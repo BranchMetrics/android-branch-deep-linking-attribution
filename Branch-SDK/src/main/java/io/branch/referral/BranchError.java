@@ -6,7 +6,7 @@ package io.branch.referral;
 public class BranchError {
     
     String errorMessage_ = "";
-    int errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
+    int errorCode_ = ERR_OTHER;
     
     /* Error processing request since session not initialised yet. */
     public static final int ERR_NO_SESSION = -101;
@@ -42,6 +42,10 @@ public class BranchError {
     public static final int ERR_IMPROPER_REINITIALIZATION = -119;
     /* Request task timed out before completing*/
     public static final int ERR_BRANCH_TASK_TIMEOUT = -120;
+    /* Error when network request is made on main thread */
+    public static final int ERR_NETWORK_ON_MAIN = -121;
+    /* General error reporting */
+    public static final int ERR_OTHER = -122;
 
     /**
      * <p>Returns the message explaining the error.</p>
@@ -88,7 +92,7 @@ public class BranchError {
         String errMsg;
         if (statusCode == ERR_BRANCH_NO_CONNECTIVITY) {
             errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
-            errMsg = " Branch API Error: poor network connectivity. Please try again later.";
+            errMsg = " Check network connectivity or DNS settings.";
         } else if (statusCode == ERR_BRANCH_KEY_INVALID) {
             errorCode_ = ERR_BRANCH_KEY_INVALID;
             errMsg = " Branch API Error: Please enter your branch_key in your project's manifest file first.";
@@ -142,8 +146,8 @@ public class BranchError {
             errorCode_ = ERR_BRANCH_TASK_TIMEOUT;
             errMsg = " Task exceeded timeout.";
         } else {
-            errorCode_ = ERR_BRANCH_NO_CONNECTIVITY;
-            errMsg = " Check network connectivity and that you properly initialized.";
+            errorCode_ = ERR_OTHER;
+            errMsg = " See exception message or logs for more details. ";
         }
         return errMsg;
     }

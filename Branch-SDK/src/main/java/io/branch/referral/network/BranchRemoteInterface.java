@@ -94,7 +94,7 @@ public abstract class BranchRemoteInterface {
         if (addCommonParams(params, branchKey)) {
             modifiedUrl += this.convertJSONtoString(params);
         } else {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "");
         }
 
         long reqStartTime = System.currentTimeMillis();
@@ -104,11 +104,7 @@ public abstract class BranchRemoteInterface {
             BranchResponse response = doRestfulGet(modifiedUrl);
             return processEntityForJSON(response, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
-            if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
-            } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
-            }
+            return new ServerResponse(tag, branchError.branchErrorCode, "", branchError.branchErrorMessage);
         } finally {
             // Add total round trip time
             if (Branch.getInstance() != null) {
@@ -132,7 +128,7 @@ public abstract class BranchRemoteInterface {
         body = body != null ? body : new JSONObject();
 
         if (!addCommonParams(body, branchKey)) {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "");
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "");
         }
         BranchLogger.v("posting to " + url);
         BranchLogger.v("Post value = " + body.toString());
@@ -141,11 +137,7 @@ public abstract class BranchRemoteInterface {
             BranchResponse response = doRestfulPost(url, body);
             return processEntityForJSON(response, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
-            if (branchError.branchErrorCode == BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_REQ_TIMED_OUT, "");
-            } else { // All other errors are considered as connectivity error
-                return new ServerResponse(tag, BranchError.ERR_BRANCH_NO_CONNECTIVITY, "");
-            }
+            return new ServerResponse(tag, branchError.branchErrorCode, "", branchError.branchErrorMessage);
         } finally {
             if (Branch.getInstance() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
@@ -175,7 +167,7 @@ public abstract class BranchRemoteInterface {
 
         int statusCode = response.responseCode;
 
-        ServerResponse result = new ServerResponse(tag, statusCode, requestId);
+        ServerResponse result = new ServerResponse(tag, statusCode, requestId, "");
         if(!TextUtils.isEmpty(requestId)){
             BranchLogger.v(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
         } else {
@@ -285,7 +277,8 @@ public abstract class BranchRemoteInterface {
      * see {@link #doRestfulGet(String)} and {@link #doRestfulPost(String, JSONObject)}
      */
     public static class BranchRemoteException extends Exception {
-        private int branchErrorCode = BranchError.ERR_BRANCH_NO_CONNECTIVITY;
+        private int branchErrorCode;
+        private String branchErrorMessage;
 
         /**
          * Creates BranchRemoteException
@@ -295,6 +288,11 @@ public abstract class BranchRemoteInterface {
          */
         public BranchRemoteException(int errorCode) {
             branchErrorCode = errorCode;
+        }
+
+        public BranchRemoteException(int errorCode, String errorMessage) {
+            branchErrorCode = errorCode;
+            branchErrorMessage = errorMessage;
         }
     }
 
