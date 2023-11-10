@@ -519,6 +519,7 @@ public class MainActivity extends Activity {
 
                             @Override
                             public void onFailure(Exception e) {
+                                Log.d("BranchSDK_Tester", e.toString());
                                 Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
                             }
                         });

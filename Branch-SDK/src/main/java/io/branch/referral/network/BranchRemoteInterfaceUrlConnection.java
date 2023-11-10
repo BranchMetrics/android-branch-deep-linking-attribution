@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.net.TrafficStats;
 import android.os.NetworkOnMainThreadException;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -101,8 +102,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             }
         } catch (SocketException ex) {
             BranchLogger.v("Http connect exception: " + ex.getMessage());
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
-
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
         } catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
             if (retryNumber < prefHelper.getRetryCount()) {
@@ -114,7 +114,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, ex.getMessage());
             }
         } catch(InterruptedIOException ex){
             // When the thread times out before or while sending the request
@@ -127,11 +127,11 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT, ex.getMessage());
             }
         } catch (IOException ex) {
             BranchLogger.v("Branch connect exception: " + ex.getMessage());
-            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+            throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -223,6 +223,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
 
         } catch (SocketTimeoutException ex) {
+            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
             // On socket  time out retry the request for retryNumber of times
             if (retryNumber < prefHelper.getRetryCount()) {
                 try {
@@ -233,9 +234,10 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, ex.getMessage());
             }
         } catch(InterruptedIOException ex){
+            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
             // When the thread times out before or while sending the request
             if (retryNumber < prefHelper.getRetryCount()) {
                 try {
@@ -246,11 +248,12 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT, ex.getMessage());
             }
         }
         // Unable to resolve host/Unknown host exception
         catch (IOException ex) {
+            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
             if (retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
@@ -262,15 +265,15 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 return doRestfulPost(url, payload, retryNumber);
             }
             else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY);
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
             }
         } catch (Exception ex) {
-            BranchLogger.v("Exception: " + ex.getMessage());
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-                if (ex instanceof NetworkOnMainThreadException)
-                    BranchLogger.v("Branch Error: Don't call our synchronous methods on the main thread!!!");
+            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
+            if (ex instanceof NetworkOnMainThreadException) {
+                BranchLogger.v("Branch Error: Cannot make network request on main thread: " + Log.getStackTraceString(ex));
+                throw new BranchRemoteException((BranchError.ERR_NETWORK_ON_MAIN), ex.getMessage());
             }
-            return new BranchResponse(null, 500);
+            throw new BranchRemoteException(BranchError.ERR_OTHER, ex.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();
