@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.7.3
+  * _*Master Release*_ - Nov 9, 2023
+    - Updated network debug logging to reduce confusion when client side errors occur rather than attribute to server status.
+    - Added exception message to init callback error message.
 - v5.7.2
   * _*Master Release*_ - Oct 20, 2023
     - Added additional fields to initialization and event requests
