@@ -84,7 +84,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     }
     
     @Override
-    public void handleFailure(int statusCode, String causeMsg) {
+    public synchronized void handleFailure(int statusCode, String causeMsg) {
         if (callback_ != null && !Branch.getInstance().isIDLSession()) {
             JSONObject obj = new JSONObject();
             try {
@@ -113,7 +113,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     }
     
     @Override
-    public void clearCallbacks() {
+    public synchronized void clearCallbacks() {
         callback_ = null;
     }
     
