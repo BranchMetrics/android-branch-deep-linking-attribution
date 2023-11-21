@@ -2296,7 +2296,7 @@ public class Branch {
             }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
-            BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread());
+            BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
             branch.initializeSession(initRequest, delay);
         }
 
