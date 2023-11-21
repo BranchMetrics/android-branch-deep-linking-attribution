@@ -73,6 +73,16 @@ class ReferringUrlUtilityTests : BranchTest() {
     }
 
     @Test
+    fun testReferringURLWithEmptyURIScheme() {
+        val url = "branchtest://home"
+        val expected = JSONObject()
+
+        referringUrlUtility.parseReferringURL(url)
+        val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+
+        assertTrue(areJSONObjectsEqual(expected, params))
+    }
+    @Test
     fun testReferringURLWithURISchemeSanityCheck() {
         val url = "branchtest://?gclid=12345"
         val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
