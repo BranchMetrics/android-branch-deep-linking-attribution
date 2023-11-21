@@ -1,6 +1,5 @@
 package io.branch.referral
 
-import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONException
 
@@ -46,6 +45,17 @@ class ReferringUrlUtilityTests : BranchTest() {
         val expected = JSONObject()
 
         referringUrlUtility.parseReferringURL(url)
+        val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+
+        assertTrue(areJSONObjectsEqual(expected, params))
+    }
+
+    @Test
+    fun testReferringURINonHierarchical() {
+        val uri = "branchtest:non-hierarchical"
+        val expected = JSONObject()
+
+        referringUrlUtility.parseReferringURL(uri)
         val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
 
         assertTrue(areJSONObjectsEqual(expected, params))

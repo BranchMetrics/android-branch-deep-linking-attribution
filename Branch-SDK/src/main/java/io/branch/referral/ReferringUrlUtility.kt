@@ -22,30 +22,33 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
     fun parseReferringURL(urlString: String) {
         if (!Branch.getInstance().isTrackingDisabled) {
             val uri = Uri.parse(urlString)
+            if (uri.isHierarchical) {
+                for (originalParamName in uri.queryParameterNames) {
+                    val paramName = originalParamName.lowercase()
+                    val paramValue = uri.getQueryParameter(originalParamName)
+                    BranchLogger.v("Found URL Query Parameter - Key: $paramName, Value: $paramValue")
 
-            for (originalParamName in uri.queryParameterNames) {
-                val paramName = originalParamName.lowercase()
-                val paramValue = uri.getQueryParameter(originalParamName)
-                BranchLogger.v("Found URL Query Parameter - Key: $paramName, Value: $paramValue")
+                    if (isSupportedQueryParameter(paramName)) {
+                        val param = findUrlQueryParam(paramName)
+                        param.value = paramValue
+                        param.timestamp = Date()
+                        param.isDeepLink = true
 
-                if (isSupportedQueryParameter(paramName)) {
-                    val param = findUrlQueryParam(paramName)
-                    param.value = paramValue
-                    param.timestamp = Date()
-                    param.isDeepLink = true
+                        // If there is no validity window, set to default.
+                        if (param.validityWindow == 0L) {
+                            param.validityWindow = defaultValidityWindowForParam(paramName)
+                        }
 
-                    // If there is no validity window, set to default.
-                    if (param.validityWindow == 0L) {
-                        param.validityWindow = defaultValidityWindowForParam(paramName)
+                        urlQueryParameters[paramName] = param
                     }
-
-                    urlQueryParameters[paramName] = param
                 }
+
+                prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
+
+                BranchLogger.v("Current referringURLQueryParameters: " + prefHelper.referringURLQueryParameters.toString())
+            } else {
+                BranchLogger.d("Skipping referring URL query parameter parsing because the URI is not hierarchical. URI: $urlString")
             }
-
-            prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
-
-            BranchLogger.v("Current referringURLQueryParameters: " + prefHelper.referringURLQueryParameters.toString())
         } else {
             BranchLogger.d("Skipping referring URL query parameter parsing due to disabled tracking.")
         }
