@@ -683,6 +683,7 @@ public abstract class ServerRequest {
      * Also attaches any required URL query parameters based on the request type.
      */
     public void onPreExecute() {
+        BranchLogger.v("onPreExecute " + this);
         if (this instanceof ServerRequestRegisterOpen || this instanceof ServerRequestLogEvent) {
             try {
                 ReferringUrlUtility utility = new ReferringUrlUtility(prefHelper_);

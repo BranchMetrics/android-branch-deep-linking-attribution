@@ -811,6 +811,7 @@ public class Branch {
     }
 
     private void readAndStripParam(Uri data, Activity activity) {
+        BranchLogger.v("Read params uri: " + data + " bypassCurrentActivityIntentState: " + bypassCurrentActivityIntentState_ + " intent state: " + intentState_);
         if (enableInstantDeepLinking) {
 
             // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
@@ -857,8 +858,10 @@ public class Branch {
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
-        return activity != null && activity.getIntent() != null &&
+        boolean result = activity != null && activity.getIntent() != null &&
                 activity.getIntent().getBooleanExtra(Defines.IntentKeys.BranchLinkUsed.getKey(), false);
+        BranchLogger.v("isIntentParamsAlreadyConsumed " + result);
+        return result;
     }
     
     private boolean isActivityLaunchedFromHistory(Activity activity) {
@@ -1333,6 +1336,7 @@ public class Branch {
     }
 
     private void initializeSession(ServerRequestInitSession initRequest, int delay) {
+        BranchLogger.v("initializeSession " + initRequest + " delay " + delay);
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
             //Report Key error on callback
@@ -1365,7 +1369,9 @@ public class Branch {
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
 
-        if (getInitState() == SESSION_STATE.UNINITIALISED || forceBranchSession) {
+        SESSION_STATE sessionState = getInitState();
+        BranchLogger.v("Intent: " + intent + " forceBranchSession: " + forceBranchSession + " initState: " + sessionState);
+        if (sessionState == SESSION_STATE.UNINITIALISED || forceBranchSession) {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
             }
@@ -1381,14 +1387,18 @@ public class Branch {
      * will wait on the wait locks to complete any pending operations
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
+         BranchLogger.v("registerAppInit " + request);
          setInitState(SESSION_STATE.INITIALISING);
 
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
          if (r == null) {
+             BranchLogger.v("Moving " + request + " " + " to front of the queue");
              requestQueue_.insertRequestAtFront(request);
          }
          else {
+             BranchLogger.v("Retrieved " + r + " with callback " + r.callback_ + " from disk");
              r.callback_ = request.callback_;
+             BranchLogger.v(request + " now has callback " + request.callback_);
          }
          initTasks(request, ignoreWaitLocks);
 
@@ -1396,6 +1406,7 @@ public class Branch {
      }
 
     private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
+         BranchLogger.v("initTasks " + request + " ignoreWaitLocks " + ignoreWaitLocks);
         if (!ignoreWaitLocks) {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
@@ -2054,6 +2065,7 @@ public class Branch {
     }
 
     private boolean extractBranchLinkFromIntentExtra(Activity activity) {
+        BranchLogger.v("extractBranchLinkFromIntentExtra " + activity);
         //Check for any push identifier in case app is launched by a push notification
         try {
             if (activity != null && activity.getIntent() != null && activity.getIntent().getExtras() != null) {
@@ -2084,6 +2096,7 @@ public class Branch {
     }
 
     private void extractExternalUriAndIntentExtras(Uri data, Activity activity) {
+        BranchLogger.v("extractExternalUriAndIntentExtras " + data + " " + activity);
         try {
             if (!isIntentParamsAlreadyConsumed(activity)) {
                 String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
@@ -2156,6 +2169,7 @@ public class Branch {
          */
         @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder withCallback(BranchUniversalReferralInitListener callback) {
+            BranchLogger.v("InitSessionBuilder setting BranchUniversalReferralInitListener withCallback with " + callback);
             this.callback = new BranchUniversalReferralInitWrapper(callback);
             return this;
         }
@@ -2184,6 +2198,7 @@ public class Branch {
          */
         @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder withCallback(BranchReferralInitListener callback) {
+            BranchLogger.v("InitSessionBuilder setting BranchReferralInitListener withCallback with " + callback);
             this.callback = callback;
             return this;
         }
@@ -2196,6 +2211,7 @@ public class Branch {
          */
         @SuppressWarnings("WeakerAccess")
         public InitSessionBuilder withData(Uri uri) {
+            BranchLogger.v("InitSessionBuilder setting withData with " + uri);
             this.uri = uri;
             return this;
         }
@@ -2236,6 +2252,10 @@ public class Branch {
         public void init() {
             BranchLogger.v("Beginning session initialization");
             BranchLogger.v("Session uri is " + uri);
+            BranchLogger.v("Callback is " + callback);
+            BranchLogger.v("Is auto init " + isAutoInitialization);
+            BranchLogger.v("Will ignore intent " + ignoreIntent);
+            BranchLogger.v("Is reinitializing " + isReInitializing);
 
             if(deferInitForPluginRuntime){
                 BranchLogger.v("Session init is deferred until signaled by plugin.");
@@ -2275,6 +2295,7 @@ public class Branch {
                 return;
             }
 
+            BranchLogger.v("isInstantDeepLinkPossible " + branch.isInstantDeepLinkPossible);
             // readAndStripParams (above) may set isInstantDeepLinkPossible to true
             if (branch.isInstantDeepLinkPossible) {
                 // reset state
@@ -2296,7 +2317,7 @@ public class Branch {
             }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
-            BranchLogger.d("Creating " + initRequest + " from init");
+            BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
             branch.initializeSession(initRequest, delay);
         }
 

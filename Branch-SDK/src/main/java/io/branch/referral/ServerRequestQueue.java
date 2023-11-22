@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -179,6 +180,12 @@ public class ServerRequestQueue {
         }
         return req;
     }
+
+    public void printQueue(){
+        synchronized (reqQueueLockObject){
+            BranchLogger.v("Queue is: " + Arrays.toString(queue.toArray()));
+        }
+    }
     
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index specified in the supplied
@@ -317,6 +324,7 @@ public class ServerRequestQueue {
     }
 
     void processNextQueueItem() {
+        this.printQueue();
         try {
             serverSema_.acquire();
             if (networkCount_ == 0 && this.getSize() > 0) {
@@ -325,7 +333,7 @@ public class ServerRequestQueue {
 
                 serverSema_.release();
                 if (req != null) {
-                    BranchLogger.d("processNextQueueItem, req " + req.getClass().getSimpleName());
+                    BranchLogger.d("processNextQueueItem, req " + req);
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
@@ -420,6 +428,11 @@ public class ServerRequestQueue {
     }
 
     private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
+        BranchLogger.v("executeTimedBranchPostTask " + req);
+        if(req instanceof ServerRequestInitSession){
+            BranchLogger.v("callback to be returned " + ((ServerRequestInitSession) req).callback_);
+        }
+
         final CountDownLatch latch = new CountDownLatch(1);
         final BranchPostTask postTask = new BranchPostTask(req, latch);
 
@@ -517,6 +530,7 @@ public class ServerRequestQueue {
             if (thisReq_.isGetRequest()) {
                 result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
             } else {
+                BranchLogger.v("Beginning rest post for " + thisReq_);
                 result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
             }
             if (latch_ != null) {
@@ -532,6 +546,7 @@ public class ServerRequestQueue {
         }
 
         void onPostExecuteInner(ServerResponse serverResponse) {
+            BranchLogger.v("onPostExecuteInner " + this + " " + serverResponse);
             if (latch_ != null) {
                 latch_.countDown();
             }
@@ -561,6 +576,7 @@ public class ServerRequestQueue {
         }
 
         private void onRequestSuccess(ServerResponse serverResponse) {
+            BranchLogger.v("onRequestSuccess " + serverResponse);
             // If the request succeeded
             @Nullable final JSONObject respJson = serverResponse.getObject();
             if (respJson == null) {
