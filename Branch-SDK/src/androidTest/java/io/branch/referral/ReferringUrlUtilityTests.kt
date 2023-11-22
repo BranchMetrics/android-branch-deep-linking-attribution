@@ -1,6 +1,5 @@
 package io.branch.referral
 
-import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONException
 
@@ -52,6 +51,17 @@ class ReferringUrlUtilityTests : BranchTest() {
     }
 
     @Test
+    fun testReferringURINonHierarchical() {
+        val uri = "branchtest:non-hierarchical"
+        val expected = JSONObject()
+
+        referringUrlUtility.parseReferringURL(uri)
+        val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+
+        assertTrue(areJSONObjectsEqual(expected, params))
+    }
+
+    @Test
     fun testReferringURLWithGclid() {
         val url = "https://bnctestbed.app.link?gclid=12345"
         val expected = JSONObject("""{"gclid": "12345", "is_deeplink_gclid": true}""")
@@ -62,6 +72,16 @@ class ReferringUrlUtilityTests : BranchTest() {
         assertTrue(areJSONObjectsEqual(expected, params))
     }
 
+    @Test
+    fun testReferringURLWithEmptyURIScheme() {
+        val url = "branchtest://home"
+        val expected = JSONObject()
+
+        referringUrlUtility.parseReferringURL(url)
+        val params = referringUrlUtility.getURLQueryParamsForRequest(openServerRequest())
+
+        assertTrue(areJSONObjectsEqual(expected, params))
+    }
     @Test
     fun testReferringURLWithURISchemeSanityCheck() {
         val url = "branchtest://?gclid=12345"
