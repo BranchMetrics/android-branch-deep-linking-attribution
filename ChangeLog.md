@@ -1,4 +1,7 @@
 # Branch Android SDK change log
+- v5.7.4
+  * _*Master Release*_ - Nov 21, 2023
+    - Added check for non-hierarchical URIs when parsing query parameters.
 - v5.7.3
   * _*Master Release*_ - Nov 9, 2023
     - Updated network debug logging to reduce confusion when client side errors occur rather than attribute to server status.
