@@ -325,7 +325,7 @@ public class ServerRequestQueue {
 
                 serverSema_.release();
                 if (req != null) {
-                    BranchLogger.d("processNextQueueItem, req " + req.getClass().getSimpleName());
+                    BranchLogger.d("processNextQueueItem, req " + req);
                     if (!req.isWaitingOnProcessToFinish()) {
                         // All request except Install request need a valid RandomizedBundleToken
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
