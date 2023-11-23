@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
@@ -20,7 +19,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -37,7 +35,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +51,6 @@ import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
-import io.branch.referral.util.CommerceEvent;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -853,8 +849,9 @@ public class Branch {
 
     void unlockSDKInitWaitLock() {
         if (requestQueue_ == null) return;
+        requestQueue_.postInitClear();
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
-        requestQueue_.processNextQueueItem();
+        requestQueue_.processNextQueueItem("unlockSDKInitWaitLock");
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -1053,7 +1050,7 @@ public class Branch {
     @SuppressWarnings("WeakerAccess")
     public void removeSessionInitializationDelay() {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-        requestQueue_.processNextQueueItem();
+        requestQueue_.processNextQueueItem("removeSessionInitializationDelay");
     }
     
     /**
@@ -1375,7 +1372,7 @@ public class Branch {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
             }
-            registerAppInit(initRequest, false);
+            registerAppInit(initRequest, false, forceBranchSession);
         } else if (initRequest.callback_ != null) {
             // Else, let the user know session initialization failed because it's already initialized.
             initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
@@ -1386,23 +1383,31 @@ public class Branch {
      * Registers app init with params filtered from the intent. Unless ignoreIntent = true, this
      * will wait on the wait locks to complete any pending operations
      */
-     void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
+     void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks, boolean forceBranchSession) {
          BranchLogger.v("registerAppInit " + request);
          setInitState(SESSION_STATE.INITIALISING);
 
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
-         if (r == null) {
-             BranchLogger.v("Moving " + request + " " + " to front of the queue");
+         BranchLogger.v("Ordering init calls");
+         requestQueue_.printQueue();
+
+         // if forceBranchSession aka reInit is true, we want to preserve the callback order in case
+         // there is one still in flight
+         if (r == null || forceBranchSession) {
+             BranchLogger.v("Moving " + request + " " + " to front of the queue or behind network-in-progress request");
              requestQueue_.insertRequestAtFront(request);
          }
          else {
-             BranchLogger.v("Retrieved " + r + " with callback " + r.callback_ + " from disk");
+             // if false, maintain previous behavior
+             BranchLogger.v("Retrieved " + r + " with callback " + r.callback_ + " in queue currently");
              r.callback_ = request.callback_;
-             BranchLogger.v(request + " now has callback " + request.callback_);
+             BranchLogger.v(r + " now has callback " + request.callback_);
          }
+         BranchLogger.v("Finished ordering init calls");
+         requestQueue_.printQueue();
          initTasks(request, ignoreWaitLocks);
 
-         requestQueue_.processNextQueueItem();
+         requestQueue_.processNextQueueItem("registerAppInit");
      }
 
     private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
@@ -1411,6 +1416,7 @@ public class Branch {
             // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
             // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
             if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
+                BranchLogger.v("Adding INTENT_PENDING_WAIT_LOCK");
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             }
 
@@ -1423,8 +1429,7 @@ public class Branch {
                     @Override
                     public void onInstallReferrersFinished() {
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        BranchLogger.v("calling processNextQueueItem from onInstallReferrersFinished");
-                        requestQueue_.processNextQueueItem();
+                        requestQueue_.processNextQueueItem("onInstallReferrersFinished");
                     }
                 });
             }
@@ -1434,7 +1439,7 @@ public class Branch {
             @Override
             public void onAdsParamsFetchFinished() {
                 requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-                requestQueue_.processNextQueueItem();
+                requestQueue_.processNextQueueItem("onAdsParamsFetchFinished");
             }
         });
     }
@@ -1452,6 +1457,7 @@ public class Branch {
     }
     
     void onIntentReady(@NonNull Activity activity) {
+        BranchLogger.v("onIntentReady " + activity + " removing INTENT_PENDING_WAIT_LOCK");
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
@@ -1461,14 +1467,14 @@ public class Branch {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
-        requestQueue_.processNextQueueItem();
+        requestQueue_.processNextQueueItem("onIntentReady");
     }
 
     /**
      * Notify Branch when network is available in order to process the next request in the queue.
      */
     public void notifyNetworkAvailable() {
-        requestQueue_.processNextQueueItem();
+        requestQueue_.processNextQueueItem("notifyNetworkAvailable");
     }
 
     private void setActivityLifeCycleObserver(Application application) {
@@ -1707,6 +1713,7 @@ public class Branch {
             //Check if the application is launched by clicking a Branch link.
             if (!latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
                     || !latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
+                BranchLogger.v("Does not have Clicked_Branch_Link or Clicked_Branch_Link is false, returning");
                 return;
             }
             if (latestParams.length() > 0) {
@@ -1731,6 +1738,7 @@ public class Branch {
                     }
                 }
                 if (deepLinkActivity != null && getCurrentActivity() != null) {
+                    BranchLogger.v("deepLinkActivity " + deepLinkActivity + " getCurrentActivity " + getCurrentActivity());
                     Activity currentActivity = getCurrentActivity();
 
                     Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));

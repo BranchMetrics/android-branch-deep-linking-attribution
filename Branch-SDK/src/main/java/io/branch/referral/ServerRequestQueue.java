@@ -183,7 +183,11 @@ public class ServerRequestQueue {
 
     public void printQueue(){
         synchronized (reqQueueLockObject){
-            BranchLogger.v("Queue is: " + Arrays.toString(queue.toArray()));
+            StringBuilder stringBuilder = new StringBuilder();
+            for(int i = 0; i < queue.size(); i++){
+                stringBuilder.append(queue.get(i)).append(" with locks ").append(queue.get(i).printWaitLocks()).append("\n");
+            }
+            BranchLogger.v("Queue is: " + stringBuilder);
         }
     }
     
@@ -323,7 +327,34 @@ public class ServerRequestQueue {
         }
     }
 
-    void processNextQueueItem() {
+    // We must check that there is no other init request that may read or write these values
+    // Then when init request count in the queue is either the last or none, clear.
+    public void postInitClear() {
+        // Check for any Third party SDK for data handling
+        PrefHelper prefHelper_ = Branch.getInstance().getPrefHelper();
+        boolean canClear = this.canClearInitData();
+        BranchLogger.v("postInitClear " + prefHelper_ + " can clear init data " + canClear);
+
+        if(prefHelper_ != null && canClear) {
+            prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setIsFullAppConversion(false);
+            prefHelper_.setInitialReferrer(PrefHelper.NO_STRING_VALUE);
+
+            if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0) {
+                prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME));
+            }
+        }
+    }
+
+    void processNextQueueItem(String callingMethodName) {
+        BranchLogger.v("processNextQueueItem " + callingMethodName);
         this.printQueue();
         try {
             serverSema_.acquire();
@@ -492,7 +523,20 @@ public class ServerRequestQueue {
         this.enqueue(req);
         req.onRequestQueued();
 
-        this.processNextQueueItem();
+        this.processNextQueueItem("handleNewRequest");
+    }
+
+    // If there is 1 (currently being removed) or 0 init requests in the queue, clear the init data
+    public boolean canClearInitData() {
+        int result = 0;
+        synchronized (reqQueueLockObject) {
+            for(int i = 0; i < queue.size(); i++){
+                if(queue.get(i) instanceof ServerRequestInitSession){
+                    result++;
+                }
+            }
+        }
+        return result <= 1;
     }
 
     /**
@@ -570,7 +614,7 @@ public class ServerRequestQueue {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    ServerRequestQueue.this.processNextQueueItem();
+                    ServerRequestQueue.this.processNextQueueItem("onPostExecuteInner");
                 }
             });
         }

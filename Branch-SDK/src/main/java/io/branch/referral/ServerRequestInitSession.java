@@ -84,21 +84,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
         Branch.getInstance().unlockSDKInitWaitLock();
-        // Check for any Third party SDK for data handling
-        prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.setIsFullAppConversion(false);
-        prefHelper_.setInitialReferrer(PrefHelper.NO_STRING_VALUE);
-
-        if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0) {
-            prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME));
-        }
     }
 
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
