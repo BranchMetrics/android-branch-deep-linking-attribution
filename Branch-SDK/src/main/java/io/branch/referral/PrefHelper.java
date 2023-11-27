@@ -602,7 +602,6 @@ public class PrefHelper {
      * @param uri A {@link String} value containing intent URI to set
      */
     public void setExternalIntentUri(String uri) {
-        BranchLogger.v("setExternalIntentUri " + uri);
         setString(KEY_EXTERNAL_INTENT_URI, uri);
     }
     
