@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.7.5
+  * _*Master Release*_ - Nov 27, 2023
+    - Fix a race condition where two quickly queued consecutive init/reInit requests would overwrite uri arguments and return no params.
+    - Added more verbose trace logging
 - v5.7.4
   * _*Master Release*_ - Nov 21, 2023
     - Added check for non-hierarchical URIs when parsing query parameters.
