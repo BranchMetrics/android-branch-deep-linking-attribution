@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -179,6 +180,16 @@ public class ServerRequestQueue {
         }
         return req;
     }
+
+    public void printQueue(){
+        synchronized (reqQueueLockObject){
+            StringBuilder stringBuilder = new StringBuilder();
+            for(int i = 0; i < queue.size(); i++){
+                stringBuilder.append(queue.get(i)).append(" with locks ").append(queue.get(i).printWaitLocks()).append("\n");
+            }
+            BranchLogger.v("Queue is: " + stringBuilder);
+        }
+    }
     
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index specified in the supplied
@@ -316,7 +327,35 @@ public class ServerRequestQueue {
         }
     }
 
-    void processNextQueueItem() {
+    // We must check that there is no other init request that may read or write these values
+    // Then when init request count in the queue is either the last or none, clear.
+    public void postInitClear() {
+        // Check for any Third party SDK for data handling
+        PrefHelper prefHelper_ = Branch.getInstance().getPrefHelper();
+        boolean canClear = this.canClearInitData();
+        BranchLogger.v("postInitClear " + prefHelper_ + " can clear init data " + canClear);
+
+        if(prefHelper_ != null && canClear) {
+            prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE);
+            prefHelper_.setIsFullAppConversion(false);
+            prefHelper_.setInitialReferrer(PrefHelper.NO_STRING_VALUE);
+
+            if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0) {
+                prefHelper_.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME));
+            }
+        }
+    }
+
+    void processNextQueueItem(String callingMethodName) {
+        BranchLogger.v("processNextQueueItem " + callingMethodName);
+        this.printQueue();
         try {
             serverSema_.acquire();
             if (networkCount_ == 0 && this.getSize() > 0) {
@@ -420,6 +459,11 @@ public class ServerRequestQueue {
     }
 
     private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
+        BranchLogger.v("executeTimedBranchPostTask " + req);
+        if(req instanceof ServerRequestInitSession){
+            BranchLogger.v("callback to be returned " + ((ServerRequestInitSession) req).callback_);
+        }
+
         final CountDownLatch latch = new CountDownLatch(1);
         final BranchPostTask postTask = new BranchPostTask(req, latch);
 
@@ -479,7 +523,20 @@ public class ServerRequestQueue {
         this.enqueue(req);
         req.onRequestQueued();
 
-        this.processNextQueueItem();
+        this.processNextQueueItem("handleNewRequest");
+    }
+
+    // If there is 1 (currently being removed) or 0 init requests in the queue, clear the init data
+    public boolean canClearInitData() {
+        int result = 0;
+        synchronized (reqQueueLockObject) {
+            for(int i = 0; i < queue.size(); i++){
+                if(queue.get(i) instanceof ServerRequestInitSession){
+                    result++;
+                }
+            }
+        }
+        return result <= 1;
     }
 
     /**
@@ -517,6 +574,7 @@ public class ServerRequestQueue {
             if (thisReq_.isGetRequest()) {
                 result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
             } else {
+                BranchLogger.v("Beginning rest post for " + thisReq_);
                 result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
             }
             if (latch_ != null) {
@@ -532,6 +590,7 @@ public class ServerRequestQueue {
         }
 
         void onPostExecuteInner(ServerResponse serverResponse) {
+            BranchLogger.v("onPostExecuteInner " + this + " " + serverResponse);
             if (latch_ != null) {
                 latch_.countDown();
             }
@@ -555,12 +614,13 @@ public class ServerRequestQueue {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    ServerRequestQueue.this.processNextQueueItem();
+                    ServerRequestQueue.this.processNextQueueItem("onPostExecuteInner");
                 }
             });
         }
 
         private void onRequestSuccess(ServerResponse serverResponse) {
+            BranchLogger.v("onRequestSuccess " + serverResponse);
             // If the request succeeded
             @Nullable final JSONObject respJson = serverResponse.getObject();
             if (respJson == null) {

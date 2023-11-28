@@ -133,6 +133,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
     
     @Override
     public void clearCallbacks() {
+        BranchLogger.v(this + " clearCallbacks");
         callback_ = null;
     }
     

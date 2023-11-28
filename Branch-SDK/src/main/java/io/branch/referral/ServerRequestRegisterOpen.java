@@ -57,6 +57,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         super.onRequestSucceeded(resp, branch);
+        BranchLogger.v("onRequestSucceeded " + this + " " + resp + " on callback " + callback_);
         try {
             if (resp.getObject().has(Defines.Jsonkey.LinkClickID.getKey())) {
                 prefHelper_.setLinkClickID(resp.getObject().getString(Defines.Jsonkey.LinkClickID.getKey()));
@@ -114,6 +115,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
     
     @Override
     public void clearCallbacks() {
+        BranchLogger.v(this + " clearCallbacks " + callback_);
         callback_ = null;
     }
     

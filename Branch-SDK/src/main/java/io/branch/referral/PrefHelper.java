@@ -611,7 +611,8 @@ public class PrefHelper {
      * @return A {@link String} value containing external URI set.
      */
     public String getExternalIntentUri() {
-        return getString(KEY_EXTERNAL_INTENT_URI);
+        String result = getString(KEY_EXTERNAL_INTENT_URI);
+        return result;
     }
     
     
