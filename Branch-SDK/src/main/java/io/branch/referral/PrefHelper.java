@@ -612,7 +612,6 @@ public class PrefHelper {
      */
     public String getExternalIntentUri() {
         String result = getString(KEY_EXTERNAL_INTENT_URI);
-        BranchLogger.v("getExternalIntentUri " + result);
         return result;
     }
     
