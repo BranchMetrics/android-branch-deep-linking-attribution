@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.LinkProperties;
@@ -17,87 +18,106 @@ public class NativeShareLinkManager {
 
     /* Current activity context.*/
     Context context_;
-    Branch.BranchLinkShareListener linkShareListenerCallback_;
-    Branch.IChannelProperties channelPropertiesCallback_;
-    SharingUtil sharingUtility_ = new SharingUtil();
-    
+    Branch.BranchNativeLinkShareListener linkShareListenerCallback_;
+    //SharingUtil sharingUtility_ = new SharingUtil();
+
+    private static volatile NativeShareLinkManager INSTANCE = null;
+
+    private NativeShareLinkManager() {
+    }
+
+    public static NativeShareLinkManager getInstance() {
+        if (INSTANCE == null) {
+            // synchronize the block to ensure only one thread can execute at a time
+            synchronized (NativeShareLinkManager.class) {
+                // check again if the instance is already created
+                if (INSTANCE == null) {
+                    INSTANCE = new NativeShareLinkManager();
+                }
+            }
+        }
+        return INSTANCE;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
-    void shareLink(@NonNull Activity activity, String url, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkShareListener callback, @Nullable Branch.IChannelProperties channelProperties) {
+    void shareLink(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchNativeLinkShareListener callback) {
 
         context_ = activity;
-        linkShareListenerCallback_ = new LinkShareListenerWrapper(callback, linkProperties);
-        channelPropertiesCallback_ = channelProperties;
+        linkShareListenerCallback_ = new LinkShareListenerWrapper(callback, linkProperties,buo);
 
         try {
-            sharingUtility_.share(url,"test", activity);
-            if (linkShareListenerCallback_ != null) {
-                linkShareListenerCallback_.onShareLinkDialogLaunched();
-            }
+            buo.generateShortUrl(activity, linkProperties, new Branch.BranchLinkCreateListener() {
+                @Override
+                public void onLinkCreate(String url, BranchError error) {
+                    if (error == null) {
+                        SharingUtil.share(url,"", activity);
+                    } else {
+
+                        if (callback != null) {
+                            callback.onLinkShareError(url, error);
+                        } else {
+                            BranchLogger.v("Unable to share link " + error.getMessage());
+                        }
+                        if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY
+                                || error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
+                            SharingUtil.share(url, "", activity);
+                        }
+                    }
+                }
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
             if (linkShareListenerCallback_ != null) {
-                linkShareListenerCallback_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
+                linkShareListenerCallback_.onLinkShareError(null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
             } else {
                 BranchLogger.v("Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
     }
 
-        /**
-         * Class for intercepting share sheet events to report auto events on BUO
-         */
-        private class LinkShareListenerWrapper implements Branch.BranchLinkShareListener {
-            private final Branch.BranchLinkShareListener originalCallback_;
-            private final LinkProperties linkProperties_;
+    /**
+     * Class for intercepting share sheet events to report auto events on BUO
+     */
+    private class LinkShareListenerWrapper implements Branch.BranchNativeLinkShareListener {
+        private final Branch.BranchNativeLinkShareListener originalCallback_;
+        private final LinkProperties linkProperties_;
+        private final BranchUniversalObject buo_;
 
-            LinkShareListenerWrapper(Branch.BranchLinkShareListener originalCallback, LinkProperties linkProperties) {
-                originalCallback_ = originalCallback;
-                linkProperties_ = linkProperties;
+        LinkShareListenerWrapper(Branch.BranchNativeLinkShareListener originalCallback, LinkProperties linkProperties, BranchUniversalObject buo) {
+            originalCallback_ = originalCallback;
+            linkProperties_ = linkProperties;
+            buo_ = buo;
+        }
+
+        @Override
+        public void onLinkShareError(String sharedLink, BranchError error) {
+            BranchEvent shareEvent = new BranchEvent(BRANCH_STANDARD_EVENT.SHARE);
+            if (error == null) {
+                shareEvent.addCustomDataProperty(Defines.Jsonkey.SharedLink.getKey(), sharedLink);
+                shareEvent.addContentItems(buo_);
+            } else {
+                shareEvent.addCustomDataProperty(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
 
-            @Override
-            public void onShareLinkDialogLaunched() {
-                if (originalCallback_ != null) {
-                    originalCallback_.onShareLinkDialogLaunched();
-                }
-            }
+            shareEvent.logEvent(Branch.getInstance().getApplicationContext());
 
-            @Override
-            public void onShareLinkDialogDismissed() {
-                if (originalCallback_ != null) {
-                    originalCallback_.onShareLinkDialogDismissed();
-                }
-            }
-
-            @Override
-            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-                BranchEvent shareEvent = new BranchEvent(BRANCH_STANDARD_EVENT.SHARE);
-                if (error == null) {
-                    shareEvent.addCustomDataProperty(Defines.Jsonkey.SharedLink.getKey(), sharedLink);
-                    shareEvent.addCustomDataProperty(Defines.Jsonkey.SharedChannel.getKey(), sharedChannel);
-            //Nd        shareEvent.addContentItems(BranchUniversalObject.this);
-                } else {
-                    shareEvent.addCustomDataProperty(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
-                }
-
-                shareEvent.logEvent(Branch.getInstance().getApplicationContext());
-
-                if (originalCallback_ != null) {
-                    originalCallback_.onLinkShareResponse(sharedLink, sharedChannel, error);
-                }
-            }
-
-            @Override
-            public void onChannelSelected(String channelName) {
-                if (originalCallback_ != null) {
-                    originalCallback_.onChannelSelected(channelName);
-                }
-                if (originalCallback_ instanceof Branch.ExtendedBranchLinkShareListener) {
-                   // if (((Branch.ExtendedBranchLinkShareListener) originalCallback_).onChannelSelected(channelName, BranchUniversalObject.this, linkProperties_)) {
-                 //ND       shareSheetBuilder_.setShortLinkBuilderInternal(getLinkBuilder(shareSheetBuilder_.getShortLinkBuilder(), linkProperties_));
-                   // }
-                }
+            if (originalCallback_ != null) {
+                originalCallback_.onLinkShareError(sharedLink, error);
             }
         }
+
+        @Override
+        public void onChannelSelected(String channelName) {
+            if (originalCallback_ != null) {
+                originalCallback_.onChannelSelected(channelName);
+            }
+            if (originalCallback_ instanceof Branch.ExtendedBranchNativeLinkShareListener) {
+                 if (((Branch.ExtendedBranchNativeLinkShareListener) originalCallback_).onChannelSelected(channelName, buo_, linkProperties_)) {
+                   //    shareSheetBuilder_.setShortLinkBuilderInternal(getLinkBuilder(shareSheetBuilder_.getShortLinkBuilder(), linkProperties_));
+                 }
+            }
+        }
+    }
 
 }

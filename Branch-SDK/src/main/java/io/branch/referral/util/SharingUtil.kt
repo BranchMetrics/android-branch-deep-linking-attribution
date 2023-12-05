@@ -1,17 +1,23 @@
 package io.branch.referral.util
 
 import android.app.Activity
-import android.app.Instrumentation.ActivityResult
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import io.branch.receivers.SharingBroadcastReceiver
 
+object SharingUtil {
 
-class SharingUtil {
+    val shareIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, "test1234")
+        putExtra(Intent.EXTRA_SUBJECT, "")
+    }
+    var chooserIntent: Intent? = null
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    @JvmStatic @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     fun share(text: String, subject: String?, activity: Activity) {
 
         val immutabilityIntentFlags: Int =
@@ -21,13 +27,8 @@ class SharingUtil {
                 0
             }
 
-        val shareIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-        }
-        val chooserIntent =
+
+         chooserIntent =
             Intent.createChooser(
                 shareIntent,
                 null, // dialog title optional
@@ -35,7 +36,7 @@ class SharingUtil {
                     activity.applicationContext,
                     0,
                     Intent(activity.applicationContext, SharingBroadcastReceiver::class.java),
-                    PendingIntent.FLAG_UPDATE_CURRENT or immutabilityIntentFlags
+                    PendingIntent.FLAG_UPDATE_CURRENT
                 ).intentSender
             )
 

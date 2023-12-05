@@ -400,38 +400,17 @@ public class MainActivity extends Activity {
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
-                Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchLinkShareListener() {
-
+                Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
                             @Override
-                            public void onShareLinkDialogLaunched() {
-                            }
+                            public void onLinkShareError(String sharedLink, BranchError error) {
 
-                            @Override
-                            public void onShareLinkDialogDismissed() {
-                            }
-
-                            @Override
-                            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
                             }
 
                             @Override
                             public void onChannelSelected(String channelName) {
-                            }
-                        },
-                        new Branch.IChannelProperties() {
-                            @Override
-                            public String getSharingTitleForChannel(String channel) {
-                                return channel.contains("Messaging") ? "title for SMS" :
-                                        channel.contains("Slack") ? "title for slack" :
-                                                channel.contains("Gmail") ? "title for gmail" : null;
+
                             }
 
-                            @Override
-                            public String getSharingMessageForChannel(String channel) {
-                                return channel.contains("Messaging") ? "message for SMS" :
-                                        channel.contains("Slack") ? "message for slack" :
-                                                channel.contains("Gmail") ? "message for gmail" : null;
-                            }
                         });
             }
         });
