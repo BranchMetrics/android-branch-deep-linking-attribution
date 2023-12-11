@@ -470,19 +470,19 @@ abstract class SystemObserver {
                 public void resumeWith(Object o) {
                     try {
                         if (o != null) {
-                                com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
+                            com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
 
-                                boolean lat = info.isLimitAdTrackingEnabled();
-                                String aid = null;
+                            boolean lat = info.isLimitAdTrackingEnabled();
+                            String aid = null;
 
-                                if(!lat) {
-                                    aid = info.getId();
-                                }
-
-                                setLAT(lat ? 1 : 0);
-                                setGAID(aid);
+                            if (!lat) {
+                                aid = info.getId();
                             }
+
+                            setLAT(lat ? 1 : 0);
+                            setGAID(aid);
                         }
+                    }
                     catch (Exception e) {
                         BranchLogger.d("Error in continuation: " + e);
                     }
