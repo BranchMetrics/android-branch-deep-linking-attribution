@@ -468,27 +468,27 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
-                    if (o != null) {
-                        try {
-                            com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
+                    try {
+                        if (o != null) {
+                                com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
 
-                            boolean lat = info.isLimitAdTrackingEnabled();
-                            String aid = null;
+                                boolean lat = info.isLimitAdTrackingEnabled();
+                                String aid = null;
 
-                            if(!lat) {
-                                aid = info.getId();
+                                if(!lat) {
+                                    aid = info.getId();
+                                }
+
+                                setLAT(lat ? 1 : 0);
+                                setGAID(aid);
                             }
-
-                            setLAT(lat ? 1 : 0);
-                            setGAID(aid);
                         }
-                        catch (Exception e) {
-                            BranchLogger.d("Error in continuation: " + e);
-                        }
-                        finally {
-                            if (callback != null) {
-                                callback.onAdsParamsFetchFinished();
-                            }
+                    catch (Exception e) {
+                        BranchLogger.d("Error in continuation: " + e);
+                    }
+                    finally {
+                        if (callback != null) {
+                            callback.onAdsParamsFetchFinished();
                         }
                     }
                 }
@@ -517,8 +517,8 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
-                    if (o != null) {
-                        try {
+                    try {
+                        if (o != null) {
                             AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
 
                             boolean lat = info.isLimitAdTrackingEnabled();
@@ -531,13 +531,13 @@ abstract class SystemObserver {
                             setLAT(lat ? 1 : 0);
                             setGAID(aid);
                         }
-                        catch (Exception e) {
-                            BranchLogger.d("Error in continuation: " + e);
-                        }
-                        finally {
-                            if (callback != null) {
-                                callback.onAdsParamsFetchFinished();
-                            }
+                    }
+                    catch (Exception e) {
+                        BranchLogger.d("Error in continuation: " + e);
+                    }
+                    finally {
+                        if (callback != null) {
+                            callback.onAdsParamsFetchFinished();
                         }
                     }
                 }
