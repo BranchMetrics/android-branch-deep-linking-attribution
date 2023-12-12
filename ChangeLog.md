@@ -5,18 +5,18 @@
     - Add a simple interface to echo SDK logs for developer's implementation
 
 - v5.7.5
-  * _*Master Release*_ - Nov 27, 2023
+  * _*Release Branch 5.7.5*_ - Nov 27, 2023
     - Fix a race condition where two quickly queued consecutive init/reInit requests would overwrite uri arguments and return no params.
     - Added more verbose trace logging
 - v5.7.4
-  * _*Master Release*_ - Nov 21, 2023
+  * _*Release Branch 5.7.4*_ - Nov 21, 2023
     - Added check for non-hierarchical URIs when parsing query parameters.
 - v5.7.3
-  * _*Master Release*_ - Nov 9, 2023
+  * _*Release Branch 5.7.3*_ - Nov 9, 2023
     - Updated network debug logging to reduce confusion when client side errors occur rather than attribute to server status.
     - Added exception message to init callback error message.
 - v5.7.2
-  * _*Master Release*_ - Oct 20, 2023
+  * _*Release Branch 5.7.2*_ - Oct 20, 2023
     - Added additional fields to initialization and event requests
 - v5.7.1
   * _*Master Release*_ - Oct 3, 2023
