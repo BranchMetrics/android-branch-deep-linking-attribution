@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.8.0
+  * _*Release Branch 5.8.0*_ - Dec 11, 2023
+    - Fix a condition where the SDK would not init if the Google service was unavailable to provide the Ad ID.
+    - Add a simple interface to echo SDK logs for developer's implementation
+
 - v5.7.5
   * _*Master Release*_ - Nov 27, 2023
     - Fix a race condition where two quickly queued consecutive init/reInit requests would overwrite uri arguments and return no params.
