@@ -1,6 +1,7 @@
 package io.branch.referral
 
 import android.util.Log
+import io.branch.interfaces.IBranchLoggingCallbacks
 
 object BranchLogger {
 
@@ -8,6 +9,11 @@ object BranchLogger {
 
     @JvmStatic
     var loggingEnabled = false
+    
+    @JvmStatic
+    var loggerCallback: IBranchLoggingCallbacks? = null
+
+    private val isDebug = BuildConfig.DEBUG;
 
     /**
      * <p>Creates a <b>Error</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
@@ -17,7 +23,11 @@ object BranchLogger {
     @JvmStatic
     fun e(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            Log.e(TAG, message)
+            loggerCallback?.onBranchLog(message, "ERROR")
+
+            if(isDebug) {
+                Log.e(TAG, message)
+            }
         }
     }
 
@@ -29,7 +39,11 @@ object BranchLogger {
     @JvmStatic
     fun w(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            Log.w(TAG, message)
+            loggerCallback?.onBranchLog(message, "WARN")
+
+            if(isDebug) {
+                Log.w(TAG, message)
+            }
         }
     }
 
@@ -41,7 +55,11 @@ object BranchLogger {
     @JvmStatic
     fun i(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            Log.i(TAG, message)
+            loggerCallback?.onBranchLog(message, "INFO")
+
+            if(isDebug) {
+                Log.i(TAG, message)
+            }
         }
     }
 
@@ -53,7 +71,11 @@ object BranchLogger {
     @JvmStatic
     fun d(message: String?) {
         if (loggingEnabled && message?.isNotEmpty() == true) {
-            Log.d(TAG, message)
+            loggerCallback?.onBranchLog(message, "DEBUG")
+
+            if(isDebug) {
+                Log.d(TAG, message)
+            }
         }
     }
 
@@ -65,21 +87,33 @@ object BranchLogger {
     @JvmStatic
     fun v(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            Log.v(TAG, message)
+            loggerCallback?.onBranchLog(message, "VERBOSE")
+
+            if(isDebug) {
+                Log.v(TAG, message)
+            }
         }
     }
 
     @JvmStatic
     fun logAlways(message: String) {
         if (message.isNotEmpty()) {
-            Log.i(TAG, message)
+            loggerCallback?.onBranchLog(message, "INFO")
+
+            if(isDebug) {
+                Log.i(TAG, message)
+            }
         }
     }
 
     @JvmStatic
     fun logException(message: String, t: Exception?) {
         if (message.isNotEmpty()) {
-            Log.e(TAG, message, t)
+            loggerCallback?.onBranchLog(message, "ERROR")
+
+            if(isDebug) {
+                Log.e(TAG, message, t)
+            }
         }
     }
 }

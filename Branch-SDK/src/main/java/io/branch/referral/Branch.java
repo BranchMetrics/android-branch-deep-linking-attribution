@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import io.branch.referral.network.BranchRemoteInterface;
@@ -1824,6 +1825,11 @@ public class Branch {
      * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
+        enableLogging(null);
+    }
+
+    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging){
+        BranchLogger.setLoggerCallback(iBranchLogging);
         BranchLogger.logAlways(GOOGLE_VERSION_TAG);
         BranchLogger.setLoggingEnabled(true);
     }
@@ -1833,6 +1839,7 @@ public class Branch {
      */
     public static void disableLogging() {
         BranchLogger.setLoggingEnabled(false);
+        BranchLogger.setLoggerCallback(null);
     }
 
     /**
