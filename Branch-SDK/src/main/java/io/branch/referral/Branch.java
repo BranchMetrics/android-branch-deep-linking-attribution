@@ -78,7 +78,6 @@ public class Branch {
 
     /**
      * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that
-     * Hard-coded {@link String} that denotes a {@link BranchLinkData}; applies to links that
      * are shared with others directly as a user action, via social media for instance.
      */
     public static final String FEATURE_TAG_SHARE = "share";
