@@ -1,19 +1,22 @@
 package io.branch.receivers
 
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.EXTRA_CHOSEN_COMPONENT
 import io.branch.referral.BranchLogger
-import io.branch.referral.util.SharingUtil
+import io.branch.referral.NativeShareLinkManager
 
 class SharingBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val clickedComponent : ComponentName? = intent.getParcelableExtra(EXTRA_CHOSEN_COMPONENT);
+        val clickedComponent: ComponentName? = intent.getParcelableExtra(EXTRA_CHOSEN_COMPONENT);
 
         BranchLogger.v("Intent: $intent")
         BranchLogger.v("Clicked component: $clickedComponent")
+
+        NativeShareLinkManager.getInstance().linkShareListenerCallback?.onChannelSelected(
+            clickedComponent.toString()
+        )
     }
 }

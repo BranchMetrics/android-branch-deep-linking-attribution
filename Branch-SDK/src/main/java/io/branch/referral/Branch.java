@@ -77,7 +77,7 @@ public class Branch {
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
 
     /**
-     * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that
+     * Hard-coded {@link String} that denotes a {@link BranchLinkData}; applies to links that
      * are shared with others directly as a user action, via social media for instance.
      */
     public static final String FEATURE_TAG_SHARE = "share";
@@ -1217,22 +1217,19 @@ public class Branch {
 
 
     /**
-     * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
+     * <p>Creates a link with given attributes and shares with the
      * user selected clients using native android share sheet</p>
      *
+     * @param activity          The {@link Activity} to show native share sheet chooser dialog.
+     * @param buo               A {@link BranchUniversalObject} value containing the deep link params.
+     * @param linkProperties    An object of {@link LinkProperties} specifying the properties of this link
+     * @param callback          A {@link Branch.BranchNativeLinkShareListener } instance for getting sharing status.
+     * @param title             A {@link String } for setting title in native chooser dialog.
+     * @param subject           A {@link String } for setting subject in native chooser dialog.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
-    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchNativeLinkShareListener callback){
-
-        if (Branch.getInstance() == null) {  //if in case Branch instance is not created. In case of user missing create instance or BranchApp in manifest
-            if (callback != null) {
-                callback.onLinkShareError(null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
-            } else {
-                BranchLogger.v("Sharing error. Branch instance is not created yet. Make sure you have initialized Branch.");
-            }
-        } else {
-            NativeShareLinkManager.getInstance().shareLink(activity, buo, linkProperties, callback);
-        }
+    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchNativeLinkShareListener callback, String title, String subject){
+            NativeShareLinkManager.getInstance().shareLink(activity, buo, linkProperties, callback, title, subject);
     }
 
     /**
@@ -1640,44 +1637,21 @@ public class Branch {
     public interface BranchNativeLinkShareListener {
 
         /**
-         * <p> Callback method to report error.</p>
+         * <p> Callback method to report error/response.</p>
          *
          * @param sharedLink    The link shared to the channel.
          * @param error         A {@link BranchError} to update errors, if there is any.
          */
-        void onLinkShareError(String sharedLink,  BranchError error);
+        void onLinkShareResponse(String sharedLink, BranchError error);
 
         /**
          * <p>Called when user select a channel for sharing a deep link.
-         * Branch will create a deep link for the selected channel and share with it after calling this
-         * method. On sharing complete, status is updated by onLinkShareResponse() callback. Consider
-         * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
-         * and sharing complete.</p>
          *
          * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
         void onChannelSelected(String channelName);
     }
 
-    /**
-     * <p>An extended version of {@link BranchNativeLinkShareListener } with callback that supports updating link data or properties after user select a channel to share
-     * This will provide the extended callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} only when sharing a link using Branch Universal Object.</p>
-     */
-    public interface ExtendedBranchNativeLinkShareListener extends BranchNativeLinkShareListener {
-        /**
-         * <p>
-         * Called when user select a channel for sharing a deep link.
-         * This method allows modifying the link data and properties by providing the params  {@link BranchUniversalObject} and {@link LinkProperties}
-         * </p>
-         *
-         * @param channelName    The name of the channel user selected for sharing a link
-         * @param buo            {@link BranchUniversalObject} BUO used for sharing link for updating any params
-         * @param linkProperties {@link LinkProperties} associated with the sharing link for updating the properties
-         * @return Return {@code true} to create link with any updates added to the data ({@link BranchUniversalObject}) or to the properties ({@link LinkProperties}).
-         * Return {@code false} otherwise.
-         */
-        boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties);
-    }
     /**
      * <p>An interface class for customizing sharing properties with selected channel.</p>
      */

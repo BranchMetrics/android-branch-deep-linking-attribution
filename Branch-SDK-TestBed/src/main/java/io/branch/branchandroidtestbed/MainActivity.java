@@ -402,16 +402,17 @@ public class MainActivity extends Activity {
                         .setDuration(100);
                 Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
                             @Override
-                            public void onLinkShareError(String sharedLink, BranchError error) {
-
+                            public void onLinkShareResponse(String sharedLink, BranchError error) {
+                                Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
                             }
 
                             @Override
                             public void onChannelSelected(String channelName) {
-
+                                Log.d("Native Share Sheet:", "Channel Selected: " + channelName);
                             }
 
-                        });
+                        },
+                        "Sharing Branch Short URL", "Using Native Chooser Dialog");
             }
         });
 
