@@ -80,7 +80,7 @@ public class NativeShareLinkManager {
     private class NativeLinkShareListenerWrapper implements Branch.BranchNativeLinkShareListener {
         private final Branch.BranchNativeLinkShareListener originalCallback_;
         private final BranchUniversalObject buo_;
-        private final String channelSelected_;
+        private String channelSelected_;
 
         NativeLinkShareListenerWrapper(Branch.BranchNativeLinkShareListener originalCallback, LinkProperties linkProperties, BranchUniversalObject buo) {
             originalCallback_ = originalCallback;

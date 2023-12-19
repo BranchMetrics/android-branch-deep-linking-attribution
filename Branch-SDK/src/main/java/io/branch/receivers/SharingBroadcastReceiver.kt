@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.Intent.EXTRA_CHOSEN_COMPONENT
 import io.branch.referral.BranchLogger
 import io.branch.referral.NativeShareLinkManager
+import io.branch.referral.util.SharingUtil
 
 class SharingBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -18,5 +19,7 @@ class SharingBroadcastReceiver: BroadcastReceiver() {
         NativeShareLinkManager.getInstance().linkShareListenerCallback?.onChannelSelected(
             clickedComponent.toString()
         )
+
+        NativeShareLinkManager.getInstance().linkShareListenerCallback?.onLinkShareResponse(SharingUtil.sharedURL, null);
     }
 }

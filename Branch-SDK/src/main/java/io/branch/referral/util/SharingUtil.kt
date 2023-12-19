@@ -8,8 +8,11 @@ import androidx.annotation.RequiresApi
 import io.branch.receivers.SharingBroadcastReceiver
 
 object SharingUtil {
+    var sharedURL: String? = ""
+
     @JvmStatic @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     fun share(text: String, title: String?, subject: String?, activity: Activity) {
+        sharedURL = text
         val immutabilityIntentFlags: Int =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_MUTABLE
