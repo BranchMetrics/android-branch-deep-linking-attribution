@@ -16,6 +16,7 @@ public interface Constants {
     String IOS_URL = "iOSUrl";
     String BUO_REFERENCE_AND_CREATE_DEP_LINK = "BUOReferenceAndCreateDeeplink";
     String CREATE_SHARE_LINK = "CreateShareLink";
+    String CREATE_NATIVE_SHARE_LINK = "CreateNativeShareLink";
     String TYPE = "type";
     String CREATE_SEND_NOTIFICATION = "CreateSendNotification";
     String CREATE_SEND_READ_DEEP_LINK = "CreateReadDeepLink";
