@@ -45,6 +45,7 @@ jobs:
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
+        timeout-minutes: 30
         run: |
           echo "Starting emulator and waiting for boot to complete."
           nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
@@ -84,6 +85,7 @@ jobs:
                   echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
               # boots and waits for the emulator to be ready
               - name: Launch Emulator
+                timeout-minutes: 30
                 run: |
                   echo "Starting emulator and waiting for boot to complete."
                   nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
@@ -142,6 +144,7 @@ jobs:
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
+        timeout-minutes: 30
         run: |
           echo "Starting emulator and waiting for boot to complete."
           nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
