@@ -7,6 +7,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
@@ -61,7 +64,9 @@ public class NativeShareLinkManager {
             });
 
         } catch (Exception e) {
-            e.printStackTrace();
+            StringWriter errors = new StringWriter();
+            e.printStackTrace(new PrintWriter(errors));
+            BranchLogger.e(errors.toString());
             if (nativeLinkShareListenerCallback_ != null) {
                 nativeLinkShareListenerCallback_.onLinkShareResponse(null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
             } else {
@@ -78,12 +83,12 @@ public class NativeShareLinkManager {
      * Class for intercepting share sheet events to report auto events on BUO
      */
     private class NativeLinkShareListenerWrapper implements Branch.BranchNativeLinkShareListener {
-        private final Branch.BranchNativeLinkShareListener originalCallback_;
+        private final Branch.BranchNativeLinkShareListener branchNativeLinkShareListener_;
         private final BranchUniversalObject buo_;
         private String channelSelected_;
 
-        NativeLinkShareListenerWrapper(Branch.BranchNativeLinkShareListener originalCallback, LinkProperties linkProperties, BranchUniversalObject buo) {
-            originalCallback_ = originalCallback;
+        NativeLinkShareListenerWrapper(Branch.BranchNativeLinkShareListener branchNativeLinkShareListener, LinkProperties linkProperties, BranchUniversalObject buo) {
+            branchNativeLinkShareListener_ = branchNativeLinkShareListener;
             buo_ = buo;
             channelSelected_ = "";
         }
@@ -101,16 +106,16 @@ public class NativeShareLinkManager {
 
             shareEvent.logEvent(Branch.getInstance().getApplicationContext());
 
-            if (originalCallback_ != null) {
-                originalCallback_.onLinkShareResponse(sharedLink, error);
+            if (branchNativeLinkShareListener_ != null) {
+                branchNativeLinkShareListener_.onLinkShareResponse(sharedLink, error);
             }
         }
 
         @Override
         public void onChannelSelected(String channelName) {
             channelSelected_ = channelName;
-            if (originalCallback_ != null) {
-                originalCallback_.onChannelSelected(channelName);
+            if (branchNativeLinkShareListener_ != null) {
+                branchNativeLinkShareListener_.onChannelSelected(channelName);
             }
         }
     }
