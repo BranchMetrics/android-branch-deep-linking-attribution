@@ -13,8 +13,6 @@ object BranchLogger {
     @JvmStatic
     var loggerCallback: IBranchLoggingCallbacks? = null
 
-    private val isDebug = BuildConfig.DEBUG;
-
     /**
      * <p>Creates a <b>Error</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
@@ -23,9 +21,10 @@ object BranchLogger {
     @JvmStatic
     fun e(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            loggerCallback?.onBranchLog(message, "ERROR")
-
-            if(isDebug) {
+            if (useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "ERROR")
+            }
+            else {
                 Log.e(TAG, message)
             }
         }
@@ -39,9 +38,10 @@ object BranchLogger {
     @JvmStatic
     fun w(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            loggerCallback?.onBranchLog(message, "WARN")
-
-            if(isDebug) {
+            if (useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "WARN")
+            }
+            else {
                 Log.w(TAG, message)
             }
         }
@@ -55,9 +55,10 @@ object BranchLogger {
     @JvmStatic
     fun i(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            loggerCallback?.onBranchLog(message, "INFO")
-
-            if(isDebug) {
+            if(useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "INFO")
+            }
+            else {
                 Log.i(TAG, message)
             }
         }
@@ -71,9 +72,10 @@ object BranchLogger {
     @JvmStatic
     fun d(message: String?) {
         if (loggingEnabled && message?.isNotEmpty() == true) {
-            loggerCallback?.onBranchLog(message, "DEBUG")
-
-            if(isDebug) {
+            if (useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "DEBUG")
+            }
+            else {
                 Log.d(TAG, message)
             }
         }
@@ -87,9 +89,10 @@ object BranchLogger {
     @JvmStatic
     fun v(message: String) {
         if (loggingEnabled && message.isNotEmpty()) {
-            loggerCallback?.onBranchLog(message, "VERBOSE")
-
-            if(isDebug) {
+            if (useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "VERBOSE")
+            }
+            else {
                 Log.v(TAG, message)
             }
         }
@@ -98,9 +101,10 @@ object BranchLogger {
     @JvmStatic
     fun logAlways(message: String) {
         if (message.isNotEmpty()) {
-            loggerCallback?.onBranchLog(message, "INFO")
-
-            if(isDebug) {
+            if (useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "INFO")
+            }
+            else {
                 Log.i(TAG, message)
             }
         }
@@ -109,11 +113,20 @@ object BranchLogger {
     @JvmStatic
     fun logException(message: String, t: Exception?) {
         if (message.isNotEmpty()) {
-            loggerCallback?.onBranchLog(message, "ERROR")
-
-            if(isDebug) {
+            if (useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "ERROR")
+            }
+            else {
                 Log.e(TAG, message, t)
             }
         }
+    }
+
+    /**
+     * If an implementation of IBranchLoggingCallbacks is passed, forward logging messages to callback
+     * Else, maintain the original behavior of Branch.enableLogging().
+     */
+    private fun useCustomLogger(): Boolean {
+        return loggerCallback != null
     }
 }
