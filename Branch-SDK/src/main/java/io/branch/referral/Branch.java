@@ -1828,6 +1828,11 @@ public class Branch {
         enableLogging(null);
     }
 
+    /**
+     * Optional interface. Implement a callback to receive logging from the SDK directly to your
+     * own logging solution. If null, and enabled, the default android.util.Log is used.
+     * @param iBranchLogging
+     */
     public static void enableLogging(IBranchLoggingCallbacks iBranchLogging){
         BranchLogger.setLoggerCallback(iBranchLogging);
         BranchLogger.logAlways(GOOGLE_VERSION_TAG);
