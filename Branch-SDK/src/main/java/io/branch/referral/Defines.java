@@ -217,7 +217,8 @@ public class Defines {
         Google_Play_Store("PlayStore"),
         Huawei_App_Gallery("AppGallery"),
         Samsung_Galaxy_Store("GalaxyStore"),
-        Xiaomi_Get_Apps("GetApps");
+        Xiaomi_Get_Apps("GetApps"),
+        Meta_Install_Referrer("MetaInstallReferrer");
 
         private final String key;
         
