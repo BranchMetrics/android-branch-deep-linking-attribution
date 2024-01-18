@@ -364,7 +364,7 @@ private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>
         if (latestReferrer.appStore == Jsonkey.Google_Play_Store.key) {
             //Deduplicate the Meta and Play Store referrers
             if (latestReferrer.latestClickTimestamp == metaReferrer.latestClickTimestamp) {
-                //metaReferrer.appStore = Jsonkey.Google_Play_Store.key
+                metaReferrer.appStore = Jsonkey.Google_Play_Store.key
                 return metaReferrer
             }
         }
@@ -373,7 +373,7 @@ private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>
     } else {
         //The Meta Referrer is view through. Return it if the Play Store referrer is organic (latestClickTimestamp is 0)
         return if (googleReferrer?.latestClickTimestamp == 0L) {
-            //metaReferrer.appStore = Jsonkey.Google_Play_Store.key
+            metaReferrer.appStore = Jsonkey.Google_Play_Store.key
             metaReferrer
         } else {
             val referrersWithoutMeta = allReferrers.filterNotNull().filterNot { it.appStore == Jsonkey.Meta_Install_Referrer.key }
