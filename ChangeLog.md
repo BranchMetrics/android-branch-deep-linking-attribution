@@ -1,6 +1,6 @@
 # Branch Android SDK change log
 - v5.8.1
-  * _*Release Branch 5.8.1*_ - Dec 11, 2023
+  * _*Release Branch 5.8.1*_ - Jan 18, 2024
     - Preserve logging to console when SDK is not in debug.
 
 - v5.8.0
