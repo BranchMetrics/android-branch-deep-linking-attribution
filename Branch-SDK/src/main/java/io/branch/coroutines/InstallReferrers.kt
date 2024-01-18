@@ -1,7 +1,6 @@
 package io.branch.coroutines
 
 import android.content.Context
-import android.database.Cursor
 import android.net.Uri
 import android.os.RemoteException
 import com.android.installreferrer.api.InstallReferrerClient
@@ -18,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import org.json.JSONException
 import org.json.JSONObject
 import java.net.URLDecoder
 
@@ -230,110 +230,92 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
     }
 }
 
-suspend fun getMetaInstallReferrerDetails(context: Context): InstallReferrerResult? {
-    return withContext(Dispatchers.Default) {
-        try {
-            val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
-            val fbAppID = context.getString(
-                context.resources.getIdentifier(
-                    "facebook_app_id",
-                    "string",
-                    context.packageName
-                )
-            )
-
-            if (fbAppID.isNullOrEmpty()) {
-                deferredReferrerDetails.complete(null)
-            }
-
-            val referrerData = queryMetaInstallReferrer(context, fbAppID)
-
-            if (referrerData != null) {
-                deferredReferrerDetails.complete(
-                    try {
-                        referrerData
-                    } catch (e: Exception) {
-                        BranchLogger.d("Error processing Meta Install Referrer: $e")
-                        null
-                    }
-                )
-            } else {
-                deferredReferrerDetails.complete(null)
-            }
-
-            deferredReferrerDetails.await()
-        } catch (exception: Exception) {
-            BranchLogger.d("Exception in getMetaInstallReferrerDetails: $exception")
+suspend fun getMetaInstallReferrerDetails(context: Context): InstallReferrerResult? = withContext(Dispatchers.Default) {
+    try {
+        val fbAppID = context.getString(
+            context.resources.getIdentifier("facebook_app_id", "string", context.packageName)
+        )
+        if (fbAppID.isNullOrEmpty()) {
+            BranchLogger.d("No Facebook App ID found in strings.xml. Can't check for Meta Install Referrer")
             null
+        } else {
+            queryMetaInstallReferrer(context, fbAppID)
         }
+    } catch (exception: Exception) {
+        BranchLogger.e("Exception in getMetaInstallReferrerDetails: $exception")
+        null
     }
 }
+private fun queryMetaInstallReferrer(context: Context, fbAppId: String): InstallReferrerResult? {
+    val facebookProvider = "content://com.facebook.katana.provider.InstallReferrerProvider/$fbAppId"
+    val instagramProvider = "content://com.instagram.contentprovider.InstallReferrerProvider/$fbAppId"
 
-fun queryMetaInstallReferrer(context: Context, fbAppId: String): InstallReferrerResult? {
-    var cursor: Cursor? = null
-    try {
-        val projection = arrayOf("install_referrer", "is_ct", "actual_timestamp")
-        var providerUri: Uri? = null
+    val facebookResult = queryProvider(context, facebookProvider)
+    val instagramResult = queryProvider(context, instagramProvider)
 
-        if (context.packageManager.resolveContentProvider(
-                "com.facebook.katana.provider.InstallReferrerProvider", 0
-            ) != null
-        ) {
-            providerUri = Uri.parse(
-                "content://com.facebook.katana.provider.InstallReferrerProvider/$fbAppId"
-            );
-        } else if (context.packageManager.resolveContentProvider(
-                "com.instagram.contentprovider.InstallReferrerProvider", 0
-            ) != null
-        ) {
-            providerUri = Uri.parse(
-                "content://com.instagram.contentprovider.InstallReferrerProvider/$fbAppId"
-            );
+    // Check both Facebook and Instagram for install referrers and return the latest one
+    if (facebookResult != null && instagramResult != null) {
+        return if (facebookResult.latestClickTimestamp > instagramResult.latestClickTimestamp) {
+            facebookResult
         } else {
-            BranchLogger.d("No content provider found for Meta Install Referrer")
-            return null;
+            instagramResult
         }
+    }
 
-        cursor = context.contentResolver.query(providerUri, projection, null, null, null)
-        if (cursor == null || !cursor.moveToFirst()) {
-            BranchLogger.d("queryMetaInstallReferrer cursor is empty or null")
+    return facebookResult ?: instagramResult
+}
+
+private fun queryProvider(context: Context, provider: String): InstallReferrerResult? {
+    val projection = arrayOf("install_referrer", "is_ct", "actual_timestamp")
+
+    context.contentResolver.query(Uri.parse(provider), projection, null, null, null)?.use { cursor ->
+
+        if (!cursor.moveToFirst()) {
+            BranchLogger.d("getMetaInstallReferrerDetails - cursor is empty or null for provider $provider")
             return null
         }
 
-        val installReferrerIndex: Int = cursor.getColumnIndex("install_referrer")
-        val timestampIndex: Int = cursor.getColumnIndex("actual_timestamp")
-        val isClickThroughIndex: Int = cursor.getColumnIndex("is_ct")
+        val timestampIndex = cursor.getColumnIndex("actual_timestamp")
+        val clickThroughIndex = cursor.getColumnIndex("is_ct")
+        val referrerIndex = cursor.getColumnIndex("install_referrer")
 
-        val actualTimestamp: Long =
-            cursor.getLong(timestampIndex)
-        val isClickThrough: Int = cursor.getInt(isClickThroughIndex);
+        if (timestampIndex == -1 || clickThroughIndex == -1 || referrerIndex == -1) {
+            BranchLogger.d("getMetaInstallReferrerDetails - Required column not found in cursor for provider $provider")
+            return null
+        }
 
-        val installReferrerString = cursor.getString(installReferrerIndex);
+        val actualTimestamp = cursor.getLong(timestampIndex)
+        val isClickThrough = cursor.getInt(clickThroughIndex) == 1
+        val installReferrerString = cursor.getString(referrerIndex)
 
-        val decodedUrl = URLDecoder.decode(installReferrerString, "UTF-8")
-        val utmContentValue = decodedUrl.split("&")
-            .firstOrNull { it.startsWith("utm_content=") }
-            ?.substringAfter("utm_content=")
-            ?: return null
+        val utmContentValue = URLDecoder.decode(installReferrerString, "UTF-8")
+            .substringAfter("utm_content=", "")
+        if (utmContentValue.isEmpty()) {
+            BranchLogger.d("getMetaInstallReferrerDetails - utm_content is empty for provider $provider")
+            return null
+        }
 
-        val json = JSONObject(utmContentValue)
-        val latestInstallTimestamp = json.getLong("t")
+        BranchLogger.i("getMetaInstallReferrerDetails - Got Meta Install Referrer from provider $provider: $installReferrerString")
 
-        return InstallReferrerResult(
-            Jsonkey.Meta_Install_Referrer.key,
-            latestInstallTimestamp,
-            installReferrerString,
-            actualTimestamp
-        )
-    } catch (e: Exception) {
-        BranchLogger.e("Exception in queryMetaInstallReferrer: $e")
-        return null
-    } finally {
-        cursor?.close()
+        return try {
+            val json = JSONObject(utmContentValue)
+            val latestInstallTimestamp = json.getLong("t")
+
+            InstallReferrerResult(
+                Jsonkey.Meta_Install_Referrer.key,
+                latestInstallTimestamp,
+                installReferrerString,
+                actualTimestamp,
+                isClickThrough
+            )
+        } catch (e: JSONException) {
+            BranchLogger.e("getMetaInstallReferrerDetails - JSONException in queryProvider: $e")
+            null
+        }
     }
+
+    return null
 }
-
-
 
 /**
  * Invokes the source install referrer's coroutines in parallel.
@@ -348,8 +330,9 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
         val metaReferrer = async { getMetaInstallReferrerDetails(context) }
 
         val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await(), metaReferrer.await())
+        BranchLogger.d("MetaTesting: allReferrers: $allReferrers")
         val latestReferrer = getLatestValidReferrerStore(allReferrers)
-
+        BranchLogger.d("MetaTesting: latestReferrer: $latestReferrer")
         latestReferrer
     }
 }
@@ -364,15 +347,39 @@ fun getLatestValidReferrerStore(allReferrers: List<InstallReferrerResult?>): Ins
         it.latestInstallTimestamp
     }
 
-    // Return the Meta install referrer if it shares the same click timestamp as the latest PlayStore install referrer.
-    if (result?.appStore == Jsonkey.Google_Play_Store.key) {
-        val metaReferrer = allReferrers.filterNotNull().firstOrNull { it.appStore == Jsonkey.Meta_Install_Referrer.key }
-        if (result != null) {
-            if (metaReferrer != null && metaReferrer.latestClickTimestamp == result.latestClickTimestamp) {
-                return metaReferrer
-            }
-        }
+    if (allReferrers.filterNotNull().any { it.appStore == Jsonkey.Meta_Install_Referrer.key }) {
+        return handleMetaInstallReferrer(allReferrers, result!!)
     }
 
     return result
+}
+
+//Handle the deduplication and click vs view logic for Meta install referrer
+private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>, latestReferrer: InstallReferrerResult): InstallReferrerResult? {
+    val metaReferrer = allReferrers.filterNotNull().firstOrNull { it.appStore == Jsonkey.Meta_Install_Referrer.key }
+    val googleReferrer = allReferrers.filterNotNull().firstOrNull { it.appStore == Jsonkey.Google_Play_Store.key }
+
+    if (metaReferrer!!.isClickThrough) {
+        //The Meta Referrer is click through. Return it if it or the matching Play Store referrer is the latest
+        if (latestReferrer.appStore == Jsonkey.Google_Play_Store.key) {
+            //Deduplicate the Meta and Play Store referrers
+            if (latestReferrer.latestClickTimestamp == metaReferrer.latestClickTimestamp) {
+                //metaReferrer.appStore = Jsonkey.Google_Play_Store.key
+                return metaReferrer
+            }
+        }
+
+        return latestReferrer
+    } else {
+        //The Meta Referrer is view through. Return it if the Play Store referrer is organic (latestClickTimestamp is 0)
+        return if (googleReferrer?.latestClickTimestamp == 0L) {
+            //metaReferrer.appStore = Jsonkey.Google_Play_Store.key
+            metaReferrer
+        } else {
+            val referrersWithoutMeta = allReferrers.filterNotNull().filterNot { it.appStore == Jsonkey.Meta_Install_Referrer.key }
+            referrersWithoutMeta.maxByOrNull {
+                it.latestInstallTimestamp
+            }
+        }
+    }
 }
