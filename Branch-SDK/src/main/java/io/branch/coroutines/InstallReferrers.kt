@@ -387,5 +387,5 @@ private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>
             }
         }
     }
-    
+
 }
