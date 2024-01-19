@@ -335,9 +335,7 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
         val metaReferrer = async { getMetaInstallReferrerDetails(context) }
 
         val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await(), metaReferrer.await())
-        BranchLogger.d("MetaTesting: allReferrers: $allReferrers")
         val latestReferrer = getLatestValidReferrerStore(allReferrers)
-        BranchLogger.d("MetaTesting: latestReferrer: $latestReferrer")
         latestReferrer
     }
 }
