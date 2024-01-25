@@ -9,6 +9,7 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
         Branch.enableLogging();
+        Branch.setFBAppID("123456789");
         Branch.getAutoInstance(this);
     }
 }

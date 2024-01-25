@@ -8,6 +8,7 @@ import com.android.installreferrer.api.InstallReferrerStateListener
 import io.branch.data.InstallReferrerResult
 import io.branch.referral.BranchLogger
 import io.branch.referral.Defines.Jsonkey
+import io.branch.referral.PrefHelper
 import io.branch.referral.util.classExists
 import io.branch.referral.util.huaweiInstallReferrerClass
 import io.branch.referral.util.samsungInstallReferrerClass
@@ -232,10 +233,9 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
 
 suspend fun getMetaInstallReferrerDetails(context: Context): InstallReferrerResult? = withContext(Dispatchers.Default) {
     try {
-        val fbAppID = context.getString(
-            context.resources.getIdentifier("facebook_app_id", "string", context.packageName)
-        )
-        if (fbAppID.isEmpty()) {
+        val fbAppID = PrefHelper.fbAppId_
+
+        if (fbAppID.isNullOrEmpty()) {
             BranchLogger.d("No Facebook App ID found in strings.xml. Can't check for Meta Install Referrer")
             null
         } else {
