@@ -1,9 +1,9 @@
 import  org.gradle.api.tasks.testing.logging.*
 
 plugins {
-    id("com.android.library") version "8.0.2" apply false
-    id("com.android.application") version "8.0.2" apply false
-    id("org.jetbrains.kotlin.android") version "1.6.20" apply false
+    id("com.android.library") version "8.1.2" apply false
+    id("com.android.application") version "8.1.2" apply false
+    id("org.jetbrains.kotlin.android") version "1.6.21" apply false
 }
 
 val VERSION_NAME: String by project
