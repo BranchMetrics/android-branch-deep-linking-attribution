@@ -236,7 +236,7 @@ suspend fun getMetaInstallReferrerDetails(context: Context): InstallReferrerResu
         val fbAppID = PrefHelper.fbAppId_
 
         if (fbAppID.isNullOrEmpty()) {
-            BranchLogger.d("No Facebook App ID found in strings.xml. Can't check for Meta Install Referrer")
+            BranchLogger.d("No Facebook App ID provided. Can't check for Meta Install Referrer")
             null
         } else {
             queryMetaInstallReferrer(context, fbAppID)
