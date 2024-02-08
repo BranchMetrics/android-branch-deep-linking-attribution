@@ -217,7 +217,10 @@ public class Defines {
         Google_Play_Store("PlayStore"),
         Huawei_App_Gallery("AppGallery"),
         Samsung_Galaxy_Store("GalaxyStore"),
-        Xiaomi_Get_Apps("GetApps");
+        Xiaomi_Get_Apps("GetApps"),
+        DMA_EEA_Region("dma_eea_region"),
+        DMA_Ad_Personalization_Consent("dma_ad_personalization_consent"),
+        DMA_Ad_User_Data_Usage_Consent("dma_ad_user_data_usage_consent");
 
         private final String key;
         
