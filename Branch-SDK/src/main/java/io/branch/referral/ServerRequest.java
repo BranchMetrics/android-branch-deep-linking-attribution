@@ -177,9 +177,19 @@ public abstract class ServerRequest {
     void addDMAParams() {
         if (prefHelper_.isDMAParamsInitialized()) {
             try {
-                params_.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
-                params_.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
-                params_.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
+                BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
+                if (version == BRANCH_API_VERSION.V1) {
+                    params_.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                    params_.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                    params_.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
+                } else {
+                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                    if (userDataObj != null) {
+                        userDataObj.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                        userDataObj.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                        userDataObj.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
+                    }
+                }
             } catch (JSONException e) {
                 BranchLogger.d(e.getMessage());
             }
