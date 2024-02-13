@@ -109,9 +109,9 @@ public class PrefHelper {
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
     private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
-    private static final String KEY_EEA_REGION = "bnc_eea_region";
-    private static final String KEY_AD_PERSONALIZATION_CONSENT = "bnc_ad_personalization_consent";
-    private static final String KEY_AD_USER_DATA_USAGE_CONSENT = "bnc_ad_user_data_usage_consent";
+    private static final String KEY_DMA_EEA = "bnc_dma_eea";
+    private static final String KEY_DMA_AD_PERSONALIZATION = "bnc_dma_ad_personalization";
+    private static final String KEY_DMA_AD_USER_DATA = "bnc_dma_ad_user_data";
     private static final String KEY_LOG_IAP_AS_EVENTS = "bnc_log_iap_as_events";
 
     static final String KEY_ORIGINAL_INSTALL_TIME = "bnc_original_install_time";
@@ -959,7 +959,7 @@ public class PrefHelper {
      * Returns true if DMA params - KEY_EEA_REGION value exist in pref helper.
      */
     boolean isDMAParamsInitialized() {
-        if(hasPrefValue(KEY_EEA_REGION)){
+        if(hasPrefValue(KEY_DMA_EEA)){
             return true;
         }
         return false;
@@ -969,11 +969,11 @@ public class PrefHelper {
      * <p>Internal setter/getter func for key eea_region </p>
      */
     void setEEARegion(boolean isEEARegion) {
-        setBool(KEY_EEA_REGION, isEEARegion);
+        setBool(KEY_DMA_EEA, isEEARegion);
     }
 
     boolean getEEARegion() {
-        return getBool(KEY_EEA_REGION);
+        return getBool(KEY_DMA_EEA);
     }
 
      /**
@@ -981,11 +981,11 @@ public class PrefHelper {
      *  @param hasAdPersonalizationConsent {@code true} if user has given consent.
      */
     void setAdPersonalizationConsent(boolean hasAdPersonalizationConsent) {
-        setBool(KEY_AD_PERSONALIZATION_CONSENT, hasAdPersonalizationConsent);
+        setBool(KEY_DMA_AD_PERSONALIZATION, hasAdPersonalizationConsent);
     }
 
     boolean getAdPersonalizationConsent() {
-        return getBool(KEY_AD_PERSONALIZATION_CONSENT);
+        return getBool(KEY_DMA_AD_PERSONALIZATION);
     }
 
     /**
@@ -993,11 +993,11 @@ public class PrefHelper {
      *  @param hasAdUserDataUsageConsent {@code true} if user has given consent.
      */
     void setAdUserDataUsageConsent(boolean hasAdUserDataUsageConsent) {
-        setBool(KEY_AD_USER_DATA_USAGE_CONSENT, hasAdUserDataUsageConsent);
+        setBool(KEY_DMA_AD_USER_DATA, hasAdUserDataUsageConsent);
     }
 
     boolean getAdUserDataUsageConsent() {
-        return getBool(KEY_AD_USER_DATA_USAGE_CONSENT);
+        return getBool(KEY_DMA_AD_USER_DATA);
     }
 
 

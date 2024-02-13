@@ -218,9 +218,9 @@ public class Defines {
         Huawei_App_Gallery("AppGallery"),
         Samsung_Galaxy_Store("GalaxyStore"),
         Xiaomi_Get_Apps("GetApps"),
-        DMA_EEA_Region("dma_eea_region"),
-        DMA_Ad_Personalization_Consent("dma_ad_personalization_consent"),
-        DMA_Ad_User_Data_Usage_Consent("dma_ad_user_data_usage_consent");
+        DMA_EEA("dma_eea"),
+        DMA_Ad_Personalization("dma_ad_personalization"),
+        DMA_Ad_User_Data("dma_ad_user_data");
 
         private final String key;
         

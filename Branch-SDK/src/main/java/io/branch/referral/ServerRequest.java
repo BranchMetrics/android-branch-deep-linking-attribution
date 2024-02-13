@@ -177,25 +177,9 @@ public abstract class ServerRequest {
     void addDMAParams() {
         if (prefHelper_.isDMAParamsInitialized()) {
             try {
-               boolean isEEARegion = prefHelper_.getEEARegion();
-               boolean hasAdPersonalizationConsent = prefHelper_.getAdPersonalizationConsent();
-               boolean hasAdUserDataUsageConsent = prefHelper_.getAdUserDataUsageConsent();
-
-                params_.put(Defines.Jsonkey.DMA_EEA_Region.getKey(), isEEARegion);
-
-                if (isEEARegion) {
-                    params_.put(Defines.Jsonkey.DMA_Ad_Personalization_Consent.getKey(), hasAdPersonalizationConsent);
-                    params_.put(Defines.Jsonkey.DMA_Ad_User_Data_Usage_Consent.getKey(), hasAdUserDataUsageConsent);
-                } else {
-                    if (!hasAdPersonalizationConsent) {
-                        params_.put(Defines.Jsonkey.DMA_Ad_Personalization_Consent.getKey(), false);
-                    }
-
-                    if (!hasAdUserDataUsageConsent) {
-                        params_.put(Defines.Jsonkey.DMA_Ad_User_Data_Usage_Consent.getKey(), false);
-                    }
-                }
-
+                params_.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                params_.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                params_.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
             } catch (JSONException e) {
                 BranchLogger.d(e.getMessage());
             }
