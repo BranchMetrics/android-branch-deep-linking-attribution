@@ -28,6 +28,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         try {
             setPost(new JSONObject());
         } catch (JSONException ex) {
+            BranchLogger.w("Caught JSONException " + ex.getMessage());
             ex.printStackTrace();
             constructError_ = true;
         }
@@ -53,7 +54,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 getPost().put(Defines.Jsonkey.LinkClickID.getKey(), AppStoreReferrer.getInstallationID());
             }
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w(e.getMessage());
         }
     }
     
@@ -97,7 +98,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
             
         } catch (Exception ex) {
-            ex.printStackTrace();
+            BranchLogger.w("Caught JSONException " + ex.getMessage());
         }
         onInitSessionCompleted(resp, branch);
     }
@@ -109,7 +110,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             try {
                 obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
             } catch (JSONException ex) {
-                ex.printStackTrace();
+                BranchLogger.w("Caught JSONException " + ex.getMessage());
             }
             callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch. " + causeMsg, statusCode));
         }
@@ -144,6 +145,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
     @Override
     public boolean shouldRetryOnFail() {
-        return true;   //Install request needs to retry on failure.
+        return false;
     }
 }

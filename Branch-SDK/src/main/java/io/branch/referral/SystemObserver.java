@@ -105,7 +105,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 packageName = packageInfo.packageName;
             } catch (Exception e) {
-                BranchLogger.logException("Error obtaining PackageName", e);
+                BranchLogger.e("Caught Exception, error obtaining PackageName " + e.getMessage());
             }
         }
         return packageName;
@@ -123,7 +123,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 appVersion = packageInfo.versionName;
             } catch (Exception e) {
-                BranchLogger.logException("Error obtaining AppVersion", e);
+                BranchLogger.e("Caught Exception, error obtaining AppVersion " + e.getMessage());
             }
         }
         return (TextUtils.isEmpty(appVersion) ? BLANK : appVersion);
@@ -141,7 +141,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 firstTime = packageInfo.firstInstallTime;
             } catch (Exception e) {
-                BranchLogger.logException("Error obtaining FirstInstallTime", e);
+                BranchLogger.e("Caught Exception, error obtaining FirstInstallTime " + e.getMessage());
             }
         }
 
@@ -166,7 +166,7 @@ abstract class SystemObserver {
 
                 isInstalled = (!list.isEmpty());
             } catch (Exception e) {
-                BranchLogger.logException("Error obtaining PackageInfo", e);
+                BranchLogger.e("Caught Exception, error obtaining PackageInfo " + e.getMessage());
             }
         }
 
@@ -185,7 +185,7 @@ abstract class SystemObserver {
                 final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 lastTime = packageInfo.lastUpdateTime;
             } catch (Exception e) {
-                BranchLogger.logException("Error obtaining LastUpdateTime", e);
+                BranchLogger.e("Caught Exception, Error obtaining LastUpdateTime " + e.getMessage());
             }
         }
 
@@ -267,6 +267,7 @@ abstract class SystemObserver {
             Object result = GoogleisPlayServicesAvailable.invoke(GoogleApiAvailabilityInstance, context);
             return (result instanceof Integer) && (Integer) result == 0;
         } catch (Exception e) {
+            BranchLogger.e("Caught Exception " + e.getMessage());
             return false;
         }
     }
@@ -484,7 +485,7 @@ abstract class SystemObserver {
                         }
                     }
                     catch (Exception e) {
-                        BranchLogger.d("Error in continuation: " + e);
+                        BranchLogger.e("Caught Exception. Error in continuation: " + e.getMessage());
                     }
                     finally {
                         if (callback != null) {
@@ -533,7 +534,7 @@ abstract class SystemObserver {
                         }
                     }
                     catch (Exception e) {
-                        BranchLogger.d("Error in continuation: " + e);
+                        BranchLogger.e("Caught Exception. Error in continuation: " + e.getMessage());
                     }
                     finally {
                         if (callback != null) {
@@ -577,7 +578,7 @@ abstract class SystemObserver {
                     }
                 }
                 catch (Exception e){
-                    BranchLogger.d("Error in continuation: " + e);
+                    BranchLogger.e("Caught Exception. Error in continuation: " + e.getMessage());
                 }
                 finally {
                     if (callback != null) {
@@ -607,7 +608,7 @@ abstract class SystemObserver {
             });
         }
         catch(Exception e){
-            BranchLogger.d(e.getMessage());
+            BranchLogger.e("Caught Exception " + e.getMessage());
         }
         finally {
             if(callback != null){

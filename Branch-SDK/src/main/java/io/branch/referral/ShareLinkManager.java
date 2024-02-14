@@ -82,7 +82,7 @@ class ShareLinkManager {
         try {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught Exception" + e.getMessage());
             if (callback_ != null) {
                 callback_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
             } else {

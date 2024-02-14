@@ -14,7 +14,7 @@ suspend fun getGoogleAdvertisingInfoObject(context: Context): AdvertisingIdClien
             AdvertisingIdClient.getAdvertisingIdInfo(context)
         }
         catch (exception: Exception) {
-            BranchLogger.d("getGoogleAdvertisingInfoObject exception: $exception")
+            BranchLogger.w("Caught getGoogleAdvertisingInfoObject exception: $exception")
             null
         }
     }
@@ -26,7 +26,7 @@ suspend fun getHuaweiAdvertisingInfoObject(context: Context):  com.huawei.hms.ad
             com.huawei.hms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo(context)
         }
         catch (exception: Exception) {
-            BranchLogger.d("getHuaweiAdvertisingInfoObject exception: $exception")
+            BranchLogger.w("Caught getHuaweiAdvertisingInfoObject exception: $exception")
             null
         }
     }
@@ -42,7 +42,7 @@ suspend fun getAmazonFireAdvertisingInfoObject(context: Context): Pair<Int, Stri
             )
         }
         catch (exception: Exception) {
-            BranchLogger.d("getAmazonFireAdvertisingInfo exception: $exception")
+            BranchLogger.w("getAmazonFireAdvertisingInfo exception: $exception")
             null
         }
     }

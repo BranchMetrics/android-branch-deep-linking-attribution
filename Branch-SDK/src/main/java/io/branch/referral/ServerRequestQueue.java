@@ -126,7 +126,7 @@ public class ServerRequestQueue {
                         }
                     }
                 } catch (JSONException e) {
-                    BranchLogger.d(e.getMessage());
+                    BranchLogger.w("Caught JSONException " + e.getMessage());
                 }
             }
         }
@@ -175,7 +175,7 @@ public class ServerRequestQueue {
             try {
                 req = queue.get(0);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.w("Caught IndexOutOfBoundsException |  NoSuchElementException " + e.getMessage());
             }
         }
         return req;
@@ -207,7 +207,7 @@ public class ServerRequestQueue {
             try {
                 req = queue.get(index);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.w("Caught IndexOutOfBoundsException |  NoSuchElementException " + e.getMessage());
             }
         }
         return req;
@@ -231,7 +231,7 @@ public class ServerRequestQueue {
                 queue.add(index, request);
                 persist();
             } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.w("Caught IndexOutOfBoundsException " + e.getMessage());
             }
         }
     }
@@ -253,7 +253,7 @@ public class ServerRequestQueue {
                 req = queue.remove(index);
                 persist();
             } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.w("Caught IndexOutOfBoundsException " + e.getMessage());
             }
         }
         return req;
@@ -273,7 +273,7 @@ public class ServerRequestQueue {
                 isRemoved = queue.remove(request);
                 persist();
             } catch (UnsupportedOperationException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.w("Caught UnsupportedOperationException " + e.getMessage());
             }
         }
         return isRemoved;
@@ -288,7 +288,7 @@ public class ServerRequestQueue {
                 queue.clear();
                 persist();
             } catch (UnsupportedOperationException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.w("Caught UnsupportedOperationException " + e.getMessage());
             }
         }
     }
@@ -392,7 +392,7 @@ public class ServerRequestQueue {
                 serverSema_.release();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught Exception " + e.getMessage());
         }
     }
 
@@ -454,7 +454,7 @@ public class ServerRequestQueue {
                 }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
     }
 
@@ -486,6 +486,7 @@ public class ServerRequestQueue {
                 postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", ""));
             }
         } catch (InterruptedException e) {
+            BranchLogger.w("Caught InterruptedException " + e.getMessage());
             postTask.cancel(true);
             postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", e.getMessage()));
         }
@@ -634,7 +635,7 @@ public class ServerRequestQueue {
                     final String url = respJson.getString("url");
                     Branch.getInstance().linkCache_.put(postBody, url);
                 } catch (JSONException ex) {
-                    ex.printStackTrace();
+                    BranchLogger.w("Caught JSONException " + ex.getMessage());
                 }
             } else if (thisReq_ instanceof ServerRequestLogout) {
                 //On Logout clear the link cache and all pending requests
@@ -720,6 +721,7 @@ public class ServerRequestQueue {
             boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
             // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
             // remove it from the queue
+            BranchLogger.d(serverResponse + " onRequestFailed Retry code is " + status + " " +unretryableErrorCode);
             if (unretryableErrorCode || !thisReq_.shouldRetryOnFail() || (thisReq_.currentRetryCount >= Branch.getInstance().prefHelper_.getNoConnectionRetryMax())) {
                 Branch.getInstance().requestQueue_.remove(thisReq_);
             } else {

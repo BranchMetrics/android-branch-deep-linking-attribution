@@ -139,7 +139,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                 json.put(param.name.toString(), paramDict)
             }
         } catch (e: JSONException) {
-            BranchLogger.logException("Exception when serializing JSON for referring URL query parameters", e)
+            BranchLogger.e("Caught JSONException when serializing JSON for referring URL query parameters " + e.message)
         }
 
         return json
@@ -167,7 +167,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                         val timestampStr = temp.getString("timestamp")
                         param.timestamp = dateFormat.parse(timestampStr)
                     } catch (e: ParseException) {
-                        BranchLogger.logException("Exception when parsing referring URL query parameter timestamp", e)
+                        BranchLogger.e("Caught JSONException when parsing referring URL query parameter timestamp " + e.message)
                     }
                 }
 
@@ -186,7 +186,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                 }
             }
         } catch (e: JSONException) {
-            BranchLogger.logException("Exception when deserializing JSON for referring URL query parameters", e)
+            BranchLogger.e("Caught JSONException when deserializing JSON for referring URL query parameters " + e.message)
         }
 
         return result

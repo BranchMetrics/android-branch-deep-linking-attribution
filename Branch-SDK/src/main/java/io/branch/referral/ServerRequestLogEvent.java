@@ -49,7 +49,7 @@ public class ServerRequestLogEvent extends ServerRequest {
             }
             setPost(reqBody);
         } catch (JSONException e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         updateEnvironment(context, reqBody);
     }

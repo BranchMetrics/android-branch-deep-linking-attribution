@@ -134,7 +134,7 @@ public class ServerResponse {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.e("Caught JSONException " + e.getMessage());
         }
         return causeMsg;
     }

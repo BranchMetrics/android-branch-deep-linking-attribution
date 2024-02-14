@@ -2446,7 +2446,7 @@ public class Branch {
                 if (succeeded) {
                     BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
                 } else {
-                    BranchLogger.logException("Cannot log IAP event. Billing client setup failed", new Exception("Billing Client Setup Failed"));
+                    BranchLogger.e("Cannot log IAP event. Billing client setup failed");
                 }
                 return null;
             });

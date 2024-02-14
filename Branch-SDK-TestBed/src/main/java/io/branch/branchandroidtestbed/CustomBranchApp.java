@@ -16,7 +16,7 @@ public final class CustomBranchApp extends Application {
                 Log.v( "CustomTag", logMessage);
             }
         };
-        Branch.enableLogging(iBranchLoggingCallbacks);
+        Branch.enableLogging();
         Branch.getAutoInstance(this);
     }
 }

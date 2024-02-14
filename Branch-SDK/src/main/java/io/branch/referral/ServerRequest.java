@@ -259,12 +259,13 @@ public abstract class ServerRequest {
                     }
                     extendedPost.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
                 } catch (JSONException e) {
-                    BranchLogger.d(e.getMessage());
+                    BranchLogger.w("Caught JSONException " + e.getMessage());
                 }
             }
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         } catch (ConcurrentModificationException ex) {
+            BranchLogger.w("Caught ConcurrentModificationException " + ex.getMessage());
             extendedPost = params_;
         }
         return extendedPost;
@@ -289,7 +290,7 @@ public abstract class ServerRequest {
         try {
             params_.put(paramKey, paramValue);
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
     }
     
@@ -308,6 +309,7 @@ public abstract class ServerRequest {
             json.put(POST_KEY, params_);
             json.put(POST_PATH_KEY, requestPath_.getPath());
         } catch (JSONException e) {
+            BranchLogger.w("Caught JSONException " + e.getMessage());
             return null;
         }
         return json;
@@ -332,6 +334,7 @@ public abstract class ServerRequest {
                 post = json.getJSONObject(POST_KEY);
             }
         } catch (JSONException e) {
+            BranchLogger.w("Caught JSONException " + e.getMessage());
             // it's OK for post to be null
         }
         
@@ -340,6 +343,7 @@ public abstract class ServerRequest {
                 requestPath = json.getString(POST_PATH_KEY);
             }
         } catch (JSONException e) {
+            BranchLogger.w("Caught JSONException " + e.getMessage());
             // it's OK for post to be null
         }
 
@@ -348,7 +352,7 @@ public abstract class ServerRequest {
                 initiatedByClient = json.getBoolean(INITIATED_BY_CLIENT);
             }
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         
         if (!TextUtils.isEmpty(requestPath)) {
@@ -430,7 +434,7 @@ public abstract class ServerRequest {
                 }
             }
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
     }
 
@@ -449,7 +453,7 @@ public abstract class ServerRequest {
             JSONObject advertisingIdsObject = new JSONObject().put(key, aid);
             params_.put(Defines.Jsonkey.AdvertisingIDs.getKey(), advertisingIdsObject);
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
     }
 
@@ -475,7 +479,7 @@ public abstract class ServerRequest {
                 }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
     }
     
@@ -493,7 +497,7 @@ public abstract class ServerRequest {
                     userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
                     userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
                 } catch (JSONException e) {
-                BranchLogger.d(e.getMessage());
+                    BranchLogger.w("Caught JSONException " + e.getMessage());
             }
             }
         }
@@ -533,7 +537,7 @@ public abstract class ServerRequest {
             }
             params_.put(Defines.Jsonkey.Metadata.getKey(), metadata);
         } catch (JSONException e) {
-           BranchLogger.v("Could not merge metadata, ignoring user metadata.");
+           BranchLogger.w("Caught JSONException. Could not merge metadata, ignoring user metadata. " + e.getMessage());
         }
     }
     
@@ -703,7 +707,7 @@ public abstract class ServerRequest {
                 }
 
             } catch (Exception e) {
-                BranchLogger.logException("Caught exception in onPreExecute: ", e);
+                BranchLogger.e("Caught exception in onPreExecute: " + e.getMessage() + " stacktrace " + BranchLogger.stackTraceToString(e));
             }
         }
     }

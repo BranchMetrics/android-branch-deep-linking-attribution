@@ -2,6 +2,11 @@ package io.branch.referral
 
 import android.util.Log
 import io.branch.interfaces.IBranchLoggingCallbacks
+import java.io.PrintWriter
+
+import java.io.StringWriter
+
+import java.io.Writer
 
 object BranchLogger {
 
@@ -110,17 +115,6 @@ object BranchLogger {
         }
     }
 
-    @JvmStatic
-    fun logException(message: String, t: Exception?) {
-        if (message.isNotEmpty()) {
-            if (useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "ERROR")
-            }
-            else {
-                Log.e(TAG, message, t)
-            }
-        }
-    }
 
     /**
      * If an implementation of IBranchLoggingCallbacks is passed, forward logging messages to callback
@@ -128,5 +122,13 @@ object BranchLogger {
      */
     private fun useCustomLogger(): Boolean {
         return loggerCallback != null
+    }
+
+    @JvmStatic
+    fun stackTraceToString(exception: java.lang.Exception): String {
+        val writer: Writer = StringWriter()
+        exception.printStackTrace(PrintWriter(writer))
+
+        return writer.toString()
     }
 }

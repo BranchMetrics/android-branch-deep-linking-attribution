@@ -91,7 +91,7 @@ class ServerRequestCreateUrl extends ServerRequest {
             linkPost_.remove("hardware_id");
 
         } catch (JSONException ex) {
-            ex.printStackTrace();
+            BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;
         }
     }
@@ -127,7 +127,7 @@ class ServerRequestCreateUrl extends ServerRequest {
                 callback_.onLinkCreate(url, null);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            BranchLogger.w("Caught JSONException " + ex.getMessage());
         }
     }
 

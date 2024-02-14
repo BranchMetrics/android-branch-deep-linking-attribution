@@ -119,7 +119,7 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
             }
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
     }
 
@@ -232,7 +232,7 @@ class DeviceInfo {
             }
 
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
     }
 
@@ -306,7 +306,7 @@ class DeviceInfo {
                 Branch._userAgentString = WebSettings.getDefaultUserAgent(context);
             }
             catch (Exception exception) {
-                BranchLogger.v(exception.getMessage());
+                BranchLogger.e("Caught exception " + exception.getMessage() + " stacktrace " + BranchLogger.stackTraceToString(exception));
                 // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
                 // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
             }
@@ -336,7 +336,7 @@ class DeviceInfo {
                     w.destroy();
                 }
                 catch (Exception e) {
-                    BranchLogger.v(e.getMessage());
+                    BranchLogger.w("Caught Exception " + e.getMessage());
                 }
 
             }

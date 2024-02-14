@@ -38,7 +38,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
                                 InstallReferrerResult(Jsonkey.Google_Play_Store.key, result.installBeginTimestampSeconds, result.installReferrer, result.referrerClickTimestampSeconds)
                             }
                             catch (e: Exception) {
-                                BranchLogger.d("getGooglePlayStoreReferrerDetails installReferrer exception: $e")
+                                BranchLogger.w("Caught getGooglePlayStoreReferrerDetails installReferrer exception: $e")
                                 null
                             }
                         )
@@ -60,7 +60,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
             deferredReferrerDetails.await()
         }
         catch (exception: Exception) {
-            BranchLogger.d("getGooglePlayStoreReferrerDetails exception: $exception")
+            BranchLogger.w("Caught getGooglePlayStoreReferrerDetails exception: $exception")
             null
         }
     }

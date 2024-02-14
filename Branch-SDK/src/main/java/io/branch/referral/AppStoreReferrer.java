@@ -67,10 +67,9 @@ public class AppStoreReferrer {
                 }
 
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                BranchLogger.w("Caught JSONException " + e.getMessage());
             } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-                BranchLogger.v("Illegal characters in url encoded string");
+                BranchLogger.w("Caught IllegalArgumentException " + e.getMessage());
             }
         }
     }

@@ -44,7 +44,7 @@ class ServerRequestIdentifyUserRequest extends ServerRequest {
             post.put(Defines.Jsonkey.Identity.getKey(), userId);
             setPost(post);
         } catch (JSONException ex) {
-            ex.printStackTrace();
+            BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;
         }
     }
