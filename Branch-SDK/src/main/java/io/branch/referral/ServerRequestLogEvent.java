@@ -93,6 +93,6 @@ public class ServerRequestLogEvent extends ServerRequest {
     }
 
     public boolean shouldRetryOnFail() {
-        return true; // Branch event need to be retried on failure.
+        return false; // Branch event need to be retried on failure.
     }
 }
