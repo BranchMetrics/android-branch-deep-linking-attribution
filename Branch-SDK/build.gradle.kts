@@ -62,9 +62,8 @@ dependencies {
 }
 
 val VERSION_NAME: String by project
-val ANDROID_BUILD_SDK_VERSION: String by project
-val ANDROID_BUILD_TARGET_SDK_MINIMUM: String by project
-val ANDROID_BUILD_TARGET_SDK_VERSION: String by project
+val ANDROID_BUILD_SDK_VERSION_COMPILE: String by project
+val ANDROID_BUILD_SDK_VERSION_MINIMUM: String by project
 val VERSION_CODE: String by project
 
 fun isReleaseBuild(): Boolean {
@@ -72,11 +71,10 @@ fun isReleaseBuild(): Boolean {
 }
 
 android {
-    compileSdk = ANDROID_BUILD_SDK_VERSION.toInt()
+    compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
 
     defaultConfig {
-        minSdk = ANDROID_BUILD_TARGET_SDK_MINIMUM.toInt()
-        targetSdk = ANDROID_BUILD_TARGET_SDK_VERSION.toInt()
+        minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("proguard-consumer.txt")
     }

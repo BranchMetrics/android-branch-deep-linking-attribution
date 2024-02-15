@@ -103,7 +103,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         } catch (SocketException ex) {
             BranchLogger.v("Http connect exception: " + ex.getMessage());
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
-
         } catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
             if (retryNumber < prefHelper.getRetryCount()) {
@@ -235,10 +234,10 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
             } else {
-                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, Log.getStackTraceString(ex));
+                throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, ex.getMessage());
             }
         } catch(InterruptedIOException ex){
-            BranchLogger.v("Encountered exception while attempting network request: " + ex);
+            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
             // When the thread times out before or while sending the request
             if (retryNumber < prefHelper.getRetryCount()) {
                 try {

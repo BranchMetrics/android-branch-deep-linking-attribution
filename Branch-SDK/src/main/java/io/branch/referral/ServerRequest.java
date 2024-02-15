@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -701,6 +702,10 @@ public abstract class ServerRequest {
     public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
         locks_.remove(lock);
     }
+
+    public String printWaitLocks(){
+        return Arrays.toString(locks_.toArray());
+    }
     
     
     /**
@@ -717,6 +722,7 @@ public abstract class ServerRequest {
      * Also attaches any required URL query parameters based on the request type.
      */
     public void onPreExecute() {
+        BranchLogger.v("onPreExecute " + this);
         if (this instanceof ServerRequestRegisterOpen || this instanceof ServerRequestLogEvent) {
             try {
                 ReferringUrlUtility utility = new ReferringUrlUtility(prefHelper_);
