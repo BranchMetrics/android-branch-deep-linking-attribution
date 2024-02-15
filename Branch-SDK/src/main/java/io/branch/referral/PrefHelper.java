@@ -126,7 +126,6 @@ public class PrefHelper {
 
     static final String KEY_REFERRING_URL_QUERY_PARAMETERS = "bnc_referringUrlQueryParameters";
     static final String KEY_ANON_ID = "bnc_anon_id";
-    private static final String KEY_BASE_URL = "bnc_base_url";
 
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
@@ -161,6 +160,11 @@ public class PrefHelper {
      * Module injected key values added to all requests.
      */
     private final JSONObject secondaryRequestMetadata = new JSONObject();
+
+    /**
+     * Branch Custom server url.  Used by clients that want to proxy all requests.
+     */
+    private static String customServerURL_ = null;
 
     /**
      * Branch Custom server url.  Used by clients that want to proxy all CDN requests.
@@ -209,6 +213,7 @@ public class PrefHelper {
         enableLogging_ = false;
         prefHelper_ = null;
         customCDNBaseURL_ = null;
+        customServerURL_ = null;
         useEUEndpoint_ = false;
     }
 
@@ -216,8 +221,8 @@ public class PrefHelper {
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
-    public void setAPIUrl(String url) {
-        setString(KEY_BASE_URL, url);
+    static void setAPIUrl(String url) {
+        customServerURL_ = url;
     }
 
     /**
@@ -228,12 +233,12 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
-        if (useEUEndpoint_) {
-            return BRANCH_EU_BASE_URL_V3;
+        if (URLUtil.isHttpsUrl(customServerURL_)) {
+            return customServerURL_;
         }
 
-        if (URLUtil.isHttpsUrl(getString(KEY_BASE_URL))) {
-            return getString(KEY_BASE_URL);
+        if (useEUEndpoint_) {
+            return BRANCH_EU_BASE_URL_V3;
         }
 
         if (Build.VERSION.SDK_INT >= 20) {
