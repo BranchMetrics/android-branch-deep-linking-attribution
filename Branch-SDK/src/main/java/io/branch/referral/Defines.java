@@ -217,7 +217,10 @@ public class Defines {
         Google_Play_Store("PlayStore"),
         Huawei_App_Gallery("AppGallery"),
         Samsung_Galaxy_Store("GalaxyStore"),
-        Xiaomi_Get_Apps("GetApps");
+        Xiaomi_Get_Apps("GetApps"),
+        DMA_EEA("dma_eea"),
+        DMA_Ad_Personalization("dma_ad_personalization"),
+        DMA_Ad_User_Data("dma_ad_user_data");
 
         private final String key;
         
@@ -245,8 +248,6 @@ public class Defines {
         GetApp("v1/app-link-settings"),
         RegisterInstall("v1/install"),
         RegisterOpen("v1/open"),
-        IdentifyUser("v1/profile"),
-        Logout("v1/logout"),
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),

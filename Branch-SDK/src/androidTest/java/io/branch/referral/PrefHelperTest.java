@@ -314,4 +314,24 @@ public class PrefHelperTest extends BranchTest {
             Assert.fail();
         }
     }
+
+    @Test
+    public void testSetDMAParamsForEEA(){
+
+        Assert.assertEquals(prefHelper.isDMAParamsInitialized(),false);
+
+        Branch.getInstance().setDMAParamsForEEA(true, false,true);
+
+        Assert.assertEquals(prefHelper.isDMAParamsInitialized(),true);
+        Assert.assertEquals(prefHelper.getEEARegion(),true);
+        Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),false);
+        Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),true);
+
+        // check by flipping values - if they are overwritten
+        Branch.getInstance().setDMAParamsForEEA(false, true,false);
+
+        Assert.assertEquals(prefHelper.getEEARegion(),false);
+        Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),true);
+        Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),false);
+    }
 }

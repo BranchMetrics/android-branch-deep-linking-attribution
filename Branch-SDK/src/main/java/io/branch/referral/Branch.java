@@ -505,8 +505,10 @@ public class Branch {
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
-    public static void setAPIUrl(String url) {
-        PrefHelper.setAPIUrl(url);
+    public void setAPIUrl(String url) {
+        if (prefHelper_ != null && url.length() > 0) {
+            prefHelper_.setAPIUrl(url);
+        }
     }
 
     /**
@@ -706,6 +708,19 @@ public class Branch {
      */
     public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
         prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
+    }
+
+    /**
+     * Sets the value of parameters required by Google Conversion APIs for DMA Compliance in EEA region.
+     *
+     * @param eeaRegion {@code true} If European regulations, including the DMA, apply to this user and conversion.
+     * @param adPersonalizationConsent {@code true} If End user has granted/denied ads personalization consent.
+     * @param adUserDataUsageConsent {@code true} If User has granted/denied consent for 3P transmission of user level data for ads.
+     */
+    public void setDMAParamsForEEA(boolean eeaRegion, boolean adPersonalizationConsent, boolean adUserDataUsageConsent) {
+        prefHelper_.setEEARegion(eeaRegion);
+        prefHelper_.setAdPersonalizationConsent(adPersonalizationConsent);
+        prefHelper_.setAdUserDataUsageConsent(adUserDataUsageConsent);
     }
 
     /**
@@ -953,17 +968,13 @@ public class Branch {
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
             callback) {
-
-        installDeveloperId = userId;
-
-        ServerRequestIdentifyUserRequest req = new ServerRequestIdentifyUserRequest(context_, callback, userId);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            requestQueue_.handleNewRequest(req);
-        } else {
-            if (req.isExistingID()) {
-                req.handleUserExist(branchReferral_);
-            }
-        }
+                if (userId != null && !userId.equals(prefHelper_.getIdentity())) {
+                    installDeveloperId = userId;
+                    prefHelper_.setIdentity(userId);
+                }
+                if (callback != null) {
+                    callback.onInitFinished(getFirstReferringParams(), null);
+                }
     }
 
     /**
@@ -1007,7 +1018,7 @@ public class Branch {
     public boolean isUserIdentified() {
         return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
     }
-    
+
     /**
      * <p>This method should be called if you know that a different person is about to use the app. For example,
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
@@ -1016,7 +1027,7 @@ public class Branch {
     public void logout() {
         logout(null);
     }
-    
+
     /**
      * <p>This method should be called if you know that a different person is about to use the app. For example,
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
@@ -1025,9 +1036,13 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        ServerRequest req = new ServerRequestLogout(context_, callback);
-        if (!req.constructError_ && !req.handleErrors(context_)) {
-            requestQueue_.handleNewRequest(req);
+        prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
+        prefHelper_.clearUserValues();
+        //On Logout clear the link cache and all pending requests
+        linkCache_.clear();
+        requestQueue_.clear();
+        if (callback != null) {
+            callback.onLogoutFinished(true, null);
         }
     }
 
@@ -2451,5 +2466,13 @@ public class Branch {
                 return null;
             });
         }
+    }
+
+    /**
+     * Send requests to EU endpoints.
+     * This feature must also be enabled on the server side, otherwise the server will drop requests. Contact your account manager for details.
+     */
+    public static void useEUEndpoint() {
+        PrefHelper.useEUEndpoint(true);
     }
 }

@@ -67,7 +67,7 @@
         </activity>
 
         <meta-data android:name="io.branch.sdk.TestMode" android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
-        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv" />
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB" />
         <meta-data android:name="io.branch.sdk.BranchKey.test" android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
 
         <!-- Optional. Set to true to disable auto deep link feature-->

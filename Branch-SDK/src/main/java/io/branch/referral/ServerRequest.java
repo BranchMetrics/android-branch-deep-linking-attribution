@@ -1,10 +1,11 @@
 package io.branch.referral;
 
+import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
@@ -16,13 +17,8 @@ import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
-
-import io.branch.referral.util.BranchEvent;
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -162,7 +158,46 @@ public abstract class ServerRequest {
     protected boolean shouldUpdateLimitFacebookTracking() {
         return false;
     }
-    
+
+    /**
+     * <p>
+     * Specifies whether this request should have DMA params.
+     * By default it will return false. Subclasses can override this function, if the corresponding request type
+     * requires DMA params.
+     * </p>
+     *
+     * @return A {@link Boolean} with value false if this request does NOT need DMA params.
+     */
+    protected boolean shouldAddDMAParams() {
+        return false;
+    }
+
+    /**
+     * Adds the google DMA Compliance parameters.
+     */
+    void addDMAParams() {
+        if (prefHelper_.isDMAParamsInitialized()) {
+            try {
+                BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
+                if (version == BRANCH_API_VERSION.V1) {
+                    params_.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                    params_.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                    params_.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
+                } else {
+                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                    if (userDataObj != null) {
+                        userDataObj.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                        userDataObj.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                        userDataObj.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
+                    }
+                }
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
+            }
+        }
+    }
+
+
     /**
      * <p>Provides the path to server for this request.
      * see {@link Defines.RequestPath} <p>
@@ -371,10 +406,6 @@ public abstract class ServerRequest {
         
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.IdentifyUser.getPath())) {
-            extendedReq = new ServerRequestIdentifyUserRequest(Defines.RequestPath.IdentifyUser, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.Logout.getPath())) {
-            extendedReq = new ServerRequestLogout(Defines.RequestPath.Logout, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
             extendedReq = new ServerRequestRegisterInstall(Defines.RequestPath.RegisterInstall, post, context, initiatedByClient);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
@@ -587,6 +618,9 @@ public abstract class ServerRequest {
         if (shouldUpdateLimitFacebookTracking()) {
             updateLimitFacebookTracking();
         }
+        if (shouldAddDMAParams()) {
+            addDMAParams();
+        }
     }
     
     void doFinalUpdateOnBackgroundThread() {
@@ -744,7 +778,7 @@ public abstract class ServerRequest {
         return false;
     }
 
-    // needed for adding additional device info fields for certain request (i.e. initialization and events)
+    // needed for adding SD fields for certain request (i.e. initialization and events)
     boolean isInitializationOrEventRequest() {
         for (Defines.RequestPath item : initializationAndEventRoutes) {
             if (item.equals(requestPath_)) return true;

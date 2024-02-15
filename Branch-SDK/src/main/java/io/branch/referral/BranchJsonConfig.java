@@ -39,9 +39,9 @@ public class BranchJsonConfig {
         - if "branchKey" is missing, all three, useTestInstance/testKey/liveKey, must be present.
 
        {
-            "branchKey":"key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv",
+            "branchKey":"key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB",
             "testKey":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc",
-            "liveKey":"key_live_feebgAAhbH9Tv85H5wLQhpdaefiZv5Dv",
+            "liveKey":"key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB",
             "useTestInstance": true,
             "enableLogging": true,
             "deferInitForPluginRuntime": true

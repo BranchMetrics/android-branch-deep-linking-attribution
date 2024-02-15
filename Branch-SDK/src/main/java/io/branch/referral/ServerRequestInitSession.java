@@ -1,15 +1,10 @@
 package io.branch.referral;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-
-import java.util.Objects;
 
 import io.branch.referral.validators.DeepLinkRoutingValidator;
 
@@ -69,6 +64,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
+        return true;
+    }
+
+    @Override
+    protected boolean shouldAddDMAParams() {
         return true;
     }
 
