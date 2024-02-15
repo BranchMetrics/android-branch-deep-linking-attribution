@@ -162,11 +162,6 @@ public class PrefHelper {
     private final JSONObject secondaryRequestMetadata = new JSONObject();
 
     /**
-     * Branch Custom server url.  Used by clients that want to proxy all requests.
-     */
-    private static String customServerURL_ = null;
-
-    /**
      * Branch Custom server url.  Used by clients that want to proxy all CDN requests.
      */
     private static String customCDNBaseURL_ = null;
