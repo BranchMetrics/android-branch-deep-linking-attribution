@@ -49,26 +49,26 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testSetAPIUrl_Example() {
-        PrefHelper.setAPIUrl("https://www.example.com/");
+        prefHelper.setAPIUrl("https://www.example.com/");
         String actual = prefHelper.getAPIBaseUrl();
         Assert.assertEquals("https://www.example.com/", actual);
     }
 
     @Test
     public void testSetAPIUrl_InvalidHttp() {
-        PrefHelper.setAPIUrl("http://www.example.com/");
+        prefHelper.setAPIUrl("http://www.example.com/");
         assertDefaultURL();
     }
 
     @Test
     public void testSetAPIUrl_InvalidNull() {
-        PrefHelper.setAPIUrl(null);
+        prefHelper.setAPIUrl(null);
         assertDefaultURL();
     }
 
     @Test
     public void testSetAPIUrl_InvalidEmpty() {
-        PrefHelper.setAPIUrl("");
+        prefHelper.setAPIUrl("");
         assertDefaultURL();
     }
 
