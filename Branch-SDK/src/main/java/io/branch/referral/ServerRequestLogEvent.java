@@ -92,6 +92,11 @@ public class ServerRequestLogEvent extends ServerRequest {
         return true;
     }
 
+    @Override
+    protected boolean shouldAddDMAParams() {
+        return true;
+    }
+
     public boolean shouldRetryOnFail() {
         return true; // Branch event need to be retried on failure.
     }

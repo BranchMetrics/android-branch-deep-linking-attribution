@@ -1,10 +1,11 @@
 package io.branch.referral;
 
+import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
@@ -15,13 +16,8 @@ import org.json.JSONObject;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static io.branch.referral.ServerRequestInitSession.INITIATED_BY_CLIENT;
-
-import io.branch.referral.util.BranchEvent;
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -161,7 +157,46 @@ public abstract class ServerRequest {
     protected boolean shouldUpdateLimitFacebookTracking() {
         return false;
     }
-    
+
+    /**
+     * <p>
+     * Specifies whether this request should have DMA params.
+     * By default it will return false. Subclasses can override this function, if the corresponding request type
+     * requires DMA params.
+     * </p>
+     *
+     * @return A {@link Boolean} with value false if this request does NOT need DMA params.
+     */
+    protected boolean shouldAddDMAParams() {
+        return false;
+    }
+
+    /**
+     * Adds the google DMA Compliance parameters.
+     */
+    void addDMAParams() {
+        if (prefHelper_.isDMAParamsInitialized()) {
+            try {
+                BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
+                if (version == BRANCH_API_VERSION.V1) {
+                    params_.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                    params_.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                    params_.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
+                } else {
+                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                    if (userDataObj != null) {
+                        userDataObj.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                        userDataObj.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                        userDataObj.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
+                    }
+                }
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
+            }
+        }
+    }
+
+
     /**
      * <p>Provides the path to server for this request.
      * see {@link Defines.RequestPath} <p>
@@ -581,6 +616,9 @@ public abstract class ServerRequest {
         updateRequestMetadata();
         if (shouldUpdateLimitFacebookTracking()) {
             updateLimitFacebookTracking();
+        }
+        if (shouldAddDMAParams()) {
+            addDMAParams();
         }
     }
     
