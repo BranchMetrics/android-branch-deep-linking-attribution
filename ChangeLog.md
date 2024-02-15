@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.9.0
+  * _*Master Release*_ - Feb 15, 2024
+    - Added new useEUEndpoint method
+    - Added support for setting DMA Compliance Parameters
+    - Removed v1/profile and v1/logout requests
 - v5.8.2
   * _*Release Branch 5.8.2*_ - Jan 26, 2024
     - Removed deprecated field target SDK version from library manifest.

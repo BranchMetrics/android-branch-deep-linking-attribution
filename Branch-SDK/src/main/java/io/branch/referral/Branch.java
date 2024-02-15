@@ -505,10 +505,8 @@ public class Branch {
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
-    public void setAPIUrl(String url) {
-        if (prefHelper_ != null && url.length() > 0) {
-            prefHelper_.setAPIUrl(url);
-        }
+    public static void setAPIUrl(String url) {
+        PrefHelper.setAPIUrl(url);
     }
     /**
      * <p>Sets a custom CDN base URL.</p>
