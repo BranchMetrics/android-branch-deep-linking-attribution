@@ -94,6 +94,7 @@ android {
 
         debug {
             enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
             buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
         }
@@ -276,7 +277,6 @@ tasks {
         retry {
             maxRetries.set(3)
         }
-
         configure<JacocoTaskExtension> {
             isIncludeNoLocationClasses = true
             excludes = listOf("jdk.internal.*")
