@@ -127,6 +127,7 @@ public class PrefHelper {
     static final String KEY_REFERRING_URL_QUERY_PARAMETERS = "bnc_referringUrlQueryParameters";
     static final String KEY_ANON_ID = "bnc_anon_id";
     private static final String KEY_BASE_URL = "bnc_base_url";
+
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.

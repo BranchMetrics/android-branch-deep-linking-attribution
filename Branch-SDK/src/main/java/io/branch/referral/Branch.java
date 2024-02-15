@@ -510,7 +510,6 @@ public class Branch {
             prefHelper_.setAPIUrl(url);
         }
     }
-
     /**
      * <p>Sets a custom CDN base URL.</p>
      * @param url The {@link String} base URL for CDN endpoints.
