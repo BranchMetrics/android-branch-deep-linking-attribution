@@ -29,7 +29,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
 
             client.startConnection(object : InstallReferrerStateListener {
                 override fun onInstallReferrerSetupFinished(responseInt: Int) {
-                    BranchLogger.d("getGooglePlayStoreReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+                    BranchLogger.w("Caught getGooglePlayStoreReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
 
                     if (responseInt == InstallReferrerClient.InstallReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
@@ -38,7 +38,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
                                 InstallReferrerResult(Jsonkey.Google_Play_Store.key, result.installBeginTimestampSeconds, result.installReferrer, result.referrerClickTimestampSeconds)
                             }
                             catch (e: Exception) {
-                                BranchLogger.d("getGooglePlayStoreReferrerDetails installReferrer exception: $e")
+                                BranchLogger.w("Caught getGooglePlayStoreReferrerDetails installReferrer exception: $e")
                                 null
                             }
                         )
@@ -60,7 +60,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
             deferredReferrerDetails.await()
         }
         catch (exception: Exception) {
-            BranchLogger.d("getGooglePlayStoreReferrerDetails exception: $exception")
+            BranchLogger.w("Caught getGooglePlayStoreReferrerDetails exception: $exception")
             null
         }
     }
@@ -79,7 +79,7 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferre
                 client.startConnection(object :
                     com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener {
                     override fun onInstallReferrerSetupFinished(responseInt: Int) {
-                        BranchLogger.d("getHuaweiAppGalleryReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+                        BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
 
                         if (responseInt == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
@@ -92,12 +92,12 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferre
                                         result.referrerClickTimestampSeconds
                                     )
                                 } catch (e: Exception) {
-                                    BranchLogger.d("getHuaweiAppGalleryReferrerDetails exception: $e")
+                                    BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails exception: $e")
                                     null
                                 }
                             )
                         } else {
-                            BranchLogger.d("getHuaweiAppGalleryReferrerDetails response code: $responseInt")
+                            BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails response code: $responseInt")
                             deferredReferrerDetails.complete(null)
                         }
                         client.endConnection()
@@ -112,7 +112,7 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferre
 
                 deferredReferrerDetails.await()
             } catch (exception: Exception) {
-                BranchLogger.d("getHuaweiAppGalleryReferrerDetails exception: $exception")
+                BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails exception: $exception")
                 null
             }
         }
@@ -136,7 +136,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                 client.startConnection(object :
                     com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
                     override fun onInstallReferrerSetupFinished(p0: Int) {
-                        BranchLogger.d("getSamsungGalaxyStoreReferrerDetails onInstallReferrerSetupFinished response code: $p0")
+                        BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails onInstallReferrerSetupFinished response code: $p0")
 
                         if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
@@ -149,12 +149,12 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                                         result.referrerClickTimestampSeconds
                                     )
                                 } catch (e: RemoteException) {
-                                    BranchLogger.d("getSamsungGalaxyStoreReferrerDetails exception: $e")
+                                    BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
                                     null
                                 }
                             )
                         } else {
-                            BranchLogger.d("getSamsungGalaxyStoreReferrerDetails response code: $p0")
+                            BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails response code: $p0")
                             deferredReferrerDetails.complete(null)
                         }
                         client.endConnection()
@@ -169,7 +169,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
 
                 deferredReferrerDetails.await()
             } catch (exception: Exception) {
-                BranchLogger.d("getSamsungGalaxyStoreReferrerDetails exception: $exception")
+                BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $exception")
                 null
             }
         }
@@ -188,7 +188,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
 
                 client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
                     override fun onGetAppsReferrerSetupFinished(state: Int) {
-                        BranchLogger.d("getXiaomiGetAppsReferrerDetails onInstallReferrerSetupFinished response code: $state")
+                        BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails onInstallReferrerSetupFinished response code: $state")
 
                         if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
@@ -201,12 +201,12 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                                         result.referrerClickTimestampSeconds
                                     )
                                 } catch (e: RemoteException) {
-                                    BranchLogger.d("getXiaomiGetAppsReferrerDetails exception: $e")
+                                    BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails exception: $e")
                                     null
                                 }
                             )
                         } else {
-                            BranchLogger.d("getXiaomiGetAppsReferrerDetails response code: $state")
+                            BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails response code: $state")
                             deferredReferrerDetails.complete(null)
                         }
                         client.endConnection()
@@ -220,7 +220,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                 })
                 deferredReferrerDetails.await()
             } catch (exception: Exception) {
-                BranchLogger.d("getXiaomiGetAppsReferrerDetails exception: $exception")
+                BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails exception: $exception")
                 null
             }
         }

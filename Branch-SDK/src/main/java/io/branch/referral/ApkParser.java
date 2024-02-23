@@ -180,7 +180,7 @@ class ApkParser {
             results.put(Defines.Jsonkey.URIScheme.getKey(), intentFilters);
             results.put(Defines.Jsonkey.AppLinks.getKey(), applinkFilters);
         } catch (JSONException e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         return results;
     }

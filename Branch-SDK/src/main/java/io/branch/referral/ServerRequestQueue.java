@@ -107,7 +107,7 @@ public class ServerRequestQueue {
             editor.putString(PREF_KEY, jsonArr.toString()).apply();
         } catch (Exception ex) {
             String msg = ex.getMessage();
-            BranchLogger.v("Failed to persist queue" + (msg == null ? "" : msg));
+            BranchLogger.e("Failed to persist queue" + (msg == null ? "" : msg));
         }
     }
     
@@ -126,7 +126,7 @@ public class ServerRequestQueue {
                         }
                     }
                 } catch (JSONException e) {
-                    BranchLogger.d(e.getMessage());
+                    BranchLogger.w("Caught JSONException " + e.getMessage());
                 }
             }
         }
@@ -175,7 +175,7 @@ public class ServerRequestQueue {
             try {
                 req = queue.get(0);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.w("Caught Exception " + e.getMessage());
             }
         }
         return req;
@@ -207,7 +207,7 @@ public class ServerRequestQueue {
             try {
                 req = queue.get(index);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.e("Caught Exception " + e.getMessage());
             }
         }
         return req;
@@ -231,7 +231,7 @@ public class ServerRequestQueue {
                 queue.add(index, request);
                 persist();
             } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.e("Caught IndexOutOfBoundsException " + e.getMessage());
             }
         }
     }
@@ -253,7 +253,7 @@ public class ServerRequestQueue {
                 req = queue.remove(index);
                 persist();
             } catch (IndexOutOfBoundsException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.e("Caught IndexOutOfBoundsException " + e.getMessage());
             }
         }
         return req;
@@ -273,7 +273,7 @@ public class ServerRequestQueue {
                 isRemoved = queue.remove(request);
                 persist();
             } catch (UnsupportedOperationException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
             }
         }
         return isRemoved;
@@ -288,7 +288,7 @@ public class ServerRequestQueue {
                 queue.clear();
                 persist();
             } catch (UnsupportedOperationException e) {
-                BranchLogger.d(e.getMessage());
+                BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
             }
         }
     }
@@ -392,7 +392,7 @@ public class ServerRequestQueue {
                 serverSema_.release();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            BranchLogger.e("Caught Exception " + e.getMessage() + BranchLogger.stackTraceToString(e));
         }
     }
 
@@ -454,7 +454,7 @@ public class ServerRequestQueue {
                 }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            BranchLogger.e("Caught JSONException " + e.getMessage());
         }
     }
 
@@ -486,6 +486,7 @@ public class ServerRequestQueue {
                 postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", ""));
             }
         } catch (InterruptedException e) {
+            BranchLogger.e("Caught InterruptedException " + e.getMessage());
             postTask.cancel(true);
             postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", e.getMessage()));
         }
@@ -629,7 +630,7 @@ public class ServerRequestQueue {
                     final String url = respJson.getString("url");
                     Branch.getInstance().linkCache_.put(postBody, url);
                 } catch (JSONException ex) {
-                    ex.printStackTrace();
+                    BranchLogger.w("Caught JSONException " + ex.getMessage());
                 }
             }
 
@@ -660,7 +661,7 @@ public class ServerRequestQueue {
                             updateAllRequestsInQueue();
                         }
                     } catch (JSONException ex) {
-                        ex.printStackTrace();
+                        BranchLogger.w("Caught JSONException " + ex.getMessage());
                     }
                 }
 

@@ -189,10 +189,10 @@ public abstract class BranchRemoteInterface {
                             jsonObj.put(Defines.Jsonkey.QRCodeResponseString.getKey(), responseString);
                             result.setPost(jsonObj);
                         } catch (JSONException e) {
-                            BranchLogger.v("JSON exception: " + e.getMessage());
+                            BranchLogger.w("Caught JSONException " + e.getMessage());
                         }
                     } else {
-                        BranchLogger.v("JSON exception: " + ex2.getMessage());
+                        BranchLogger.w("Caught JSONException " + ex2.getMessage());
                     }
                 }
             }
@@ -210,7 +210,7 @@ public abstract class BranchRemoteInterface {
                 return true;
             }
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         return false;
     }
@@ -237,7 +237,7 @@ public abstract class BranchRemoteInterface {
                         String value = json.getString(key);
                         result.append(key).append("=").append(value);
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        BranchLogger.w("Caught JSONException " + e.getMessage());
                         return null;
                     }
                 }

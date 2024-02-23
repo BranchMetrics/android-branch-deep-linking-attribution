@@ -8,15 +8,12 @@ import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.android.gms.common.util.Strings;
 
-import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.BranchLogger;
-import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -28,11 +25,14 @@ import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.util.Objects;
 
 import javax.net.ssl.HttpsURLConnection;
-import org.json.JSONException;
-import org.json.JSONObject;
+
+import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
+import io.branch.referral.BranchLogger;
+import io.branch.referral.Defines;
+import io.branch.referral.PrefHelper;
 
 /**
  * Created by sojanpr on 5/31/17.
@@ -40,13 +40,22 @@ import org.json.JSONObject;
  * This class provides implementation for Branch RESTful operations using HTTP URL Connection.
  */
 public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
-    private static final int THREAD_TAG_POST= 102;
+    private static final int THREAD_TAG_POST = 102;
 
-    private @NonNull final Branch branch;
+    private @NonNull
+    final Branch branch;
 
     public BranchRemoteInterfaceUrlConnection(@NonNull Branch branch) {
         this.branch = branch;
+        this.prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
+        this.retryLimit = prefHelper.getRetryCount();
     }
+
+    private int lastResponseCode = -1;
+    private String lastResponseMessage = "";
+    private String lastRequestId = "";
+    private PrefHelper prefHelper;
+    private int retryLimit;
 
     @Override
     public BranchResponse doRestfulGet(String url) throws BranchRemoteException {
@@ -76,63 +85,77 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
 
             int responseCode = connection.getResponseCode();
-            if (responseCode >= 500 && retryNumber < prefHelper.getRetryCount()) {
+            if (responseCode >= 500 && retryNumber < retryLimit) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                }
+                catch (InterruptedException e) {
+                    BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber));
                 }
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
-            } else {
+            }
+            else {
                 BranchResponse result;
                 try {
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
                         result = new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
-                    } else {
+                    }
+                    else {
                         result = new BranchResponse(getResponseString(connection.getInputStream()), responseCode);
                     }
-                } catch (FileNotFoundException ex) {
+                }
+                catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
-                    BranchLogger.v("A resource conflict occurred with this request " + url);
+                    BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
                     result = new BranchResponse(null, responseCode);
                 }
                 result.requestId = Strings.emptyToNull(requestId);
                 return result;
             }
-        } catch (SocketException ex) {
-            BranchLogger.v("Http connect exception: " + ex.getMessage());
+        }
+        catch (SocketException ex) {
+            BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
-        } catch (SocketTimeoutException ex) {
+        }
+        catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
-            if (retryNumber < prefHelper.getRetryCount()) {
+            if (retryNumber < retryLimit) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                }
+                catch (InterruptedException e) {
+                    BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber));
                 }
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
-            } else {
+            }
+            else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, ex.getMessage());
             }
-        } catch(InterruptedIOException ex){
+        }
+        catch (InterruptedIOException ex) {
+            BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             // When the thread times out before or while sending the request
-            if (retryNumber < prefHelper.getRetryCount()) {
+            if (retryNumber < retryLimit) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                }
+                catch (InterruptedException e) {
+                    BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber));
                 }
                 retryNumber++;
                 return doRestfulGet(url, retryNumber);
-            } else {
+            }
+            else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT, ex.getMessage());
             }
-        } catch (IOException ex) {
-            BranchLogger.v("Branch connect exception: " + ex.getMessage());
+        }
+        catch (IOException ex) {
+            BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
-        } finally {
+        }
+        finally {
             if (connection != null) {
                 connection.disconnect();
             }
@@ -148,8 +171,9 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
         try {
             payload.put(RETRY_NUMBER, retryNumber);
-        } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+        }
+        catch (JSONException e) {
+            BranchLogger.e("Caught JSONException, retry number: " + retryNumber + " " + e.getMessage() + " stacktrace " + BranchLogger.stackTraceToString(e));
         }
         try {
             // set the setThreadStatsTag for POST if API 26+
@@ -166,10 +190,11 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             if (url.contains(Defines.Jsonkey.QRCodeTag.getKey())) {
                 connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 connection.setRequestProperty("Accept", "image/*");
-            } else {
+            }
+            else {
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setRequestProperty("Accept", "application/json");
-             }
+            }
             connection.setRequestMethod("POST");
 
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream());
@@ -179,23 +204,32 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             outputStreamWriter.close();
 
             String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
+            lastRequestId = requestId;
 
             int responseCode = connection.getResponseCode();
-            if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR
-                    && retryNumber < prefHelper.getRetryCount()) {
+            lastResponseCode = responseCode;
+            lastResponseMessage = connection.getResponseMessage(); // If we have the response code, this will not invoke any more data transfer
+            BranchLogger.d("lastResponseMessage " + lastResponseMessage);
+
+            if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR && retryNumber < retryLimit) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                }
+                catch (InterruptedException e) {
+                    BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber));
                 }
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
-            } else {
+            }
+            else {
                 BranchResponse result;
                 try {
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
+                        BranchLogger.e("Branch Networking Error: " + "\nURL: " + url + "" + "\nResponse Code: " + lastResponseCode + "\nResponse Message: " + lastResponseMessage + "\nRetry number: " + retryNumber + "\nFinal attempt: true" + // no retry on 4XX errors
+                                "\nrequestId: " + lastRequestId + "\nObject: " + this);
                         result = new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
-                    } else {
+                    }
+                    else {
                         if (url.contains(Defines.Jsonkey.QRCodeTag.getKey())) {
                             // Converting binary data to Base64
                             InputStream inputStream = connection.getInputStream();
@@ -206,14 +240,17 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                             String bmpString = Base64.encodeToString(b, Base64.DEFAULT);
 
                             result = new BranchResponse(bmpString, responseCode);
-                        } else {
+                        }
+                        else {
                             result = new BranchResponse(getResponseString(connection.getInputStream()), responseCode);
                         }
-                    }
 
-                } catch (FileNotFoundException ex) {
+                        BranchLogger.v("Branch Networking Success" + "\nURL: " + url + "\nResponse Code: " + lastResponseCode + "\nResponse Message: " + lastResponseMessage + "\nRetry number: " + retryNumber + "\nrequestId: " + lastRequestId + "\nObject: " + this);
+                    }
+                }
+                catch (FileNotFoundException ex) {
                     // In case of Resource conflict getInputStream will throw FileNotFoundException. Handle it here in order to send the right status code
-                    BranchLogger.v("A resource conflict occurred with this request " + url);
+                    BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
                     result = new BranchResponse(null, responseCode);
                 }
 
@@ -221,45 +258,50 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 return result;
             }
 
-
-        } catch (SocketTimeoutException ex) {
-            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
+        }
+        catch (SocketTimeoutException ex) {
+            BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             // On socket  time out retry the request for retryNumber of times
-            if (retryNumber < prefHelper.getRetryCount()) {
+            if (retryNumber < retryLimit) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                }
+                catch (InterruptedException e) {
+                    BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber));
                 }
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
-            } else {
+            }
+            else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_REQ_TIMED_OUT, ex.getMessage());
             }
-        } catch(InterruptedIOException ex){
-            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
+        }
+        catch (InterruptedIOException ex) {
+            BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             // When the thread times out before or while sending the request
-            if (retryNumber < prefHelper.getRetryCount()) {
+            if (retryNumber < retryLimit) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                }
+                catch (InterruptedException e) {
+                    BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber));
                 }
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
-            } else {
+            }
+            else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_TASK_TIMEOUT, ex.getMessage());
             }
         }
         // Unable to resolve host/Unknown host exception
         catch (IOException ex) {
-            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
-            if (retryNumber < prefHelper.getRetryCount()) {
+            BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
+            if (retryNumber < retryLimit) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
                 catch (InterruptedException e) {
-                    e.printStackTrace();
+                    BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber));
                 }
                 retryNumber++;
                 return doRestfulPost(url, payload, retryNumber);
@@ -267,14 +309,16 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             else {
                 throw new BranchRemoteException(BranchError.ERR_BRANCH_NO_CONNECTIVITY, ex.getMessage());
             }
-        } catch (Exception ex) {
-            BranchLogger.v("Encountered exception while attempting network request: " + Log.getStackTraceString(ex));
+        }
+        catch (Exception ex) {
+            BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             if (ex instanceof NetworkOnMainThreadException) {
-                BranchLogger.v("Branch Error: Cannot make network request on main thread: " + Log.getStackTraceString(ex));
+                BranchLogger.e("Cannot make network request on main thread.");
                 throw new BranchRemoteException((BranchError.ERR_NETWORK_ON_MAIN), ex.getMessage());
             }
             throw new BranchRemoteException(BranchError.ERR_OTHER, ex.getMessage());
-        } finally {
+        }
+        finally {
             if (connection != null) {
                 connection.disconnect();
             }
@@ -293,11 +337,25 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 }
                 rd.close();
                 responseString = sb.toString();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 BranchLogger.d(e.getMessage());
             }
         }
         return responseString;
     }
 
+    String getNetworkErrorMessage(Exception e, String url, int retry){
+        return "Branch Networking Error: " +
+                "\nURL: " + url +
+                "\nResponse Code: " + lastResponseCode +
+                "\nResponse Message: " + lastResponseMessage +
+                "\nCaught exception type: " + e.getClass().getCanonicalName() +
+                "\nRetry number: " + retry +
+                "\nrequestId: " + lastRequestId +
+                "\nFinal attempt: " + (retry >= retryLimit) +
+                "\nObject: " + this +
+                "\nException Message: " + e.getMessage() +
+                "\nStacktrace: " + BranchLogger.stackTraceToString(e);
+    }
 }

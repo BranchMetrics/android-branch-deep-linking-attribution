@@ -82,11 +82,11 @@ class ShareLinkManager {
         try {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
-            e.printStackTrace();
+            BranchLogger.e("Caught Exception" + e.getMessage());
             if (callback_ != null) {
                 callback_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
             } else {
-                BranchLogger.v("Unable create share options. Couldn't find applications on device to share the link.");
+                BranchLogger.w("Unable create share options. Couldn't find applications on device to share the link.");
             }
         }
         return shareDlg_;
