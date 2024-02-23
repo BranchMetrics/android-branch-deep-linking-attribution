@@ -158,6 +158,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         finally {
             if (connection != null) {
                 connection.disconnect();
+                resetStats();
             }
         }
     }
@@ -245,7 +246,13 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                             result = new BranchResponse(getResponseString(connection.getInputStream()), responseCode);
                         }
 
-                        BranchLogger.v("Branch Networking Success" + "\nURL: " + url + "\nResponse Code: " + lastResponseCode + "\nResponse Message: " + lastResponseMessage + "\nRetry number: " + retryNumber + "\nrequestId: " + lastRequestId + "\nObject: " + this);
+                        BranchLogger.v("Branch Networking Success" +
+                                "\nURL: " + url +
+                                "\nResponse Code: " + lastResponseCode +
+                                "\nResponse Message: " + lastResponseMessage +
+                                "\nRetry number: " + retryNumber +
+                                "\nrequestId: " + lastRequestId +
+                                "\nObject: " + this);
                     }
                 }
                 catch (FileNotFoundException ex) {
@@ -321,8 +328,15 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         finally {
             if (connection != null) {
                 connection.disconnect();
+                resetStats();
             }
         }
+    }
+
+    private void resetStats() {
+        lastRequestId = "";
+        lastResponseCode = -1;
+        lastResponseMessage = "";
     }
 
     private String getResponseString(InputStream inputStream) {
