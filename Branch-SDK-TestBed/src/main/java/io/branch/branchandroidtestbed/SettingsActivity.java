@@ -3,6 +3,7 @@ package io.branch.branchandroidtestbed;
 import android.app.Activity;
 
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -60,7 +61,7 @@ public class SettingsActivity extends Activity {
         apiUrlText.setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_DONE) {
                 String newApiUrl = textView.getText().toString();
-                Branch.getInstance().setAPIUrl(newApiUrl);
+                Branch.setAPIUrl(newApiUrl);
 
                 InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(apiUrlText.getWindowToken(), 0);

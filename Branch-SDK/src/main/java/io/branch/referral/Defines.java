@@ -219,6 +219,10 @@ public class Defines {
         Samsung_Galaxy_Store("GalaxyStore"),
         Xiaomi_Get_Apps("GetApps"),
         Meta_Install_Referrer("Meta");
+        
+        DMA_EEA("dma_eea"),
+        DMA_Ad_Personalization("dma_ad_personalization"),
+        DMA_Ad_User_Data("dma_ad_user_data");
 
         private final String key;
         

@@ -1,13 +1,16 @@
 package io.branch.referral;
 
+import static io.branch.referral.BranchUtil.isTestModeEnabled;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Build;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.webkit.URLUtil;
+
+import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,8 +20,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static io.branch.referral.BranchUtil.isTestModeEnabled;
 
 /**
  * <p>A class that uses the helper pattern to provide regularly referenced static values and
@@ -108,6 +109,9 @@ public class PrefHelper {
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
     private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
+    private static final String KEY_DMA_EEA = "bnc_dma_eea";
+    private static final String KEY_DMA_AD_PERSONALIZATION = "bnc_dma_ad_personalization";
+    private static final String KEY_DMA_AD_USER_DATA = "bnc_dma_ad_user_data";
     private static final String KEY_LOG_IAP_AS_EVENTS = "bnc_log_iap_as_events";
 
     static final String KEY_ORIGINAL_INSTALL_TIME = "bnc_original_install_time";
@@ -122,7 +126,6 @@ public class PrefHelper {
 
     static final String KEY_REFERRING_URL_QUERY_PARAMETERS = "bnc_referringUrlQueryParameters";
     static final String KEY_ANON_ID = "bnc_anon_id";
-    private static final String KEY_BASE_URL = "bnc_base_url";
 
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
@@ -157,6 +160,11 @@ public class PrefHelper {
      * Module injected key values added to all requests.
      */
     private final JSONObject secondaryRequestMetadata = new JSONObject();
+
+    /**
+     * Branch Custom server url.  Used by clients that want to proxy all requests.
+     */
+    private static String customServerURL_ = null;
 
     /**
      * Branch Custom server url.  Used by clients that want to proxy all CDN requests.
@@ -205,6 +213,7 @@ public class PrefHelper {
         enableLogging_ = false;
         prefHelper_ = null;
         customCDNBaseURL_ = null;
+        customServerURL_ = null;
         useEUEndpoint_ = false;
     }
 
@@ -212,8 +221,8 @@ public class PrefHelper {
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
-    public void setAPIUrl(String url) {
-        setString(KEY_BASE_URL, url);
+    static void setAPIUrl(String url) {
+        customServerURL_ = url;
     }
 
     /**
@@ -224,12 +233,12 @@ public class PrefHelper {
      * API uses.
      */
     public String getAPIBaseUrl() {
-        if (useEUEndpoint_) {
-            return BRANCH_EU_BASE_URL_V3;
+        if (URLUtil.isHttpsUrl(customServerURL_)) {
+            return customServerURL_;
         }
 
-        if (URLUtil.isHttpsUrl(getString(KEY_BASE_URL))) {
-            return getString(KEY_BASE_URL);
+        if (useEUEndpoint_) {
+            return BRANCH_EU_BASE_URL_V3;
         }
 
         if (Build.VERSION.SDK_INT >= 20) {
@@ -950,7 +959,53 @@ public class PrefHelper {
     boolean isAppTrackingLimited() {
         return getBool(KEY_LIMIT_FACEBOOK_TRACKING);
     }
-    
+
+    /**
+     * Returns true if DMA params - KEY_EEA_REGION value exist in pref helper.
+     */
+    boolean isDMAParamsInitialized() {
+        if(hasPrefValue(KEY_DMA_EEA)){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * <p>Internal setter/getter func for key eea_region </p>
+     */
+    void setEEARegion(boolean isEEARegion) {
+        setBool(KEY_DMA_EEA, isEEARegion);
+    }
+
+    boolean getEEARegion() {
+        return getBool(KEY_DMA_EEA);
+    }
+
+     /**
+     * <p>Sets value of consent granted/denied by end user for ads personalization.</p>
+     *  @param hasAdPersonalizationConsent {@code true} if user has given consent.
+     */
+    void setAdPersonalizationConsent(boolean hasAdPersonalizationConsent) {
+        setBool(KEY_DMA_AD_PERSONALIZATION, hasAdPersonalizationConsent);
+    }
+
+    boolean getAdPersonalizationConsent() {
+        return getBool(KEY_DMA_AD_PERSONALIZATION);
+    }
+
+    /**
+     * <p>Sets value of consent granted/denied for 3P transmission of user level data for ads.</p>
+     *  @param hasAdUserDataUsageConsent {@code true} if user has given consent.
+     */
+    void setAdUserDataUsageConsent(boolean hasAdUserDataUsageConsent) {
+        setBool(KEY_DMA_AD_USER_DATA, hasAdUserDataUsageConsent);
+    }
+
+    boolean getAdUserDataUsageConsent() {
+        return getBool(KEY_DMA_AD_USER_DATA);
+    }
+
+
     /**
      * <p>Resets the user-related values that have been stored in preferences. This will cause a
      * sync to occur whenever a method reads any of the values and finds the value to be 0 or unset.</p>

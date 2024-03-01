@@ -49,26 +49,26 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testSetAPIUrl_Example() {
-        prefHelper.setAPIUrl("https://www.example.com/");
+        PrefHelper.setAPIUrl("https://www.example.com/");
         String actual = prefHelper.getAPIBaseUrl();
         Assert.assertEquals("https://www.example.com/", actual);
     }
 
     @Test
     public void testSetAPIUrl_InvalidHttp() {
-        prefHelper.setAPIUrl("http://www.example.com/");
+        PrefHelper.setAPIUrl("http://www.example.com/");
         assertDefaultURL();
     }
 
     @Test
     public void testSetAPIUrl_InvalidNull() {
-        prefHelper.setAPIUrl(null);
+        PrefHelper.setAPIUrl(null);
         assertDefaultURL();
     }
 
     @Test
     public void testSetAPIUrl_InvalidEmpty() {
-        prefHelper.setAPIUrl("");
+        PrefHelper.setAPIUrl("");
         assertDefaultURL();
     }
 
@@ -313,5 +313,25 @@ public class PrefHelperTest extends BranchTest {
         } catch (JSONException e) {
             Assert.fail();
         }
+    }
+
+    @Test
+    public void testSetDMAParamsForEEA(){
+
+        Assert.assertEquals(prefHelper.isDMAParamsInitialized(),false);
+
+        Branch.getInstance().setDMAParamsForEEA(true, false,true);
+
+        Assert.assertEquals(prefHelper.isDMAParamsInitialized(),true);
+        Assert.assertEquals(prefHelper.getEEARegion(),true);
+        Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),false);
+        Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),true);
+
+        // check by flipping values - if they are overwritten
+        Branch.getInstance().setDMAParamsForEEA(false, true,false);
+
+        Assert.assertEquals(prefHelper.getEEARegion(),false);
+        Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),true);
+        Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),false);
     }
 }

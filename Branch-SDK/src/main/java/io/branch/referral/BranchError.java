@@ -7,7 +7,7 @@ public class BranchError {
     
     String errorMessage_ = "";
     int errorCode_ = ERR_OTHER;
-    
+
     /* Error processing request since session not initialised yet. */
     public static final int ERR_NO_SESSION = -101;
     /* Error processing request since app doesn't have internet permission. */
