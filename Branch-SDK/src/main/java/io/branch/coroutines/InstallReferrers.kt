@@ -22,6 +22,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.net.URLDecoder
 
+private const val installReferrer = "install_referrer"
+private const val isCt = "is_ct"
+private const val actualTimestamp = "actual_timestamp"
+
 suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
         try {
@@ -254,19 +258,23 @@ private fun queryMetaInstallReferrer(context: Context, fbAppId: String): Install
     val instagramResult = queryProvider(context, instagramProvider)
 
     // Check both Facebook and Instagram for install referrers and return the latest one
-    return if (facebookResult != null && instagramResult != null) {
+    val result: InstallReferrerResult?
+
+    if (facebookResult != null && instagramResult != null) {
         if (facebookResult.latestClickTimestamp > instagramResult.latestClickTimestamp) {
-            facebookResult
+            result = facebookResult
         } else {
-            instagramResult
+            result = instagramResult
         }
     } else {
-        facebookResult ?: instagramResult
+         result = facebookResult ?: instagramResult
     }
+
+    return result
 }
 
 private fun queryProvider(context: Context, provider: String): InstallReferrerResult? {
-    val projection = arrayOf("install_referrer", "is_ct", "actual_timestamp")
+    val projection = arrayOf(installReferrer, isCt, actualTimestamp)
 
     context.contentResolver.query(Uri.parse(provider), projection, null, null, null)?.use { cursor ->
 
@@ -275,12 +283,12 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
             return null
         }
 
-        val timestampIndex = cursor.getColumnIndex("actual_timestamp")
-        val clickThroughIndex = cursor.getColumnIndex("is_ct")
-        val referrerIndex = cursor.getColumnIndex("install_referrer")
+        val timestampIndex = cursor.getColumnIndex(actualTimestamp)
+        val clickThroughIndex = cursor.getColumnIndex(isCt)
+        val referrerIndex = cursor.getColumnIndex(installReferrer)
 
         if (timestampIndex == -1 || clickThroughIndex == -1 || referrerIndex == -1) {
-            BranchLogger.d("getMetaInstallReferrerDetails - Required column not found in cursor for provider $provider")
+            BranchLogger.w("getMetaInstallReferrerDetails - Required column not found in cursor for provider $provider")
             return null
         }
 
@@ -291,22 +299,22 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
         val utmContentValue = try {
             URLDecoder.decode(installReferrerString, "UTF-8").substringAfter("utm_content=", "")
         } catch (e: IllegalArgumentException) {
-            BranchLogger.e("getMetaInstallReferrerDetails - Error decoding URL: $e")
+            BranchLogger.w("getMetaInstallReferrerDetails - Error decoding URL: $e")
             return null
         }
 
         if (utmContentValue.isEmpty()) {
-            BranchLogger.d("getMetaInstallReferrerDetails - utm_content is empty for provider $provider")
+            BranchLogger.w("getMetaInstallReferrerDetails - utm_content is empty for provider $provider")
             return null
         }
 
         BranchLogger.i("getMetaInstallReferrerDetails - Got Meta Install Referrer from provider $provider: $installReferrerString")
 
-        return try {
+        try {
             val json = JSONObject(utmContentValue)
             val latestInstallTimestamp = json.getLong("t")
 
-            InstallReferrerResult(
+            return InstallReferrerResult(
                 Jsonkey.Meta_Install_Referrer.key,
                 latestInstallTimestamp,
                 installReferrerString,
@@ -314,8 +322,8 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
                 isClickThrough
             )
         } catch (e: JSONException) {
-            BranchLogger.e("getMetaInstallReferrerDetails - JSONException in queryProvider: $e")
-            null
+            BranchLogger.w("getMetaInstallReferrerDetails - JSONException in queryProvider: $e")
+            return null
         }
     }
 
@@ -364,6 +372,7 @@ fun getLatestValidReferrerStore(allReferrers: List<InstallReferrerResult?>): Ins
 
 //Handle the deduplication and click vs view logic for Meta install referrer
 private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>, latestReferrer: InstallReferrerResult): InstallReferrerResult? {
+    val result: InstallReferrerResult?
     val metaReferrer = allReferrers.filterNotNull().firstOrNull { it.appStore == Jsonkey.Meta_Install_Referrer.key }
 
     if (metaReferrer!!.isClickThrough) {
@@ -371,22 +380,23 @@ private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>
         if (latestReferrer.appStore == Jsonkey.Google_Play_Store.key) {
             //Deduplicate the Meta and Play Store referrers
             if (latestReferrer.latestClickTimestamp == metaReferrer.latestClickTimestamp) {
-                return metaReferrer
+                return  metaReferrer
             }
         }
 
-        return latestReferrer
+        result =  latestReferrer
     } else {
         //The Meta Referrer is view through. Return it if the Play Store referrer is organic (latestClickTimestamp is 0)
         val googleReferrer = allReferrers.filterNotNull().firstOrNull { it.appStore == Jsonkey.Google_Play_Store.key }
-        return if (googleReferrer?.latestClickTimestamp == 0L) {
-            metaReferrer
+        if (googleReferrer?.latestClickTimestamp == 0L) {
+            result =  metaReferrer
         } else {
             val referrersWithoutMeta = allReferrers.filterNotNull().filterNot { it.appStore == Jsonkey.Meta_Install_Referrer.key }
-            referrersWithoutMeta.maxByOrNull {
+            result = referrersWithoutMeta.maxByOrNull {
                 it.latestInstallTimestamp
             }
         }
     }
 
+    return result
 }
