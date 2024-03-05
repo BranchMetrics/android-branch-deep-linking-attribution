@@ -218,7 +218,7 @@ public class Defines {
         Huawei_App_Gallery("AppGallery"),
         Samsung_Galaxy_Store("GalaxyStore"),
         Xiaomi_Get_Apps("GetApps"),
-        Meta_Install_Referrer("Meta");
+        Meta_Install_Referrer("Meta"),
         
         DMA_EEA("dma_eea"),
         DMA_Ad_Personalization("dma_ad_personalization"),
