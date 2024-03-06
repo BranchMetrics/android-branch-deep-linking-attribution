@@ -17,12 +17,14 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.android.billingclient.api.Purchase;
@@ -76,7 +78,7 @@ public class Branch {
     private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
 
     /**
-     * Hard-coded {@link String} that denotes a {@link BranchLinkData#tags}; applies to links that
+     * Hard-coded {@link String} that denotes a {@link BranchLinkData}; applies to links that
      * are shared with others directly as a user action, via social media for instance.
      */
     public static final String FEATURE_TAG_SHARE = "share";
@@ -1226,6 +1228,21 @@ public class Branch {
     }
 
 
+    /**
+     * <p>Creates a link with given attributes and shares with the
+     * user selected clients using native android share sheet</p>
+     *
+     * @param activity          The {@link Activity} to show native share sheet chooser dialog.
+     * @param buo               A {@link BranchUniversalObject} value containing the deep link params.
+     * @param linkProperties    An object of {@link LinkProperties} specifying the properties of this link
+     * @param callback          A {@link Branch.BranchNativeLinkShareListener } instance for getting sharing status.
+     * @param title             A {@link String } for setting title in native chooser dialog.
+     * @param subject           A {@link String } for setting subject in native chooser dialog.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
+    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchNativeLinkShareListener callback, String title, String subject){
+            NativeShareLinkManager.getInstance().shareLink(activity, buo, linkProperties, callback, title, subject);
+    }
 
     /**
      * <p>Creates options for sharing a link with other Applications. Creates a link with given attributes and shares with the
@@ -1641,7 +1658,29 @@ public class Branch {
          */
         boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties);
     }
-    
+
+    /**
+     * <p>An Interface class that is implemented by all classes that make use of
+     * {@link BranchNativeLinkShareListener}, defining methods to listen for link sharing status.</p>
+     */
+    public interface BranchNativeLinkShareListener {
+
+        /**
+         * <p> Callback method to report error/response.</p>
+         *
+         * @param sharedLink    The link shared to the channel.
+         * @param error         A {@link BranchError} to update errors, if there is any.
+         */
+        void onLinkShareResponse(String sharedLink, BranchError error);
+
+        /**
+         * <p>Called when user select a channel for sharing a deep link.
+         *
+         * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
+         */
+        void onChannelSelected(String channelName);
+    }
+
     /**
      * <p>An interface class for customizing sharing properties with selected channel.</p>
      */

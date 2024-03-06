@@ -145,6 +145,24 @@ public class GenerateUrlActivity extends AppCompatActivity implements View.OnCli
                             return false;
                         }
                     });
+        } else if (clickType.equals(Constants.CREATE_NATIVE_SHARE_LINK)) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                Branch.getInstance().share(this, Common.branchUniversalObject, Common.lp, new Branch.BranchNativeLinkShareListener() {
+                            @Override
+                            public void onLinkShareResponse(String sharedLink, BranchError error) {
+                                Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
+                            }
+
+                            @Override
+                            public void onChannelSelected(String channelName) {
+                                Log.d("Native Share Sheet:", "Channel Selected: " + channelName);
+                            }
+
+                        },
+                        "Sharing Branch Short URL", "Using Native Chooser Dialog");
+            }
+
         } else if (clickType.equals(Constants.CREATE_QR_CODE)) {
             Log.e("qr code","create qr code");
             String qrCodeCenterLogoUrlStr = etQrCodeLogoUrl.getText().toString();
