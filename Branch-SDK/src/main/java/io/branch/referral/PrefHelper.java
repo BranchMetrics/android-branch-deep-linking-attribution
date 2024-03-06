@@ -1386,6 +1386,8 @@ public class PrefHelper {
     private static boolean enableLogging_ = false;
     private static boolean useEUEndpoint_ = false;
 
+    public static String fbAppId_ = null;
+
     static void enableLogging(boolean fEnable) {
         enableLogging_ = fEnable;
     }

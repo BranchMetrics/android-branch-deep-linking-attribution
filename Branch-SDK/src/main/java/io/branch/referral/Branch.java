@@ -2511,4 +2511,8 @@ public class Branch {
     public static void useEUEndpoint() {
         PrefHelper.useEUEndpoint(true);
     }
+
+    public static void setFBAppID(String fbAppID) {
+        PrefHelper.fbAppId_ = fbAppID;
+    }
 }

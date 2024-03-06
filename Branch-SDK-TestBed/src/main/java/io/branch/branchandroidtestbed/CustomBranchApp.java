@@ -10,6 +10,7 @@ public final class CustomBranchApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+      
         IBranchLoggingCallbacks iBranchLoggingCallbacks = new IBranchLoggingCallbacks() {
             @Override
             public void onBranchLog(String logMessage, String severityConstantName) {
@@ -17,6 +18,7 @@ public final class CustomBranchApp extends Application {
             }
         };
         Branch.enableLogging(iBranchLoggingCallbacks);
+
         Branch.getAutoInstance(this);
     }
 }
