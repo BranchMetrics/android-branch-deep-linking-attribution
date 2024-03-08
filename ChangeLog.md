@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.10.0
+  * _*Master Release*_ - Mar 8, 2024
+    - Introduced Meta Install Referrer tracking
+    - Added new method for using the native Android share sheet
+    - Added additional logging with improved formatting
 - v5.9.0
   * _*Master Release*_ - Feb 15, 2024
     - Added new useEUEndpoint method
