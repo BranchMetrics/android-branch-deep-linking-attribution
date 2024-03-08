@@ -49,7 +49,7 @@ public class ServerRequestLogEvent extends ServerRequest {
             }
             setPost(reqBody);
         } catch (JSONException e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         updateEnvironment(context, reqBody);
     }
@@ -98,6 +98,6 @@ public class ServerRequestLogEvent extends ServerRequest {
     }
 
     public boolean shouldRetryOnFail() {
-        return true; // Branch event need to be retried on failure.
+        return false;
     }
 }

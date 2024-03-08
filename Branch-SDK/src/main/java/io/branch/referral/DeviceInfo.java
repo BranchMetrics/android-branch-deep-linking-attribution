@@ -119,7 +119,7 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
             }
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException" + e.getMessage());
         }
     }
 
@@ -232,7 +232,7 @@ class DeviceInfo {
             }
 
         } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.w("Caught JSONException" + e.getMessage());
         }
     }
 

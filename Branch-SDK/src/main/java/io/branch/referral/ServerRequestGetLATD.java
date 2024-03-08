@@ -25,7 +25,7 @@ public class ServerRequestGetLATD extends ServerRequest {
         try {
             setPost(reqBody);
         } catch (JSONException e) {
-            e.printStackTrace();
+            BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         updateEnvironment(context, reqBody);
     }

@@ -91,7 +91,7 @@ class ServerRequestCreateUrl extends ServerRequest {
             linkPost_.remove("hardware_id");
 
         } catch (JSONException ex) {
-            ex.printStackTrace();
+            BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;
         }
     }
@@ -127,7 +127,7 @@ class ServerRequestCreateUrl extends ServerRequest {
                 callback_.onLinkCreate(url, null);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            BranchLogger.e("Caught Exception " + BranchLogger.stackTraceToString(ex));
         }
     }
 
@@ -249,7 +249,8 @@ class ServerRequestCreateUrl extends ServerRequest {
                 String urlEncodedBase64Data = URLEncoder.encode(base64Data, "UTF8");
                 longUrl = longUrl + "&data=" + urlEncodedBase64Data;
             }
-        } catch (Exception ignore) {
+        } catch (Exception exception) {
+            BranchLogger.e("Caught Exception " + BranchLogger.stackTraceToString(exception));
             callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", BranchError.ERR_BRANCH_INVALID_REQUEST));
         }
 

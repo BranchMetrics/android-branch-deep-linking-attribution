@@ -29,7 +29,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
             setPost(openPost);
         } catch (JSONException ex) {
-            ex.printStackTrace();
+            BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;
         }
         
@@ -79,7 +79,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
             
         } catch (Exception ex) {
-            ex.printStackTrace();
+            BranchLogger.w("Caught Exception " + ex.getMessage());
         }
         onInitSessionCompleted(resp, branch);
     }
@@ -91,7 +91,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             try {
                 obj.put("error_message", "Trouble reaching server. Please try again in a few minutes");
             } catch (JSONException ex) {
-                ex.printStackTrace();
+                BranchLogger.w("Caught JSONException " + ex.getMessage());
             }
             callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch. " + causeMsg, statusCode));
         }
@@ -126,6 +126,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
 
     @Override
     public boolean shouldRetryOnFail() {
-        return true;   //Open request needs to retry on failure.
+        return false;
     }
 }
