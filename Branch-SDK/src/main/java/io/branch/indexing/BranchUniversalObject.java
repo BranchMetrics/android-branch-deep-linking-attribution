@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.text.TextUtils;
-import android.webkit.TracingController;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -26,7 +25,6 @@ import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
 import io.branch.referral.TrackingController;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
@@ -537,11 +535,17 @@ public class BranchUniversalObject implements Parcelable {
     
     
     //------------------ Share sheet -------------------------------------//
-    
+
+    /**
+     * @deprecated Please use {@link Branch#share(Activity, BranchUniversalObject, LinkProperties, Branch.BranchNativeLinkShareListener, String, String)} instead.}
+     */
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
         showShareSheet(activity, linkProperties, style, callback, null);
     }
-    
+
+    /**
+     * @deprecated Please use {@link Branch#share(Activity, BranchUniversalObject, LinkProperties, Branch.BranchNativeLinkShareListener, String, String)} instead.}
+     */
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback, Branch.IChannelProperties channelProperties) {
         if (Branch.getInstance() == null) {  //if in case Branch instance is not created. In case of user missing create instance or BranchApp in manifest
             if (callback != null) {

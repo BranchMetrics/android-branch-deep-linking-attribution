@@ -105,6 +105,7 @@ public class BUOReferenceActivity extends AppCompatActivity implements View.OnCl
                     public void onDialogDismissed() {
                         if (clickType.equals(Constants.BUO_REFERENCE_AND_CREATE_DEP_LINK)
                                 || clickType.equals(Constants.CREATE_SHARE_LINK)
+                                || clickType.equals(Constants.CREATE_NATIVE_SHARE_LINK)
                                 || clickType.equals(Constants.CREATE_SEND_NOTIFICATION)
                                 || clickType.equals(Constants.CREATE_SEND_READ_DEEP_LINK)
                                 || clickType.equals(Constants.NAVIGATE_TO_CONTENT)

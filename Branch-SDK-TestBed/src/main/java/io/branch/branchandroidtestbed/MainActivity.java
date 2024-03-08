@@ -20,7 +20,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -29,7 +29,6 @@ import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 
 import org.json.JSONObject;
@@ -40,15 +39,13 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.branch.branchandroidtestbed.R;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
-import io.branch.referral.Defines;
-import io.branch.referral.ServerResponse;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -387,6 +384,38 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.native_share_btn).setOnClickListener(new OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
+            @Override
+            public void onClick(View view) {
+
+                LinkProperties linkProperties = new LinkProperties()
+                        .addTag("myShareTag1")
+                        .addTag("myShareTag2")
+                        .setChannel("myShareChannel2")
+                        .setFeature("mySharefeature2")
+                        .setStage("10")
+                        .setCampaign("Android campaign")
+                        .addControlParameter("$android_deeplink_path", "custom/path/*")
+                        .addControlParameter("$ios_url", "http://example.com/ios")
+                        .setDuration(100);
+                Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
+                            @Override
+                            public void onLinkShareResponse(String sharedLink, BranchError error) {
+                                Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
+                            }
+
+                            @Override
+                            public void onChannelSelected(String channelName) {
+                                Log.d("Native Share Sheet:", "Channel Selected: " + channelName);
+                            }
+
+                        },
+                        "Sharing Branch Short URL", "Using Native Chooser Dialog");
+            }
+        });
+
+
         findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -689,6 +718,10 @@ public class MainActivity extends Activity {
             //For e.g. Go to HomeActivity or a  SignUp Activity.
             Intent i = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(i);
+        }
+
+        if(requestCode == getResources().getInteger(R.integer.ShareRequestCode)){
+            Log.d("BranchSDK", "Sharing result was " + resultCode + " intent " + data);
         }
     }
 

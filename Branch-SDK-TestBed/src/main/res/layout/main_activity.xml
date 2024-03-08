@@ -44,6 +44,12 @@
                 android:text="Share Branch Link" />
 
             <Button
+                android:id="@+id/native_share_btn"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_share_24"
+                android:text="Native Share Branch Link" />
+
+            <Button
                 android:id="@+id/qrCode_btn"
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/ic_baseline_qr_code_24"

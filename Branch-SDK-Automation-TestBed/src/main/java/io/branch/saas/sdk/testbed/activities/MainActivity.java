@@ -16,7 +16,7 @@ import io.branch.saas.sdk.testbed.Constants;
 import io.branch.saas.sdk.testbed.R;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private Button btBuoObj, btCreateDeepLink, btShare, btTrackUser,
+    private Button btBuoObj, btCreateDeepLink, btShare, btNativeShare, btTrackUser,
             btReadDeepLink, btNotification, btBuoObjWithMeta, btNavigateToContent, btTrackContent, btHandleLinks, btCreateQrCode;
     private TextView tvMessage, tvUrl;
 
@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btBuoObj = findViewById(R.id.bt_buo_obj);
         btCreateDeepLink = findViewById(R.id.bt_create_deep_link);
         btShare = findViewById(R.id.bt_share);
+        btNativeShare = findViewById(R.id.bt_native_share);
         btReadDeepLink = findViewById(R.id.bt_read_deep_link);
         tvMessage = findViewById(R.id.tv_message);
         tvUrl = findViewById(R.id.tv_url);
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btBuoObj.setOnClickListener(this);
         btCreateDeepLink.setOnClickListener(this);
         btShare.setOnClickListener(this);
+        btNativeShare.setOnClickListener(this);
         btTrackContent.setOnClickListener(this);
         btHandleLinks.setOnClickListener(this);
         btTrackUser = findViewById(R.id.bt_track_user);
@@ -87,6 +89,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (view == btCreateDeepLink) {
             Intent intent = new Intent(this, BUOReferenceActivity.class);
             intent.putExtra(Constants.TYPE, Constants.BUO_REFERENCE_AND_CREATE_DEP_LINK);
+            startActivity(intent);
+        } else if (view == btNativeShare) {
+            Intent intent = new Intent(this, BUOReferenceActivity.class);
+            intent.putExtra(Constants.TYPE, Constants.CREATE_NATIVE_SHARE_LINK);
             startActivity(intent);
         } else if (view == btShare) {
             Intent intent = new Intent(this, BUOReferenceActivity.class);
