@@ -121,15 +121,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         String googlePlayReferrer = prefHelper_.getAppStoreReferrer();
         if (!googlePlayReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
             try {
-
-                //Handle Meta Install Referrer by setting store as Google Play Store and adding is_meta_click_through
-                if (googlePlayReferrer.equals(Defines.Jsonkey.Meta_Install_Referrer.getKey())) {
-                    getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), Defines.Jsonkey.Google_Play_Store.getKey());
-                    getPost().put(Defines.Jsonkey.Is_Meta_Click_Through.getKey(), prefHelper_.getIsMetaClickThrough());
-                } else {
-                    getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
-                }
-
+                getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
             } catch (JSONException e) {
                 BranchLogger.w("Caught JSONException " + e.getMessage());
             }
@@ -138,7 +130,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
         String appStore = prefHelper_.getAppStoreSource();
         if(!PrefHelper.NO_STRING_VALUE.equals(appStore)) {
             try {
-                getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
+                //Handle Meta Install Referrer by setting store as Google Play Store and adding is_meta_click_through
+                if (appStore.equals(Defines.Jsonkey.Meta_Install_Referrer.getKey())) {
+                    getPost().put(Defines.Jsonkey.App_Store.getKey(), Defines.Jsonkey.Google_Play_Store.getKey());
+                    getPost().put(Defines.Jsonkey.Is_Meta_Click_Through.getKey(), prefHelper_.getIsMetaClickThrough());
+                } else {
+                    getPost().put(Defines.Jsonkey.App_Store.getKey(), appStore);
+                }
             } catch (JSONException e) {
                 BranchLogger.w("Caught JSONException " + e.getMessage());
             }

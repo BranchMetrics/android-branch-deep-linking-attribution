@@ -308,7 +308,7 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
             return null
         }
 
-        BranchLogger.i("getMetaInstallReferrerDetails - Got Meta Install Referrer from provider $provider: $installReferrerString")
+        BranchLogger.i("getMetaInstallReferrerDetails - Got Meta Install Referrer as ${if (isClickThrough) "click-through" else "view-through"} from provider $provider: $installReferrerString")
 
         try {
             val json = JSONObject(utmContentValue)
