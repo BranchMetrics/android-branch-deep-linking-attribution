@@ -360,11 +360,7 @@ fun getLatestValidReferrerStore(allReferrers: List<InstallReferrerResult?>): Ins
     }
 
     if (allReferrers.filterNotNull().any { it.appStore == Jsonkey.Meta_Install_Referrer.key }) {
-        val latestReferrer = handleMetaInstallReferrer(allReferrers, result!!)
-        if (latestReferrer?.appStore == Jsonkey.Meta_Install_Referrer.key) {
-            latestReferrer?.appStore = Jsonkey.Google_Play_Store.key
-        }
-        return latestReferrer
+        return handleMetaInstallReferrer(allReferrers, result!!)
     }
 
     return result

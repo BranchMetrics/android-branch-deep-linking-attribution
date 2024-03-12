@@ -602,7 +602,7 @@ abstract class SystemObserver {
                 public void resumeWith(@NonNull Object o) {
                     if (o != null) {
                         InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
-                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore());
+                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore(), latestReferrer.isClickThrough());
                     }
                 }
             });

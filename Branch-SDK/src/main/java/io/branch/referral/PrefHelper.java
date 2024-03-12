@@ -127,6 +127,8 @@ public class PrefHelper {
     static final String KEY_REFERRING_URL_QUERY_PARAMETERS = "bnc_referringUrlQueryParameters";
     static final String KEY_ANON_ID = "bnc_anon_id";
 
+    static final String KEY_IS_META_CLICKTHROUGH = "bnc_is_meta_clickthrough";
+
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -707,6 +709,14 @@ public class PrefHelper {
 
     public String getAppStoreSource(){
         return getString(KEY_APP_STORE_SOURCE);
+    }
+
+    public void setIsMetaClickThrough(boolean isMetaClickThrough) {
+        setBool(KEY_IS_META_CLICKTHROUGH, isMetaClickThrough);
+    }
+
+    public boolean getIsMetaClickThrough() {
+        return getBool(KEY_IS_META_CLICKTHROUGH);
     }
 
     /**
