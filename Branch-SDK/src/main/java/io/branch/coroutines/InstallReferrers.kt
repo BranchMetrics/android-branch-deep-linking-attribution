@@ -345,6 +345,9 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
         val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await(), metaReferrer.await())
         val latestReferrer = getLatestValidReferrerStore(allReferrers)
 
+        BranchLogger.v("All Install Referrers: $allReferrers")
+        BranchLogger.v("Latest Install Referrer: $latestReferrer")
+
         latestReferrer
     }
 }
