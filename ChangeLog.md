@@ -1,7 +1,7 @@
 # Branch Android SDK change log
 - v5.10.1
-  * _*Master Release*_ - Mar 8, 2024
-    - Introduced Meta Install Referrer tracking
+  * _*Master Release*_ - Mar 11, 2024
+    - Fix for Meta Install Referrer tracking of view-through installs
 - v5.10.0
   * _*Master Release*_ - Mar 8, 2024
     - Introduced Meta Install Referrer tracking
