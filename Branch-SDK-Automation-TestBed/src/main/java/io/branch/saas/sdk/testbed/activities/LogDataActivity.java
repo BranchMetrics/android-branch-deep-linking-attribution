@@ -69,6 +69,7 @@ public class LogDataActivity extends AppCompatActivity {
             }
         } else {
             if (!TextUtils.isEmpty(message)) {
+                tvLogData.setVisibility(View.VISIBLE);
                 tvLogData.setText(message);
             }
         }

@@ -156,7 +156,16 @@
         android:layout_marginBottom="@dimen/_2sdp"
         android:text="Create QR Code"
         android:textAllCaps="false" />
-
+    <Button
+        android:id="@+id/bt_set_dma_params"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_15sdp"
+        android:layout_marginTop="@dimen/_2sdp"
+        android:layout_marginEnd="@dimen/_15sdp"
+        android:layout_marginBottom="@dimen/_2sdp"
+        android:text="Set DMA Params"
+        android:textAllCaps="false" />
     <ToggleButton
         android:id="@+id/tracking_cntrl_btn"
         style="@style/testbed_button_style"
