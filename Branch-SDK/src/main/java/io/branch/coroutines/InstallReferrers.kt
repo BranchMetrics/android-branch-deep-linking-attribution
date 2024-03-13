@@ -308,7 +308,7 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
             return null
         }
 
-        BranchLogger.i("getMetaInstallReferrerDetails - Got Meta Install Referrer from provider $provider: $installReferrerString")
+        BranchLogger.i("getMetaInstallReferrerDetails - Got Meta Install Referrer as ${if (isClickThrough) "click-through" else "view-through"} from provider $provider: $installReferrerString")
 
         try {
             val json = JSONObject(utmContentValue)
@@ -345,6 +345,9 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
         val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await(), metaReferrer.await())
         val latestReferrer = getLatestValidReferrerStore(allReferrers)
 
+        BranchLogger.v("All Install Referrers: $allReferrers")
+        BranchLogger.v("Latest Install Referrer: $latestReferrer")
+
         latestReferrer
     }
 }
@@ -360,11 +363,7 @@ fun getLatestValidReferrerStore(allReferrers: List<InstallReferrerResult?>): Ins
     }
 
     if (allReferrers.filterNotNull().any { it.appStore == Jsonkey.Meta_Install_Referrer.key }) {
-        val latestReferrer = handleMetaInstallReferrer(allReferrers, result!!)
-        if (latestReferrer?.appStore == Jsonkey.Meta_Install_Referrer.key) {
-            latestReferrer?.appStore = Jsonkey.Google_Play_Store.key
-        }
-        return latestReferrer
+        return handleMetaInstallReferrer(allReferrers, result!!)
     }
 
     return result

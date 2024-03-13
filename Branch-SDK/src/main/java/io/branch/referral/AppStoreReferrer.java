@@ -15,10 +15,15 @@ public class AppStoreReferrer {
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
 
-    public static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS, String store) {
+    public static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS, String store, Boolean isClickThrough) {
         PrefHelper prefHelper = PrefHelper.getInstance(context);
         if(!TextUtils.isEmpty(store)){
             prefHelper.setAppStoreSource(store);
+
+            //Set the click through flag for Meta Install Referrers
+            if (store.equals(Defines.Jsonkey.Meta_Install_Referrer.getKey())) {
+                prefHelper.setIsMetaClickThrough(isClickThrough);
+            }
         }
         if (referrerClickTS > 0) {
             prefHelper.setLong(PrefHelper.KEY_REFERRER_CLICK_TS, referrerClickTS);
