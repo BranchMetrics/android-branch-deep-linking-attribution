@@ -33,9 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Branch.expectDelayedSessionInitialization(true);
-        Branch.getInstance().setIdentity("automation_test_user");
-        Branch.enableLogging();
+
         btBuoObj = findViewById(R.id.bt_buo_obj);
         btCreateDeepLink = findViewById(R.id.bt_create_deep_link);
         btShare = findViewById(R.id.bt_share);
@@ -93,6 +91,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
+        if (view == btSetDMAParams) {
+            Branch.expectDelayedSessionInitialization(true);
+        } else {
+            Branch.getInstance().setIdentity("automation_test_user");
+        }
+        Branch.enableLogging();
         if (view == btBuoObj) {
             Intent intent = new Intent(this, BUOReferenceActivity.class);
             intent.putExtra(Constants.TYPE, Constants.BUO_REFERENCE);
@@ -151,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(intent);
         }  else if (view == btSetDMAParams) {
 
-            //getIntent().putExtra("testData", "{\"dma_eea\":\"Yes\",\"dma_ad_personalization\":\"Yes\",\"dma_ad_user_data\":\"Yes\",\"Include\":\"Yes\",\"URL\":\"https:\\/\\/timber.test-app.link\\/80OHAnv8DHb\"}");
+            getIntent().putExtra("branch_force_new_session", true);
 
             Intent intent = new Intent(this, LogDataActivity.class);
             intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
@@ -186,7 +190,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (adUserDataUsageConsentStr.equalsIgnoreCase("yes"))
                         adUserDataUsageConsent = true;
 
-                    Branch.getInstance().disableTracking(true);
                     Branch.getInstance().setDMAParamsForEEA(eeaRegion, adPersonalizationConsent, adUserDataUsageConsent);
 
                     intent.putExtra(Constants.ANDROID_URL, url);
