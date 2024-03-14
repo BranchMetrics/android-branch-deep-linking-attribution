@@ -37,6 +37,7 @@ public class LogDataActivity extends AppCompatActivity {
                         intent.putExtra(Constants.FORCE_NEW_SESSION, true);
                         break;
                     case Constants.AFTER_READ_DEEP_LINK:
+                    case Constants.SET_DMA_Params:
                         intent = new Intent(LogDataActivity.this, MainActivity.class);
                         break;
                     case Constants.TRACK_CONTENT_DATA:

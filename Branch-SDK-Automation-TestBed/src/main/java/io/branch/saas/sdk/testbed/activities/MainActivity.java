@@ -14,15 +14,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
+import io.branch.referral.util.BranchEvent;
 import io.branch.saas.sdk.testbed.Common;
 import io.branch.saas.sdk.testbed.Constants;
 import io.branch.saas.sdk.testbed.R;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button btBuoObj, btCreateDeepLink, btShare, btNativeShare, btTrackUser,
-            btReadDeepLink, btNotification, btBuoObjWithMeta, btNavigateToContent, btTrackContent, btHandleLinks, btCreateQrCode, btSetDMAParams;
+            btReadDeepLink, btNotification, btBuoObjWithMeta, btNavigateToContent, btTrackContent, btHandleLinks, btCreateQrCode, btSetDMAParams, btLogEvent;
     private TextView tvMessage, tvUrl;
 
 
@@ -44,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btTrackContent = findViewById(R.id.bt_track_content);
         btCreateQrCode = findViewById(R.id.bt_create_qr_code);
         btSetDMAParams = findViewById(R.id.bt_set_dma_params);
+        btLogEvent = findViewById(R.id.bt_logEvent_with_callback);
         btHandleLinks = findViewById(R.id.bt_handle_links);
 
         ToggleButton trackingCntrlBtn = findViewById(R.id.tracking_cntrl_btn);
@@ -61,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btNavigateToContent.setOnClickListener(this);
         btCreateQrCode.setOnClickListener(this);
         btSetDMAParams.setOnClickListener(this);
+        btLogEvent.setOnClickListener(this);
 
         trackingCntrlBtn.setChecked(Branch.getInstance().isTrackingDisabled());
         trackingCntrlBtn.setOnCheckedChangeListener((buttonView, isChecked) -> Branch.getInstance().disableTracking(isChecked));
@@ -146,62 +151,99 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(intent);
         }  else if (view == btSetDMAParams) {
 
+            //getIntent().putExtra("testData", "{\"dma_eea\":\"Yes\",\"dma_ad_personalization\":\"Yes\",\"dma_ad_user_data\":\"Yes\",\"Include\":\"Yes\",\"URL\":\"https:\\/\\/timber.test-app.link\\/80OHAnv8DHb\"}");
+
             Intent intent = new Intent(this, LogDataActivity.class);
             intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
             String erMessage = "Starting ....";
-            byte b = 0x00;
             String paramsString = (String) getIntent().getStringExtra("testData");
-            //String
-            //getIntent().get
-            try {
 
-              //  getIntent().putExtra("testData", "{\"eeaRegion\":\"Yes\",\"adPersonalizationConsent\":\"Yes\",\"adUserDataUsageConsent\":\"Yes\",\"Include\":\"Yes\",\"URL\":\"https:\\/\\/timber.test-app.link\\/80OHAnv8DHb\"}");
-                erMessage = erMessage + "Processing ...";
-
-                JSONObject jsonObject = new JSONObject(paramsString);
-                erMessage = erMessage + "Processing ... 2 ";
-                String url = jsonObject.getString("URL");
-                erMessage = erMessage + "Processing ... 3";
-                String eeaRegionStr = jsonObject.getString("eeaRegion");
-                String adPersonalizationConsentStr = jsonObject.getString("adPersonalizationConsent");
-                String adUserDataUsageConsentStr = jsonObject.getString("adUserDataUsageConsent");
-
-                boolean eeaRegion = false;
-                boolean adPersonalizationConsent = false;
-                boolean adUserDataUsageConsent = false;
-
-                if (eeaRegionStr.equalsIgnoreCase("yes"))
-                    eeaRegion = true;
-                if (adPersonalizationConsentStr.equalsIgnoreCase("yes"))
-                    adPersonalizationConsent = true;
-                if (adUserDataUsageConsentStr.equalsIgnoreCase("yes"))
-                    adUserDataUsageConsent = true;
-
-                Branch.getInstance().disableTracking(true);
-                Branch.getInstance().setDMAParamsForEEA(eeaRegion, adPersonalizationConsent, adUserDataUsageConsent);
-
-                intent.putExtra(Constants.ANDROID_URL, url);
-                Common.getInstance().clearLog();
-                Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
-                    @Override
-                    public void onInitFinished(JSONObject referringParams, BranchError error) {
-                        if (error == null) {
-                            Log.i("BRANCH SDK", referringParams.toString());
-                            intent.putExtra(Constants.STATUS, Constants.SUCCESS);
-
-                        } else {
-                            Log.i("BRANCH SDK", error.getMessage());
-                            intent.putExtra(Constants.STATUS, Constants.FAIL);
-                            intent.putExtra(Constants.MESSAGE, "Failed:" + error.getMessage());
-                        }
-                        startActivity(intent);
-                    }
-                }).withData(Uri.parse(url)).init();
-            } catch (JSONException e) {
+            if(paramsString == null) {
                 intent.putExtra(Constants.STATUS, Constants.FAIL);
-                intent.putExtra(Constants.MESSAGE, "Failed:" + erMessage + e.getMessage() + paramsString);
+                intent.putExtra(Constants.MESSAGE, "Failed to get input params");
                 startActivity(intent);
+            } else {
+                try {
+
+                     erMessage = erMessage + "Processing ...";
+
+                    JSONObject jsonObject = new JSONObject(paramsString);
+                    erMessage = erMessage + "Processing ... 2 ";
+                    String url = jsonObject.getString("URL");
+                    erMessage = erMessage + "Processing ... 3";
+                    String eeaRegionStr = jsonObject.getString("dma_eea");
+                    String adPersonalizationConsentStr = jsonObject.getString("dma_ad_personalization");
+                    String adUserDataUsageConsentStr = jsonObject.getString("dma_ad_user_data");
+
+                    boolean eeaRegion = false;
+                    boolean adPersonalizationConsent = false;
+                    boolean adUserDataUsageConsent = false;
+
+                    if (eeaRegionStr.equalsIgnoreCase("yes"))
+                        eeaRegion = true;
+                    if (adPersonalizationConsentStr.equalsIgnoreCase("yes"))
+                        adPersonalizationConsent = true;
+                    if (adUserDataUsageConsentStr.equalsIgnoreCase("yes"))
+                        adUserDataUsageConsent = true;
+
+                    Branch.getInstance().disableTracking(true);
+                    Branch.getInstance().setDMAParamsForEEA(eeaRegion, adPersonalizationConsent, adUserDataUsageConsent);
+
+                    intent.putExtra(Constants.ANDROID_URL, url);
+                    Common.getInstance().clearLog();
+                    Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
+                        @Override
+                        public void onInitFinished(JSONObject referringParams, BranchError error) {
+                            if (error == null) {
+                                Log.i("BRANCH SDK", referringParams.toString());
+                                intent.putExtra(Constants.STATUS, Constants.SUCCESS);
+
+                            } else {
+                                Log.i("BRANCH SDK", error.getMessage());
+                                intent.putExtra(Constants.STATUS, Constants.FAIL);
+                                intent.putExtra(Constants.MESSAGE, "Failed:" + error.getMessage());
+                            }
+                            startActivity(intent);
+                        }
+                    }).withData(Uri.parse(url)).init();
+                } catch (JSONException e) {
+                    intent.putExtra(Constants.STATUS, Constants.FAIL);
+                    intent.putExtra(Constants.MESSAGE, "Failed:" + erMessage + e.getMessage() + paramsString);
+                    startActivity(intent);
+                }
             }
+        } else if (view == btLogEvent) {
+            Intent intent = new Intent(this, LogDataActivity.class);
+            intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
+            intent.putExtra(Constants.ANDROID_URL, "https://timber.test-app.link/80OHAnv8DHb");
+            Branch.getInstance().disableTracking(false);
+            BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier("content/12345");
+            Common.getInstance().clearLog();
+
+            new BranchEvent(BRANCH_STANDARD_EVENT.ADD_TO_CART)
+                    .setCustomerEventAlias("my_custom_alias")
+                    .setDescription("Customer added item to cart")
+                    .setSearchQuery("Test Search query")
+                    .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                    .addCustomDataProperty("Custom_Event_Property_Key2", "Custom_Event_Property_val2")
+                    .addContentItems(buo) // Associate `BranchUniversalObject` with event
+                    .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                        @Override
+                        public void onSuccess(int responseCode) {
+
+                            Log.i("BRANCH SDK - ", "Sent Branch Commerce Event: " + responseCode);
+                            intent.putExtra(Constants.STATUS, Constants.SUCCESS);
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.i("BRANCH SDK", e.getMessage());
+                            intent.putExtra(Constants.STATUS, Constants.FAIL);
+                            intent.putExtra(Constants.MESSAGE, "Failed:" + e.getMessage());
+                            startActivity(intent);
+                        }
+                    });
         }
     }
 }
