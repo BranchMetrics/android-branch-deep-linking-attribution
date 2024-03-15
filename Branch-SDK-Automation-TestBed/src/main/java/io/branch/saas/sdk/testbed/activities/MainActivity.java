@@ -119,11 +119,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Intent intent = new Intent(MainActivity.this, LogDataActivity.class);
                 intent.putExtra(Constants.TYPE, Constants.TRACK_USER);
                 if (referringParams != null) {
-                    intent.putExtra(Constants.MESSAGE,"Track User Data");
+                    intent.putExtra(Constants.MESSAGE, "Track User Data");
                     Log.i("track user result-->", "" + referringParams);
                     intent.putExtra(Constants.STATUS, Constants.SUCCESS);
                 } else {
-                    intent.putExtra(Constants.MESSAGE,"Failed to load Track User Data");
+                    intent.putExtra(Constants.MESSAGE, "Failed to load Track User Data");
                     intent.putExtra(Constants.STATUS, Constants.FAIL);
                     Log.i("track user  error-->", "" + error.getMessage());
                 }
@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(this, BUOReferenceActivity.class);
             intent.putExtra(Constants.TYPE, Constants.HANDLE_LINKS);
             startActivity(intent);
-        }  else if (view == btSetDMAParams) {
+        } else if (view == btSetDMAParams) {
 
             getIntent().putExtra("branch_force_new_session", true);
 
@@ -162,19 +162,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String erMessage = "Starting ....";
             String paramsString = (String) getIntent().getStringExtra("testData");
 
-            if(paramsString == null) {
+            if (paramsString == null) {
                 intent.putExtra(Constants.STATUS, Constants.FAIL);
                 intent.putExtra(Constants.MESSAGE, "Failed to get input params");
                 startActivity(intent);
             } else {
                 try {
 
-                     erMessage = erMessage + "Processing ...";
-
                     JSONObject jsonObject = new JSONObject(paramsString);
-                    erMessage = erMessage + "Processing ... 2 ";
                     String url = jsonObject.getString("URL");
-                    erMessage = erMessage + "Processing ... 3";
                     String eeaRegionStr = jsonObject.getString("dma_eea");
                     String adPersonalizationConsentStr = jsonObject.getString("dma_ad_personalization");
                     String adUserDataUsageConsentStr = jsonObject.getString("dma_ad_user_data");
