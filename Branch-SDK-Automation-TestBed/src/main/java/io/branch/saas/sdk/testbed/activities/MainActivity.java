@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             Intent intent = new Intent(this, LogDataActivity.class);
             intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
-            String erMessage = "Starting ....";
+            String erMessage = "";
             String paramsString = (String) getIntent().getStringExtra("testData");
 
             if (paramsString == null) {
