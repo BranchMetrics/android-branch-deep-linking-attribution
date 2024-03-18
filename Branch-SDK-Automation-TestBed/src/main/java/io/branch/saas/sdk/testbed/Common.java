@@ -24,8 +24,6 @@ public class Common {
     public ContentMetadata contentMetadata;
     public BRANCH_STANDARD_EVENT branchStandardEvent;
 
-    private String testShortURL = "https://timber.test-app.link/80OHAnv8DHb";
-
     public static Common getInstance() {
         if (common == null)
             common = new Common();
@@ -104,9 +102,5 @@ public class Common {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public String getTestShortURL() {
-        return testShortURL;
     }
 }
