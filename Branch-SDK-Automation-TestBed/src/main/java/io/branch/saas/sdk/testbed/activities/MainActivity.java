@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btBuoObj = findViewById(R.id.bt_buo_obj);
         btCreateDeepLink = findViewById(R.id.bt_create_deep_link);
         btShare = findViewById(R.id.bt_share);
+        btNativeShare = findViewById(R.id.bt_native_share);
         btReadDeepLink = findViewById(R.id.bt_read_deep_link);
         tvMessage = findViewById(R.id.tv_message);
         tvUrl = findViewById(R.id.tv_url);
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btBuoObj.setOnClickListener(this);
         btCreateDeepLink.setOnClickListener(this);
         btShare.setOnClickListener(this);
+        btNativeShare.setOnClickListener(this);
         btTrackContent.setOnClickListener(this);
         btHandleLinks.setOnClickListener(this);
         btTrackUser = findViewById(R.id.bt_track_user);
