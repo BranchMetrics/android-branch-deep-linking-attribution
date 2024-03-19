@@ -161,32 +161,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             Intent intent = new Intent(this, LogDataActivity.class);
             intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
-            String erMessage = "";
             String paramsString = (String) getIntent().getStringExtra("testData");
 
             if (paramsString == null) {
                 intent.putExtra(Constants.STATUS, Constants.FAIL);
-                intent.putExtra(Constants.MESSAGE, "Failed to get input params");
+                intent.putExtra(Constants.MESSAGE, "Failed to get input params. This test requires DMA related params set as intent extras.\n Example: getIntent().putExtra(\"testData\", \"{\\\"dma_eea\\\":\\\"Yes\\\",\\\"dma_ad_personalization\\\":\\\"Yes\\\",\\\"dma_ad_user_data\\\":\\\"Yes\\\",\\\"Include\\\":\\\"Yes\\\",\\\"URL\\\":\\\"https:\\\\/\\\\/timber.test-app.link\\\\/80OHAnv8DHb\\\"}\");");
                 startActivity(intent);
             } else {
                 try {
-
                     JSONObject jsonObject = new JSONObject(paramsString);
                     String url = jsonObject.getString("URL");
-                    String eeaRegionStr = jsonObject.getString("dma_eea");
-                    String adPersonalizationConsentStr = jsonObject.getString("dma_ad_personalization");
-                    String adUserDataUsageConsentStr = jsonObject.getString("dma_ad_user_data");
-
-                    boolean eeaRegion = false;
-                    boolean adPersonalizationConsent = false;
-                    boolean adUserDataUsageConsent = false;
-
-                    if (eeaRegionStr.equalsIgnoreCase("yes"))
-                        eeaRegion = true;
-                    if (adPersonalizationConsentStr.equalsIgnoreCase("yes"))
-                        adPersonalizationConsent = true;
-                    if (adUserDataUsageConsentStr.equalsIgnoreCase("yes"))
-                        adUserDataUsageConsent = true;
+                    boolean eeaRegion = (jsonObject.getString("dma_eea").equalsIgnoreCase("yes"))? true:false;
+                    boolean adPersonalizationConsent = (jsonObject.getString("dma_ad_personalization").equalsIgnoreCase("yes"))? true:false;
+                    boolean adUserDataUsageConsent = (jsonObject.getString("dma_ad_user_data").equalsIgnoreCase("yes"))? true:false;
 
                     Branch.getInstance().setDMAParamsForEEA(eeaRegion, adPersonalizationConsent, adUserDataUsageConsent);
 
@@ -209,15 +196,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }).withData(Uri.parse(url)).init();
                 } catch (JSONException e) {
                     intent.putExtra(Constants.STATUS, Constants.FAIL);
-                    intent.putExtra(Constants.MESSAGE, "Failed:" + erMessage + e.getMessage() + paramsString);
+                    intent.putExtra(Constants.MESSAGE, "Failed:" + e.getMessage() + paramsString);
                     startActivity(intent);
                 }
             }
         } else if (view == btLogEvent) {
             Intent intent = new Intent(this, LogDataActivity.class);
             intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
-            intent.putExtra(Constants.ANDROID_URL, "https://timber.test-app.link/80OHAnv8DHb");
-            Branch.getInstance().disableTracking(false);
+            // TODO :  We can improve this test by passing params for creating event as intent extras
             BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier("content/12345");
             Common.getInstance().clearLog();
 
@@ -231,12 +217,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                         @Override
                         public void onSuccess(int responseCode) {
-
                             Log.i("BRANCH SDK - ", "Sent Branch Commerce Event: " + responseCode);
                             intent.putExtra(Constants.STATUS, Constants.SUCCESS);
                             startActivity(intent);
                         }
-
                         @Override
                         public void onFailure(Exception e) {
                             Log.i("BRANCH SDK", e.getMessage());
