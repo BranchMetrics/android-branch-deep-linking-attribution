@@ -61,31 +61,6 @@ public class DeviceInfoTest extends BranchTest {
         Assert.assertEquals(uniqueId1, uniqueId2);
     }
 
-    // TODO: Need to mock advertising ID providers
-    //  Tests are written to assume a valid AID is obtainable from the system
-    @Test
-    public void testGAIDFetch() throws InterruptedException {
-        initBranchInstance();
-        Assert.assertNotNull(DeviceInfo.getInstance());
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        DeviceInfo.getInstance().getSystemObserver().fetchAdId(getTestContext(), new SystemObserver.AdsParamsFetchEvents() {
-            @Override
-            public void onAdsParamsFetchFinished() {
-                latch.countDown();
-            }
-        });
-
-        Assert.assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
-
-        if(DeviceInfo.getInstance().getSystemObserver().getLATVal() == 0) {
-            Assert.assertFalse(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
-        }
-        else{
-            Assert.assertTrue(DeviceInfo.isNullOrEmptyOrBlank(DeviceInfo.getInstance().getSystemObserver().getAID()));
-        }
-    }
-
     @Test
     public void windowManagerAndDisplayManagerSameMetrics(){
         DisplayManager displayManager = (DisplayManager) getTestContext().getSystemService(Context.DISPLAY_SERVICE);

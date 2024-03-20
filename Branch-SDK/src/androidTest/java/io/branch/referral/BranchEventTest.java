@@ -82,14 +82,6 @@ public class BranchEventTest extends BranchTest {
 
         ServerRequest eventRequest = queue.peekAt(0);
         Assert.assertEquals(Defines.RequestPath.TrackStandardEvent.getPath(), eventRequest.getRequestPath());
-        Assert.assertTrue(eventRequest.isWaitingOnProcessToFinish());
-
-        initSessionResumeActivity(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertEquals(2, queue.getSize());
-            }
-        }, null);
     }
 
     @Test

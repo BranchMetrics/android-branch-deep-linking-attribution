@@ -44,6 +44,5 @@ class BillingGooglePlayTests : BranchTest() {
             Defines.RequestPath.TrackStandardEvent.path,
             eventRequest.requestPath
         )
-        Assert.assertTrue(eventRequest.isWaitingOnProcessToFinish)
     }
 }

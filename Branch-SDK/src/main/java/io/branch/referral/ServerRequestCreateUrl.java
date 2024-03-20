@@ -263,7 +263,7 @@ class ServerRequestCreateUrl extends ServerRequest {
     }
 
     @Override
-    protected boolean prepareExecuteWithoutTracking() {
+    public boolean prepareExecuteWithoutTracking() {
         // SDK-271 -- Allow creation of short links when tracking is disabled.
         return true;
     }

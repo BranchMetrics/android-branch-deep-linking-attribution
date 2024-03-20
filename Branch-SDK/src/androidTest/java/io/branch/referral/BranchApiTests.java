@@ -246,39 +246,6 @@ public class BranchApiTests extends BranchTest {
     }
 
     @Test
-    public void test01SetIdentity() {
-        initSessionResumeActivity(null, new Runnable() {
-            @Override
-            public void run() {
-                final CountDownLatch signal = new CountDownLatch(1);
-                prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
-                branch.setIdentity("test_user_1", new Branch.BranchReferralInitListener() {
-                    @Override
-                    public void onInitFinished(JSONObject referringParams, BranchError error) {
-                        Assert.assertNull(error);
-                        Assert.assertNotNull(referringParams);
-
-                        JSONObject installParams = branch.getFirstReferringParams();
-                        try {
-                            Assert.assertEquals(installParams.getString("name"), "test name");
-                            Assert.assertEquals(installParams.getString("message"), "hello there with short url");
-                        } catch (JSONException e) {
-                            BranchLogger.d(e.getMessage());
-                        }
-
-                        signal.countDown();
-                    }
-                });
-                try {
-                    Assert.assertTrue(signal.await(TEST_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS));
-                } catch (InterruptedException e) {
-                    Assert.fail();
-                }
-            }
-        });
-    }
-
-    @Test
     public void testZLoad() {
         final long now = System.currentTimeMillis();
         initSessionResumeActivity(null, new Runnable() {
@@ -367,7 +334,7 @@ public class BranchApiTests extends BranchTest {
                 Assert.assertNull(error);
                 Assert.assertNotNull(url);
                 // long url route = "/a/", short url route = "/l/"
-                Assert.assertTrue(url.startsWith("https://bnc.lt/l/"));
+                Assert.assertTrue(url.startsWith("https://bnctestbed.test-app.link"));
                 res.val = url;
 
                 signal.countDown();

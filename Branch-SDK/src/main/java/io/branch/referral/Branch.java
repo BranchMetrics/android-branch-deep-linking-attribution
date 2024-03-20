@@ -11,12 +11,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,15 +32,22 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.branch.coroutines.RequestJobsKt;
+import io.branch.data.AdvertisingInfoObjectResult;
+import io.branch.data.InstallReferrerResult;
+import io.branch.data.PreInitDataResult;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Defines.PreinstallKey;
@@ -55,6 +57,9 @@ import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.LinkProperties;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -203,8 +208,6 @@ public class Branch {
     
     private static boolean disableDeviceIDFetch_;
 
-    static boolean bypassWaitingForIntent_ = false;
-    
     private static boolean bypassCurrentActivityIntentState_ = false;
 
     static boolean disableAutoSessionInitialization;
@@ -237,16 +240,7 @@ public class Branch {
     enum SESSION_STATE {
         INITIALISED, INITIALISING, UNINITIALISED
     }
-    
-    
-    enum INTENT_STATE {
-        PENDING,
-        READY
-    }
 
-    /* Holds the current intent state. Default is set to PENDING. */
-    private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
-    
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
 
@@ -290,10 +284,8 @@ public class Branch {
     CountDownLatch getFirstReferringParamsLatch = null;
     CountDownLatch getLatestReferringParamsLatch = null;
 
-    private boolean isInstantDeepLinkPossible = false;
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
-    private static boolean enableInstantDeepLinking = false;
     private final TrackingController trackingController;
 
     // Variables for reporting plugin type and version, plus helps us make data driven decisions.
@@ -534,17 +526,6 @@ public class Branch {
         return trackingController.isTrackingDisabled();
     }
 
-    /**
-     * <p>
-     * Disables or enables the instant deep link functionality.
-     * </p>
-     *
-     * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
-     */
-    public static void disableInstantDeepLinking(boolean disableIDL) {
-        enableInstantDeepLinking = !disableIDL;
-    }
-
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
@@ -563,11 +544,7 @@ public class Branch {
 
         // Reset all of the statics.
         branchReferral_ = null;
-        bypassCurrentActivityIntentState_ = false;
-        enableInstantDeepLinking = false;
         isActivityLifeCycleCallbackRegistered_ = false;
-
-        bypassWaitingForIntent_ = false;
     }
 
 
@@ -692,13 +669,6 @@ public class Branch {
     public void setDeepLinkDebugMode(JSONObject debugParams) {
         deeplinkDebugParams_ = debugParams;
     }
-    
-    /**
-     * @deprecated Branch is not listing external apps any more from v2.11.0
-     */
-    public void disableAppList() {
-        // Do nothing
-    }
 
     /**
      * Enables or disables app tracking with Branch or any other third parties that Branch use internally
@@ -822,29 +792,7 @@ public class Branch {
     }
 
     private void readAndStripParam(Uri data, Activity activity) {
-        BranchLogger.v("Read params uri: " + data + " bypassCurrentActivityIntentState: " + bypassCurrentActivityIntentState_ + " intent state: " + intentState_);
-        if (enableInstantDeepLinking) {
-
-            // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
-            // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.
-            // In the latter case, IDL works only partially because the callback is delayed until onResume.
-            boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
-                    !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
-
-            // Skip IDL if intent contains an unused Branch link.
-            boolean noUnusedBranchLinkInIntent = !isRestartSessionRequested(activity != null ? activity.getIntent() : null);
-
-            if (activityHasValidIntent && noUnusedBranchLinkInIntent) {
-                extractSessionParamsForIDL(data, activity);
-            }
-        }
-
-        if (bypassCurrentActivityIntentState_) {
-            intentState_ = INTENT_STATE.READY;
-        }
-
-        if (intentState_ == INTENT_STATE.READY) {
-
+        BranchLogger.v("readAndStripParam " + data + " " + activity);
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             extractExternalUriAndIntentExtras(data, activity);
 
@@ -859,14 +807,11 @@ public class Branch {
                 // Check if the clicked url is an app link pointing to this app
                 extractAppLink(data, activity);
             }
-        }
     }
 
     void unlockSDKInitWaitLock() {
         if (requestQueue_ == null) return;
         requestQueue_.postInitClear();
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
-        requestQueue_.processNextQueueItem("unlockSDKInitWaitLock");
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -1060,12 +1005,6 @@ public class Branch {
         JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
         firstReferringParams = appendDebugParams(firstReferringParams);
         return firstReferringParams;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public void removeSessionInitializationDelay() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-        requestQueue_.processNextQueueItem("removeSessionInitializationDelay");
     }
     
     /**
@@ -1279,9 +1218,13 @@ public class Branch {
         ServerResponse response = null;
         try {
             int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-            response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
+            // For one-off tasks
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            response = executor.submit(() -> branchRemoteInterface_.make_restful_post(req.getPost(),
+                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
+                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey())).get(timeOut, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            BranchLogger.d(e.getMessage());
+            BranchLogger.e(e.getMessage());
         }
         String url = null;
         if (req.isDefaultToLongUrl()) {
@@ -1294,7 +1237,7 @@ public class Branch {
                     linkCache_.put(req.getLinkPost(), url);
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
+                BranchLogger.w("Caught JSONException " + e.getMessage());
             }
         }
         return url;
@@ -1311,7 +1254,7 @@ public class Branch {
                 try {
                     return new JSONObject(new String(encodedArray));
                 } catch (JSONException ex) {
-                    ex.printStackTrace();
+                    BranchLogger.w("Caught JSONException " + ex.getMessage());
                     return new JSONObject();
                 }
             }
@@ -1334,16 +1277,12 @@ public class Branch {
         return branchQRCodeCache_;
     }
 
-    PrefHelper getPrefHelper() {
+    public PrefHelper getPrefHelper() {
         return prefHelper_;
     }
 
     ShareLinkManager getShareLinkManager() {
         return shareLinkManager_;
-    }
-
-    void setIntentState(INTENT_STATE intentState) {
-        this.intentState_ = intentState;
     }
 
     void setInitState(SESSION_STATE initState) {
@@ -1354,15 +1293,7 @@ public class Branch {
         return initState_;
     }
 
-    public void setInstantDeepLinkPossible(boolean instantDeepLinkPossible) {
-        isInstantDeepLinkPossible = instantDeepLinkPossible;
-    }
-
-    public boolean isInstantDeepLinkPossible() {
-        return isInstantDeepLinkPossible;
-    }
-
-    private void initializeSession(ServerRequestInitSession initRequest, int delay) {
+    private void initializeSession(ServerRequestInitSession initRequest, int delay, boolean reInitializing) {
         BranchLogger.v("initializeSession " + initRequest + " delay " + delay);
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             setInitState(SESSION_STATE.UNINITIALISED);
@@ -1377,10 +1308,10 @@ public class Branch {
         }
 
         if (delay > 0) {
-            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
             new Handler().postDelayed(new Runnable() {
-                @Override public void run() {
-                    removeSessionInitializationDelay();
+                @Override
+                public void run() {
+                    //TODO, put this on the init coroutine
                 }
             }, delay);
         }
@@ -1395,15 +1326,24 @@ public class Branch {
         // which will blow up the session count in analytics but does the job.
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
+        BranchLogger.v("forceBranchSession " + forceBranchSession);
 
         SESSION_STATE sessionState = getInitState();
         BranchLogger.v("Intent: " + intent + " forceBranchSession: " + forceBranchSession + " initState: " + sessionState);
+
         if (sessionState == SESSION_STATE.UNINITIALISED || forceBranchSession) {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
             }
-            registerAppInit(initRequest, false, forceBranchSession);
-        } else if (initRequest.callback_ != null) {
+            registerAppInit(initRequest, false);
+        }
+        // reInitializing will be true if called by reInit() which means the onResume init should not execute
+        // TODO: With the above TODO, can we make this more elegant if we didn't have sessions?
+        else if(!reInitializing) {
+            BranchLogger.v("Not reinitializing, nor requested new session, executing onResume init()");
+            registerAppInit(initRequest, false);
+        }
+        else if (initRequest.callback_ != null) {
             // Else, let the user know session initialization failed because it's already initialized.
             initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
         }
@@ -1413,65 +1353,75 @@ public class Branch {
      * Registers app init with params filtered from the intent. Unless ignoreIntent = true, this
      * will wait on the wait locks to complete any pending operations
      */
-     void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks, boolean forceBranchSession) {
-         BranchLogger.v("registerAppInit " + request);
-         setInitState(SESSION_STATE.INITIALISING);
+    void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks) {
+        BranchLogger.v("registerAppInit " + request + " " + ignoreWaitLocks);
+        setInitState(SESSION_STATE.INITIALISING);
 
-         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
-         BranchLogger.v("Ordering init calls");
-         requestQueue_.printQueue();
+        BranchLogger.v("registerAppInit queue is " + Arrays.toString(requestQueue_.queue.toArray()));
 
-         // if forceBranchSession aka reInit is true, we want to preserve the callback order in case
-         // there is one still in flight
-         if (r == null || forceBranchSession) {
-             BranchLogger.v("Moving " + request + " " + " to front of the queue or behind network-in-progress request");
-             requestQueue_.insertRequestAtFront(request);
-         }
-         else {
-             // if false, maintain previous behavior
-             BranchLogger.v("Retrieved " + r + " with callback " + r.callback_ + " in queue currently");
-             r.callback_ = request.callback_;
-             BranchLogger.v(r + " now has callback " + request.callback_);
-         }
-         BranchLogger.v("Finished ordering init calls");
-         requestQueue_.printQueue();
-         initTasks(request, ignoreWaitLocks);
-
-         requestQueue_.processNextQueueItem("registerAppInit");
-     }
-
-    private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
-         BranchLogger.v("initTasks " + request + " ignoreWaitLocks " + ignoreWaitLocks);
-        if (!ignoreWaitLocks) {
-            // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
-            // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
-            if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
-                BranchLogger.v("Adding INTENT_PENDING_WAIT_LOCK");
-                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-            }
-
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-
-            if (request instanceof ServerRequestRegisterInstall) {
-                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-
-                deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents(){
-                    @Override
-                    public void onInstallReferrersFinished() {
-                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        requestQueue_.processNextQueueItem("onInstallReferrersFinished");
-                    }
-                });
-            }
+        // Originally, if an open was previously persisted on the queue
+        // Check if it was initiated intentionally, i.e not an auto init
+        // If so, set the callback to this current init object.
+        // TODO: This may not be needed anymore as auto-init is removed.
+        ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+        if (r != null) {
+            request.callback_ = r.callback_;
         }
 
-        deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
-            @Override
-            public void onAdsParamsFetchFinished() {
-                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-                requestQueue_.processNextQueueItem("onAdsParamsFetchFinished");
+        if(ignoreWaitLocks || (!(request instanceof ServerRequestRegisterInstall))){
+            RequestJobsKt.openRequestJob(context_, new Continuation<PreInitDataResult>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NonNull Object o) {
+                    BranchLogger.v("initTasks openRequestJob resumeWith " + o);
+                    writePreInitResults(o);
+                    ServerRequestQueue.getInstance(context_).handleNewRequest(request);
+                }
+            });
+        }
+        else {
+            RequestJobsKt.installRequestJob(context_, new Continuation<PreInitDataResult>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NonNull Object o) {
+                    BranchLogger.v("initTasks installRequestJob resumeWith " + o);
+                    writePreInitResults(o);
+                    ServerRequestQueue.getInstance(context_).handleNewRequest(request);
+                }
+            });
+        }
+    }
+
+    private void writePreInitResults(Object o) {
+        if(o != null){
+            PreInitDataResult preInitDataResult = (PreInitDataResult) o;
+
+            AdvertisingInfoObjectResult advertisingInfoObjectResult = preInitDataResult.getAdvertisingInfoObjectResult();
+            if(advertisingInfoObjectResult != null && advertisingInfoObjectResult.getLimitAdTrackingValue() != null) {
+                DeviceInfo.getInstance().getSystemObserver().setLAT(advertisingInfoObjectResult.getLimitAdTrackingValue());
+                DeviceInfo.getInstance().getSystemObserver().setGAID(advertisingInfoObjectResult.getAdvertisingId());
             }
-        });
+
+            InstallReferrerResult installReferrerResult = preInitDataResult.getInstallReferrerResult();
+            if(installReferrerResult != null){
+                AppStoreReferrer.processReferrerInfo(context_,
+                        installReferrerResult.getLatestRawReferrer(),
+                        installReferrerResult.getLatestClickTimestamp(),
+                        installReferrerResult.getLatestInstallTimestamp(),
+                        installReferrerResult.getAppStore(),
+                        installReferrerResult.isClickThrough());
+            }
+        }
     }
 
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
@@ -1484,27 +1434,6 @@ public class Branch {
             request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
         }
         return request;
-    }
-    
-    void onIntentReady(@NonNull Activity activity) {
-        BranchLogger.v("onIntentReady " + activity + " removing INTENT_PENDING_WAIT_LOCK");
-        setIntentState(Branch.INTENT_STATE.READY);
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-
-        boolean grabIntentParams = activity.getIntent() != null && getInitState() != Branch.SESSION_STATE.INITIALISED;
-
-        if (grabIntentParams) {
-            Uri intentData = activity.getIntent().getData();
-            readAndStripParam(intentData, activity);
-        }
-        requestQueue_.processNextQueueItem("onIntentReady");
-    }
-
-    /**
-     * Notify Branch when network is available in order to process the next request in the queue.
-     */
-    public void notifyNetworkAvailable() {
-        requestQueue_.processNextQueueItem("notifyNetworkAvailable");
     }
 
     private void setActivityLifeCycleObserver(Application application) {
@@ -1728,151 +1657,6 @@ public class Branch {
     }
 
     /**
-     * Async Task to create  a short link for synchronous methods
-     */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
-
-    //-------------------Auto deep link feature-------------------------------------------//
-    
-    /**
-     * <p>Checks if an activity is launched by Branch auto deep link feature. Branch launches activity configured for auto deep link on seeing matching keys.
-     * Keys for auto deep linking should be specified to each activity as a meta data in manifest.</p>
-     * Configure your activity in your manifest to enable auto deep linking as follows
-     * <!--
-     * <activity android:name=".YourActivity">
-     * <meta-data android:name="io.branch.sdk.auto_link" android:value="DeepLinkKey1","DeepLinkKey2" />
-     * </activity>
-     * -->
-     *
-     * @param activity Instance of activity to check if launched on auto deep link.
-     * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
-     */
-    public static boolean isAutoDeepLinkLaunch(Activity activity) {
-        return (activity.getIntent().getStringExtra(Defines.IntentKeys.AutoDeepLinked.getKey()) != null);
-    }
-    
-    void checkForAutoDeepLinkConfiguration() {
-        JSONObject latestParams = getLatestReferringParams();
-        String deepLinkActivity = null;
-        
-        try {
-            //Check if the application is launched by clicking a Branch link.
-            if (!latestParams.has(Defines.Jsonkey.Clicked_Branch_Link.getKey())
-                    || !latestParams.getBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
-                BranchLogger.v("Does not have Clicked_Branch_Link or Clicked_Branch_Link is false, returning");
-                return;
-            }
-            if (latestParams.length() > 0) {
-                // Check if auto deep link is disabled.
-                ApplicationInfo appInfo = context_.getPackageManager().getApplicationInfo(context_.getPackageName(), PackageManager.GET_META_DATA);
-                if (appInfo.metaData != null && appInfo.metaData.getBoolean(AUTO_DEEP_LINK_DISABLE, false)) {
-                    return;
-                }
-                PackageInfo info = context_.getPackageManager().getPackageInfo(context_.getPackageName(), PackageManager.GET_ACTIVITIES | PackageManager.GET_META_DATA);
-                ActivityInfo[] activityInfos = info.activities;
-                int deepLinkActivityReqCode = DEF_AUTO_DEEP_LINK_REQ_CODE;
-                
-                if (activityInfos != null) {
-                    for (ActivityInfo activityInfo : activityInfos) {
-                        if (activityInfo != null && activityInfo.metaData != null && (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null || activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null)) {
-                            if (checkForAutoDeepLinkKeys(latestParams, activityInfo) || checkForAutoDeepLinkPath(latestParams, activityInfo)) {
-                                deepLinkActivity = activityInfo.name;
-                                deepLinkActivityReqCode = activityInfo.metaData.getInt(AUTO_DEEP_LINK_REQ_CODE, DEF_AUTO_DEEP_LINK_REQ_CODE);
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (deepLinkActivity != null && getCurrentActivity() != null) {
-                    BranchLogger.v("deepLinkActivity " + deepLinkActivity + " getCurrentActivity " + getCurrentActivity());
-                    Activity currentActivity = getCurrentActivity();
-
-                    Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
-                    intent.putExtra(Defines.IntentKeys.AutoDeepLinked.getKey(), "true");
-
-                    // Put the raw JSON params as extra in case need to get the deep link params as JSON String
-                    intent.putExtra(Defines.Jsonkey.ReferringData.getKey(), latestParams.toString());
-
-                    // Add individual parameters in the data
-                    Iterator<?> keys = latestParams.keys();
-                    while (keys.hasNext()) {
-                        String key = (String) keys.next();
-                        intent.putExtra(key, latestParams.getString(key));
-                    }
-                    currentActivity.startActivityForResult(intent, deepLinkActivityReqCode);
-                } else {
-                    // This case should not happen. Adding a safe handling for any corner case
-                    BranchLogger.v("No activity reference to launch deep linked activity");
-                }
-            }
-        } catch (final PackageManager.NameNotFoundException e) {
-            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct!");
-        } catch (ClassNotFoundException e) {
-            BranchLogger.w("Warning: Please make sure Activity names set for auto deep link are correct! Error while looking for activity " + deepLinkActivity);
-        } catch (Exception ignore) {
-            // Can get TransactionTooLarge Exception here if the Application info exceeds 1mb binder data limit. Usually results with manifest merge from SDKs
-        }
-    }
-    
-    private boolean checkForAutoDeepLinkKeys(JSONObject params, ActivityInfo activityInfo) {
-        if (activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY) != null) {
-            String[] activityLinkKeys = activityInfo.metaData.getString(AUTO_DEEP_LINK_KEY).split(",");
-            for (String activityLinkKey : activityLinkKeys) {
-                if (params.has(activityLinkKey)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    private boolean checkForAutoDeepLinkPath(JSONObject params, ActivityInfo activityInfo) {
-        String deepLinkPath = null;
-        try {
-            if (params.has(Defines.Jsonkey.AndroidDeepLinkPath.getKey())) {
-                deepLinkPath = params.getString(Defines.Jsonkey.AndroidDeepLinkPath.getKey());
-            } else if (params.has(Defines.Jsonkey.DeepLinkPath.getKey())) {
-                deepLinkPath = params.getString(Defines.Jsonkey.DeepLinkPath.getKey());
-            }
-        } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
-        }
-        if (activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH) != null && deepLinkPath != null) {
-            String[] activityLinkPaths = activityInfo.metaData.getString(AUTO_DEEP_LINK_PATH).split(",");
-            for (String activityLinkPath : activityLinkPaths) {
-                if (pathMatch(activityLinkPath.trim(), deepLinkPath)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    private boolean pathMatch(String templatePath, String path) {
-        boolean matched = true;
-        String[] pathSegmentsTemplate = templatePath.split("\\?")[0].split("/");
-        String[] pathSegmentsTarget = path.split("\\?")[0].split("/");
-        if (pathSegmentsTemplate.length != pathSegmentsTarget.length) {
-            return false;
-        }
-        for (int i = 0; i < pathSegmentsTemplate.length && i < pathSegmentsTarget.length; i++) {
-            String pathSegmentTemplate = pathSegmentsTemplate[i];
-            String pathSegmentTarget = pathSegmentsTarget[i];
-            if (!pathSegmentTemplate.equals(pathSegmentTarget) && !pathSegmentTemplate.contains("*")) {
-                matched = false;
-                break;
-            }
-        }
-        return matched;
-    }
-
-    /**
      * Enable Logging, independent of Debug Mode.
      */
     public static void enableLogging() {
@@ -1898,60 +1682,7 @@ public class Branch {
         BranchLogger.setLoggerCallback(null);
     }
 
-    /**
-     * @deprecated use Branch.bypassWaitingForIntent(true)
-     */
-    @Deprecated
-    public static void enableForcedSession() { bypassWaitingForIntent(true); }
 
-
-    /**
-     * <p> Use this method cautiously, it is meant to enable the ability to start a session before
-     * the user opens the app.
-     *
-     * The use case explained:
-     * Users are expected to initialize session from Activity.onStart. However, by default, Branch actually
-     * waits until Activity.onResume to start session initialization, so as to ensure that the latest intent
-     * data is available (e.g. when activity is launched from stack via onNewIntent). Setting this flag to true
-     * will bypass waiting for intent, so session could technically be initialized from a background service
-     * or otherwise before the application is even opened.
-     *
-     * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
-     * in certain cases.</p>
-     *
-     * @param bypassIntent a {@link Boolean} indicating if SDK should wait for onResume in order to fire the
-     *                     session initialization request.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static void bypassWaitingForIntent(boolean bypassIntent) { bypassWaitingForIntent_ = bypassIntent; }
-
-    /**
-     * @deprecated use Branch.bypassWaitingForIntent(false)
-     */
-    @Deprecated
-    public static void disableForcedSession() { bypassWaitingForIntent(false); }
-
-    /**
-     * Returns true if session initialization should bypass waiting for intent (retrieved after onResume).
-     *
-     * @return {@link Boolean} with value true to enable forced session
-     *
-     * @deprecated use Branch.isWaitingForIntent()
-     */
-    @Deprecated
-    public static boolean isForceSessionEnabled() { return isWaitingForIntent(); }
-    @SuppressWarnings("WeakerAccess")
-    public static boolean isWaitingForIntent() { return !bypassWaitingForIntent_; }
-    
-    public static void enableBypassCurrentActivityIntentState() {
-        bypassCurrentActivityIntentState_ = true;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public static boolean bypassCurrentActivityIntentState() {
-        return bypassCurrentActivityIntentState_;
-    }
-    
     //------------------------ Content Indexing methods----------------------//
     
     public void registerView(BranchUniversalObject branchUniversalObject,
@@ -2038,50 +1769,6 @@ public class Branch {
             return showInstallPrompt(activity, requestCode, installReferrerString);
         } else {
             return showInstallPrompt(activity, requestCode, "");
-        }
-    }
-
-    private void extractSessionParamsForIDL(Uri data, Activity activity) {
-        if (activity == null || activity.getIntent() == null) return;
-
-        Intent intent = activity.getIntent();
-        try {
-            if (data == null || isIntentParamsAlreadyConsumed(activity)) {
-                // Considering the case of a deferred install. In this case the app behaves like a cold
-                // start but still Branch can do probabilistic match. So skipping instant deep link feature
-                // until first Branch open happens.
-                if (!prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-                    JSONObject nonLinkClickJson = new JSONObject();
-                    nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
-                    prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                    isInstantDeepLinkPossible = true;
-                }
-            } else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.IntentKeys.BranchData.getKey()))) {
-                // If not cold start, check the intent data to see if there are deep link params
-                String rawBranchData = intent.getStringExtra(Defines.IntentKeys.BranchData.getKey());
-                if (rawBranchData != null) {
-                    // Make sure the data received is complete and in correct format
-                    JSONObject branchDataJson = new JSONObject(rawBranchData);
-                    branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                    prefHelper_.setSessionParams(branchDataJson.toString());
-                    isInstantDeepLinkPossible = true;
-                }
-
-                // Remove Branch data from the intent once used
-                intent.removeExtra(Defines.IntentKeys.BranchData.getKey());
-                activity.setIntent(intent);
-            } else if (data.isHierarchical() && Boolean.valueOf(data.getQueryParameter(Defines.Jsonkey.Instant.getKey()))) {
-                // If instant key is true in query params, use them for instant deep linking
-                JSONObject branchDataJson = new JSONObject();
-                for (String key : data.getQueryParameterNames()) {
-                    branchDataJson.put(key, data.getQueryParameter(key));
-                }
-                branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
-                prefHelper_.setSessionParams(branchDataJson.toString());
-                isInstantDeepLinkPossible = true;
-            }
-        } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
         }
     }
 
@@ -2340,9 +2027,6 @@ public class Branch {
                         " in your application class or declare BranchApp in your manifest.");
                 return;
             }
-            if (ignoreIntent != null) {
-                Branch.bypassWaitingForIntent(ignoreIntent);
-            }
 
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
@@ -2350,6 +2034,8 @@ public class Branch {
             if (activity != null && intent != null && ActivityCompat.getReferrer(activity) != null) {
                 PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
             }
+
+            BranchLogger.v("uri " + uri + " isReInitializing " + isReInitializing + " is restart requested " +  branch.isRestartSessionRequested(intent) + " intent is " + intent);
 
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
@@ -2366,22 +2052,6 @@ public class Branch {
                 return;
             }
 
-            BranchLogger.v("isInstantDeepLinkPossible " + branch.isInstantDeepLinkPossible);
-            // readAndStripParams (above) may set isInstantDeepLinkPossible to true
-            if (branch.isInstantDeepLinkPossible) {
-                // reset state
-                branch.isInstantDeepLinkPossible = false;
-                // invoke callback returning LatestReferringParams, which were parsed out inside readAndStripParam
-                // from either intent extra "branch_data", or as parameters attached to the referring app link
-                if (callback != null) callback.onInitFinished(branch.getLatestReferringParams(), null);
-                // mark this session as IDL session
-                Branch.getInstance().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
-                // potentially routes the user to the Activity configured to consume this particular link
-                branch.checkForAutoDeepLinkConfiguration();
-                // we already invoked the callback for let's set it to null, we will still make the
-                // init session request but for analytics purposes only
-                callback = null;
-            }
 
             if (delay > 0) {
                 expectDelayedSessionInitialization(true);
@@ -2389,7 +2059,7 @@ public class Branch {
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
             BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
-            branch.initializeSession(initRequest, delay);
+            branch.initializeSession(initRequest, delay, isReInitializing);
         }
 
         private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
@@ -2424,9 +2094,6 @@ public class Branch {
         }
     }
 
-    boolean isIDLSession() {
-        return Boolean.parseBoolean(Branch.getInstance().requestQueue_.instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
-    }
     /**
      * <p> Create Branch session builder. Add configuration variables with the available methods
      * in the returned {@link InitSessionBuilder} class. Must be finished with init() or reInit(),

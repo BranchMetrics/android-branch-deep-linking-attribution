@@ -1,33 +1,30 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_BRANCH_TASK_TIMEOUT;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import io.branch.channels.ServerRequestChannelKt;
+import io.branch.data.ServerRequestResponsePair;
+import kotlin.Result;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>The Branch SDK can queue up requests whilst it is waiting for initialization of a session to
@@ -37,18 +34,12 @@ import java.util.concurrent.TimeUnit;
 public class ServerRequestQueue {
     private static final String PREF_KEY = "BNCServerRequestQueue";
     private static final int MAX_ITEMS = 25;
-    private static ServerRequestQueue SharedInstance;
+    private static volatile ServerRequestQueue SharedInstance;
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
-    private final List<ServerRequest> queue;
+    public final List<ServerRequest> queue;
     //Object for synchronising operations on server request queue
     private static final Object reqQueueLockObject = new Object();
-
-    private final Semaphore serverSema_ = new Semaphore(1);
-
-    int networkCount_ = 0;
-
-    final ConcurrentHashMap<String, String> instrumentationExtraData_ = new ConcurrentHashMap<>();
 
     /**
      * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
@@ -162,30 +153,12 @@ public class ServerRequestQueue {
             }
         }
     }
-    
-    /**
-     * <p>Gets the queued {@link ServerRequest} object at position with index 0 within the queue
-     * without removing it.</p>
-     *
-     * @return The {@link ServerRequest} object at position with index 0 within the queue.
-     */
-    ServerRequest peek() {
-        ServerRequest req = null;
-        synchronized (reqQueueLockObject) {
-            try {
-                req = queue.get(0);
-            } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.w("Caught Exception " + e.getMessage());
-            }
-        }
-        return req;
-    }
 
     public void printQueue(){
         synchronized (reqQueueLockObject){
             StringBuilder stringBuilder = new StringBuilder();
             for(int i = 0; i < queue.size(); i++){
-                stringBuilder.append(queue.get(i)).append(" with locks ").append(queue.get(i).printWaitLocks()).append("\n");
+                stringBuilder.append(queue.get(i)).append("\n");
             }
             BranchLogger.v("Queue is: " + stringBuilder);
         }
@@ -193,7 +166,7 @@ public class ServerRequestQueue {
     
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index specified in the supplied
-     * parameter, within the queue. Like {@link #peek()}, the item is not removed from the queue.</p>
+     * parameter, within the queue.</p>
      *
      * @param index An {@link Integer} that specifies the position within the queue from which to
      *              pull the {@link ServerRequest} object.
@@ -206,59 +179,14 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.get(index);
+                BranchLogger.v("ServerRequestQueue peakAt " + index + " returned " + req);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
                 BranchLogger.e("Caught Exception " + e.getMessage());
             }
         }
         return req;
     }
-    
-    /**
-     * <p>As the method name implies, inserts a {@link ServerRequest} into the queue at the index
-     * position specified.</p>
-     *
-     * @param request The {@link ServerRequest} to insert into the queue.
-     * @param index   An {@link Integer} value specifying the index at which to insert the
-     *                supplied {@link ServerRequest} object. Fails silently if the index
-     *                supplied is invalid.
-     */
-    void insert(ServerRequest request, int index) {
-        synchronized (reqQueueLockObject) {
-            try {
-                if (queue.size() < index) {
-                    index = queue.size();
-                }
-                queue.add(index, request);
-                persist();
-            } catch (IndexOutOfBoundsException e) {
-                BranchLogger.e("Caught IndexOutOfBoundsException " + e.getMessage());
-            }
-        }
-    }
-    
-    /**
-     * <p>As the method name implies, removes the {@link ServerRequest} object, at the position
-     * indicated by the {@link Integer} parameter supplied.</p>
-     *
-     * @param index An {@link Integer} value specifying the index at which to remove the
-     *              {@link ServerRequest} object. Fails silently if the index
-     *              supplied is invalid.
-     * @return The {@link ServerRequest} object being removed.
-     */
-    @SuppressWarnings("unused")
-    public ServerRequest removeAt(int index) {
-        ServerRequest req = null;
-        synchronized (reqQueueLockObject) {
-            try {
-                req = queue.remove(index);
-                persist();
-            } catch (IndexOutOfBoundsException e) {
-                BranchLogger.e("Caught IndexOutOfBoundsException " + e.getMessage());
-            }
-        }
-        return req;
-    }
-    
+
     /**
      * <p>As the method name implies, removes {@link ServerRequest} supplied in the parameter if it
      * is present in the queue.</p>
@@ -271,6 +199,7 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 isRemoved = queue.remove(request);
+                BranchLogger.v("ServerRequestQueue removed " + request + " " + isRemoved);
                 persist();
             } catch (UnsupportedOperationException e) {
                 BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
@@ -278,11 +207,47 @@ public class ServerRequestQueue {
         }
         return isRemoved;
     }
+
+
+    /**
+     * If the request is currently in the queue, remove it from that position
+     * and insert at destination to prevent duplicates
+     * Else, just insert at that position
+     * @param request
+     * @param destination
+     */
+    public void move(ServerRequest request, int destination){
+        BranchLogger.v("ServerRequestQueue move " + request + " " + destination);
+        synchronized (reqQueueLockObject) {
+            try {
+                int index = -1;
+                for (int i = 0; i < queue.size(); i++) {
+                    if (queue.get(i) == request) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                // We found the request we want to move in the queue
+                if (index > -1) {
+                    queue.remove(index);
+                }
+
+                queue.add(destination, request);
+
+                persist();
+            }
+            catch (Exception e) {
+                BranchLogger.v(e.getMessage());
+            }
+        }
+    }
     
     /**
      * <p> Clears all pending requests in the queue </p>
      */
     void clear() {
+        BranchLogger.v("ServerRequestQueue clear");
         synchronized (reqQueueLockObject) {
             try {
                 queue.clear();
@@ -313,19 +278,6 @@ public class ServerRequestQueue {
         }
         return null;
     }
-    
-    /**
-     * Set Process wait lock to false for any open / install request in the queue
-     */
-    void unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK lock) {
-        synchronized (reqQueueLockObject) {
-            for (ServerRequest req : queue) {
-                if (req != null) {
-                    req.removeProcessWaitLock(lock);
-                }
-            }
-        }
-    }
 
     // We must check that there is no other init request that may read or write these values
     // Then when init request count in the queue is either the last or none, clear.
@@ -353,58 +305,8 @@ public class ServerRequestQueue {
         }
     }
 
-    void processNextQueueItem(String callingMethodName) {
-        BranchLogger.v("processNextQueueItem " + callingMethodName);
-        this.printQueue();
-        try {
-            serverSema_.acquire();
-            if (networkCount_ == 0 && this.getSize() > 0) {
-                networkCount_ = 1;
-                ServerRequest req = this.peek();
-
-                serverSema_.release();
-                if (req != null) {
-                    BranchLogger.d("processNextQueueItem, req " + req);
-                    if (!req.isWaitingOnProcessToFinish()) {
-                        // All request except Install request need a valid RandomizedBundleToken
-                        if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                            BranchLogger.d("Branch Error: User session has not been initialized!");
-                            networkCount_ = 0;
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                        }
-                        // Determine if a session is needed to execute (SDK-271)
-                        else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
-                            networkCount_ = 0;
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
-                        } else {
-                            executeTimedBranchPostTask(req, Branch.getInstance().prefHelper_.getTaskTimeout());
-                        }
-                    }
-                    else {
-                        networkCount_ = 0;
-                    }
-                }
-                else {
-                    this.remove(null); //In case there is any request nullified remove it.
-                }
-            }
-            else {
-                serverSema_.release();
-            }
-        } catch (Exception e) {
-            BranchLogger.e("Caught Exception " + e.getMessage() + BranchLogger.stackTraceToString(e));
-        }
-    }
-
-    void insertRequestAtFront(ServerRequest req) {
-        if (networkCount_ == 0) {
-            this.insert(req, 0);
-        } else {
-            this.insert(req, 1);
-        }
-    }
-
     // Determine if a Request needs a Session to proceed.
+    //todo, check for this in handlenewrequest
     private boolean requestNeedsSession(ServerRequest request) {
         if (request instanceof ServerRequestInitSession) {
             return false;
@@ -458,41 +360,6 @@ public class ServerRequestQueue {
         }
     }
 
-    private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
-        BranchLogger.v("executeTimedBranchPostTask " + req);
-        if(req instanceof ServerRequestInitSession){
-            BranchLogger.v("callback to be returned " + ((ServerRequestInitSession) req).callback_);
-        }
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        final BranchPostTask postTask = new BranchPostTask(req, latch);
-
-        postTask.executeTask();
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            new Thread(new Runnable() {
-                @Override public void run() {
-                    awaitTimedBranchPostTask(latch, timeout, postTask);
-                }
-            }).start();
-        } else {
-            awaitTimedBranchPostTask(latch, timeout, postTask);
-        }
-    }
-
-    private void awaitTimedBranchPostTask(CountDownLatch latch, int timeout, BranchPostTask postTask) {
-        try {
-            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", ""));
-            }
-        } catch (InterruptedException e) {
-            BranchLogger.e("Caught InterruptedException " + e.getMessage());
-            postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", e.getMessage()));
-        }
-    }
-
-
     /**
      * Handles execution of a new request other than open or install.
      * Checks for the session initialisation and adds a install/Open request in front of this request
@@ -512,14 +379,34 @@ public class ServerRequestQueue {
         if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
-                req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+                    }
+                });
             }
         }
 
-        this.enqueue(req);
-        req.onRequestQueued();
+        // If the request we are about to handle is an init
+        // Move it to the front, and persist state
+        // Then go through the queue in order
+        if(req instanceof ServerRequestInitSession){
+            move(req, 0);
+            processQueue();
+            return;
+        }
 
-        this.processNextQueueItem("handleNewRequest");
+        // Add to the queue and persist the state locally
+        enqueue(req);
+
+        // If the session is already initialized,
+        // Or, it doesn't need a session
+        // Then execute immediately
+        if(Branch.getInstance().initState_ == Branch.SESSION_STATE.INITIALISED
+                || !requestNeedsSession(req)){
+            executeRequest(req);
+        }
     }
 
     // If there is 1 (currently being removed) or 0 init requests in the queue, clear the init data
@@ -536,211 +423,169 @@ public class ServerRequestQueue {
     }
 
     /**
-     * Asynchronous task handling execution of server requests. Execute the network task on background
-     * thread and request are  executed in sequential manner. Handles the request execution in
-     * Synchronous-Asynchronous pattern. Should be invoked only form main thread and  the results are
-     * published in the main thread.
+     * Process all recorded ServerRequests now that the session is ready
      */
-    private class BranchPostTask extends BranchAsyncTask<Void, Void, ServerResponse> {
-        ServerRequest thisReq_;
-        final CountDownLatch latch_;
-
-        public BranchPostTask(ServerRequest request, CountDownLatch latch) {
-            super();
-            thisReq_ = request;
-            latch_ = latch;
+    public void processQueue(){
+        BranchLogger.v("ServerRequestQueue processQueue " + Arrays.toString(queue.toArray()));
+        synchronized (reqQueueLockObject) {
+            for (ServerRequest req : queue) {
+                executeRequest(req);
+            }
         }
+    }
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            thisReq_.onPreExecute();
-            thisReq_.doFinalUpdateOnMainThread();
-        }
-
-        @Override
-        protected ServerResponse doInBackground(Void... voids) {
-            // update queue wait time
-            thisReq_.doFinalUpdateOnBackgroundThread();
-            if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
-                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "");
-            }
-            String branchKey = Branch.getInstance().prefHelper_.getBranchKey();
-            ServerResponse result;
-            if (thisReq_.isGetRequest()) {
-                result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
-            } else {
-                BranchLogger.v("Beginning rest post for " + thisReq_);
-                result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
-            }
-            if (latch_ != null) {
-                latch_.countDown();
-            }
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(ServerResponse serverResponse) {
-            super.onPostExecute(serverResponse);
-            onPostExecuteInner(serverResponse);
-        }
-
-        void onPostExecuteInner(ServerResponse serverResponse) {
-            BranchLogger.v("onPostExecuteInner " + this + " " + serverResponse);
-            if (latch_ != null) {
-                latch_.countDown();
-            }
-            if (serverResponse == null) {
-                thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
-                return;
+    private void executeRequest(ServerRequest req) {
+        ServerRequestChannelKt.execute(req, new Continuation<ServerRequestResponsePair>() {
+            @NonNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
             }
 
-            int status = serverResponse.getStatusCode();
-            if (status == 200) {
-                onRequestSuccess(serverResponse);
-            } else {
-                onRequestFailed(serverResponse, status);
-            }
-            ServerRequestQueue.this.networkCount_ = 0;
+            @Override
+            public void resumeWith(@NonNull Object o) {
+                BranchLogger.v("ServerRequestQueue executeRequest resumeWith " + o + " " + Thread.currentThread().getName());
 
-            // In rare cases where this method is called directly (eg. when network calls time out),
-            // starting the next queue item can lead to stack over flow. Ensuring that this is
-            // queued back to the main thread mitigates this.
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    ServerRequestQueue.this.processNextQueueItem("onPostExecuteInner");
+                if (o != null && o instanceof ServerRequestResponsePair) {
+                    ServerRequestResponsePair serverRequestResponsePair = (ServerRequestResponsePair) o;
+
+                    ServerRequest serverRequest = serverRequestResponsePair.getServerRequest();
+                    ServerResponse serverResponse = serverRequestResponsePair.getServerResponse();
+
+                    ServerRequestQueue.this.onRequestComplete(serverRequest, serverResponse);
                 }
-            });
-        }
+                else {
+                    BranchLogger.v("ServerRequestQueue expected ServerRequestResponsePair, was " + o);
+                    if(o instanceof Result.Failure){
+                        BranchLogger.v("logging stack");
+                        Result.Failure failure = (Result.Failure) o;
+                        BranchLogger.v(Arrays.toString(failure.exception.getStackTrace()));
+                    }
+                }
+            }
+        });
+    }
 
-        private void onRequestSuccess(ServerResponse serverResponse) {
-            BranchLogger.v("onRequestSuccess " + serverResponse);
-            // If the request succeeded
+    /**
+     * Method for handling the completion of a request, success or failure
+     * @param serverRequest
+     * @param serverResponse
+     */
+    public void onRequestComplete(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onRequestComplete " + serverRequest + " " + serverResponse + " on thread " + Thread.currentThread().getName());
+        if (serverResponse == null) {
+            serverRequest.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
+        }
+        else {
             @Nullable final JSONObject respJson = serverResponse.getObject();
+
             if (respJson == null) {
-                thisReq_.handleFailure(500, "Null response json.");
+                serverRequest.handleFailure(500, "Null response json.");
+            }
+            else {
+                int status = serverResponse.getStatusCode();
+
+                if (status == 200) {
+                    serverRequest.onRequestSucceeded(serverResponse, Branch.getInstance());
+                }
+                // We received an error code from the service
+                else {
+                    // On a bad request or in case of a conflict notify with call back and remove the request.
+                    if ((status == 400 || status == 409) && serverRequest instanceof ServerRequestCreateUrl) {
+                        ((ServerRequestCreateUrl) serverRequest).handleDuplicateURLError();
+                    }
+                    else {
+                        BranchLogger.v("onRequestComplete handleFailure");
+                        serverRequest.handleFailure(status, serverResponse.getFailReason() + " " + serverResponse.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    public void onPostExecuteInner(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onPostExecuteInner " + serverRequest + " " + serverResponse);
+
+        if(serverResponse != null) {
+            int status = serverResponse.getStatusCode();
+
+            // These write our stateful results from our service's response
+            if (status == 200) {
+                onRequestSuccessInternal(serverRequest, serverResponse);
+            }
+            else {
+                onRequestFailedInternal(serverRequest, serverResponse, status);
             }
 
-            if (thisReq_ instanceof ServerRequestCreateUrl && respJson != null) {
+            ServerRequestQueue.this.remove(serverRequest);
+        }
+    }
+
+    private void onRequestSuccessInternal(ServerRequest serverRequest, ServerResponse serverResponse) {
+        BranchLogger.v("ServerRequestQueue onRequestSuccess " + serverRequest + " " + serverResponse);
+        @Nullable final JSONObject respJson = serverResponse.getObject();
+
+        if (serverRequest instanceof ServerRequestCreateUrl && respJson != null) {
+            try {
+                // cache the link
+                BranchLinkData postBody = ((ServerRequestCreateUrl) serverRequest).getLinkPost();
+                final String url = respJson.getString("url");
+                Branch.getInstance().linkCache_.put(postBody, url);
+            }
+            catch (JSONException ex) {
+                BranchLogger.w("Caught JSONException " + BranchLogger.stackTraceToString(ex));
+            }
+        }
+
+        if (serverRequest instanceof ServerRequestInitSession) {
+            // If this request changes a session update the session-id to queued requests.
+            boolean updateRequestsInQueue = false;
+            if (!Branch.getInstance().isTrackingDisabled() && respJson != null) {
                 try {
-                    // cache the link
-                    BranchLinkData postBody = ((ServerRequestCreateUrl) thisReq_).getLinkPost();
-                    final String url = respJson.getString("url");
-                    Branch.getInstance().linkCache_.put(postBody, url);
-                } catch (JSONException ex) {
-                    BranchLogger.w("Caught JSONException " + ex.getMessage());
-                }
-            }
-
-            if (thisReq_ instanceof ServerRequestInitSession) {
-                // If this request changes a session update the session-id to queued requests.
-                boolean updateRequestsInQueue = false;
-                if (!Branch.getInstance().isTrackingDisabled() && respJson != null) {
-                    // Update PII data only if tracking is disabled
-                    try {
-                        if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                            Branch.getInstance().prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
+                    if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
+                        Branch.getInstance().prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
+                        updateRequestsInQueue = true;
+                    }
+                    if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
+                        String new_Randomized_Bundle_Token = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.getKey());
+                        if (!Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
+                            //On setting a new Randomized Bundle Token clear the link cache
+                            Branch.getInstance().linkCache_.clear();
+                            Branch.getInstance().prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
                             updateRequestsInQueue = true;
                         }
-                        if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
-                            String new_Randomized_Bundle_Token = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.getKey());
-                            if (!Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
-                                //On setting a new Randomized Bundle Token clear the link cache
-                                Branch.getInstance().linkCache_.clear();
-                                Branch.getInstance().prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
-                                updateRequestsInQueue = true;
-                            }
-                        }
-                        if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
-                            Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
-                            updateRequestsInQueue = true;
-                        }
-                        if (updateRequestsInQueue) {
-                            updateAllRequestsInQueue();
-                        }
-                    } catch (JSONException ex) {
-                        BranchLogger.w("Caught JSONException " + ex.getMessage());
+                    }
+                    if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
+                        Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
+                        updateRequestsInQueue = true;
+                    }
+                    if (updateRequestsInQueue) {
+                        updateAllRequestsInQueue();
                     }
                 }
-
-                if (thisReq_ instanceof ServerRequestInitSession) {
-                    Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
-
-                    Branch.getInstance().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
-                    // Count down the latch holding getLatestReferringParamsSync
-                    if (Branch.getInstance().getLatestReferringParamsLatch != null) {
-                        Branch.getInstance().getLatestReferringParamsLatch.countDown();
-                    }
-                    // Count down the latch holding getFirstReferringParamsSync
-                    if (Branch.getInstance().getFirstReferringParamsLatch != null) {
-                        Branch.getInstance().getFirstReferringParamsLatch.countDown();
-                    }
+                catch (JSONException ex) {
+                    BranchLogger.w("Caught JSONException " + BranchLogger.stackTraceToString(ex));
                 }
             }
 
-            if (respJson != null) {
-                thisReq_.onRequestSucceeded(serverResponse, Branch.getInstance());
-                ServerRequestQueue.this.remove(thisReq_);
-            } else if (thisReq_.shouldRetryOnFail()) {
-                // already called handleFailure above
-                thisReq_.clearCallbacks();
-            } else {
-                ServerRequestQueue.this.remove(thisReq_);
-            }
-        }
+            Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
 
-        void onRequestFailed(ServerResponse serverResponse, int status) {
-            BranchLogger.v("onRequestFailed " + serverResponse.getMessage());
-            // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
-            if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
-                Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
+            // Count down the latch holding getLatestReferringParamsSync
+            if (Branch.getInstance().getLatestReferringParamsLatch != null) {
+                Branch.getInstance().getLatestReferringParamsLatch.countDown();
             }
-
-            // On a bad request or in case of a conflict notify with call back and remove the request.
-            if ((status == 400 || status == 409) && thisReq_ instanceof ServerRequestCreateUrl) {
-                ((ServerRequestCreateUrl) thisReq_).handleDuplicateURLError();
-            } else {
-                //On Network error or Branch is down fail all the pending requests in the queue except
-                //for request which need to be replayed on failure.
-                ServerRequestQueue.this.networkCount_ = 0;
-                thisReq_.handleFailure(status, serverResponse.getFailReason() + " " + serverResponse.getMessage());
+            // Count down the latch holding getFirstReferringParamsSync
+            if (Branch.getInstance().getFirstReferringParamsLatch != null) {
+                Branch.getInstance().getFirstReferringParamsLatch.countDown();
             }
-
-            boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
-            // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
-            // remove it from the queue
-            if (unretryableErrorCode || !thisReq_.shouldRetryOnFail() || (thisReq_.currentRetryCount >= Branch.getInstance().prefHelper_.getNoConnectionRetryMax())) {
-                Branch.getInstance().requestQueue_.remove(thisReq_);
-            } else {
-                // failure has already been handled
-                // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)
-                thisReq_.clearCallbacks();
-            }
-
-            thisReq_.currentRetryCount++;
         }
     }
 
-    ///-------Instrumentation additional data---------------///
-
-    /**
-     * Update the extra instrumentation data provided to Branch
-     *
-     * @param instrumentationData A {@link HashMap} with key value pairs for instrumentation data.
-     */
-    public void addExtraInstrumentationData(HashMap<String, String> instrumentationData) {
-        instrumentationExtraData_.putAll(instrumentationData);
-    }
-
-    /**
-     * Update the extra instrumentation data provided to Branch
-     *
-     * @param key   A {@link String} Value for instrumentation data key
-     * @param value A {@link String} Value for instrumentation data value
-     */
-    public void addExtraInstrumentationData(String key, String value) {
-        instrumentationExtraData_.put(key, value);
+    void onRequestFailedInternal(ServerRequest serverRequest, ServerResponse serverResponse, int status) {
+        BranchLogger.v("ServerRequestQueue onRequestFailed " + serverRequest + " " + serverResponse);
+        // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
+        if (serverRequest instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
+            Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
+        }
     }
 }

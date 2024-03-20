@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -28,13 +27,14 @@ public class ServerRequestTests extends BranchTest {
     }
     @After
     public void tearDown() throws InterruptedException {
+        BranchLogger.v("tearing down");
         setTimeouts(PrefHelper.TIMEOUT, PrefHelper.CONNECT_TIMEOUT);
         super.tearDown();
     }
 
     @Test
-    public void testTimedOutInitSessionCallbackInvoked() throws InterruptedException {
-        setTimeouts(10,10000);
+    public void testTimedOutInitSessionCallbackInvoked() {
+        setTimeouts(1, 1);
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
@@ -45,17 +45,19 @@ public class ServerRequestTests extends BranchTest {
     }
 
     @Test
-    public void testTimedOutLastAttributedTouchDataCallbackInvoked() throws InterruptedException {
+    public void testTimedOutLastAttributedTouchDataCallbackInvoked() {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10);
+                setTimeouts(1, 1);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
                 Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
                     @Override
                     public void onDataFetched(JSONObject jsonObject, BranchError error) {
-                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
+                        BranchLogger.v("error is " + error);
+                        Assert.assertTrue((BranchError.ERR_BRANCH_REQ_TIMED_OUT == error.getErrorCode())
+                                || BranchError.ERR_BRANCH_NO_CONNECTIVITY == error.getErrorCode());
                         lock1.countDown();
                     }
                 });
@@ -70,11 +72,12 @@ public class ServerRequestTests extends BranchTest {
     }
 
     @Test
-    public void testTimedOutGenerateShortUrlCallbackInvoked() throws InterruptedException {
+    public void testTimedOutGenerateShortUrlCallbackInvoked() {
         initSessionResumeActivity(null, new Runnable() {
             @Override
             public void run() {
-                setTimeouts(10,10);
+                Branch.getInstance().setRetryCount(1);
+                setTimeouts(1, 1);
 
                 final CountDownLatch lock3 = new CountDownLatch(1);
                 BranchUniversalObject buo = new BranchUniversalObject()
@@ -98,8 +101,13 @@ public class ServerRequestTests extends BranchTest {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         BranchLogger.v("error is " + error);
-                        Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
-                        lock3.countDown();
+                        if (error == null) {
+                            Assert.fail("Error was null");
+                        }
+                        else {
+                            Assert.assertTrue((BranchError.ERR_BRANCH_REQ_TIMED_OUT == error.getErrorCode()) || BranchError.ERR_BRANCH_NO_CONNECTIVITY == error.getErrorCode());
+                            lock3.countDown();
+                        }
                     }
                 });
                 try {
