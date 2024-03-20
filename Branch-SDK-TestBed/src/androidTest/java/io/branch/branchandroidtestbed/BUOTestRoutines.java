@@ -12,13 +12,14 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.BranchAsyncTask;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.util.BranchContentSchema;
@@ -103,7 +104,36 @@ public class BUOTestRoutines {
         boolean isLinkTestPassed = false;
         String url = buo.getShortUrl(context, new LinkProperties());
         try {
-            JSONObject linkdata = new URLContentViewer().execute(url, BranchUtil.readBranchKey(context)).get();
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            JSONObject linkdata = executor.submit(new Callable<JSONObject>() {
+                @Override
+                public JSONObject call() throws Exception {
+                    HttpsURLConnection connection = null;
+                    JSONObject respObject = new JSONObject();
+                    try {
+                        URL urlObject = new URL("https://api.branch.io/v1/url?url=" + url + "&" + "branch_key=" + BranchUtil.readBranchKey(context));
+                        connection = (HttpsURLConnection) urlObject.openConnection();
+                        connection.setConnectTimeout(1500);
+                        connection.setReadTimeout(1500);
+                        int responseCode = connection.getResponseCode();
+                        if (responseCode == HttpsURLConnection.HTTP_OK) {
+                            if (connection.getInputStream() != null) {
+                                BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                                respObject = new JSONObject(rd.readLine());
+                            }
+                        }
+                    } catch (Exception e) {
+                        BranchLogger.d(e.getMessage());
+                    } finally {
+                        if (connection != null) {
+                            connection.disconnect();
+                        }
+                    }
+
+                    return respObject;
+                }
+            }).get();
+
             isLinkTestPassed = checkIfIdenticalJson(buo.convertToJson(), linkdata.optJSONObject("data"), true);
             if (isLinkTestPassed) {
                 isLinkTestPassed = checkIfIdenticalJson(BranchUniversalObject.createInstance(linkdata).convertToJson(), linkdata.optJSONObject("data"), true);
@@ -161,35 +191,4 @@ public class BUOTestRoutines {
 
         return isIdentical;
     }
-
-    private static class URLContentViewer extends BranchAsyncTask<String, Void, JSONObject> {
-
-        @Override
-        protected JSONObject doInBackground(String... strings) {
-            HttpsURLConnection connection = null;
-            JSONObject respObject = new JSONObject();
-            try {
-                URL urlObject = new URL("https://api.branch.io/v1/url?url=" + strings[0] + "&" + "branch_key=" + strings[1]);
-                connection = (HttpsURLConnection) urlObject.openConnection();
-                connection.setConnectTimeout(1500);
-                connection.setReadTimeout(1500);
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    if (connection.getInputStream() != null) {
-                        BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                        respObject = new JSONObject(rd.readLine());
-                    }
-                }
-            } catch (Exception e) {
-                BranchLogger.d(e.getMessage());
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-
-            return respObject;
-        }
-    }
-
 }

@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ActivityScenario;
@@ -18,8 +17,8 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.test.mock.MockActivity;
-import io.branch.referral.test.mock.MockRemoteInterface;
 
 /**
  * Base Instrumented test, which will execute on an Android device.
@@ -74,7 +73,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
     }
 
     protected void initBranchInstance() {
-        initBranchInstance(null);
+        initBranchInstance("key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc");
     }
 
     protected void initBranchInstance(String branchKey) {
@@ -94,24 +93,26 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
         activityScenario = ActivityScenario.launch(MockActivity.class);
 
-        branch.setBranchRemoteInterface(new MockRemoteInterface());
+        branch.setBranchRemoteInterface(new BranchRemoteInterfaceUrlConnection(Branch.getInstance()));
     }
 
     protected synchronized void initSessionResumeActivity(final Runnable pretest, final Runnable posttest) {
         final CountDownLatch sessionLatch = new CountDownLatch(1);
-
         activityScenario.onActivity(new ActivityScenario.ActivityAction<MockActivity>() {
             @Override
             public void perform(final MockActivity activity) {
+                BranchLogger.v("perform on thread " + Thread.currentThread().getName());
                 Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
                         // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
-                        BranchLogger.v(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error);
+                        BranchLogger.v(TAG + " onInitFinished, referringParams: " + referringParams + ", error: " + error + " on thread " + Thread.currentThread().getName());
                         Assert.assertNotNull(referringParams);
                         if (error != null) {
-                            if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT) {
-                                Assert.fail("error should be null unless we are testing timeouts" + error.getMessage());
+                            BranchLogger.v("error is " + error + " " + error.getErrorCode());
+                            if (error.getErrorCode() != BranchError.ERR_BRANCH_REQ_TIMED_OUT
+                                    && error.getErrorCode() != BranchError.ERR_BRANCH_NO_CONNECTIVITY) {
+                                Assert.fail("error should be null unless we are testing timeouts  " + error.errorCode_ + error.getMessage());
                             }
                         }
                         sessionLatch.countDown();
@@ -126,7 +127,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                     pretest.run();
                 }
 
-                Log.d(TAG, "initSessionResumeActivity completed");
+                BranchLogger.v("initSessionResumeActivity completed");
             }
         });
 

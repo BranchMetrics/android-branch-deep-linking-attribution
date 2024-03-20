@@ -3,15 +3,29 @@ package io.branch.coroutines
 import android.content.Context
 import android.provider.Settings
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import io.branch.data.AdvertisingInfoObjectResult
 import io.branch.referral.BranchLogger
-import io.branch.referral.PrefHelper
+import io.branch.referral.SystemObserver
+import io.branch.referral.util.classExists
+import io.branch.referral.util.huaweiAdvertisingIdClientClass
+import io.branch.referral.util.playStoreAdvertisingIdClientClass
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-suspend fun getGoogleAdvertisingInfoObject(context: Context): AdvertisingIdClient.Info? {
+suspend fun getGoogleAdvertisingInfoObject(context: Context): AdvertisingInfoObjectResult? {
     return withContext(Dispatchers.Default) {
         try {
-            AdvertisingIdClient.getAdvertisingIdInfo(context)
+            val info = AdvertisingIdClient.getAdvertisingIdInfo(context)
+
+            val lat = info.isLimitAdTrackingEnabled
+            var aid: String? = null
+
+            // Only record advertising id if limit ad tracking is false
+            if (!lat) {
+                aid = info.id
+            }
+
+            AdvertisingInfoObjectResult(if (lat) 1 else 0, aid)
         }
         catch (exception: Exception) {
             BranchLogger.w("Caught getGoogleAdvertisingInfoObject exception: $exception")
@@ -20,10 +34,20 @@ suspend fun getGoogleAdvertisingInfoObject(context: Context): AdvertisingIdClien
     }
 }
 
-suspend fun getHuaweiAdvertisingInfoObject(context: Context):  com.huawei.hms.ads.identifier.AdvertisingIdClient.Info? {
+suspend fun getHuaweiAdvertisingInfoObject(context: Context):  AdvertisingInfoObjectResult? {
     return withContext(Dispatchers.Default) {
         try {
-            com.huawei.hms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo(context)
+            val info = com.huawei.hms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo(context)
+
+            val lat = info.isLimitAdTrackingEnabled
+            var aid: String? = null
+
+            // Only record advertising id if limit ad tracking is false
+            if (!lat) {
+                aid = info.id
+            }
+
+            AdvertisingInfoObjectResult(if (lat) 1 else 0, aid)
         }
         catch (exception: Exception) {
             BranchLogger.w("Caught getHuaweiAdvertisingInfoObject exception: $exception")
@@ -32,18 +56,46 @@ suspend fun getHuaweiAdvertisingInfoObject(context: Context):  com.huawei.hms.ad
     }
 }
 
-suspend fun getAmazonFireAdvertisingInfoObject(context: Context): Pair<Int, String>? {
+suspend fun getAmazonFireAdvertisingInfoObject(context: Context): AdvertisingInfoObjectResult? {
     return withContext(Dispatchers.Default) {
         try {
             val cr = context.contentResolver
-            Pair(
-                Settings.Secure.getInt(cr, "limit_ad_tracking"),
-                Settings.Secure.getString(cr, "advertising_id")
-            )
+
+            val lat = Settings.Secure.getInt(cr, "limit_ad_tracking")
+            var aid: String? = null
+
+            // limit ad tracking false is 0, true is 1
+            // Only record advertising id if limit ad tracking is false
+            if(lat == 0){
+                aid = Settings.Secure.getString(cr, "advertising_id")
+            }
+
+            AdvertisingInfoObjectResult(lat, aid)
         }
         catch (exception: Exception) {
             BranchLogger.w("Caught getAmazonFireAdvertisingInfo exception: $exception")
             null
         }
+    }
+}
+
+suspend fun getAdvertisingInfoObject(context: Context): AdvertisingInfoObjectResult? {
+    return withContext(Dispatchers.Default) {
+        try {
+            if (SystemObserver.isFireOSDevice()) {
+                return@withContext getAmazonFireAdvertisingInfoObject(context)
+            } else if (SystemObserver.isHuaweiMobileServicesAvailable(context) && classExists(
+                    huaweiAdvertisingIdClientClass
+                )
+            ) {
+                return@withContext getHuaweiAdvertisingInfoObject(context)
+            } else if (classExists(playStoreAdvertisingIdClientClass)) {
+                return@withContext getGoogleAdvertisingInfoObject(context)
+            }
+        } catch (exception: Exception) {
+            BranchLogger.d(exception.message)
+        }
+
+        null
     }
 }

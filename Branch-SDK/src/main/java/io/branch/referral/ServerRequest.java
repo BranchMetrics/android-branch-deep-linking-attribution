@@ -41,14 +41,6 @@ public abstract class ServerRequest {
     private long queueWaitTime_ = 0;
     private final Context context_;
 
-    // Various process wait locks for Branch server request
-    enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
-    }
-    
-    // Set for holding any active wait locks
-    private final Set<PROCESS_WAIT_LOCK> locks_;
-    
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
     
@@ -71,7 +63,6 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         prefHelper_ = PrefHelper.getInstance(context);
         params_ = new JSONObject();
-        locks_ = new HashSet<>();
     }
     
     /**
@@ -87,7 +78,6 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-        locks_ = new HashSet<>();
     }
     
     /**
@@ -235,8 +225,6 @@ public abstract class ServerRequest {
             params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
             DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
-
-        params_.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
     }
     
     /**
@@ -260,49 +248,6 @@ public abstract class ServerRequest {
      */
     public boolean isGAdsParamsRequired() {
         return true;
-    }
-    
-    /**
-     * <p>Gets a {@link JSONObject} containing the post data supplied with the current request as
-     * key-value pairs appended with the instrumentation data.</p>
-     * <p>
-     * * @param instrumentationData {@link ConcurrentHashMap} with instrumentation values
-     *
-     * @return A {@link JSONObject} containing the post data supplied with the current request
-     * as key-value pairs and the instrumentation meta data.
-     */
-    public JSONObject getPostWithInstrumentationValues(ConcurrentHashMap<String, String> instrumentationData) {
-        JSONObject extendedPost = new JSONObject();
-        try {
-            //Add original parameters
-            if (params_ != null) {
-                JSONObject originalParams = new JSONObject(params_.toString());
-                Iterator<String> keys = originalParams.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    extendedPost.put(key, originalParams.get(key));
-                }
-            }
-            // Append instrumentation metadata
-            if (instrumentationData.size() > 0) {
-                JSONObject instrObj = new JSONObject();
-                Set<String> keys = instrumentationData.keySet();
-                try {
-                    for (String key : keys) {
-                        instrObj.put(key, instrumentationData.get(key));
-                        instrumentationData.remove(key);
-                    }
-                    extendedPost.put(Defines.Jsonkey.Branch_Instrumentation.getKey(), instrObj);
-                } catch (JSONException e) {
-                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                }
-            }
-        } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
-        } catch (ConcurrentModificationException ex) {
-            extendedPost = params_;
-        }
-        return extendedPost;
     }
     
     /**
@@ -615,8 +560,8 @@ public abstract class ServerRequest {
         params.remove(Defines.PreinstallKey.campaign.getKey());
         params.remove(Defines.Jsonkey.GooglePlayInstallReferrer.getKey());
     }
-    
-    void doFinalUpdateOnMainThread() {
+
+    public void updateRequestData() {
         updateRequestMetadata();
         if (shouldUpdateLimitFacebookTracking()) {
             updateLimitFacebookTracking();
@@ -625,8 +570,8 @@ public abstract class ServerRequest {
             addDMAParams();
         }
     }
-    
-    void doFinalUpdateOnBackgroundThread() {
+
+    public void updatePostData() {
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
             if (prioritizeLinkAttribution(this.params_)) {
@@ -662,64 +607,7 @@ public abstract class ServerRequest {
 
         return result == PackageManager.PERMISSION_GRANTED;
     }
-    
-    /**
-     * Called when request is added to teh queue
-     */
-    public void onRequestQueued() {
-        queueWaitTime_ = System.currentTimeMillis();
-    }
-    
-    /**
-     * Returns the amount of time this request was in queque
-     *
-     * @return {@link Integer} with value of queued time in milli sec
-     */
-    public long getQueueWaitTime() {
-        long waitTime = 0;
-        if (queueWaitTime_ > 0) {
-            waitTime = System.currentTimeMillis() - queueWaitTime_;
-        }
-        return waitTime;
-    }
-    
-    /**
-     * <p>
-     * Set the specified process wait lock for this request. This request will not be blocked from
-     * Execution until the waiting process finishes     *
-     * </p>
-     *
-     * @param lock {@link PROCESS_WAIT_LOCK} type of lock
-     */
-    public void addProcessWaitLock(PROCESS_WAIT_LOCK lock) {
-        if (lock != null) {
-            locks_.add(lock);
-        }
-    }
-    
-    /**
-     * Unlock the specified lock from the request. Call this when the locked process finishes
-     *
-     * @param lock {@link PROCESS_WAIT_LOCK} type of lock
-     */
-    public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
-        locks_.remove(lock);
-    }
 
-    public String printWaitLocks(){
-        return Arrays.toString(locks_.toArray());
-    }
-    
-    
-    /**
-     * Check if this request is waiting on any operation to finish before processing
-     *
-     * @return True if this request if any pre processing operation pending
-     */
-    public boolean isWaitingOnProcessToFinish() {
-        return locks_.size() > 0;
-    }
-    
     /**
      * Called on UI thread just before executing a request. Do any final updates to the request here.
      * Also attaches any required URL query parameters based on the request type.
@@ -776,7 +664,7 @@ public abstract class ServerRequest {
      *
      * @return {@code true} if the request needed to be executed in tracking disabled mode
      */
-    protected boolean prepareExecuteWithoutTracking() {
+    public boolean prepareExecuteWithoutTracking() {
         // Default return false. Return true for request need to be executed when tracking is disabled
         return false;
     }

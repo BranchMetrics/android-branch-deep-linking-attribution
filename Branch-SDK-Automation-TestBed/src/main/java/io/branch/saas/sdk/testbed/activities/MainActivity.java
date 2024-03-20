@@ -10,7 +10,10 @@ import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONObject;
+
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.saas.sdk.testbed.Common;
 import io.branch.saas.sdk.testbed.Constants;
 import io.branch.saas.sdk.testbed.R;
@@ -58,26 +61,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btCreateQrCode.setOnClickListener(this);
         trackingCntrlBtn.setChecked(Branch.getInstance().isTrackingDisabled());
         trackingCntrlBtn.setOnCheckedChangeListener((buttonView, isChecked) -> Branch.getInstance().disableTracking(isChecked));
-
-
-        /*LinkProperties lp = new LinkProperties()
-                .setChannel("facebook")
-                .setFeature("sharing")
-                .setCampaign("content 123 launch")
-                .setStage("new user")
-                .addControlParameter("$desktop_url", "https://example.com/home")
-                .addControlParameter("custom", "data")
-                .addControlParameter("custom_random", Long.toString(Calendar.getInstance().getTimeInMillis()));
-
-        buo.generateShortUrl(this, lp, new Branch.BranchLinkCreateListener() {
-            @Override
-            public void onLinkCreate(String url, BranchError error) {
-                if (error == null) {
-                    Log.i("BRANCH SDK", "got my Branch link to share: " + url);
-                    Toast.makeText(MainActivity.this, "link==>" + url, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });*/
     }
 
     @Override
@@ -139,5 +122,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             intent.putExtra(Constants.TYPE, Constants.HANDLE_LINKS);
             startActivity(intent);
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject referringParams, BranchError error) {
+                if (error == null) {
+                    Log.i("BranchSDK", referringParams.toString());
+                }
+                else {
+                    Log.i("BranchSDK error", error.getMessage());
+                }
+            }
+        }).withData(this.getIntent().getData()).init();
     }
 }

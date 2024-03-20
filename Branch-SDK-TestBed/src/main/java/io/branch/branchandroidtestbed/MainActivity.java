@@ -649,10 +649,55 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        //        for(int i = 0; i < 0; i++) {
+//            int finalI = i;
+//            new BranchEvent("beforeSetId"+i).logEvent(this, new BranchEvent.BranchLogEventCallback() {
+//                @Override
+//                public void onSuccess(int responseCode) {
+//                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "beforeSetId" + finalI + " onSuccess on thread " + Thread.currentThread().getName());
+//                }
+//
+//                @Override
+//                public void onFailure(Exception e) {
+//                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "beforeSetId" + finalI + " onFailure on thread " + Thread.currentThread().getName());
+//                }
+//            });
+//        }
+//        Branch.getInstance().setIdentity("newID5");
+//        for(int i = 0; i < 0; i++) {
+//            int finalI = i;
+//            new BranchEvent("afterSetId"+i).logEvent(this, new BranchEvent.BranchLogEventCallback() {
+//                @Override
+//                public void onSuccess(int responseCode) {
+//                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "afterSetId" + finalI + " onSuccess on thread " + Thread.currentThread().getName());
+//                }
+//
+//                @Override
+//                public void onFailure(Exception e) {
+//                    Log.d("BranchSDK_Tester", "ServerRequestTest I'm " + "afterSetId" + finalI + " onFailure on thread " + Thread.currentThread().getName());
+//                }
+//            });
+//        }
+
         Branch.getInstance().setIdentity("testDevID");
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
+        Log.d("BranchSDK_Tester", "initSession");
+
+        // Branch integration validation: Validate Branch integration with your app
+        // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
+        // Please look for "BranchSDK_Doctor" in the logcat to see the results.
+        // IMP : Do not make this call in your production app
+
+        //IntegrationValidator.validate(MainActivity.this);
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         Log.d("BranchSDK_Tester", "initSession");
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
@@ -666,7 +711,6 @@ public class MainActivity extends Activity {
                         Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
                         Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
                     }
-
                     if (linkProperties != null) {
                         Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
                         Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
@@ -675,37 +719,18 @@ public class MainActivity extends Activity {
 
 
                 // QA purpose only
-                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+                //TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+                //BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
 
             }
         }).withData(this.getIntent().getData()).init();
-
-        // Branch integration validation: Validate Branch integration with your app
-        // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
-        // Please look for "BranchSDK_Doctor" in the logcat to see the results.
-        // IMP : Do not make this call in your production app
-
-        //IntegrationValidator.validate(MainActivity.this);
-
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        Log.d("BranchSDK_Tester", "initSession onNewIntent " + intent);
         this.setIntent(intent);
-        Branch.sessionBuilder(this).withCallback(new BranchReferralInitListener() {
-            @Override
-            public void onInitFinished(JSONObject referringParams, BranchError error) {
-                if (error != null) {
-                    Log.e("BranchSDK_Tester", error.getMessage());
-                } else if (referringParams != null) {
-                    Log.d("BranchSDK_Tester", referringParams.toString());
-                }
-            }
-        }).reInit();
-
-
     }
 
     @Override

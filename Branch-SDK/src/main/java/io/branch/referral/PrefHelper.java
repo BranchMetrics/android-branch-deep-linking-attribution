@@ -264,7 +264,7 @@ public class PrefHelper {
      * @return A {@link String} variable containing the hard-coded CDN base URL that Branch uses or
      * custom CDN base URL set by the user.
      */
-    static String getCDNBaseUrl() {
+    public static String getCDNBaseUrl() {
         if (!TextUtils.isEmpty(customCDNBaseURL_)) {
             return customCDNBaseURL_;
         }
@@ -614,6 +614,7 @@ public class PrefHelper {
      * @param uri A {@link String} value containing intent URI to set
      */
     public void setExternalIntentUri(String uri) {
+        BranchLogger.v("setExternalIntentUri " + uri);
         setString(KEY_EXTERNAL_INTENT_URI, uri);
     }
     
