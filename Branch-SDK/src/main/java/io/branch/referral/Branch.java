@@ -519,7 +519,6 @@ public class Branch {
     }
 
     /**
-     * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
      * Toggles the tracking state of the SDK. When tracking is disabled, the SDK will not track any user data or state,
      * and it will not initiate any network calls except for deep linking operations.
      * Re-enabling tracking will reinitialize the Branch session and resume normal SDK operations.
