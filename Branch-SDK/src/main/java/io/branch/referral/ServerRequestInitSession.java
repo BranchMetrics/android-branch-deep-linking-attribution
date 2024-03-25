@@ -3,10 +3,16 @@ package io.branch.referral;
 import android.content.Context;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.branch.coroutines.DeviceSignalsKt;
 import io.branch.referral.validators.DeepLinkRoutingValidator;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -89,6 +95,31 @@ abstract class ServerRequestInitSession extends ServerRequest {
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
+
+        // If user agent query is not explicitly set as sync,
+        // asynchronously cache user agent string for subsequent V2 event
+        if (!Branch.userAgentSync) {
+            DeviceSignalsKt.getUserAgentAsync(branch.getApplicationContext(), new Continuation<String>() {
+                @NonNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NonNull Object o) {
+                    if (o != null) {
+                        BranchLogger.v("onInitSessionCompleted resumeWith userAgent " + o + " on thread " + Thread.currentThread().getName());
+                        Branch._userAgentString = (String) o;
+                    }
+                }
+            });
+        }
+        else {
+            BranchLogger.v("Deferring userAgent string call for sync retrieval");
+        }
+
+        BranchLogger.v("onInitSessionCompleted on thread " + Thread.currentThread().getName());
     }
 
     /**

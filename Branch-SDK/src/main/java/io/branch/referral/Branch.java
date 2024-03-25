@@ -355,11 +355,6 @@ public class Branch {
             branchReferral_.setActivityLifeCycleObserver((Application) context);
         }
 
-        // Cache the user agent from a webview instance if needed
-        if(userAgentSync && DeviceInfo.getInstance() != null){
-            DeviceInfo.getInstance().getUserAgentStringSync(context);
-        }
-
         return branchReferral_;
     }
 
