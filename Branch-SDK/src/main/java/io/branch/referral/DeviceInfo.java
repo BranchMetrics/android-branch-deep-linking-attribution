@@ -6,11 +6,8 @@ import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 
@@ -245,22 +242,48 @@ class DeviceInfo {
      * @param userDataObj
      */
     private void setPostUserAgent(JSONObject userDataObj) {
-        BranchLogger.v("setPostUserAgent " + Thread.currentThread().getName());
         try {
             if (!TextUtils.isEmpty(Branch._userAgentString)) {
-                BranchLogger.v("userAgent was not empty: " + Branch._userAgentString);
+                BranchLogger.v("userAgent was cached: " + Branch._userAgentString);
+
                 userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+
+                Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                Branch.getInstance().requestQueue_.processNextQueueItem("setPostUserAgent");
             }
             else {
-                BranchLogger.v("Invoking getUserAgentSync from thread " + Thread.currentThread().getName());
-                Branch._userAgentString = DeviceSignalsKt.getUserAgentSync(context_);
-                userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+                BranchLogger.v("Start invoking getUserAgentSync from thread " + Thread.currentThread().getName());
+
+                DeviceSignalsKt.getUserAgentSync(context_, new Continuation<String>() {
+                    @NonNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
+
+                    @Override
+                    public void resumeWith(@NonNull Object o) {
+                        if(o != null){
+                            Branch._userAgentString = (String) o;
+                            BranchLogger.v("onUserAgentStringFetchFinished, releasing lock");
+
+                            try {
+                                userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+                            }
+                            catch (JSONException e) {
+                                BranchLogger.w("Caught JSONException " + e.getMessage());
+                            }
+                        }
+
+                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        Branch.getInstance().requestQueue_.processNextQueueItem("onUserAgentStringFetchFinished");
+                    }
+                });
             }
         }
         catch (Exception exception){
             BranchLogger.w("Caught exception trying to set userAgent " + exception.getMessage());
         }
-        BranchLogger.v("Exiting setPostUserAgent on " + Thread.currentThread().getName());
     }
 
     /**
@@ -334,6 +357,4 @@ class DeviceInfo {
     public static boolean isNullOrEmptyOrBlank(String str) {
         return TextUtils.isEmpty(str) || str.equals(SystemObserver.BLANK);
     }
-
-
 }

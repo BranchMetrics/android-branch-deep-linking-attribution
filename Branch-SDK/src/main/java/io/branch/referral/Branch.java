@@ -196,7 +196,7 @@ public class Branch {
     /**
      * Package private user agent string cached to save on repeated queries
      */
-    static String _userAgentString = "";
+    public static String _userAgentString = "";
 
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;

@@ -96,8 +96,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
 
-        // If user agent query is not explicitly set as sync,
-        // asynchronously cache user agent string for subsequent V2 event
+        // Run this after session init, ahead of any V2 event, in the background.
         if (!Branch.userAgentSync) {
             DeviceSignalsKt.getUserAgentAsync(branch.getApplicationContext(), new Continuation<String>() {
                 @NonNull
@@ -112,6 +111,9 @@ abstract class ServerRequestInitSession extends ServerRequest {
                         BranchLogger.v("onInitSessionCompleted resumeWith userAgent " + o + " on thread " + Thread.currentThread().getName());
                         Branch._userAgentString = (String) o;
                     }
+
+                    Branch.getInstance().requestQueue_.unlockProcessWait(PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                    Branch.getInstance().requestQueue_.processNextQueueItem("getUserAgentAsync resumeWith");
                 }
             });
         }

@@ -1,10 +1,6 @@
 package io.branch.coroutines
 
 import android.content.Context
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
-import android.os.Handler
-import android.os.Looper
 import android.webkit.WebSettings
 import android.webkit.WebView
 import io.branch.referral.BranchLogger.e
@@ -18,48 +14,39 @@ import kotlinx.coroutines.withContext
  */
 suspend fun getUserAgentAsync(context: Context): String? {
     return withContext(Dispatchers.Default) {
+        v("Begin getUserAgentAsync " + Thread.currentThread())
+
         var result: String? = null
         try {
-            v("Retrieving userAgent string from WebSettings on thread " + Thread.currentThread())
             result = WebSettings.getDefaultUserAgent(context)
         }
         catch (exception: Exception) {
             e("Failed to retrieve userAgent string. " + exception.message)
         }
 
+        v("End getUserAgentAsync " + Thread.currentThread() + " " + result)
         result
     }
 }
 
-fun getUserAgentSync(context: Context): String?{
-    var result: String? = null
+/**
+ * Returns the user agent string on the main thread via WebView instance.
+ */
+suspend fun getUserAgentSync(context: Context): String?{
+    return withContext(Dispatchers.Main){
+        v("Begin getUserAgentSync " + Thread.currentThread())
 
-    if(isMainThread){
-        result = getWebViewUserAgent(context)
-    }
-    else {
-        Handler(Looper.getMainLooper()).post {
-            result = getWebViewUserAgent(context)
+        var result: String? = null
+        try {
+            val w = WebView(context)
+            result = w.settings.userAgentString
+            w.destroy()
         }
+        catch (ex: Exception){
+            e("Failed to retrieve userAgent string. " + ex.message)
+        }
+
+        v("End getUserAgentSync " + Thread.currentThread() + " " + result)
+        result
     }
-
-    return result
-}
-
-var isMainThread =
-    if (VERSION.SDK_INT >= VERSION_CODES.M) {
-        Looper.getMainLooper().isCurrentThread
-    }
-    else {
-        Thread.currentThread() === Looper.getMainLooper().thread
-    }
-
-fun getWebViewUserAgent(context: Context): String? {
-    val result: String?
-    v("Retrieving user agent from WebView instance on " + Thread.currentThread())
-    val w = WebView(context)
-    result = w.settings.userAgentString
-    w.destroy()
-
-    return result
 }

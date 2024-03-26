@@ -42,8 +42,8 @@ public abstract class ServerRequest {
     private final Context context_;
 
     // Various process wait locks for Branch server request
-    enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK
+    public enum PROCESS_WAIT_LOCK {
+        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK, USER_AGENT_STRING_LOCK
     }
     
     // Set for holding any active wait locks

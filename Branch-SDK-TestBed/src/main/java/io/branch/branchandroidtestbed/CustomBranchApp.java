@@ -18,7 +18,7 @@ public final class CustomBranchApp extends Application {
             }
         };
         Branch.enableLogging(); // Pass in iBranchLoggingCallbacks to enable logging redirects
-        Branch.setIsUserAgentSync(true);
+        Branch.setIsUserAgentSync(false);
         Branch.getAutoInstance(this);
     }
 }
