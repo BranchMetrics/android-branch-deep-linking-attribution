@@ -251,35 +251,33 @@ class DeviceInfo {
                 Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
                 Branch.getInstance().requestQueue_.processNextQueueItem("setPostUserAgent");
             }
-            else {
+            else if (Branch.userAgentSync) {
                 // If user agent sync is false, then the async coroutine is executed instead but may not have finished yet.
-                if(Branch.userAgentSync) {
-                    BranchLogger.v("Start invoking getUserAgentSync from thread " + Thread.currentThread().getName());
-                    DeviceSignalsKt.getUserAgentSync(context_, new Continuation<String>() {
-                        @NonNull
-                        @Override
-                        public CoroutineContext getContext() {
-                            return EmptyCoroutineContext.INSTANCE;
-                        }
+                BranchLogger.v("Start invoking getUserAgentSync from thread " + Thread.currentThread().getName());
+                DeviceSignalsKt.getUserAgentSync(context_, new Continuation<String>() {
+                    @NonNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
 
-                        @Override
-                        public void resumeWith(@NonNull Object o) {
-                            if (o != null) {
-                                Branch._userAgentString = (String) o;
-                                BranchLogger.v("onUserAgentStringFetchFinished, releasing lock");
+                    @Override
+                    public void resumeWith(@NonNull Object o) {
+                        if (o != null) {
+                            Branch._userAgentString = (String) o;
+                            BranchLogger.v("onUserAgentStringFetchFinished, releasing lock");
 
-                                try {
-                                    userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
-                                } catch (JSONException e) {
-                                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                                }
+                            try {
+                                userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+                            } catch (JSONException e) {
+                                BranchLogger.w("Caught JSONException " + e.getMessage());
                             }
-
-                            Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                            Branch.getInstance().requestQueue_.processNextQueueItem("onUserAgentStringFetchFinished");
                         }
-                    });
-                }
+
+                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        Branch.getInstance().requestQueue_.processNextQueueItem("onUserAgentStringFetchFinished");
+                    }
+                });
             }
         }
         catch (Exception exception){
