@@ -773,7 +773,11 @@ public class Branch {
     public static void setIsUserAgentSync(boolean sync){
         userAgentSync = sync;
     }
-    
+
+    public static boolean getIsUserAgentSync(){
+        return userAgentSync;
+    }
+
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>

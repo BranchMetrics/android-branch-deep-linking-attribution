@@ -97,7 +97,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         branch.updateSkipURLFormats();
 
         // Run this after session init, ahead of any V2 event, in the background.
-        if (!Branch.userAgentSync) {
+        if (!Branch.userAgentSync && !TextUtils.isEmpty(Branch._userAgentString)) {
             DeviceSignalsKt.getUserAgentAsync(branch.getApplicationContext(), new Continuation<String>() {
                 @NonNull
                 @Override

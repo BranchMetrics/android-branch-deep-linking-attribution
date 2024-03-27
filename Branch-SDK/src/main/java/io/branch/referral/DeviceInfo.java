@@ -241,7 +241,8 @@ class DeviceInfo {
      * or on time, query it synchronously.
      * @param userDataObj
      */
-    private void setPostUserAgent(JSONObject userDataObj) {
+    private void setPostUserAgent(final JSONObject userDataObj) {
+        BranchLogger.v("setPostUserAgent " + Thread.currentThread().getName());
         try {
             if (!TextUtils.isEmpty(Branch._userAgentString)) {
                 BranchLogger.v("userAgent was cached: " + Branch._userAgentString);
@@ -265,17 +266,46 @@ class DeviceInfo {
                     public void resumeWith(@NonNull Object o) {
                         if (o != null) {
                             Branch._userAgentString = (String) o;
-                            BranchLogger.v("onUserAgentStringFetchFinished, releasing lock");
+                            BranchLogger.v("onUserAgentStringFetchFinished getUserAgentSync resumeWith releasing lock");
 
                             try {
                                 userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
-                            } catch (JSONException e) {
+                            }
+                            catch (JSONException e) {
                                 BranchLogger.w("Caught JSONException " + e.getMessage());
                             }
                         }
 
                         Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
                         Branch.getInstance().requestQueue_.processNextQueueItem("onUserAgentStringFetchFinished");
+                    }
+                });
+            }
+            // In cases where v2 events objects are enqueued before an init, this will execute first.
+            else {
+                DeviceSignalsKt.getUserAgentAsync(context_, new Continuation<String>() {
+                    @NonNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
+
+                    @Override
+                    public void resumeWith(@NonNull Object o) {
+                        if (o != null) {
+                            Branch._userAgentString = (String) o;
+                            BranchLogger.v("onUserAgentStringFetchFinished getUserAgentAsync resumeWith releasing lock");
+
+                            try {
+                                userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+                            }
+                            catch (JSONException e) {
+                                BranchLogger.w("Caught JSONException " + e.getMessage());
+                            }
+                        }
+
+                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        Branch.getInstance().requestQueue_.processNextQueueItem("getUserAgentAsync resumeWith");
                     }
                 });
             }
