@@ -1,25 +1,23 @@
 package io.branch.referral;
 
+import static android.content.Context.UI_MODE_SERVICE;
+import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
+
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
+
+import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static android.content.Context.UI_MODE_SERVICE;
-import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
-
-import java.util.Iterator;
-import java.util.Objects;
+import io.branch.coroutines.DeviceSignalsKt;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -215,7 +213,8 @@ class DeviceInfo {
             userDataObj.put(Defines.Jsonkey.AppVersion.getKey(), getAppVersion());
             userDataObj.put(Defines.Jsonkey.SDK.getKey(), "android");
             userDataObj.put(Defines.Jsonkey.SdkVersion.getKey(), Branch.getSdkVersionNumber());
-            userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), getDefaultBrowserAgent(context_));
+
+            setPostUserAgent(userDataObj);
 
             if (serverRequest instanceof ServerRequestGetLATD) {
                 userDataObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
@@ -233,6 +232,86 @@ class DeviceInfo {
 
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException" + e.getMessage());
+        }
+    }
+
+    /**
+     * Method to append the user agent string to the POST request body's user_data object
+     * If the user agent string is empty, either because it was not obtained asynchronously
+     * or on time, query it synchronously.
+     * @param userDataObj
+     */
+    private void setPostUserAgent(final JSONObject userDataObj) {
+        BranchLogger.v("setPostUserAgent " + Thread.currentThread().getName());
+        try {
+            if (!TextUtils.isEmpty(Branch._userAgentString)) {
+                BranchLogger.v("userAgent was cached: " + Branch._userAgentString);
+
+                userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+
+                Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                Branch.getInstance().requestQueue_.processNextQueueItem("setPostUserAgent");
+            }
+            else if (Branch.userAgentSync) {
+                // If user agent sync is false, then the async coroutine is executed instead but may not have finished yet.
+                BranchLogger.v("Start invoking getUserAgentSync from thread " + Thread.currentThread().getName());
+                DeviceSignalsKt.getUserAgentSync(context_, new Continuation<String>() {
+                    @NonNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
+
+                    @Override
+                    public void resumeWith(@NonNull Object o) {
+                        if (o != null) {
+                            Branch._userAgentString = (String) o;
+                            BranchLogger.v("onUserAgentStringFetchFinished getUserAgentSync resumeWith releasing lock");
+
+                            try {
+                                userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+                            }
+                            catch (JSONException e) {
+                                BranchLogger.w("Caught JSONException " + e.getMessage());
+                            }
+                        }
+
+                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        Branch.getInstance().requestQueue_.processNextQueueItem("onUserAgentStringFetchFinished");
+                    }
+                });
+            }
+            // In cases where v2 events objects are enqueued before an init, this will execute first.
+            else {
+                DeviceSignalsKt.getUserAgentAsync(context_, new Continuation<String>() {
+                    @NonNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
+
+                    @Override
+                    public void resumeWith(@NonNull Object o) {
+                        if (o != null) {
+                            Branch._userAgentString = (String) o;
+                            BranchLogger.v("onUserAgentStringFetchFinished getUserAgentAsync resumeWith releasing lock");
+
+                            try {
+                                userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
+                            }
+                            catch (JSONException e) {
+                                BranchLogger.w("Caught JSONException " + e.getMessage());
+                            }
+                        }
+
+                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        Branch.getInstance().requestQueue_.processNextQueueItem("getUserAgentAsync resumeWith");
+                    }
+                });
+            }
+        }
+        catch (Exception exception){
+            BranchLogger.w("Caught exception trying to set userAgent " + exception.getMessage());
         }
     }
 
@@ -288,63 +367,6 @@ class DeviceInfo {
         return systemObserver_.getOS(context_);
     }
 
-
-    /**
-     * Returns the browser's user agent string
-     * PRS : User agent is checked only from api-17
-     * @param context
-     * @return user agent string
-     */
-    String getDefaultBrowserAgent(final Context context) {
-        if(!TextUtils.isEmpty(Branch._userAgentString)) {
-            return Branch._userAgentString;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            try {
-                BranchLogger.v("Retrieving user agent string from WebSettings");
-                Branch._userAgentString = WebSettings.getDefaultUserAgent(context);
-            }
-            catch (Exception exception) {
-                BranchLogger.v(exception.getMessage());
-                // A known Android issue. Webview packages are not accessible while any updates for chrome is in progress.
-                // https://bugs.chromium.org/p/chromium/issues/detail?id=506369
-            }
-        }
-        return Branch._userAgentString;
-    }
-
-    /**
-     * Must be called from the main thread
-     * Some devices appear to crash when accessing chromium through the Android framework statics
-     * Suggested alternative is to use a webview instance
-     * https://bugs.chromium.org/p/chromium/issues/detail?id=1279562
-     * https://bugs.chromium.org/p/chromium/issues/detail?id=1271617
-     **/
-    String getUserAgentStringSync(final Context context){
-        if(!TextUtils.isEmpty(Branch._userAgentString)) {
-            return Branch._userAgentString;
-        }
-
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    BranchLogger.v("Running WebView initialization for user agent on thread " + Thread.currentThread());
-                    WebView w = new WebView(context);
-                    Branch._userAgentString = w.getSettings().getUserAgentString();
-                    w.destroy();
-                }
-                catch (Exception e) {
-                    BranchLogger.v(e.getMessage());
-                }
-
-            }
-        });
-
-        return Branch._userAgentString;
-    }
-
     /**
      * Concrete SystemObserver implementation
      */
@@ -364,6 +386,4 @@ class DeviceInfo {
     public static boolean isNullOrEmptyOrBlank(String str) {
         return TextUtils.isEmpty(str) || str.equals(SystemObserver.BLANK);
     }
-
-
 }

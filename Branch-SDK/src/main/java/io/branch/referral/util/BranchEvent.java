@@ -1,6 +1,7 @@
 package io.branch.referral.util;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,7 +13,9 @@ import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
+import io.branch.referral.ServerRequest;
 import io.branch.referral.ServerRequestLogEvent;
 import io.branch.referral.ServerResponse;
 
@@ -262,32 +265,39 @@ public class BranchEvent {
     public boolean logEvent(Context context, final BranchLogEventCallback callback) {
         boolean isReqQueued = false;
         Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
-        if (Branch.getInstance() != null) {
-            Branch.getInstance().requestQueue_.handleNewRequest(
-                    new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
-                        @Override
-                        public void onRequestSucceeded(ServerResponse response, Branch branch) {
-                            if (callback != null) {
-                                callback.onSuccess(response.getStatusCode());
-                            }
-                        }
 
-                        @Override
-                        public void handleFailure(int statusCode, String causeMsg) {
-                            if (callback != null) {
-                                Exception e = new Exception("Failed logEvent server request: " + statusCode + causeMsg);
-                                callback.onFailure(e);
-                            }
-                        }
+        if (Branch.getInstance() != null) {
+            ServerRequest req = new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
+                @Override
+                public void onRequestSucceeded(ServerResponse response, Branch branch) {
+                    if (callback != null) {
+                        callback.onSuccess(response.getStatusCode());
                     }
-            );
+                }
+
+                @Override
+                public void handleFailure(int statusCode, String causeMsg) {
+                    if (callback != null) {
+                        Exception e = new Exception("Failed logEvent server request: " + statusCode + causeMsg);
+                        callback.onFailure(e);
+                    }
+                }
+            };
+
+            BranchLogger.v("Preparing V2 event, user agent is " + Branch._userAgentString);
+
+            if(TextUtils.isEmpty(Branch._userAgentString)){
+                BranchLogger.v("handleNewRequest adding process wait lock USER_AGENT_STRING_LOCK");
+                req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+            }
+
+            Branch.getInstance().requestQueue_.handleNewRequest(req);
             isReqQueued = true;
-        } else if (callback != null) {
+        }
+        else if (callback != null) {
             Exception e = new Exception("Failed logEvent server request: The Branch instance was not available");
             callback.onFailure(e);
         }
         return isReqQueued;
     }
-
-
 }

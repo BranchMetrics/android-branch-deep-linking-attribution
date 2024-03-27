@@ -196,7 +196,7 @@ public class Branch {
     /**
      * Package private user agent string cached to save on repeated queries
      */
-    static String _userAgentString = "";
+    public static String _userAgentString = "";
 
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
@@ -353,11 +353,6 @@ public class Branch {
         /* If {@link Application} is instantiated register for activity life cycle events. */
         if (context instanceof Application) {
             branchReferral_.setActivityLifeCycleObserver((Application) context);
-        }
-
-        // Cache the user agent from a webview instance if needed
-        if(userAgentSync && DeviceInfo.getInstance() != null){
-            DeviceInfo.getInstance().getUserAgentStringSync(context);
         }
 
         return branchReferral_;
@@ -778,7 +773,11 @@ public class Branch {
     public static void setIsUserAgentSync(boolean sync){
         userAgentSync = sync;
     }
-    
+
+    public static boolean getIsUserAgentSync(){
+        return userAgentSync;
+    }
+
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
