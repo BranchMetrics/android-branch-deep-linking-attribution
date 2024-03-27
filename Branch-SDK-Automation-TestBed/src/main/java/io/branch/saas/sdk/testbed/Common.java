@@ -5,8 +5,6 @@ import android.graphics.Bitmap;
 
 import androidx.appcompat.app.AlertDialog;
 
-import io.branch.saas.sdk.testbed.listeners.DialogClickListener;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,6 +14,7 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.LinkProperties;
+import io.branch.saas.sdk.testbed.listeners.DialogClickListener;
 
 public class Common {
     public static LinkProperties lp;

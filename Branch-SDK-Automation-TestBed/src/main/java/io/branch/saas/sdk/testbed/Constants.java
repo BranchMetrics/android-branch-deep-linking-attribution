@@ -33,4 +33,5 @@ public interface Constants {
     String AFTER_READ_DEEP_LINK = "AfterReadDeepLink";
     String TRACK_CONTENT_DATA = "TrackContentData";
     String CREATE_QR_CODE = "CreateQRCode";
+    String SET_DMA_Params = "SetDMAParams";
 }

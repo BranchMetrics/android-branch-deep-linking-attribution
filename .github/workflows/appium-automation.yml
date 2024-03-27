@@ -26,6 +26,7 @@ jobs:
         with:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
+          ref: SDK-2288-DMA-Compliance-Automation
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
       # repo's gradle is configured to run on java 17
       - name: Setup java for gradle
