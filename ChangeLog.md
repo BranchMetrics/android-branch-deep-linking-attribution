@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.10.2
+  * _*Master Release*_ - Mar 27, 2024
+  - Improved start up performance for applications that are using `Branch.setIsUserAgentSync(true)`
+
 - v5.10.1
   * _*Master Release*_ - Mar 13, 2024
     - Track Meta Install Referrer view-through installs
