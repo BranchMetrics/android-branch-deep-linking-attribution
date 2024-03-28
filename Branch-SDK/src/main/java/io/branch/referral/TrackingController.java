@@ -25,6 +25,7 @@ public class TrackingController {
     }
 
     void disableTracking(Context context, boolean disableTracking, @Nullable Branch.TrackingStateCallback callback) {
+        // If the tracking state is already set to the desired state, then return instantly
         if (trackingDisabled == disableTracking) {
             if (callback != null) {
                 callback.onTrackingStateChanged(trackingDisabled, Branch.getInstance().getFirstReferringParams(), null);
