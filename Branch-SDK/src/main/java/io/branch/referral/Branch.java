@@ -379,7 +379,7 @@ public class Branch {
 
             String apiUrl = BranchJsonConfig.getInstance(context).getAPIUrl();
             if (!TextUtils.isEmpty(apiUrl)) {
-                setAPIUrl(apiUrl);
+                setAPIUrl(apiUrl + "/");
             }
 
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
