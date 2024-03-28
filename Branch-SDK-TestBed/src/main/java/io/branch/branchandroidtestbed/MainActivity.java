@@ -451,16 +451,14 @@ public class MainActivity extends Activity {
             }
         });
 
-        ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Branch.getInstance().disableTracking(isChecked);
-                if (isChecked) {
+        ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Branch.getInstance().disableTracking(isChecked, (trackingDisabled, referringParams, error) -> {
+                if (trackingDisabled) {
                     Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_SHORT).show();
                 }
-            }
+            });
         });
 
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
