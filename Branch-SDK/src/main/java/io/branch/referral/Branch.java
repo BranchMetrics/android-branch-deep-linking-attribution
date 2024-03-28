@@ -377,6 +377,11 @@ public class Branch {
             // Should only be set in json config
             deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
 
+            String apiUrl = BranchJsonConfig.getInstance(context).getAPIUrl();
+            if (!TextUtils.isEmpty(apiUrl)) {
+                setAPIUrl(apiUrl);
+            }
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -403,6 +408,11 @@ public class Branch {
 
             // Should only be set in json config
             deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
+
+            String apiUrl = BranchJsonConfig.getInstance(context).getAPIUrl();
+            if (!TextUtils.isEmpty(apiUrl)) {
+                setAPIUrl(apiUrl);
+            }
 
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key

@@ -29,7 +29,8 @@ public class BranchJsonConfig {
         liveKey,
         useTestInstance,
         enableLogging,
-        deferInitForPluginRuntime
+        deferInitForPluginRuntime,
+        apiUrl
     }
 
     /*
@@ -44,7 +45,8 @@ public class BranchJsonConfig {
             "liveKey":"key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB",
             "useTestInstance": true,
             "enableLogging": true,
-            "deferInitForPluginRuntime": true
+            "deferInitForPluginRuntime": true,
+            "apiUrl": "https://api.branch.io"
        }
     */
 
@@ -184,6 +186,20 @@ public class BranchJsonConfig {
         } catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
             return false;
+        }
+    }
+
+    @Nullable
+    public String getAPIUrl() {
+        if (mConfiguration == null) return null;
+
+        try {
+            if (!mConfiguration.has("apiUrl")) return null;
+            return mConfiguration.getString("apiUrl");
+        }
+        catch (JSONException exception) {
+            Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
+            return null;
         }
     }
 }
