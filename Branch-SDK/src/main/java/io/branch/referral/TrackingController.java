@@ -3,6 +3,7 @@ package io.branch.referral;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.json.JSONObject;
 
@@ -22,19 +23,33 @@ public class TrackingController {
     TrackingController(Context context) {
         updateTrackingState(context);
     }
-    
-    void disableTracking(Context context, boolean disableTracking) {
-        if (trackingDisabled != disableTracking) {
-            trackingDisabled = disableTracking;
-            if (disableTracking) {
-                onTrackingDisabled(context);
-            } else {
-                onTrackingEnabled();
+
+    void disableTracking(Context context, boolean disableTracking, @Nullable Branch.TrackingStateCallback callback) {
+        // If the tracking state is already set to the desired state, then return instantly
+        if (trackingDisabled == disableTracking) {
+            if (callback != null) {
+                callback.onTrackingStateChanged(trackingDisabled, Branch.getInstance().getFirstReferringParams(), null);
             }
-            PrefHelper.getInstance(context).setBool(PrefHelper.KEY_TRACKING_STATE, disableTracking);
+            return;
+        }
+
+        trackingDisabled = disableTracking;
+        PrefHelper.getInstance(context).setBool(PrefHelper.KEY_TRACKING_STATE, disableTracking);
+
+        if (disableTracking) {
+            onTrackingDisabled(context);
+            if (callback != null) {
+                callback.onTrackingStateChanged(true, null, null);
+            }
+        } else {
+            onTrackingEnabled((referringParams, error) -> {
+                if (callback != null) {
+                    callback.onTrackingStateChanged(false, referringParams, error);
+                }
+            });
         }
     }
-    
+
     boolean isTrackingDisabled() {
         return trackingDisabled;
     }
@@ -70,10 +85,10 @@ public class TrackingController {
         Branch.getInstance().clearPartnerParameters();
     }
     
-    private void onTrackingEnabled() {
+    private void onTrackingEnabled(Branch.BranchReferralInitListener callback) {
         Branch branch = Branch.getInstance();
         if (branch != null) {
-            branch.registerAppInit(branch.getInstallOrOpenRequest(null, true), true, false);
+            branch.registerAppInit(branch.getInstallOrOpenRequest(callback, true), true, false);
         }
     }
 }
