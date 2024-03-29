@@ -46,7 +46,7 @@ public class BranchJsonConfig {
             "useTestInstance": true,
             "enableLogging": true,
             "deferInitForPluginRuntime": true,
-            "apiUrl": "https://api.branch.io"
+            "apiUrl": "https://api2.branch.io"
        }
     */
 
