@@ -514,6 +514,7 @@ public class Branch {
      */
     public static void setAPIUrl(String url) {
         PrefHelper.setAPIUrl(url);
+        BranchLogger.v("setAPIUrl: Branch API URL was set to " + url);
     }
     /**
      * <p>Sets a custom CDN base URL.</p>
