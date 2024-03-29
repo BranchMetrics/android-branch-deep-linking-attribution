@@ -61,7 +61,7 @@ public class SettingsActivity extends Activity {
         apiUrlText.setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_DONE) {
                 String newApiUrl = textView.getText().toString();
-                Branch.setAPIUrl("https://myapi.com/");
+                Branch.setAPIUrl(newApiUrl);
 
                 InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(apiUrlText.getWindowToken(), 0);

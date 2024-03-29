@@ -507,8 +507,16 @@ public class Branch {
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
     public static void setAPIUrl(String url) {
-        PrefHelper.setAPIUrl(url);
-        BranchLogger.v("setAPIUrl: Branch API URL was set to " + url);
+        if (!TextUtils.isEmpty(url)) {
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
+
+            PrefHelper.setAPIUrl(url);
+            BranchLogger.v("setAPIUrl: Branch API URL was set to " + url);
+        } else {
+            BranchLogger.w("setAPIUrl: URL cannot be empty or null");
+        }
     }
     /**
      * <p>Sets a custom CDN base URL.</p>

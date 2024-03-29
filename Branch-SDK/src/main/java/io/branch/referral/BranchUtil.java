@@ -144,7 +144,7 @@ public class BranchUtil {
         BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
         String apiUrl = jsonConfig.getAPIUrl();
         if (!TextUtils.isEmpty(apiUrl)) {
-            Branch.setAPIUrl(apiUrl + "/");
+            Branch.setAPIUrl(apiUrl);
         }
     }
 
