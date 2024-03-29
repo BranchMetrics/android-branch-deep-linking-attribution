@@ -169,6 +169,26 @@
             android:text="Set DMA Params"
             android:textAllCaps="false" />
         <Button
+            android:id="@+id/bt_InitSession_with_callback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_15sdp"
+            android:layout_marginTop="@dimen/_2sdp"
+            android:layout_marginEnd="@dimen/_15sdp"
+            android:layout_marginBottom="@dimen/_2sdp"
+            android:text="Init Session"
+            android:textAllCaps="false" />
+        <Button
+            android:id="@+id/bt_Read_Logs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_15sdp"
+            android:layout_marginTop="@dimen/_2sdp"
+            android:layout_marginEnd="@dimen/_15sdp"
+            android:layout_marginBottom="@dimen/_2sdp"
+            android:text="Read Logs"
+            android:textAllCaps="false" />
+        <Button
             android:id="@+id/bt_logEvent_with_callback"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

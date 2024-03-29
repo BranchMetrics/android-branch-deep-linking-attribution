@@ -25,7 +25,7 @@ import io.branch.saas.sdk.testbed.R;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button btBuoObj, btCreateDeepLink, btShare, btNativeShare, btTrackUser,
-            btReadDeepLink, btNotification, btBuoObjWithMeta, btNavigateToContent, btTrackContent, btHandleLinks, btCreateQrCode, btSetDMAParams, btLogEvent;
+            btReadDeepLink, btNotification, btBuoObjWithMeta, btNavigateToContent, btTrackContent, btHandleLinks, btCreateQrCode, btSetDMAParams, btLogEvent, btInitSession, btReadLogs;
     private TextView tvMessage, tvUrl;
 
 
@@ -33,7 +33,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        Common.getInstance().clearLog();
+        Branch.enableLogging();
         btBuoObj = findViewById(R.id.bt_buo_obj);
         btCreateDeepLink = findViewById(R.id.bt_create_deep_link);
         btShare = findViewById(R.id.bt_share);
@@ -48,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btSetDMAParams = findViewById(R.id.bt_set_dma_params);
         btLogEvent = findViewById(R.id.bt_logEvent_with_callback);
         btHandleLinks = findViewById(R.id.bt_handle_links);
+        btInitSession = findViewById(R.id.bt_InitSession_with_callback);
+        btReadLogs = findViewById(R.id.bt_Read_Logs);
 
         ToggleButton trackingCntrlBtn = findViewById(R.id.tracking_cntrl_btn);
         btBuoObj.setOnClickListener(this);
@@ -66,10 +69,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btCreateQrCode.setOnClickListener(this);
         btSetDMAParams.setOnClickListener(this);
         btLogEvent.setOnClickListener(this);
+        btReadLogs.setOnClickListener(this);
+        btInitSession.setOnClickListener(this);
 
         trackingCntrlBtn.setChecked(Branch.getInstance().isTrackingDisabled());
         trackingCntrlBtn.setOnCheckedChangeListener((buttonView, isChecked) -> Branch.getInstance().disableTracking(isChecked));
 
+        //  Common.getInstance().clearLog();
 
         /*LinkProperties lp = new LinkProperties()
                 .setChannel("facebook")
@@ -93,12 +99,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
+
         if (view == btSetDMAParams) {
             Branch.expectDelayedSessionInitialization(true);
+            Branch.enableLogging();
         } else {
+            Branch.enableLogging();
             Branch.getInstance().setIdentity("automation_test_user");
         }
-        Branch.enableLogging();
         if (view == btBuoObj) {
             Intent intent = new Intent(this, BUOReferenceActivity.class);
             intent.putExtra(Constants.TYPE, Constants.BUO_REFERENCE);
@@ -229,6 +237,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             startActivity(intent);
                         }
                     });
+        } else if (view == btInitSession) {
+            getIntent().putExtra("branch_force_new_session", true);
+
+            Intent intent = new Intent(this, LogDataActivity.class);
+            intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
+
+            Branch.sessionBuilder(this).withCallback(new Branch.BranchReferralInitListener() {
+                @Override
+                public void onInitFinished(JSONObject referringParams, BranchError error) {
+                    if (error == null) {
+                        Log.i("BRANCH SDK", referringParams.toString());
+                        intent.putExtra(Constants.STATUS, Constants.SUCCESS);
+
+                    } else {
+                        Log.i("BRANCH SDK", error.getMessage());
+                        intent.putExtra(Constants.STATUS, Constants.FAIL);
+                        intent.putExtra(Constants.MESSAGE, "Failed:" + error.getMessage());
+                    }
+                    startActivity(intent);
+                }
+            }).withData(this.getIntent().getData()).init();
+        } else if (view == btReadLogs) {
+            try {
+                Thread.sleep(2000);
+            }
+            catch (InterruptedException e) {
+                Log.i("BRANCH SDK", e.getMessage());
+            }
+            Intent intent = new Intent(this, LogDataActivity.class);
+            intent.putExtra(Constants.TYPE, Constants.SET_DMA_Params);
+            intent.putExtra(Constants.STATUS, Constants.SUCCESS);
+            startActivity(intent);
         }
     }
 }
