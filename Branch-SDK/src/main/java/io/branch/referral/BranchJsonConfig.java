@@ -169,8 +169,8 @@ public class BranchJsonConfig {
         if (mConfiguration == null) return null;
 
         try {
-            if (!mConfiguration.has("testKey")) return null;
-            return mConfiguration.getString("testKey");
+            if (!mConfiguration.has(BranchJsonKey.testKey.toString())) return null;
+            return mConfiguration.getString(BranchJsonKey.testKey.toString());
         }
         catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
@@ -194,8 +194,8 @@ public class BranchJsonConfig {
         if (mConfiguration == null) return null;
 
         try {
-            if (!mConfiguration.has("apiUrl")) return null;
-            return mConfiguration.getString("apiUrl");
+            if (!mConfiguration.has(BranchJsonKey.apiUrl.toString())) return null;
+            return mConfiguration.getString(BranchJsonKey.apiUrl.toString());
         }
         catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
