@@ -2,6 +2,7 @@
 - v5.11.0
   * _*Master Release*_ - Apr 1, 2024
   - Added support for setting Branch API URL through `branch.json`
+  - Improved performance for best case of user agent string fetch
   
 - v5.10.2
   * _*Master Release*_ - Mar 27, 2024
