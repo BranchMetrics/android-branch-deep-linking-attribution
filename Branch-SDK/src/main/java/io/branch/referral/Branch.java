@@ -377,6 +377,8 @@ public class Branch {
             // Should only be set in json config
             deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
 
+            BranchUtil.setAPIBaseUrlFromConfig(context);
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -403,6 +405,8 @@ public class Branch {
 
             // Should only be set in json config
             deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
+
+            BranchUtil.setAPIBaseUrlFromConfig(context);
 
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
@@ -503,7 +507,16 @@ public class Branch {
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
     public static void setAPIUrl(String url) {
-        PrefHelper.setAPIUrl(url);
+        if (!TextUtils.isEmpty(url)) {
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
+
+            PrefHelper.setAPIUrl(url);
+            BranchLogger.v("setAPIUrl: Branch API URL was set to " + url);
+        } else {
+            BranchLogger.w("setAPIUrl: URL cannot be empty or null");
+        }
     }
     /**
      * <p>Sets a custom CDN base URL.</p>

@@ -10,6 +10,7 @@ import android.os.Build;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONArray;
@@ -137,6 +138,12 @@ public class BranchUtil {
         }
 
         return deferInitForPluginRuntime;
+    }
+
+    public static void setAPIBaseUrlFromConfig(Context context) {
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        String apiUrl = jsonConfig.getAPIUrl();
+        Branch.setAPIUrl(apiUrl);
     }
 
     /**
