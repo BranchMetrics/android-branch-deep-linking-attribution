@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: sdk
+          ref: ${{ github.ref }}
       # point to automation master branch by default
       - name: Checkout Master SDK repo with testbed app for Reinstallation tests
         uses: actions/checkout@v3
@@ -33,7 +34,7 @@ jobs:
         with:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
-          ref: ${{ github.ref }}
+          ref: ReinstallationTestsAndroid
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
       # repo's gradle is configured to run on java 17
       - name: Setup java for gradle
