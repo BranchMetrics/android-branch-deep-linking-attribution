@@ -1,6 +1,7 @@
 name: unit-and-instrumented-tests
 on:
   workflow_dispatch:
+  push:
 env:
   API_MIN: 21
   API_CURRENT: 34
