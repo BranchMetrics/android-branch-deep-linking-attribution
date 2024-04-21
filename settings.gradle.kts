@@ -10,3 +10,5 @@ pluginManagement {
         mavenCentral()
     }
 }
+include(":app")
+include(":branchsdk-link-clicktest")
