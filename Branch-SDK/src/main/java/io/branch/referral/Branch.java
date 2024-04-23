@@ -1907,7 +1907,7 @@ public class Branch {
      */
     private static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
         BranchLogger.setLoggerCallback(iBranchLogging);
-        BranchLogger.setLogLevel(level);
+        BranchLogger.setLoggingLevel(level);
         BranchLogger.setLoggingEnabled(true);
         BranchLogger.logAlways(GOOGLE_VERSION_TAG);
     }

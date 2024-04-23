@@ -15,7 +15,7 @@ object BranchLogger {
     }
 
     @JvmStatic
-    var logLevel: BranchLogLevel = BranchLogLevel.DEBUG
+    var loggingLevel: BranchLogLevel = BranchLogLevel.DEBUG
 
     @JvmStatic
     var loggingEnabled = false
@@ -23,7 +23,7 @@ object BranchLogger {
     @JvmStatic
     var loggerCallback: IBranchLoggingCallbacks? = null
 
-    private fun shouldLog(level: BranchLogLevel): Boolean = level.level <= logLevel.level
+    private fun shouldLog(level: BranchLogLevel): Boolean = level.level <= loggingLevel.level
 
     /**
      * <p>Creates a <b>Error</b> message in the debugger. If debugging is disabled, this will fail silently.</p>

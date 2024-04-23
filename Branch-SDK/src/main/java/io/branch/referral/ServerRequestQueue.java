@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
@@ -15,12 +14,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -184,7 +179,7 @@ public class ServerRequestQueue {
 
     public void printQueue(){
         // Only print the queue if the log level is verbose
-        if (BranchLogger.getLogLevel().getLevel() == BranchLogger.BranchLogLevel.VERBOSE.getLevel()) {
+        if (BranchLogger.getLoggingLevel().getLevel() == BranchLogger.BranchLogLevel.VERBOSE.getLevel()) {
             synchronized (reqQueueLockObject) {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (int i = 0; i < queue.size(); i++) {
