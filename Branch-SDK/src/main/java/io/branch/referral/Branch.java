@@ -1905,9 +1905,9 @@ public class Branch {
      * @param iBranchLogging Optional interface to receive logging from the SDK.
      * @param level The minimum log level for logging output.
      */
-    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
+    private static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
         BranchLogger.setLoggerCallback(iBranchLogging);
-        BranchLogger.setMinimumLogLevel(level);
+        BranchLogger.setLogLevel(level);
         BranchLogger.setLoggingEnabled(true);
         BranchLogger.logAlways(GOOGLE_VERSION_TAG);
     }
@@ -1920,14 +1920,24 @@ public class Branch {
     }
 
     /**
-     * Enable Logging, independent of Debug Mode. Defaults to DEBUG level.
+     * Enable Logging, independent of Debug Mode. Set to VERBOSE level.
      * Implement a callback to receive logging from the SDK directly to your
      * own logging solution. If null, and enabled, the default android.util.Log is used.
      *
      * @param iBranchLogging Optional interface to receive logging from the SDK.
      */
     public static void enableLogging(IBranchLoggingCallbacks iBranchLogging) {
-        enableLogging(iBranchLogging, BranchLogger.BranchLogLevel.DEBUG);
+        enableLogging(iBranchLogging, BranchLogger.BranchLogLevel.VERBOSE);
+    }
+
+    /**
+     * Enable logging with a specific log level.
+     *
+     * @param level The minimum log level for logging output.
+     */
+    public static void enableLogging(BranchLogger.BranchLogLevel level) {
+        enableLogging(null, level);
+
     }
 
     /**

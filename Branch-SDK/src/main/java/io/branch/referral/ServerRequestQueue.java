@@ -184,7 +184,7 @@ public class ServerRequestQueue {
 
     public void printQueue(){
         // Only print the queue if the log level is verbose
-        if (BranchLogger.getMinimumLogLevel().getLevel() == BranchLogger.BranchLogLevel.VERBOSE.getLevel()) {
+        if (BranchLogger.getLogLevel().getLevel() == BranchLogger.BranchLogLevel.VERBOSE.getLevel()) {
             synchronized (reqQueueLockObject) {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (int i = 0; i < queue.size(); i++) {
