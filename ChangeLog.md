@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.12.0
+  * _*Master Release*_ - Apr 24, 2024
+  - Added new enableLogging method to set preferred logging level
+
 - v5.11.0
   * _*Master Release*_ - Apr 1, 2024
   - Added support for setting Branch API URL through `branch.json`
