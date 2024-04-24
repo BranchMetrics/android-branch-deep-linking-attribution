@@ -6,7 +6,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "io.branch.saas.sdk.testbed"
+        applicationId "io.branch.branchandroiddemo"
         minSdk 21
         targetSdk 33
         versionCode 1
@@ -25,7 +25,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'io.branch.saas.sdk.testbed'
+    namespace 'io.branch.branchandroiddemo'
 }
 
 dependencies {
@@ -40,4 +40,6 @@ dependencies {
     implementation 'com.intuit.sdp:sdp-android:1.0.6'
 
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
+    implementation("com.google.code.gson:gson:2.8.7")
+    implementation 'com.googlecode.json-simple:json-simple:1.1'
 }

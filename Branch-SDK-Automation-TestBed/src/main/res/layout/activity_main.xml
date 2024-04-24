@@ -27,16 +27,6 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
-        <Button
-            android:id="@+id/bt_buo_obj"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Create Content Reference"
-            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/bt_buo_obj_with_meta"
@@ -61,27 +51,6 @@
             android:text="Create Deep Link"
             android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/bt_notification"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Send notification"
-            android:textAllCaps="false" />
-
-        <Button
-            android:id="@+id/bt_share"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Share Deep Link"
-            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/bt_native_share"
@@ -95,39 +64,6 @@
             android:textAllCaps="false" />
 
         <Button
-            android:id="@+id/bt_read_deep_link"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Read Deep Link"
-            android:textAllCaps="false" />
-
-        <Button
-            android:id="@+id/bt_navigate_to_content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Navigate to content"
-            android:textAllCaps="false" />
-
-        <Button
-            android:id="@+id/bt_handle_links"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Handle links in app"
-            android:textAllCaps="false" />
-
-        <Button
             android:id="@+id/bt_track_user"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -135,19 +71,9 @@
             android:layout_marginTop="@dimen/_2sdp"
             android:layout_marginEnd="@dimen/_15sdp"
             android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Track user"
+            android:text="Set Identity"
             android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/bt_track_content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Track Content"
-            android:textAllCaps="false" />
         <Button
             android:id="@+id/bt_create_qr_code"
             android:layout_width="match_parent"
@@ -169,7 +95,7 @@
             android:text="Set DMA Params"
             android:textAllCaps="false" />
         <Button
-            android:id="@+id/bt_InitSession_with_callback"
+            android:id="@+id/bt_init_session"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/_15sdp"
@@ -177,6 +103,16 @@
             android:layout_marginEnd="@dimen/_15sdp"
             android:layout_marginBottom="@dimen/_2sdp"
             android:text="Init Session"
+            android:textAllCaps="false" />
+        <Button
+            android:id="@+id/bt_logEvent_with_callback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_15sdp"
+            android:layout_marginTop="@dimen/_2sdp"
+            android:layout_marginEnd="@dimen/_15sdp"
+            android:layout_marginBottom="@dimen/_2sdp"
+            android:text="Send Standard Event"
             android:textAllCaps="false" />
         <Button
             android:id="@+id/bt_Read_Logs"
@@ -187,16 +123,6 @@
             android:layout_marginEnd="@dimen/_15sdp"
             android:layout_marginBottom="@dimen/_2sdp"
             android:text="Read Logs"
-            android:textAllCaps="false" />
-        <Button
-            android:id="@+id/bt_logEvent_with_callback"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_15sdp"
-            android:layout_marginTop="@dimen/_2sdp"
-            android:layout_marginEnd="@dimen/_15sdp"
-            android:layout_marginBottom="@dimen/_2sdp"
-            android:text="Log Event"
             android:textAllCaps="false" />
         <ToggleButton
             android:id="@+id/tracking_cntrl_btn"
