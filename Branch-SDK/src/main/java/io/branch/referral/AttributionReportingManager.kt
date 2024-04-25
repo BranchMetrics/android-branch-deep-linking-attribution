@@ -6,9 +6,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.OutcomeReceiver
 import android.os.ext.SdkExtensions
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 class AttributionReportingManager() {
@@ -40,8 +37,10 @@ class AttributionReportingManager() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 7) {
                 val systemObserver = DeviceInfo.getInstance().systemObserver
+                val prefHelper = PrefHelper.getInstance(context)
+
                 val gaid = systemObserver.aid
-                val hardwareId = SystemObserver.getUniqueID(context, false).getId()
+                val hardwareId = SystemObserver.getUniqueID(context, false).id
                 val brand = SystemObserver.getPhoneBrand()
                 val model = SystemObserver.getPhoneModel()
                 val osVersion = SystemObserver.getOSVersion()
@@ -57,6 +56,18 @@ class AttributionReportingManager() {
                 val osName = SystemObserver.getOS(context)
                 val language = SystemObserver.getISO2LanguageCode()
                 val country = SystemObserver.getISO2CountryCode()
+                val sandboxVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES)
+                val appPackageName =  context.packageName
+                val timestamp = System.currentTimeMillis()
+                val platform = "ANDROID_APP"
+                val os = "ANDROID"
+                val appVersion = SystemObserver.getAppVersion(context)
+                val eea = prefHelper.eeaRegion
+                val environment =
+                    if (DeviceInfo.getInstance().isPackageInstalled) Defines.Jsonkey.NativeApp.key else Defines.Jsonkey.InstantApp.key;
+                val appStore = prefHelper.appStoreSource
+                val cpuType = SystemObserver.getCPUType()
+                val wifi = SystemObserver.getWifiConnected(context)
 
                 // Construct the trigger URI with all the available parameters
                 val params = listOf(
@@ -76,7 +87,18 @@ class AttributionReportingManager() {
                     "ui_mode" to uiMode,
                     "os_name" to osName,
                     "language" to language,
-                    "country" to country
+                    "country" to country,
+                    "privacy_sandbox_version" to sandboxVersion.toString(),
+                    "app_package_name" to appPackageName,
+                    "timestamp" to timestamp.toString(),
+                    "platform" to platform,
+                    "os" to os,
+                    "app_version" to appVersion,
+                    "eea" to eea.toString(),
+                    "environment" to environment,
+                    "app_store" to appStore,
+                    "cpu_type" to cpuType,
+                    "wifi" to wifi.toString()
                 ).joinToString("&") { "${it.first}=${Uri.encode(it.second)}" }
 
                 val triggerUri = Uri.parse("${PrefHelper.BRANCH_BASE_URL_V2}trigger?$params")

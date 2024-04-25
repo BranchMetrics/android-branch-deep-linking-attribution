@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.AttributionReportingManager;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
@@ -271,6 +272,9 @@ public class BranchEvent {
                 @Override
                 public void onRequestSucceeded(ServerResponse response, Branch branch) {
                     if (callback != null) {
+                        AttributionReportingManager attributionManager = new AttributionReportingManager();
+                        attributionManager.registerTrigger(context, eventName);
+
                         callback.onSuccess(response.getStatusCode());
                     }
                 }
