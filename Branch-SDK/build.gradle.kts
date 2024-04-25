@@ -41,6 +41,10 @@ dependencies {
     // Google Play Billing library
     compileOnly("com.android.billingclient:billing:6.0.1")
 
+    // Android Privacy Sandbox
+    compileOnly("androidx.privacysandbox.ads:ads-adservices:1.1.0-beta06")
+    compileOnly("androidx.privacysandbox.ads:ads-adservices-java:1.1.0-beta06")
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")

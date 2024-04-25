@@ -66,6 +66,11 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if(!TextUtils.isEmpty(identity) && !identity.equals(PrefHelper.NO_STRING_VALUE)){
             post.put(Defines.Jsonkey.Identity.getKey(), identity);
         }
+
+        AttributionReportingManager attributionManager = new AttributionReportingManager();
+        if (attributionManager.isMeasurementApiEnabled()) {
+            post.put(Defines.Jsonkey.Privacy_Sandbox.getKey(), true);
+        }
     }
 
     @Override

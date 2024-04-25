@@ -122,7 +122,13 @@ class ServerRequestCreateUrl extends ServerRequest {
     @Override
     public void onRequestSucceeded(ServerResponse resp, Branch branch) {
         try {
-            final String url = resp.getObject().getString("url");
+            String url = resp.getObject().getString("url");
+
+            AttributionReportingManager attributionManager = new AttributionReportingManager();
+            if (attributionManager.isMeasurementApiEnabled()) {
+                url = url + "&" + Defines.Jsonkey.Privacy_Sandbox.getKey() + "=true";
+            }
+
             if (callback_ != null) {
                 callback_.onLinkCreate(url, null);
             }

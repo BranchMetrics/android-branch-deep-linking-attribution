@@ -223,7 +223,8 @@ public class Defines {
         DMA_EEA("dma_eea"),
         DMA_Ad_Personalization("dma_ad_personalization"),
         DMA_Ad_User_Data("dma_ad_user_data"),
-        Is_Meta_Click_Through("is_meta_ct");
+        Is_Meta_Click_Through("is_meta_ct"),
+        Privacy_Sandbox("~google-privacy-sandbox");
 
         private final String key;
         

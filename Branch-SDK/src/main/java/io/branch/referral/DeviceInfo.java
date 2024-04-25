@@ -230,6 +230,11 @@ class DeviceInfo {
                 userDataObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
             }
 
+            AttributionReportingManager attributionManager = new AttributionReportingManager();
+            if (attributionManager.isMeasurementApiEnabled()) {
+                userDataObj.put(Defines.Jsonkey.Privacy_Sandbox.getKey(), true);
+            }
+
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException" + e.getMessage());
         }

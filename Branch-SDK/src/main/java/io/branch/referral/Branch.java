@@ -2414,6 +2414,9 @@ public class Branch {
                 expectDelayedSessionInitialization(true);
             }
 
+            AttributionReportingManager attributionManager = new AttributionReportingManager();
+            attributionManager.checkMeasurementApiStatus(branch.context_);
+
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
             BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
             branch.initializeSession(initRequest, delay);

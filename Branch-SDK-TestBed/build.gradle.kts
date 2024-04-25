@@ -19,6 +19,9 @@ dependencies {
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+    implementation("androidx.privacysandbox.ads:ads-adservices:1.1.0-beta06")
+    implementation("androidx.privacysandbox.ads:ads-adservices-java:1.1.0-beta06")
 }
 
 android {
