@@ -52,6 +52,8 @@ jobs:
       - name: Build testbed app
         run: |
           cd sdk
+          ls -la
+          ls -la ./Branch-SDK-Automation-TestBed/
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
