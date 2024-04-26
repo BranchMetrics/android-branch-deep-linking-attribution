@@ -43,15 +43,29 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
       # to reduce complexity, testbed app uses sdk as a project reference
+      - name: Decode Keystore
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'Branch-SDK-Automation-TestBed/automationSigningKeys.jks'
+          encodedString: ${{ secrets.KEYSTORE }}
       - name: Build testbed app
         run: |
           cd sdk
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       - name: Build Master testbed app for Reinstallation tests
         if: ${{ !( github.ref == 'refs/heads/master')}}
         run: |
           cd previousVersionSDK
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       - name: Upload APK to BrowserStack
         run: |
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")

@@ -5,6 +5,14 @@ plugins {
 android {
     compileSdk 33
 
+    signingConfigs {
+        debug {
+            keyAlias System.getenv("SIGNING_KEY_ALIAS")
+            keyPassword System.getenv("SIGNING_KEY_PASSWORD")
+            storeFile= file("Branch-SDK-Automation-TestBed/automationSigningKeys.jks")
+            storePassword System.getenv("SIGNING_STORE_PASSWORD")
+        }
+    }
     defaultConfig {
         applicationId "io.branch.branchandroiddemo"
         minSdk 21
