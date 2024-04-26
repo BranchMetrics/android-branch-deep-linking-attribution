@@ -44,11 +44,13 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       # to reduce complexity, testbed app uses sdk as a project reference
       - name: Decode Keystore
-        id: decode_keystore
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'sdk/Branch-SDK-Automation-TestBed/automationSigningKeys.jks'
-          encodedString: ${{ secrets.KEYSTORE }}
+        env:
+            ENCODED_STRING: ${{ secrets.KEYSTORE }}
+        run: |
+            cd sdk
+            echo $ENCODED_STRING | base64 -di > ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks
+            ls -la
+            ls -la ./Branch-SDK-Automation-TestBed/
       - name: Build testbed app
         run: |
           cd sdk
