@@ -47,7 +47,7 @@ jobs:
         id: decode_keystore
         uses: timheuer/base64-to-file@v1
         with:
-          fileName: 'Branch-SDK-Automation-TestBed/automationSigningKeys.jks'
+          fileName: 'sdk/Branch-SDK-Automation-TestBed/automationSigningKeys.jks'
           encodedString: ${{ secrets.KEYSTORE }}
       - name: Build testbed app
         run: |
