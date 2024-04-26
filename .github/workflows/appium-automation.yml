@@ -52,12 +52,13 @@ jobs:
             cp ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks ../previousVersionSDK/Branch-SDK-Automation-TestBed/
             ls -la
             ls -la ./Branch-SDK-Automation-TestBed/
-      - name: Build testbed app
+      - name: Build testbed app and Link Click Test App
         run: |
           cd sdk
           ls -la
           ls -la ./Branch-SDK-Automation-TestBed/
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
+          ./gradlew branchsdk-link-clicktest:assembleDebug
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
@@ -77,6 +78,12 @@ jobs:
           parsed=$(echo $response | jq ".app_url")
           echo "::add-mask::$parsed"
           echo "BrowserStackAndroidNewBuildKey=$parsed" >> "$GITHUB_ENV"
+      - name: Upload Link Click Test App APK to BrowserStack
+        run: |
+          response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/branchsdk-link-clicktest/build/outputs/apk/debug/branchsdk-link-clicktest-debug.apk")
+          parsed=$(echo $response | jq ".app_url")
+          echo "::add-mask::$parsed"
+          echo "BrowserStackLinkClickAppURL=$parsed" >> "$GITHUB_ENV"
       - name: Upload APK from Master branch to BrowserStack for Reinstallation tests
         if: ${{ !( github.ref == 'refs/heads/master')}}
         run: |
@@ -94,3 +101,9 @@ jobs:
         run: |
           cd qa
           mvn clean test -DsuiteXMLFile=testng.xml -e -DInputFormat="json" -DInputFilePath="TestSelection_BrowserStack_Android.json" -DUploadNewBuild="Yes"
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            qa/Results
