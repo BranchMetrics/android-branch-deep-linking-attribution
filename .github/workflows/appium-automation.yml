@@ -59,6 +59,10 @@ jobs:
           ls -la ./Branch-SDK-Automation-TestBed/
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
           ./gradlew branchsdk-link-clicktest:assembleDebug
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       - name: Build Master testbed app for Reinstallation tests
         if: ${{ !( github.ref == 'refs/heads/master')}}
         run: |
