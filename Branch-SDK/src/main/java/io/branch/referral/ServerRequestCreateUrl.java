@@ -124,7 +124,7 @@ class ServerRequestCreateUrl extends ServerRequest {
         try {
             String url = resp.getObject().getString("url");
 
-            AttributionReportingManager attributionManager = new AttributionReportingManager();
+            AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
             if (attributionManager.isMeasurementApiEnabled()) {
                 url = url + "&" + Defines.Jsonkey.Privacy_Sandbox.getKey() + "=true";
             }

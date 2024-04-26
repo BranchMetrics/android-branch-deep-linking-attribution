@@ -2,27 +2,27 @@ package io.branch.referral
 
 import android.adservices.measurement.MeasurementManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.OutcomeReceiver
 import android.os.ext.SdkExtensions
+import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
 
-class AttributionReportingManager() {
+
+object AttributionReportingManager {
     private var isMeasurementApiEnabled: Boolean = false
 
     fun checkMeasurementApiStatus(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && SdkExtensions.getExtensionVersion(
-                SdkExtensions.AD_SERVICES
-            ) >= 7
-        ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+            && SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 7 ) {
             val executor = Executors.newSingleThreadExecutor()
             val manager = MeasurementManager.get(context)
 
             manager.getMeasurementApiStatus(executor, object : OutcomeReceiver<Int, Exception> {
                 override fun onResult(result: Int) {
-                    isMeasurementApiEnabled =
-                        result == MeasurementManager.MEASUREMENT_API_STATE_ENABLED
+                    isMeasurementApiEnabled = result == MeasurementManager.MEASUREMENT_API_STATE_ENABLED
                     BranchLogger.v("Measurement API is ${if (isMeasurementApiEnabled) "enabled" else "not enabled"}")
                     executor.shutdown()
                 }
@@ -35,12 +35,13 @@ class AttributionReportingManager() {
         }
     }
 
-    fun isMeasurementApiEnabled() = isMeasurementApiEnabled
+    fun isMeasurementApiEnabled(): Boolean = isMeasurementApiEnabled
 
     fun registerTrigger(context: Context, conversionId: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 7) {
                 if (isMeasurementApiEnabled()) {
+                    BranchLogger.v("Registering trigger for conversion ID: $conversionId")
                     val systemObserver = DeviceInfo.getInstance().systemObserver
                     val prefHelper = PrefHelper.getInstance(context)
 
@@ -62,7 +63,11 @@ class AttributionReportingManager() {
                     val language = SystemObserver.getISO2LanguageCode()
                     val country = SystemObserver.getISO2CountryCode()
                     val sandboxVersion =
-                        SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES)
+                        if (SdkExtensions.getExtensionVersion(Build.VERSION_CODES.R) >= 4) {
+                            SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES)
+                        } else {
+                            0
+                        }
                     val appPackageName = context.packageName
                     val timestamp = System.currentTimeMillis()
                     val platform = "ANDROID_APP"
@@ -116,16 +121,16 @@ class AttributionReportingManager() {
                         executor,
                         object : OutcomeReceiver<Any?, Exception> {
                             override fun onResult(result: Any?) {
-                                BranchLogger.d("Trigger registered successfully with URI: $triggerUri")
+                                BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
                             }
 
                             override fun onError(e: Exception) {
-                                BranchLogger.w("Error while registering trigger: ${e.message}")
+                                BranchLogger.d("Error while registering trigger: ${e.message}")
                             }
                         }
                     )
                 } else {
-                    BranchLogger.w("Measurement API is not enabled. Did not register trigger.")
+                    BranchLogger.v("Measurement API is not enabled. Did not register trigger.")
                 }
             }
         }

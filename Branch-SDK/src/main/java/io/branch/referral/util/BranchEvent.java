@@ -272,7 +272,7 @@ public class BranchEvent {
                 @Override
                 public void onRequestSucceeded(ServerResponse response, Branch branch) {
                     if (callback != null) {
-                        AttributionReportingManager attributionManager = new AttributionReportingManager();
+                        AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
                         attributionManager.registerTrigger(context, eventName);
 
                         callback.onSuccess(response.getStatusCode());

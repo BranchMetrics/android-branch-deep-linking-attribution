@@ -67,7 +67,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             post.put(Defines.Jsonkey.Identity.getKey(), identity);
         }
 
-        AttributionReportingManager attributionManager = new AttributionReportingManager();
+        AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
         if (attributionManager.isMeasurementApiEnabled()) {
             post.put(Defines.Jsonkey.Privacy_Sandbox.getKey(), true);
         }

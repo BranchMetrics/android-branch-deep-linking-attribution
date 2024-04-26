@@ -230,7 +230,7 @@ class DeviceInfo {
                 userDataObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
             }
 
-            AttributionReportingManager attributionManager = new AttributionReportingManager();
+            AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
             if (attributionManager.isMeasurementApiEnabled()) {
                 userDataObj.put(Defines.Jsonkey.Privacy_Sandbox.getKey(), true);
             }
