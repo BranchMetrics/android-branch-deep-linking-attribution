@@ -28,7 +28,7 @@ jobs:
         if: ${{ !( github.ref == 'refs/heads/master')}}
         with:
           path: previousVersionSDK
-          ref: Test-Automation-Improvements/c16c3297fffff4ce9937e4186fec84d779c328b5
+          ref: Test-Automation-Improvements
       - name: Checkout qa automation
         uses: actions/checkout@v3
         with:
