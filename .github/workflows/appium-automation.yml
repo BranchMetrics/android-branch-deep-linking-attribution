@@ -49,6 +49,7 @@ jobs:
         run: |
             cd sdk
             echo $ENCODED_STRING | base64 -d > ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks
+            cp ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks ../previousVersionSDK/Branch-SDK-Automation-TestBed/
             ls -la
             ls -la ./Branch-SDK-Automation-TestBed/
       - name: Build testbed app
