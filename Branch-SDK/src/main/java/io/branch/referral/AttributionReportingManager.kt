@@ -107,7 +107,9 @@ class AttributionReportingManager() {
                         "wifi" to wifi.toString()
                     ).joinToString("&") { "${it.first}=${Uri.encode(it.second)}" }
 
-                    val triggerUri = Uri.parse("${PrefHelper.BRANCH_BASE_URL_V2}trigger?$params")
+                    val triggerUri = Uri.parse("${PrefHelper.BRANCH_BASE_URL_V2}v1/android-attribution-api/trigger\n" +
+                            "\n" +
+                            "\n?$params")
                     val executor = Executors.newSingleThreadExecutor()
                     val manager = MeasurementManager.get(context)
 
