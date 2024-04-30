@@ -451,16 +451,14 @@ public class MainActivity extends Activity {
             }
         });
 
-        ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Branch.getInstance().disableTracking(isChecked);
-                if (isChecked) {
+        ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Branch.getInstance().disableTracking(isChecked, (trackingDisabled, referringParams, error) -> {
+                if (trackingDisabled) {
                     Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_SHORT).show();
                 }
-            }
+            });
         });
 
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
@@ -654,6 +652,35 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.d("BranchSDK_Tester", "initSession");
+
+        //initSessionsWithTests();
+
+        // Branch integration validation: Validate Branch integration with your app
+        // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
+        // Please look for "BranchSDK_Doctor" in the logcat to see the results.
+        // IMP : Do not make this call in your production app
+
+        //IntegrationValidator.validate(MainActivity.this);
+    }
+
+
+    private void initSessionsWithTests() {
+        boolean testUserAgent = true;
+        userAgentTests(testUserAgent, 10);
+    }
+
+    // Enqueue several v2 events prior to init to simulate worst timing conditions for user agent fetch
+    // TODO Add to automation.
+    //  Check that all events up to Event N-1 complete with user agent string.
+    private void userAgentTests(boolean userAgentSync, int n) {
+        Branch.setIsUserAgentSync(userAgentSync);
+        Log.i("BranchSDK_Tester", "Beginning stress tests with IsUserAgentSync" + Branch.getIsUserAgentSync());
+
+        for (int i = 0; i < n; i++) {
+            BranchEvent event = new BranchEvent("Event " + i);
+            event.logEvent(this);
+        }
+
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
@@ -677,17 +704,8 @@ public class MainActivity extends Activity {
                 // QA purpose only
                 // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
                 // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
-
             }
         }).withData(this.getIntent().getData()).init();
-
-        // Branch integration validation: Validate Branch integration with your app
-        // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
-        // Please look for "BranchSDK_Doctor" in the logcat to see the results.
-        // IMP : Do not make this call in your production app
-
-        //IntegrationValidator.validate(MainActivity.this);
-
     }
 
     @Override
@@ -704,8 +722,6 @@ public class MainActivity extends Activity {
                 }
             }
         }).reInit();
-
-
     }
 
     @Override

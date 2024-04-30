@@ -196,7 +196,7 @@ public class Branch {
     /**
      * Package private user agent string cached to save on repeated queries
      */
-    static String _userAgentString = "";
+    public static String _userAgentString = "";
 
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
@@ -355,11 +355,6 @@ public class Branch {
             branchReferral_.setActivityLifeCycleObserver((Application) context);
         }
 
-        // Cache the user agent from a webview instance if needed
-        if(userAgentSync && DeviceInfo.getInstance() != null){
-            DeviceInfo.getInstance().getUserAgentStringSync(context);
-        }
-
         return branchReferral_;
     }
 
@@ -381,6 +376,8 @@ public class Branch {
 
             // Should only be set in json config
             deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
+
+            BranchUtil.setAPIBaseUrlFromConfig(context);
 
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
@@ -408,6 +405,8 @@ public class Branch {
 
             // Should only be set in json config
             deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
+
+            BranchUtil.setAPIBaseUrlFromConfig(context);
 
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
@@ -508,7 +507,16 @@ public class Branch {
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
     public static void setAPIUrl(String url) {
-        PrefHelper.setAPIUrl(url);
+        if (!TextUtils.isEmpty(url)) {
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
+
+            PrefHelper.setAPIUrl(url);
+            BranchLogger.v("setAPIUrl: Branch API URL was set to " + url);
+        } else {
+            BranchLogger.w("setAPIUrl: URL cannot be empty or null");
+        }
     }
     /**
      * <p>Sets a custom CDN base URL.</p>
@@ -519,10 +527,25 @@ public class Branch {
     }
 
     /**
-     * Method to change the Tracking state. If disabled SDK will not track any user data or state. SDK will not send any network calls except for deep linking when tracking is disabled
+     * Toggles the tracking state of the SDK. When tracking is disabled, the SDK will not track any user data or state,
+     * and it will not initiate any network calls except for deep linking operations.
+     * Re-enabling tracking will reinitialize the Branch session and resume normal SDK operations.
+     * This method allows for optional callback specification to handle post-operation actions or state notifications.
+     *
+     * @param disableTracking A boolean value indicating whether tracking should be disabled ({@code true}) or enabled
+     *                        ({@code false}).
+     * @param callback An optional {@link TrackingStateCallback} instance for receiving callback notifications about
+     *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
      */
+    public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
+        trackingController.disableTracking(context_, disableTracking, callback);
+    }
     public void disableTracking(boolean disableTracking) {
-        trackingController.disableTracking(context_, disableTracking);
+        disableTracking(disableTracking, null);
+    }
+
+    public interface TrackingStateCallback {
+        void onTrackingStateChanged(boolean trackingDisabled, @Nullable JSONObject referringParams, @Nullable BranchError error);
     }
     
     /**
@@ -778,7 +801,11 @@ public class Branch {
     public static void setIsUserAgentSync(boolean sync){
         userAgentSync = sync;
     }
-    
+
+    public static boolean getIsUserAgentSync(){
+        return userAgentSync;
+    }
+
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
@@ -1090,7 +1117,7 @@ public class Branch {
         }
         String storedParam = prefHelper_.getInstallParams();
         JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
-        firstReferringParams = appendDebugParams(firstReferringParams);
+        appendDebugParams(firstReferringParams);
         getFirstReferringParamsLatch = null;
         return firstReferringParams;
     }
@@ -1873,21 +1900,44 @@ public class Branch {
     }
 
     /**
-     * Enable Logging, independent of Debug Mode.
+     * Enable logging with a specific log level, independent of Debug Mode.
+     *
+     * @param iBranchLogging Optional interface to receive logging from the SDK.
+     * @param level The minimum log level for logging output.
      */
-    public static void enableLogging() {
-        enableLogging(null);
+    private static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
+        BranchLogger.setLoggerCallback(iBranchLogging);
+        BranchLogger.setLoggingLevel(level);
+        BranchLogger.setLoggingEnabled(true);
+        BranchLogger.logAlways(GOOGLE_VERSION_TAG);
     }
 
     /**
-     * Optional interface. Implement a callback to receive logging from the SDK directly to your
-     * own logging solution. If null, and enabled, the default android.util.Log is used.
-     * @param iBranchLogging
+     * Enable Logging, independent of Debug Mode. Defaults to DEBUG level.
      */
-    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging){
-        BranchLogger.setLoggerCallback(iBranchLogging);
-        BranchLogger.logAlways(GOOGLE_VERSION_TAG);
-        BranchLogger.setLoggingEnabled(true);
+    public static void enableLogging() {
+        enableLogging(null, BranchLogger.BranchLogLevel.DEBUG);
+    }
+
+    /**
+     * Enable Logging, independent of Debug Mode. Set to VERBOSE level.
+     * Implement a callback to receive logging from the SDK directly to your
+     * own logging solution. If null, and enabled, the default android.util.Log is used.
+     *
+     * @param iBranchLogging Optional interface to receive logging from the SDK.
+     */
+    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging) {
+        enableLogging(iBranchLogging, BranchLogger.BranchLogLevel.VERBOSE);
+    }
+
+    /**
+     * Enable logging with a specific log level.
+     *
+     * @param level The minimum log level for logging output.
+     */
+    public static void enableLogging(BranchLogger.BranchLogLevel level) {
+        enableLogging(null, level);
+
     }
 
     /**
