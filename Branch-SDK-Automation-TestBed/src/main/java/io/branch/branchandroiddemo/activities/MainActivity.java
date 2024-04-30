@@ -17,6 +17,7 @@ import io.branch.branchandroiddemo.BranchWrapper;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.util.LinkProperties;
 import io.branch.branchandroiddemo.Common;
 import io.branch.branchandroiddemo.Constants;
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         branchWrapper = new BranchWrapper(getApplicationContext());
         branchWrapper.delayInitializationIfRequired(getIntent());
 
-        Branch.enableLogging();
+        Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
 
         trackingCntrlBtn.setChecked(Branch.getInstance().isTrackingDisabled());
         trackingCntrlBtn.setOnCheckedChangeListener((buttonView, isChecked) -> Branch.getInstance().disableTracking(isChecked));
