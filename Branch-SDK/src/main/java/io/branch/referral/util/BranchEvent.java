@@ -274,7 +274,6 @@ public class BranchEvent {
                     if (callback != null) {
                         AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
                         attributionManager.registerTrigger(context, eventName);
-
                         callback.onSuccess(response.getStatusCode());
                     }
                 }

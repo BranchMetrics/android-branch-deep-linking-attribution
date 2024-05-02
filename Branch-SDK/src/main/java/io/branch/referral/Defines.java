@@ -256,7 +256,9 @@ public class Defines {
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),
         GetLATD("v1/cpid/latd"),
-        QRCode("v1/qr-code");
+        QRCode("v1/qr-code"),
+        RegisterSource("v1/android-attribution-api/source"),
+        RegisterTrigger("v1/android-attribution-api/trigger");
 
         private final String key;
         
