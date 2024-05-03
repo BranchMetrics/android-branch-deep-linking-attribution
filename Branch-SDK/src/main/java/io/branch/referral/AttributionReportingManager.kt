@@ -10,9 +10,10 @@ import java.util.concurrent.Executors
 
 object AttributionReportingManager {
     private var isMeasurementApiEnabled: Boolean = false
+    private const val MIN_AD_SERVICES_VERSION = 7
 
     fun checkMeasurementApiStatus(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 7) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
             val executor = Executors.newSingleThreadExecutor()
             val manager = MeasurementManager.get(context)
 
@@ -39,7 +40,7 @@ object AttributionReportingManager {
 
     fun registerSource(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 7) {
+            if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
                 if (isMeasurementApiEnabled()) {
                     val manager = MeasurementManager.get(context)
                     val executor = Executors.newSingleThreadExecutor()
@@ -65,7 +66,7 @@ object AttributionReportingManager {
 
     fun registerTrigger(context: Context, conversionId: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 7) {
+            if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
                 if (isMeasurementApiEnabled()) {
                     BranchLogger.v("Registering trigger for conversion ID: $conversionId")
 
@@ -94,7 +95,7 @@ object AttributionReportingManager {
         }
     }
 
-    fun getParams(context: Context): String {
+    private fun getParams(context: Context): String {
         val systemObserver = DeviceInfo.getInstance().systemObserver
         val prefHelper = PrefHelper.getInstance(context)
 
@@ -115,13 +116,7 @@ object AttributionReportingManager {
         val osName = SystemObserver.getOS(context)
         val language = SystemObserver.getISO2LanguageCode()
         val country = SystemObserver.getISO2CountryCode()
-        val sandboxVersion = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-                    SdkExtensions.getExtensionVersion(Build.VERSION_CODES.R) >= 4 -> {
-                SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES)
-            }
-            else -> 0  // Default to 0 if conditions are not met
-        }
+        val sandboxVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES)
         val appPackageName = context.packageName
         val timestamp = System.currentTimeMillis()
         val platform = "ANDROID_APP"
