@@ -77,7 +77,12 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             }
             
             prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
-            
+
+            AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
+            if (attributionManager.isMeasurementApiEnabled()) {
+                attributionManager.registerSource(branch.getApplicationContext());
+            }
+
         } catch (Exception ex) {
             BranchLogger.w("Caught Exception " + ex.getMessage());
         }

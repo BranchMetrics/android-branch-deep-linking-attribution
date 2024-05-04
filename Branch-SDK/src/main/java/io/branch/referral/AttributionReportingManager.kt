@@ -6,7 +6,16 @@ import android.net.Uri
 import android.os.Build
 import android.os.OutcomeReceiver
 import android.os.ext.SdkExtensions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 object AttributionReportingManager {
     private var isMeasurementApiEnabled: Boolean = false
@@ -22,9 +31,6 @@ object AttributionReportingManager {
                     isMeasurementApiEnabled = result == MeasurementManager.MEASUREMENT_API_STATE_ENABLED
                     BranchLogger.v("Measurement API is ${if (isMeasurementApiEnabled) "enabled" else "not enabled"}")
 
-                    if (isMeasurementApiEnabled) {
-                        registerSource(context)
-                    }
                     executor.shutdown()
                 }
 
@@ -39,39 +45,50 @@ object AttributionReportingManager {
     fun isMeasurementApiEnabled(): Boolean = isMeasurementApiEnabled
 
     fun registerSource(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
-                if (isMeasurementApiEnabled()) {
-                    val manager = MeasurementManager.get(context)
-                    val executor = Executors.newSingleThreadExecutor()
-                    val params = getParams(context)
-                    val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
-                    val sourceUri = Uri.parse("${branchBaseURL}${Defines.RequestPath.RegisterSource}?$params")
+        val scope = CoroutineScope(Dispatchers.IO + Job())
 
-                    manager.registerSource(sourceUri, null, executor, object : OutcomeReceiver<Any?, Exception> {
-                        override fun onResult(result: Any?) {
-                            BranchLogger.v("Source registered successfully with URI: $sourceUri")
-                            executor.shutdown()
-                        }
+        scope.launch {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
+                        if (isMeasurementApiEnabled()) {
+                            val latdParams = getLATDParams(context)
+                            val manager = MeasurementManager.get(context)
+                            val executor = Executors.newSingleThreadExecutor()
+                            val params = getParams(context) + "&" + latdParams
+                            val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
+                            val sourceUri = Uri.parse("${branchBaseURL}${Defines.RequestPath.RegisterSource}?$params")
 
-                        override fun onError(e: Exception) {
-                            BranchLogger.w("Error while registering source: ${e.message}")
-                            executor.shutdown()
+                            manager.registerSource(sourceUri, null, executor, object : OutcomeReceiver<Any?, Exception> {
+                                override fun onResult(result: Any?) {
+                                    BranchLogger.v("Source registered successfully with URI: $sourceUri")
+                                    executor.shutdown()
+                                }
+
+                                override fun onError(e: Exception) {
+                                    BranchLogger.w("Error while registering source: ${e.message}")
+                                    executor.shutdown()
+                                }
+                            })
                         }
-                    })
+                    }
                 }
+            } catch (e: Exception) {
+                BranchLogger.w("Error while registering source: ${e.message}")
+            } finally {
+                scope.cancel()
             }
         }
     }
 
-    fun registerTrigger(context: Context, conversionId: String) {
+    fun registerTrigger(context: Context, eventName: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
                 if (isMeasurementApiEnabled()) {
-                    BranchLogger.v("Registering trigger for conversion ID: $conversionId")
+                    BranchLogger.v("Registering trigger for event: $eventName")
 
                     val executor = Executors.newSingleThreadExecutor()
-                    val params = getParams(context) + "&conversion_id=$conversionId"
+                    val params = getParams(context) + "&event_name=$eventName"
                     val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
                     val triggerUri = Uri.parse("${branchBaseURL}${Defines.RequestPath.RegisterTrigger}?$params")
                     val manager = MeasurementManager.get(context)
@@ -90,6 +107,45 @@ object AttributionReportingManager {
                     )
                 } else {
                     BranchLogger.v("Measurement API is not enabled. Did not register trigger.")
+                }
+            }
+        }
+    }
+
+    suspend fun getLATDParams(context: Context): String = withContext(Dispatchers.IO) {
+        suspendCancellableCoroutine { continuation ->
+            Branch.getInstance().getLastAttributedTouchData { latdJSON, error ->
+                if (error == null) {
+                    try {
+                        val latdParams = mutableMapOf<String, String>()
+
+                        latdJSON.let {
+                            it.optString("last_attributed_touch_data_tilde_advertising_partner_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_partner"] = value }
+                            it.optString("last_attributed_touch_data_tilde_channel").takeIf { it.isNotEmpty() }?.let { value -> latdParams["touch_type"] = value }
+                            it.optString("last_attributed_touch_data_tilde_campaign").takeIf { it.isNotEmpty() }?.let { value -> latdParams["campaign_name"] = value }
+                            it.optString("last_attributed_touch_data_tilde_campaign_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["campaign_id"] = value }
+                            it.optString("last_attributed_touch_data_tilde_campaign_type").takeIf { it.isNotEmpty() }?.let { value -> latdParams["campaign_type"] = value }
+                            it.optString("last_attributed_touch_data_tilde_ad_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_name"] = value }
+                            it.optString("last_attributed_touch_data_tilde_ad_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_id"] = value }
+                            it.optString("last_attributed_touch_data_tilde_ad_set_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_set_name"] = value }
+                            it.optString("last_attributed_touch_data_tilde_ad_set_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_set_id"] = value }
+                            it.optString("last_attributed_touch_data_tilde_keyword").takeIf { it.isNotEmpty() }?.let { value -> latdParams["keyword"] = value }
+                            it.optString("last_attributed_touch_data_tilde_keyword_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["keyword_id"] = value }
+                            it.optString("last_attributed_touch_data_tilde_creative_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["creative_name"] = value }
+                            it.optString("last_attributed_touch_data_tilde_creative_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["creative_id"] = value }
+                            it.optString("last_attributed_touch_data_tilde_secondary_publisher").takeIf { it.isNotEmpty() }?.let { value -> latdParams["secondary_publisher"] = value }
+                        }
+
+                        val queryParams = latdParams.map { (key, value) ->
+                            "${Uri.encode(key)}=${Uri.encode(value)}"
+                        }.joinToString("&")
+
+                        continuation.resume(queryParams)
+                    } catch (e: Exception) {
+                        continuation.resumeWithException(e)
+                    }
+                } else {
+                    continuation.resumeWithException(RuntimeException("Error fetching LATD data: ${error.message}"))
                 }
             }
         }
