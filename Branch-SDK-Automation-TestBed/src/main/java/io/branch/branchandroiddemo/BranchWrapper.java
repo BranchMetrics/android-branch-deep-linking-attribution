@@ -105,7 +105,7 @@ public class BranchWrapper {
         }
     }
 
-    public  void logEvent(Intent intent, Context ctx){
+    public void logEvent(Intent intent, Context ctx){
         Common.getInstance().clearLog();
         String testDataStr = intent.getStringExtra("testData");
         Log.d("Branch SDK", "Intent extra 'testData:'\n" + testDataStr);
@@ -148,7 +148,7 @@ public class BranchWrapper {
         if (testDataStr != null) {
             TestData testDataObj = new TestData();
             Boolean delayInit = testDataObj.getBoolParamValue(testDataStr, "DelayInitialization");
-            if ( delayInit) {
+            if (    delayInit) {
                 Branch.expectDelayedSessionInitialization(true);
             }
         }
