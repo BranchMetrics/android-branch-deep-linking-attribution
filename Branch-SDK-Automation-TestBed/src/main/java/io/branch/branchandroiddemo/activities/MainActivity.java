@@ -72,30 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-
-        /*  getIntent().putExtra("testData", "{\"BUOData\":{\"imageUrl\":\"https:\\/\\/www.qentelli.com\\/sites\\/default\\/files\\/qentelli-logo.svg\",\"canonicalIdentifier\":\"content\\/2\",\"contentTitle\":\"Sample Content Title\",\"contentDesc\":\"Sample Content Description\"},\"Include\":\"Yes\",\"CreateLinkReference\":{\"feature\":\"sharing\",\"stage\":\"new user\",\"desktopUrl\":\"www.qentelli.com\",\"androidUrl\":\"https:\\/\\/play.google.com\\/store\\/apps\\/details?id=com.instagram.android\",\"campaign\":\"content 2 launch\",\"channelName\":\"instagram\",\"additionalData\":\"When all fields provided with valid entries\",\"iOSUrl\":\"www.qentelli.com\"},\"TrackContentData\" : {\n" +
-                "         \"eventType\": \"COMMERCE\",\n" +
-                "         \"trackContentEvent\" : \"ADD_TO_CART\",\n" +
-                "         \"alias\" : \"My Alias\",\n" +
-                "         \"transactionId\": \"Branch007XYZ\",\n" +
-                "         \"currency\": \"AED\",\n" +
-                "         \"revenue\": \"10000\",\n" +
-                "         \"shipping\": \"12345\",\n" +
-                "         \"tax\": \"100\",\n" +
-                "         \"coupon\": \"BranchCoupon\",\n" +
-                "         \"affiliation\": \"Affiliation\",\n" +
-                "         \"description\": \"Branch Track Content Desc\",\n" +
-                "         \"purchaseLocation\": \"US\",\n" +
-                "         \"availability\": \"available\",\n" +
-                "         \"additionalData\": \"Track content Commerce Additional data\",\n" +
-                "         \"searchQuery\": \"nothing\",\n" +
-                "         \"registrationId\": \"AEU10EEEE1123\",\n" +
-                "         \"customEventProperty1\": \"My custom event1\",\n" +
-                "         \"customEventProperty2\": \"My custom event2\",\n" +
-                "         \"customData1\": \"Branch custom data1\",\n" +
-                "         \"customData2\": \"Branch custom data2\"\n" +
-                "       }, \"UserName\" : \"test_automation_user1\", \"URL\": \"https://cq9pf.app.link/1JW565m0XIb\" }");
-        */
+        
         if (view == btCreateDeepLink) {
             branchWrapper.createDeepLink(getIntent(), MainActivity.this);
         } else if (view == btNativeShare) {
