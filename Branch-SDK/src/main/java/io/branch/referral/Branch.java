@@ -1900,21 +1900,44 @@ public class Branch {
     }
 
     /**
-     * Enable Logging, independent of Debug Mode.
+     * Enable logging with a specific log level, independent of Debug Mode.
+     *
+     * @param iBranchLogging Optional interface to receive logging from the SDK.
+     * @param level The minimum log level for logging output.
      */
-    public static void enableLogging() {
-        enableLogging(null);
+    private static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
+        BranchLogger.setLoggerCallback(iBranchLogging);
+        BranchLogger.setLoggingLevel(level);
+        BranchLogger.setLoggingEnabled(true);
+        BranchLogger.logAlways(GOOGLE_VERSION_TAG);
     }
 
     /**
-     * Optional interface. Implement a callback to receive logging from the SDK directly to your
-     * own logging solution. If null, and enabled, the default android.util.Log is used.
-     * @param iBranchLogging
+     * Enable Logging, independent of Debug Mode. Defaults to DEBUG level.
      */
-    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging){
-        BranchLogger.setLoggerCallback(iBranchLogging);
-        BranchLogger.logAlways(GOOGLE_VERSION_TAG);
-        BranchLogger.setLoggingEnabled(true);
+    public static void enableLogging() {
+        enableLogging(null, BranchLogger.BranchLogLevel.DEBUG);
+    }
+
+    /**
+     * Enable Logging, independent of Debug Mode. Set to VERBOSE level.
+     * Implement a callback to receive logging from the SDK directly to your
+     * own logging solution. If null, and enabled, the default android.util.Log is used.
+     *
+     * @param iBranchLogging Optional interface to receive logging from the SDK.
+     */
+    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging) {
+        enableLogging(iBranchLogging, BranchLogger.BranchLogLevel.VERBOSE);
+    }
+
+    /**
+     * Enable logging with a specific log level.
+     *
+     * @param level The minimum log level for logging output.
+     */
+    public static void enableLogging(BranchLogger.BranchLogLevel level) {
+        enableLogging(null, level);
+
     }
 
     /**

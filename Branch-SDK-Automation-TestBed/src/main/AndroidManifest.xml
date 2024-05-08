@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest package="io.branch.branchandroiddemo"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name="io.branch.referral.BranchApp"
@@ -16,69 +17,44 @@
             android:name=".activities.ShowQRCodeActivity"
             android:exported="true" />
         <activity
-            android:name=".activities.LogDataActivity"
-            android:exported="true"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".activities.TrackContentActivity"
-            android:exported="true"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".activities.MetadataActivity"
-            android:exported="true"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".activities.UrlPreviewActivity"
+            android:name="io.branch.branchandroiddemo.activities.LogDataActivity"
             android:exported="true"
             android:screenOrientation="portrait" />
 
         <meta-data
             android:name="io.branch.sdk.BranchKey"
-            android:value="key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB" /> <!-- For your test app, if you have one; Again, use your actual test Branch key -->
+            android:value="key_live_fBcbpexoE7Nu1ONlzfl1BilgsFcsZT8T" /> <!-- For your test app, if you have one; Again, use your actual test Branch key -->
         <meta-data
             android:name="io.branch.sdk.BranchKey.test"
-            android:value="key_test_om2EWe1WBeBYmpz9Z1mdpopouDmoN72T" />
+            android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
         <meta-data
             android:name="io.branch.sdk.TestMode"
-            android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
+            android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
         <activity
-            android:name=".activities.MainActivity"
+            android:name="io.branch.branchandroiddemo.activities.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait">
-            <intent-filter>
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name=".activities.ReadDeepLinkActivity"
-            android:exported="true"
-            android:screenOrientation="portrait">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data
-                    android:host="timber.test-app.link"
-                    android:scheme="https" />
-                <data
-                    android:host="timber.app.link"
-                    android:scheme="https" />
+                <data android:scheme="https" />
+                <data android:host="cq9pf.app.link" />
             </intent-filter>
+
+
+            <!-- Branch URI Scheme -->
         </activity>
-        <activity
-            android:name=".activities.GenerateUrlActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name=".activities.BUOReferenceActivity"
-            android:exported="true"
-            android:screenOrientation="portrait" />
-        <receiver android:name="io.branch.receivers.SharingBroadcastReceiver" android:exported="true">
+        <receiver
+            android:name="io.branch.receivers.SharingBroadcastReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="EXTRA_CHOSEN_COMPONENT" />
             </intent-filter>

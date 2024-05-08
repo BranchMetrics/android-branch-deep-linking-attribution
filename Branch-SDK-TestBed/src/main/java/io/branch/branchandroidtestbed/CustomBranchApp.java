@@ -5,6 +5,7 @@ import android.util.Log;
 
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLogger;
 
 public final class CustomBranchApp extends Application {
     @Override
@@ -17,7 +18,7 @@ public final class CustomBranchApp extends Application {
                 Log.v( "CustomTag", logMessage);
             }
         };
-        Branch.enableLogging(); // Pass in iBranchLoggingCallbacks to enable logging redirects
+        Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE); // Pass in iBranchLoggingCallbacks to enable logging redirects
         Branch.getAutoInstance(this);
     }
 }
