@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
     <application
         android:name="io.branch.referral.BranchApp"
         android:allowBackup="true"
@@ -13,6 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BranchSDKTestBed">
+        <property android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/ad_services_config" />
         <activity
             android:name=".activities.ShowQRCodeActivity"
             android:exported="true" />

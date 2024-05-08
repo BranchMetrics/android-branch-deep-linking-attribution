@@ -50,4 +50,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     implementation("com.google.code.gson:gson:2.8.7")
     implementation 'com.googlecode.json-simple:json-simple:1.1'
+
+    implementation("androidx.privacysandbox.ads:ads-adservices:1.1.0-beta06")
+    implementation("androidx.privacysandbox.ads:ads-adservices-java:1.1.0-beta06")
 }
