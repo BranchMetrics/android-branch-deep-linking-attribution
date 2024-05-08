@@ -44,43 +44,6 @@ object AttributionReportingManager {
 
     fun isMeasurementApiEnabled(): Boolean = isMeasurementApiEnabled
 
-    fun registerSource(context: Context) {
-        val scope = CoroutineScope(Dispatchers.IO + Job())
-
-        scope.launch {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
-                        if (isMeasurementApiEnabled()) {
-                            val latdParams = getLATDParams(context)
-                            val manager = MeasurementManager.get(context)
-                            val executor = Executors.newSingleThreadExecutor()
-                            val params = getParams(context) + "&" + latdParams
-                            val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
-                            val sourceUri = Uri.parse("${branchBaseURL}${Defines.RequestPath.RegisterSource}?$params")
-
-                            manager.registerSource(sourceUri, null, executor, object : OutcomeReceiver<Any?, Exception> {
-                                override fun onResult(result: Any?) {
-                                    BranchLogger.v("Source registered successfully with URI: $sourceUri")
-                                    executor.shutdown()
-                                }
-
-                                override fun onError(e: Exception) {
-                                    BranchLogger.w("Error while registering source: ${e.message}")
-                                    executor.shutdown()
-                                }
-                            })
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                BranchLogger.w("Error while registering source: ${e.message}")
-            } finally {
-                scope.cancel()
-            }
-        }
-    }
-
     fun registerTrigger(context: Context, eventName: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
