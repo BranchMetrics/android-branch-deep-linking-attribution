@@ -5,12 +5,14 @@ plugins {
 android {
     compileSdk 33
 
-    signingConfigs {
-        debug {
-            keyAlias System.getenv("SIGNING_KEY_ALIAS")
-            keyPassword System.getenv("SIGNING_KEY_PASSWORD")
-            storeFile file("automationSigningKeys.jks")
-            storePassword System.getenv("SIGNING_STORE_PASSWORD")
+    if (file('automationSigningKeys.jks').exists()) {
+        signingConfigs {
+            debug {
+                keyAlias System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword System.getenv("SIGNING_KEY_PASSWORD")
+                storeFile file("automationSigningKeys.jks")
+                storePassword System.getenv("SIGNING_STORE_PASSWORD")
+            }
         }
     }
     defaultConfig {
