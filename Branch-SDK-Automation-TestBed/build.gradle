@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     signingConfigs {
         debug {
@@ -16,7 +16,7 @@ android {
     defaultConfig {
         applicationId "io.branch.branchandroiddemo"
         minSdk 21
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
