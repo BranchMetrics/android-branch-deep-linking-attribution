@@ -1,6 +1,7 @@
 name: appium-automation
 on: 
   workflow_dispatch:
+  push:
   pull_request:
     types: [ opened, synchronize, reopened ]
 env:
@@ -26,6 +27,7 @@ jobs:
         with:
           path: qa
           repository: BranchMetrics/qentelli-saas-sdk-testing-automation
+          ref: SDK-2323
           token: ${{ secrets.BRANCHLET_ACCESS_TOKEN_PUBLIC }}
       # repo's gradle is configured to run on java 17
       - name: Setup java for gradle
