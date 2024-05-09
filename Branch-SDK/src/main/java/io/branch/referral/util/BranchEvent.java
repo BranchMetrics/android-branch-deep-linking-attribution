@@ -271,9 +271,10 @@ public class BranchEvent {
             ServerRequest req = new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
                 @Override
                 public void onRequestSucceeded(ServerResponse response, Branch branch) {
+                    AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
+                    attributionManager.registerTrigger(context, this);
+
                     if (callback != null) {
-                        AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
-                        attributionManager.registerTrigger(context, eventName);
                         callback.onSuccess(response.getStatusCode());
                     }
                 }

@@ -11,11 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.URLEncoder
 import java.util.concurrent.Executors
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 object AttributionReportingManager {
     private var isMeasurementApiEnabled: Boolean = false
@@ -44,137 +42,74 @@ object AttributionReportingManager {
 
     fun isMeasurementApiEnabled(): Boolean = isMeasurementApiEnabled
 
-    fun registerTrigger(context: Context, eventName: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
-                if (isMeasurementApiEnabled()) {
-                    BranchLogger.v("Registering trigger for event: $eventName")
+    fun registerTrigger(context: Context, request: ServerRequest) {
+        val scope = CoroutineScope(Dispatchers.IO + Job())
 
-                    val executor = Executors.newSingleThreadExecutor()
-                    val params = getParams(context) + "&event_name=$eventName"
-                    val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
-                    val triggerUri = Uri.parse("${branchBaseURL}${Defines.RequestPath.RegisterTrigger}?$params")
-                    val manager = MeasurementManager.get(context)
+        scope.launch {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
+                        if (isMeasurementApiEnabled()) {
+                            BranchLogger.v("Registering trigger for ${request.requestPath} request")
+                            val executor = Executors.newSingleThreadExecutor()
+                            val manager = MeasurementManager.get(context)
 
-                    manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
-                            override fun onResult(result: Any?) {
-                                BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
-                                executor.shutdown()
-                            }
+                            val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
+                            val requestJson = request.toJSON().getJSONObject("REQ_POST")
+                            val triggerUri = createURIFromJSON(branchBaseURL, requestJson)
 
-                            override fun onError(e: Exception) {
-                                BranchLogger.w("Error while registering trigger: ${e.message}")
-                                executor.shutdown()
-                            }
+                            //TODO: Trim the triggerURI if its over 10k characters by removing content items from the request JSON
+
+                            manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
+                                    override fun onResult(result: Any?) {
+                                        BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
+                                        executor.shutdown()
+                                    }
+
+                                    override fun onError(e: Exception) {
+                                        BranchLogger.w("Error while registering trigger with URI $triggerUri: ${e.message}")
+                                        executor.shutdown()
+                                    }
+                                }
+                            )
+                        } else {
+                            BranchLogger.v("Measurement API is not enabled. Did not register trigger.")
                         }
-                    )
-                } else {
-                    BranchLogger.v("Measurement API is not enabled. Did not register trigger.")
-                }
-            }
-        }
-    }
-
-    suspend fun getLATDParams(context: Context): String = withContext(Dispatchers.IO) {
-        suspendCancellableCoroutine { continuation ->
-            Branch.getInstance().getLastAttributedTouchData { latdJSON, error ->
-                if (error == null) {
-                    try {
-                        val latdParams = mutableMapOf<String, String>()
-
-                        latdJSON.let {
-                            it.optString("last_attributed_touch_data_tilde_advertising_partner_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_partner"] = value }
-                            it.optString("last_attributed_touch_data_tilde_channel").takeIf { it.isNotEmpty() }?.let { value -> latdParams["touch_type"] = value }
-                            it.optString("last_attributed_touch_data_tilde_campaign").takeIf { it.isNotEmpty() }?.let { value -> latdParams["campaign_name"] = value }
-                            it.optString("last_attributed_touch_data_tilde_campaign_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["campaign_id"] = value }
-                            it.optString("last_attributed_touch_data_tilde_campaign_type").takeIf { it.isNotEmpty() }?.let { value -> latdParams["campaign_type"] = value }
-                            it.optString("last_attributed_touch_data_tilde_ad_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_name"] = value }
-                            it.optString("last_attributed_touch_data_tilde_ad_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_id"] = value }
-                            it.optString("last_attributed_touch_data_tilde_ad_set_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_set_name"] = value }
-                            it.optString("last_attributed_touch_data_tilde_ad_set_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["ad_set_id"] = value }
-                            it.optString("last_attributed_touch_data_tilde_keyword").takeIf { it.isNotEmpty() }?.let { value -> latdParams["keyword"] = value }
-                            it.optString("last_attributed_touch_data_tilde_keyword_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["keyword_id"] = value }
-                            it.optString("last_attributed_touch_data_tilde_creative_name").takeIf { it.isNotEmpty() }?.let { value -> latdParams["creative_name"] = value }
-                            it.optString("last_attributed_touch_data_tilde_creative_id").takeIf { it.isNotEmpty() }?.let { value -> latdParams["creative_id"] = value }
-                            it.optString("last_attributed_touch_data_tilde_secondary_publisher").takeIf { it.isNotEmpty() }?.let { value -> latdParams["secondary_publisher"] = value }
-                        }
-
-                        val queryParams = latdParams.map { (key, value) ->
-                            "${Uri.encode(key)}=${Uri.encode(value)}"
-                        }.joinToString("&")
-
-                        continuation.resume(queryParams)
-                    } catch (e: Exception) {
-                        continuation.resumeWithException(e)
                     }
-                } else {
-                    continuation.resumeWithException(RuntimeException("Error fetching LATD data: ${error.message}"))
+                }
+            } catch (e: Exception) {
+                BranchLogger.w("Error while registering source: ${e.message}")
+            } finally {
+                scope.cancel()
+            }
+        }
+    }
+
+    private fun createURIFromJSON(baseURL: String, json: JSONObject): Uri {
+        val builder = Uri.parse(baseURL).buildUpon()
+        val params = mutableMapOf<String, String>()
+        parseJson("", json, params)
+
+        params.forEach { (key, value) ->
+            builder.appendQueryParameter(URLEncoder.encode(key, "UTF-8"), URLEncoder.encode(value, "UTF-8"))
+        }
+
+        return builder.build()
+    }
+
+    // Recursive function to flatten the JSON object into a map of strings
+    private fun parseJson(prefix: String, json: JSONObject, params: MutableMap<String, String>) {
+        json.keys().forEach { key ->
+            val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
+            when (val value = json.get(key)) {
+                is JSONObject -> {
+                    parseJson(fullKey, value, params)
+                }
+                else -> {
+                    params[fullKey] = value.toString()
                 }
             }
         }
     }
 
-    private fun getParams(context: Context): String {
-        val systemObserver = DeviceInfo.getInstance().systemObserver
-        val prefHelper = PrefHelper.getInstance(context)
-
-        val gaid = systemObserver.aid
-        val hardwareId = SystemObserver.getUniqueID(context, false).id
-        val brand = SystemObserver.getPhoneBrand()
-        val model = SystemObserver.getPhoneModel()
-        val osVersion = SystemObserver.getOSVersion()
-        val apiLevel = SystemObserver.getAPILevel()
-        val localIp = SystemObserver.getLocalIPAddress()
-        val connectionType = SystemObserver.getConnectionType(context)
-        val carrier = SystemObserver.getCarrier(context)
-        val screenDisplay = SystemObserver.getScreenDisplay(context)
-        val dpi = screenDisplay.densityDpi
-        val screenWidth = screenDisplay.widthPixels
-        val screenHeight = screenDisplay.heightPixels
-        val uiMode = SystemObserver.getUIMode(context)
-        val osName = SystemObserver.getOS(context)
-        val language = SystemObserver.getISO2LanguageCode()
-        val country = SystemObserver.getISO2CountryCode()
-        val sandboxVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES)
-        val appPackageName = context.packageName
-        val timestamp = System.currentTimeMillis()
-        val platform = "ANDROID_APP"
-        val os = "ANDROID"
-        val appVersion = SystemObserver.getAppVersion(context)
-        val eea = prefHelper.eeaRegion
-        val environment = if (DeviceInfo.getInstance().isPackageInstalled) Defines.Jsonkey.NativeApp.key else Defines.Jsonkey.InstantApp.key;
-        val appStore = prefHelper.appStoreSource
-        val cpuType = SystemObserver.getCPUType()
-        val wifi = SystemObserver.getWifiConnected(context)
-
-        return listOf(
-            "gaid" to gaid,
-            "hardware_id" to hardwareId,
-            "brand" to brand,
-            "model" to model,
-            "os_version" to osVersion,
-            "api_level" to apiLevel.toString(),
-            "local_ip" to localIp,
-            "connection_type" to connectionType,
-            "carrier" to carrier,
-            "dpi" to dpi.toString(),
-            "screen_width" to screenWidth.toString(),
-            "screen_height" to screenHeight.toString(),
-            "ui_mode" to uiMode,
-            "os_name" to osName,
-            "language" to language,
-            "country" to country,
-            "privacy_sandbox_version" to sandboxVersion.toString(),
-            "app_package_name" to appPackageName,
-            "timestamp" to timestamp.toString(),
-            "platform" to platform,
-            "os" to os,
-            "app_version" to appVersion,
-            "eea" to eea.toString(),
-            "environment" to environment,
-            "app_store" to appStore,
-            "cpu_type" to cpuType,
-            "wifi" to wifi.toString()
-        ).joinToString("&") { "${it.first}=${Uri.encode(it.second)}" }
-    }
 }
