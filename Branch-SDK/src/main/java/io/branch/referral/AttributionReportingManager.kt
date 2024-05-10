@@ -56,9 +56,15 @@ object AttributionReportingManager {
 
                             val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
                             val requestJson = request.toJSON().getJSONObject("REQ_POST")
-                            val triggerUri = createURIFromJSON(branchBaseURL, requestJson)
+                            var triggerUri = createURIFromJSON(branchBaseURL, requestJson)
 
-                            //TODO: Trim the triggerURI if its over 10k characters by removing content items from the request JSON
+                            if (triggerUri.toString().length > 10000) {
+                                val trimmedJson = trimJsonForUri(requestJson)
+                                val trimmedUri = createURIFromJSON(branchBaseURL, trimmedJson)
+
+                                BranchLogger.d("Trigger URI is too long. Removed content items from request JSON. New URI: $trimmedUri")
+                                triggerUri = trimmedUri
+                            }
 
                             manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
                                     override fun onResult(result: Any?) {
@@ -111,5 +117,18 @@ object AttributionReportingManager {
             }
         }
     }
+
+    private fun trimJsonForUri(json: JSONObject): JSONObject {
+        val fieldsToRemove = arrayOf(Defines.Jsonkey.ContentItems.key, Defines.Jsonkey.CustomData.key)
+
+        for (field in fieldsToRemove) {
+            if (json.has(field)) {
+                json.remove(field)
+            }
+        }
+
+        return json
+    }
+
 
 }
