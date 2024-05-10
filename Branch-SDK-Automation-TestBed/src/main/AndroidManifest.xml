@@ -26,7 +26,7 @@
             android:value="key_live_fBcbpexoE7Nu1ONlzfl1BilgsFcsZT8T" /> <!-- For your test app, if you have one; Again, use your actual test Branch key -->
         <meta-data
             android:name="io.branch.sdk.BranchKey.test"
-            android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
+            android:value="key_test_eBcfhlApy9PCXJUhtjOy2gghtxltZJ5Z" />
         <meta-data
             android:name="io.branch.sdk.TestMode"
             android:value="false" /> <!-- Set to true to use Branch_Test_Key -->
