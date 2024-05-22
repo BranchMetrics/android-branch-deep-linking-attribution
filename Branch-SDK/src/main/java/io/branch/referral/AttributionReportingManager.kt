@@ -66,6 +66,10 @@ object AttributionReportingManager {
                                 triggerUri = trimmedUri
                             }
 
+                            //Add Sandbox version to the trigger URI
+                            val sandboxVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES).toString()
+                            triggerUri = triggerUri.buildUpon().appendQueryParameter(Defines.Jsonkey.Privacy_Sandbox_Version.key, sandboxVersion).build()
+
                             manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
                                     override fun onResult(result: Any?) {
                                         BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
