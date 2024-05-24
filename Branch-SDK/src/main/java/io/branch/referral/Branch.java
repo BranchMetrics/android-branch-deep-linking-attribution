@@ -379,6 +379,8 @@ public class Branch {
 
             BranchUtil.setAPIBaseUrlFromConfig(context);
 
+            BranchUtil.setFbAppIdFromConfig(context);
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -407,7 +409,7 @@ public class Branch {
             deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
 
             BranchUtil.setAPIBaseUrlFromConfig(context);
-
+            BranchUtil.setFbAppIdFromConfig(context);
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {
@@ -2561,7 +2563,17 @@ public class Branch {
         PrefHelper.useEUEndpoint(true);
     }
 
+    /**
+     * Sets the Facebook App ID for the Branch instance.
+     *
+     * @param fbAppID The Facebook App ID as a {@link String}.
+     */
     public static void setFBAppID(String fbAppID) {
-        PrefHelper.fbAppId_ = fbAppID;
+        if (!TextUtils.isEmpty(fbAppID)) {
+            PrefHelper.fbAppId_ = fbAppID;
+            BranchLogger.v("setFBAppID to " + fbAppID);
+        } else {
+            BranchLogger.w("setFBAppID: fbAppID cannot be empty or null");
+        }
     }
 }
