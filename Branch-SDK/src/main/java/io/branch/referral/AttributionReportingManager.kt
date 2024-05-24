@@ -74,7 +74,6 @@ object AttributionReportingManager {
                             manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
                                 override fun onResult(result: Any?) {
                                     BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
-                                    BranchLogger.d("Register trigger took ${endTime - startTime}ms")
                                     executor.shutdown()
                                     scope.cancel()
                                 }
