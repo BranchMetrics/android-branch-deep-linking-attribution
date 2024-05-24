@@ -44,7 +44,6 @@ object AttributionReportingManager {
 
     fun registerTrigger(context: Context, request: ServerRequest) {
         val scope = CoroutineScope(Dispatchers.IO + Job())
-
         scope.launch {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -54,11 +53,12 @@ object AttributionReportingManager {
                             val executor = Executors.newSingleThreadExecutor()
                             val manager = MeasurementManager.get(context)
 
-                            val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl
+                            val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl + Defines.RequestPath.RegisterTrigger.path
                             val requestJson = request.toJSON().getJSONObject("REQ_POST")
                             var triggerUri = createURIFromJSON(branchBaseURL, requestJson)
 
-                            if (triggerUri.toString().length > 10000) {
+                            //Limit the URI to under 10,000 characters (9950 here since the sandboxVersion query parameter is added after)
+                            if (triggerUri.toString().length > 9950) {
                                 val trimmedJson = trimJsonForUri(requestJson)
                                 val trimmedUri = createURIFromJSON(branchBaseURL, trimmedJson)
 
@@ -66,22 +66,25 @@ object AttributionReportingManager {
                                 triggerUri = trimmedUri
                             }
 
-                            //Add Sandbox version to the trigger URI
                             val sandboxVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES).toString()
-                            triggerUri = triggerUri.buildUpon().appendQueryParameter(Defines.Jsonkey.Privacy_Sandbox_Version.key, sandboxVersion).build()
+                            triggerUri = triggerUri.buildUpon()
+                                .appendQueryParameter(Defines.Jsonkey.Privacy_Sandbox_Version.key, sandboxVersion)
+                                .build()
 
                             manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
-                                    override fun onResult(result: Any?) {
-                                        BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
-                                        executor.shutdown()
-                                    }
-
-                                    override fun onError(e: Exception) {
-                                        BranchLogger.w("Error while registering trigger with URI $triggerUri: ${e.message}")
-                                        executor.shutdown()
-                                    }
+                                override fun onResult(result: Any?) {
+                                    BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
+                                    BranchLogger.d("Register trigger took ${endTime - startTime}ms")
+                                    executor.shutdown()
+                                    scope.cancel()
                                 }
-                            )
+
+                                override fun onError(e: Exception) {
+                                    BranchLogger.w("Error while registering trigger with URI $triggerUri: ${e.message}")
+                                    executor.shutdown()
+                                    scope.cancel()
+                                }
+                            })
                         } else {
                             BranchLogger.v("Measurement API is not enabled. Did not register trigger.")
                         }
@@ -89,16 +92,25 @@ object AttributionReportingManager {
                 }
             } catch (e: Exception) {
                 BranchLogger.w("Error while registering source: ${e.message}")
-            } finally {
                 scope.cancel()
             }
         }
     }
 
+    /**
+     * This function creates a URI from a base URL and a JSON object by appending query parameters.
+     *
+     * Example:
+     * Input:
+     *  - baseURL: "https://api2.branch.io/v1/open"
+     *  - json: {"key1": "value1", "key2": {"subkey": "subvalue"}}
+     * Output:
+     *  - URI: "https://api2.branch.io?key1=value1&key2.subkey=subvalue"
+     */
     private fun createURIFromJSON(baseURL: String, json: JSONObject): Uri {
         val builder = Uri.parse(baseURL).buildUpon()
         val params = mutableMapOf<String, String>()
-        parseJson("", json, params)
+        flattenJsonForRegisterTriggerUri("", json, params)
 
         params.forEach { (key, value) ->
             builder.appendQueryParameter(URLEncoder.encode(key, "UTF-8"), URLEncoder.encode(value, "UTF-8"))
@@ -108,12 +120,12 @@ object AttributionReportingManager {
     }
 
     // Recursive function to flatten the JSON object into a map of strings
-    private fun parseJson(prefix: String, json: JSONObject, params: MutableMap<String, String>) {
+    private fun flattenJsonForRegisterTriggerUri(prefix: String, json: JSONObject, params: MutableMap<String, String>) {
         json.keys().forEach { key ->
             val fullKey = if (prefix.isEmpty()) key else "$prefix.$key"
             when (val value = json.get(key)) {
                 is JSONObject -> {
-                    parseJson(fullKey, value, params)
+                    flattenJsonForRegisterTriggerUri(fullKey, value, params)
                 }
                 else -> {
                     params[fullKey] = value.toString()
