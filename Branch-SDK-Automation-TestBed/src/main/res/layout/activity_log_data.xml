@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/_5sdp"
-    tools:context="io.branch.saas.sdk.testbed.activities.LogDataActivity">
+    tools:context="io.branch.branchandroiddemo.activities.LogDataActivity">
 
     <TextView
         android:id="@+id/tv_success_fail_title"
@@ -24,8 +24,7 @@
             android:id="@+id/tv_log_data"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/_5sdp"
-            android:visibility="gone" />
+            android:layout_margin="@dimen/_5sdp" />
     </ScrollView>
 
     <Button
@@ -34,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="Next"
+        android:text="Done"
         android:textAllCaps="false" />
 
 </RelativeLayout>
