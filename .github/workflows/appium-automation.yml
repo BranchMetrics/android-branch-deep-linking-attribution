@@ -84,16 +84,15 @@ jobs:
         run: |
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@sdk/branchsdk-link-clicktest/build/outputs/apk/debug/branchsdk-link-clicktest-debug.apk")
           parsed=$(echo $response | jq ".app_url")
-          echo "::add-mask::$parsed"
           echo "BrowserStackLinkClickAppURL=$parsed" >> "$GITHUB_ENV"
       - name: Upload APK from Master branch to BrowserStack for Reinstallation tests
         if: ${{ !( github.ref == 'refs/heads/master')}}
         run: |
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@previousVersionSDK/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
-          parsed=$(echo $response | jq ".app_url")
+          parsed2=$(echo $response | jq ".app_url")
           echo "Old app is ========="
-          echo "$parsed"
-          echo "BrowserStackAndroidOldBuildKey=$parsed" >> "$GITHUB_ENV"
+          echo "$parsed2"
+          echo "BrowserStackAndroidOldBuildKey=$parsed2" >> "$GITHUB_ENV"
       # automation is compatible with java 11
       - name: Setup java for automation
         uses: actions/setup-java@v3
