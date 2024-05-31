@@ -43,20 +43,21 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       # to reduce complexity, testbed app uses sdk as a project reference
       - name: Decode Keystore
-        if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
         env:
             ENCODED_STRING: ${{ secrets.KEYSTORE }}
         run: |
             cd sdk
             echo $ENCODED_STRING | base64 -d > ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks
-            cp ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks ../previousVersionSDK/Branch-SDK-Automation-TestBed/
-            ls -la
-            ls -la ./Branch-SDK-Automation-TestBed/
+     - name: Decode Keystore for Reinstallation
+        if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
+        env:
+            ENCODED_STRING: ${{ secrets.KEYSTORE }}
+        run: |
+            cd previousVersionSDK
+            echo $ENCODED_STRING | base64 -d > ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks
       - name: Build testbed app and Link Click Test App
         run: |
           cd sdk
-          ls -la
-          ls -la ./Branch-SDK-Automation-TestBed/
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
           ./gradlew branchsdk-link-clicktest:assembleDebug
         env:
