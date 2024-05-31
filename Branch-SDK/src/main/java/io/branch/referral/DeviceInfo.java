@@ -29,6 +29,8 @@ class DeviceInfo {
     private final SystemObserver systemObserver_;
     private final Context context_;
 
+    private final int  test;
+
     /**
      * Get the singleton instance for this class
      *
@@ -43,6 +45,7 @@ class DeviceInfo {
     DeviceInfo(Context context) {
         context_ = context;
         systemObserver_ = new SystemObserverInstance();
+        test = 123;
     }
 
     /**
