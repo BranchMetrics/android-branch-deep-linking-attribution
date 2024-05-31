@@ -48,7 +48,7 @@ jobs:
         run: |
             cd sdk
             echo $ENCODED_STRING | base64 -d > ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks
-     - name: Decode Keystore for Reinstallation
+      - name: Decode Keystore for Reinstallation
         if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
         env:
             ENCODED_STRING: ${{ secrets.KEYSTORE }}
