@@ -25,7 +25,7 @@ jobs:
       # point to automation master branch by default
       - name: Checkout Master SDK repo with testbed app for Reinstallation tests
         uses: actions/checkout@v3
-        if: ${{ !( github.ref == 'refs/heads/master')}}
+        if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
         with:
           path: previousVersionSDK
           ref: master
