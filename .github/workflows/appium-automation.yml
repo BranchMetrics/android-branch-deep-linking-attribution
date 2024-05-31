@@ -25,7 +25,7 @@ jobs:
       # point to automation master branch by default
       - name: Checkout Master SDK repo with testbed app for Reinstallation tests
         uses: actions/checkout@v3
-        if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
+        if: ${{ !( github.ref == 'refs/heads/master')}}
         with:
           path: previousVersionSDK
           ref: master
@@ -49,7 +49,7 @@ jobs:
             cd sdk
             echo $ENCODED_STRING | base64 -d > ./Branch-SDK-Automation-TestBed/automationSigningKeys.jks
       - name: Decode Keystore for Reinstallation
-        if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
+        if: ${{ !( github.ref == 'refs/heads/master')}}
         env:
             ENCODED_STRING: ${{ secrets.KEYSTORE }}
         run: |
@@ -65,7 +65,7 @@ jobs:
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       - name: Build Master testbed app for Reinstallation tests
-        if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
+        if: ${{ !( github.ref == 'refs/heads/master')}}
         run: |
           cd previousVersionSDK
           ./gradlew Branch-SDK-Automation-TestBed:assembleDebug
@@ -86,7 +86,7 @@ jobs:
           echo "::add-mask::$parsed"
           echo "BrowserStackLinkClickAppURL=$parsed" >> "$GITHUB_ENV"
       - name: Upload APK from Master branch to BrowserStack for Reinstallation tests
-        if: ${{ !( github.ref == 'refs/heads/Reinstallationtest-workflow-fix-')}}
+        if: ${{ !( github.ref == 'refs/heads/master')}}
         run: |
           response=$(curl -X POST https://api-cloud.browserstack.com/app-automate/upload -u "${{ secrets.BROWSER_STACK_USER }}:${{ secrets.BROWSER_STACK_KEY }}"  -F "file=@previousVersionSDK/Branch-SDK-Automation-TestBed/build/outputs/apk/debug/Branch-SDK-Automation-TestBed-debug.apk")
           parsed=$(echo $response | jq ".app_url")
