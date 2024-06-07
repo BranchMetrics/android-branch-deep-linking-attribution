@@ -207,10 +207,15 @@ public class BranchJsonConfig {
 
     @Nullable
     public String getFbAppId() {
-        if (mConfiguration == null) return null;
+        if (mConfiguration == null) {
+            return null;
+        }
 
         try {
-            if (!mConfiguration.has(BranchJsonKey.fbAppId.toString())) return null;
+            if (!mConfiguration.has(BranchJsonKey.fbAppId.toString())) {
+                return null;
+            }
+            
             return mConfiguration.getString(BranchJsonKey.fbAppId.toString());
         }
         catch (JSONException exception) {
