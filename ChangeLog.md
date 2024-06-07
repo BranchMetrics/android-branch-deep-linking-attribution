@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.12.1
+  * _*Master Release*_ - Jun 7, 2024
+  - Added support for setting FB App ID through `branch.json`
+
 - v5.12.0
   * _*Master Release*_ - Apr 24, 2024
   - Added new enableLogging method to set preferred logging level
