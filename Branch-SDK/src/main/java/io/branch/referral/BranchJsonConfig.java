@@ -30,7 +30,8 @@ public class BranchJsonConfig {
         useTestInstance,
         enableLogging,
         deferInitForPluginRuntime,
-        apiUrl
+        apiUrl,
+        fbAppId
     }
 
     /*
@@ -46,7 +47,8 @@ public class BranchJsonConfig {
             "useTestInstance": true,
             "enableLogging": true,
             "deferInitForPluginRuntime": true,
-            "apiUrl": "https://api2.branch.io"
+            "apiUrl": "https://api2.branch.io",
+            "fbAppId": "xyz123456789"
        }
     */
 
@@ -196,6 +198,25 @@ public class BranchJsonConfig {
         try {
             if (!mConfiguration.has(BranchJsonKey.apiUrl.toString())) return null;
             return mConfiguration.getString(BranchJsonKey.apiUrl.toString());
+        }
+        catch (JSONException exception) {
+            Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
+            return null;
+        }
+    }
+
+    @Nullable
+    public String getFbAppId() {
+        if (mConfiguration == null) {
+            return null;
+        }
+
+        try {
+            if (!mConfiguration.has(BranchJsonKey.fbAppId.toString())) {
+                return null;
+            }
+            
+            return mConfiguration.getString(BranchJsonKey.fbAppId.toString());
         }
         catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());

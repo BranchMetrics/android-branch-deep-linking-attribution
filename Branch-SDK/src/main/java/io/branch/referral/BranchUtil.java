@@ -143,7 +143,17 @@ public class BranchUtil {
     public static void setAPIBaseUrlFromConfig(Context context) {
         BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
         String apiUrl = jsonConfig.getAPIUrl();
-        Branch.setAPIUrl(apiUrl);
+        if (!TextUtils.isEmpty(apiUrl)) {
+            Branch.setAPIUrl(apiUrl);
+        }
+    }
+
+    public static void setFbAppIdFromConfig(Context context) {
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        String fbAppId = jsonConfig.getFbAppId();
+        if (!TextUtils.isEmpty(fbAppId)) {
+            Branch.setFBAppID(fbAppId);
+        }
     }
 
     /**
