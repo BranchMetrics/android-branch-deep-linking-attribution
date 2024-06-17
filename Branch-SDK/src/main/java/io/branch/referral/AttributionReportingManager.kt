@@ -43,8 +43,6 @@ object AttributionReportingManager {
     fun isMeasurementApiEnabled(): Boolean = isMeasurementApiEnabled
 
     fun registerTrigger(context: Context, request: ServerRequest) {
-        val scope = CoroutineScope(Dispatchers.IO + Job())
-        scope.launch {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= MIN_AD_SERVICES_VERSION) {
@@ -75,13 +73,11 @@ object AttributionReportingManager {
                                 override fun onResult(result: Any?) {
                                     BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
                                     executor.shutdown()
-                                    scope.cancel()
                                 }
 
                                 override fun onError(e: Exception) {
                                     BranchLogger.w("Error while registering trigger with URI $triggerUri: ${e.message}")
                                     executor.shutdown()
-                                    scope.cancel()
                                 }
                             })
                         } else {
@@ -91,9 +87,7 @@ object AttributionReportingManager {
                 }
             } catch (e: Exception) {
                 BranchLogger.w("Error while registering source: ${e.message}")
-                scope.cancel()
             }
-        }
     }
 
     /**
