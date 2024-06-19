@@ -42,6 +42,7 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
           echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
           echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
       # boots and waits for the emulator to be ready
@@ -82,6 +83,7 @@ jobs:
               - name: Create Android emulator
                 run: |
                   yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+                  $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
                   echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
                   echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
               # boots and waits for the emulator to be ready
@@ -140,6 +142,7 @@ jobs:
       - name: Create Android emulator
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
           echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
           echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list device
           echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
