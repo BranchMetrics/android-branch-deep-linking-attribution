@@ -41,8 +41,8 @@ jobs:
       - name: Create Android emulator
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;x86_64"
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64"
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
@@ -81,8 +81,8 @@ jobs:
               - name: Create Android emulator
                 run: |
                   echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-                  echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;x86_64"
-                  echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
+                  echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64"
+                  echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64"
               # boots and waits for the emulator to be ready
               - name: Launch Emulator
                 timeout-minutes: 30
@@ -139,9 +139,9 @@ jobs:
       - name: Create Android emulator
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64"
           echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list device
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
