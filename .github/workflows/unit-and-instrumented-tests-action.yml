@@ -40,18 +40,20 @@ jobs:
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
-          echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
+          SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+          echo "y" | ${SDKMANAGER} "platform-tools"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
+          echo "yes" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
+          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
         run: |
           echo "Starting emulator and waiting for boot to complete."
-          nohup $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
+          nohup $ANDROID_SDK_ROOT/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+          $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
@@ -82,17 +84,17 @@ jobs:
               # create an emulator with google apis, runs on java 8
               - name: Create Android emulator
                 run: |
-                  yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-                  $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
-                  echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
-                  echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
+                  yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+                  $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
+                  echo "yes" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
+                  echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
               # boots and waits for the emulator to be ready
               - name: Launch Emulator
                 timeout-minutes: 30
                 run: |
                   echo "Starting emulator and waiting for boot to complete."
-                  nohup $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-                  $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
+                  nohup $ANDROID_SDK_ROOT/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+                  $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
                   echo "Emulator has finished booting"
               # repo's gradle is configured to run on java 17
               - name: Setup java 17 for gradle
@@ -141,18 +143,18 @@ jobs:
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
-          echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list device
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
+          echo "yes" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
+          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager list device
+          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
         run: |
           echo "Starting emulator and waiting for boot to complete."
-          nohup $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
+          nohup $ANDROID_SDK_ROOT/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+          $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
