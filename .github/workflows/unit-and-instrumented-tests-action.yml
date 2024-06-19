@@ -40,9 +40,9 @@ jobs:
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
-          echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64"
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64"
+          no | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
@@ -80,9 +80,9 @@ jobs:
               # create an emulator with google apis, runs on java 8
               - name: Create Android emulator
                 run: |
-                  echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-                  echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64"
-                  echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64"
+                  yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+                  yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64"
+                  no | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64"
               # boots and waits for the emulator to be ready
               - name: Launch Emulator
                 timeout-minutes: 30
@@ -138,10 +138,10 @@ jobs:
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
-          echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64"
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list device
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64"
+          no | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list device
+          no | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
