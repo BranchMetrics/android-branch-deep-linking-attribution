@@ -11,6 +11,10 @@ SDK-XXX -- <TITLE>.
 <!-- CHOOSE ONE OF THE THREE ASSESSMENTS ABOVE -->
 <!-- FOR MEDIUM OR HIGH ASSESSMENTS, ADD ADDITIONAL NOTES HERE -->
 
+## Change Type [`MAJOR` || `MINOR` || `PATCH`]
+Automation Tests Pull Request: 
+
+
 - [ ] I, the PR creator, have tested — integration, unit, or otherwise — this code.
 
 ## Reviewer Checklist (To be checked off by the reviewer only)
@@ -21,5 +25,6 @@ SDK-XXX -- <TITLE>.
     - [ ] Mission critical pieces are documented in code and out of code as needed.
 - [ ] Unit Tests reviewed and test issue sufficiently.
 - [ ] Functionality was reviewed in QA independently by another engineer on the team.
+- [ ] If changes are considered MINOR or MAJOR, a link to automation PR is provided.
 
 cc @BranchMetrics/saas-sdk-devs for visibility.
