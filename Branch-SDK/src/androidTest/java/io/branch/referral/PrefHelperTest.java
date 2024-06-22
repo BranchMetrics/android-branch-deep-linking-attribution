@@ -334,4 +334,13 @@ public class PrefHelperTest extends BranchTest {
         Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),true);
         Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),false);
     }
+
+    @Test
+    public void testSetConsumerProtectionPreference() {
+        Branch.getInstance().setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY);
+        Assert.assertEquals(prefHelper.getConsumerProtectionPreference(), Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY);
+
+        Branch.getInstance().setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference.FULL);
+        Assert.assertEquals(prefHelper.getConsumerProtectionPreference(), Defines.BranchConsumerProtectionPreference.FULL);
+    }
 }

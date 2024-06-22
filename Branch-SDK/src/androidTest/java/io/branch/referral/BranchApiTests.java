@@ -1,7 +1,6 @@
 package io.branch.referral;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -15,10 +14,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -350,6 +346,12 @@ public class BranchApiTests extends BranchTest {
     public void testSdkVersion() {
         Assert.assertNotNull(Branch.getSdkVersionNumber());
         Assert.assertEquals(io.branch.referral.BuildConfig.VERSION_NAME, Branch.getSdkVersionNumber());
+    }
+
+    @Test
+    public void testTrackingLevel() {
+        Branch.getInstance().setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY);
+        Assert.assertEquals(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY, prefHelper.getConsumerProtectionPreference());
     }
 
     private void getFBUrl(final FBUrl res) throws InterruptedException {

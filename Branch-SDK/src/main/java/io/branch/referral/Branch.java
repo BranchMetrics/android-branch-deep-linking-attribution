@@ -2576,4 +2576,15 @@ public class Branch {
             BranchLogger.w("setFBAppID: fbAppID cannot be empty or null");
         }
     }
+
+    /**
+     * Sets the consumer protection preference
+     *
+     * @param preference The consumer protection preference {@link Defines.BranchConsumerProtectionPreference}.
+     */
+    public void setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference preference) {
+        prefHelper_.setConsumerProtectionPreference(preference);
+
+        BranchLogger.v("Set Consumer Protection Preference to " + preference);
+    }
 }

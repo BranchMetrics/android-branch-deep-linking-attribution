@@ -197,6 +197,16 @@ public abstract class ServerRequest {
         }
     }
 
+    void addConsumerProtectionPreference() {
+        try {
+            if (prefHelper_.getConsumerProtectionPreference() != null) {
+                params_.put(Defines.Jsonkey.Consumer_Protection_Preference.getKey(), prefHelper_.getConsumerProtectionPreference());
+            }
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
+    }
+
 
     /**
      * <p>Provides the path to server for this request.
@@ -624,6 +634,9 @@ public abstract class ServerRequest {
         if (shouldAddDMAParams()) {
             addDMAParams();
         }
+
+        addConsumerProtectionPreference();
+
     }
     
     void doFinalUpdateOnBackgroundThread() {

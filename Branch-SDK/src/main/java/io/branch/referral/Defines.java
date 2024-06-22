@@ -223,7 +223,9 @@ public class Defines {
         DMA_EEA("dma_eea"),
         DMA_Ad_Personalization("dma_ad_personalization"),
         DMA_Ad_User_Data("dma_ad_user_data"),
-        Is_Meta_Click_Through("is_meta_ct");
+        Is_Meta_Click_Through("is_meta_ct"),
+
+        Consumer_Protection_Preference("consumer_protection_preference");
 
         private final String key;
         
@@ -391,5 +393,17 @@ public class Defines {
         public String toString() {
             return key;
         }
+    }
+
+    /**
+     * <p>
+     * Defines Branch Consumer Protection Preference
+     * </p>
+     */
+    public enum BranchConsumerProtectionPreference {
+        FULL,
+        PRIVACY_ONLY,
+        ANALYTICS_ONLY,
+        NO_ATTRIBUTION
     }
 }
