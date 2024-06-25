@@ -5,3 +5,5 @@
 -dontwarn com.samsung.android.sdk.sinstallreferrer.**
 
 -dontwarn com.google.android.gms.**
+
+-dontwarn com.android.billingclient.**
