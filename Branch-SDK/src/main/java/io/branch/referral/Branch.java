@@ -538,10 +538,21 @@ public class Branch {
      *                        ({@code false}).
      * @param callback An optional {@link TrackingStateCallback} instance for receiving callback notifications about
      *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
+     * @deprecated Use {@link #setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference)} instead.
      */
     public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
         trackingController.disableTracking(context_, disableTracking, callback);
     }
+
+    /**
+     * Toggles the tracking state of the SDK. When tracking is disabled, the SDK will not track any user data or state,
+     * and it will not initiate any network calls except for deep linking operations.
+     * Re-enabling tracking will reinitialize the Branch session and resume normal SDK operations.
+     *
+     * @param disableTracking A boolean value indicating whether tracking should be disabled ({@code true}) or enabled
+     *                        ({@code false}).
+     * @deprecated Use {@link #setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference)} instead.
+     */
     public void disableTracking(boolean disableTracking) {
         disableTracking(disableTracking, null);
     }
@@ -2584,6 +2595,12 @@ public class Branch {
      */
     public void setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference preference) {
         prefHelper_.setConsumerProtectionPreference(preference);
+
+        if (preference == Defines.BranchConsumerProtectionPreference.TRACKING_DISABLED) {
+            trackingController.disableTracking(context_, true, null);
+        } else {
+            trackingController.disableTracking(context_, false, null);
+        }
 
         BranchLogger.v("Set Consumer Protection Preference to " + preference);
     }

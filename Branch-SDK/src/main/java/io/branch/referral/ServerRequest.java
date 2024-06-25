@@ -197,10 +197,10 @@ public abstract class ServerRequest {
         }
     }
 
-    void addConsumerProtectionPreference() {
+    void updateConsumerProtectionPreference() {
         try {
             if (prefHelper_.getConsumerProtectionPreference() != null) {
-                params_.put(Defines.Jsonkey.Consumer_Protection_Preference.getKey(), prefHelper_.getConsumerProtectionPreference());
+                params_.put(Defines.Jsonkey.Consumer_Protection_Preference.getKey(), prefHelper_.getConsumerProtectionPreference().ordinal());
             }
         } catch (JSONException e) {
             BranchLogger.d(e.getMessage());
@@ -634,9 +634,7 @@ public abstract class ServerRequest {
         if (shouldAddDMAParams()) {
             addDMAParams();
         }
-
-        addConsumerProtectionPreference();
-
+        updateConsumerProtectionPreference();
     }
     
     void doFinalUpdateOnBackgroundThread() {

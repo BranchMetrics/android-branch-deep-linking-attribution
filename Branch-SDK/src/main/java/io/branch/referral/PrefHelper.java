@@ -1438,7 +1438,7 @@ public class PrefHelper {
      * @return A {@link Defines.BranchConsumerProtectionPreference} value representing the tracking level set.
      */
     public Defines.BranchConsumerProtectionPreference getConsumerProtectionPreference() {
-        int preferenceInt = getInteger(KEY_CONSUMER_PROTECTION_PREFERENCE, Defines.BranchConsumerProtectionPreference.FULL.ordinal());
+        int preferenceInt = getInteger(KEY_CONSUMER_PROTECTION_PREFERENCE, Defines.BranchConsumerProtectionPreference.FULL_ATTRIBUTION.ordinal());
         return Defines.BranchConsumerProtectionPreference.values()[preferenceInt];
     }
 

@@ -349,7 +349,7 @@ public class BranchApiTests extends BranchTest {
     }
 
     @Test
-    public void testTrackingLevel() {
+    public void testConsumerProtectionPreference() {
         Branch.getInstance().setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY);
         Assert.assertEquals(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY, prefHelper.getConsumerProtectionPreference());
     }

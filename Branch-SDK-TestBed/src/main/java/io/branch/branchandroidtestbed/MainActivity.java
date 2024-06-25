@@ -461,6 +461,33 @@ public class MainActivity extends Activity {
             });
         });
 
+        findViewById(R.id.cmdConsumerProtectionPreference).setOnClickListener(v -> {
+            final String[] options = {"Full Attribution", "Privacy Attribution", "Analytics Only", "Tracking Disabled"};
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Select Consumer Protection Preference")
+                    .setItems(options, (dialog, which) -> {
+                        Defines.BranchConsumerProtectionPreference preference;
+                        switch (which) {
+                            case 1:
+                                preference = Defines.BranchConsumerProtectionPreference.PRIVACY_ATTRIBUTION;
+                                break;
+                            case 2:
+                                preference = Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY;
+                                break;
+                            case 3:
+                                preference = Defines.BranchConsumerProtectionPreference.TRACKING_DISABLED;
+                                break;
+                            case 0:
+                            default:
+                                preference = Defines.BranchConsumerProtectionPreference.FULL_ATTRIBUTION;
+                                break;
+                        }
+                        Branch.getInstance().setConsumerProtectionPreference(preference);
+                        Toast.makeText(MainActivity.this, "Consumer Protection Preference set to " + options[which], Toast.LENGTH_SHORT).show();
+                    });
+            builder.create().show();
+        });
+
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
