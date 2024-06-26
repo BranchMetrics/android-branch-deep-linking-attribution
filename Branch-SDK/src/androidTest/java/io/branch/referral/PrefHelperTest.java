@@ -337,17 +337,17 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testConsumerProtectionAttributionLevel() {
-        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.REDUCED);
-        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.REDUCED, prefHelper.getConsumerProtectionAttributionLevel());
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.REDUCED);
+        Assert.assertEquals(Defines.BranchAttributionLevel.REDUCED, prefHelper.getConsumerProtectionAttributionLevel());
 
-        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.MINIMAL);
-        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.MINIMAL, prefHelper.getConsumerProtectionAttributionLevel());
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.MINIMAL);
+        Assert.assertEquals(Defines.BranchAttributionLevel.MINIMAL, prefHelper.getConsumerProtectionAttributionLevel());
 
-        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.NONE);
-        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.NONE, prefHelper.getConsumerProtectionAttributionLevel());
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.NONE);
+        Assert.assertEquals(Defines.BranchAttributionLevel.NONE, prefHelper.getConsumerProtectionAttributionLevel());
 
-        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.FULL);
-        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.FULL, prefHelper.getConsumerProtectionAttributionLevel());
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.FULL);
+        Assert.assertEquals(Defines.BranchAttributionLevel.FULL, prefHelper.getConsumerProtectionAttributionLevel());
     }
 
 }

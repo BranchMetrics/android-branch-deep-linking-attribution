@@ -397,10 +397,10 @@ public class Defines {
 
     /**
      * <p>
-     * Defines Branch Consumer Protection Preference
+     * Defines Branch Attribution Level
      * </p>
      */
-    public enum BranchConsumerProtectionAttributionLevel {
+    public enum BranchAttributionLevel {
         /**
          * Full Attribution (Default)
          * - Advertising Ids

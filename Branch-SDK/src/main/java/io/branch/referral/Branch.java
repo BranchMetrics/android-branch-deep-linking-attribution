@@ -538,7 +538,7 @@ public class Branch {
      *                        ({@code false}).
      * @param callback An optional {@link TrackingStateCallback} instance for receiving callback notifications about
      *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
-     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel)} instead.
+     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)} instead.
      */
     public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
         trackingController.disableTracking(context_, disableTracking, callback);
@@ -551,7 +551,7 @@ public class Branch {
      *
      * @param disableTracking A boolean value indicating whether tracking should be disabled ({@code true}) or enabled
      *                        ({@code false}).
-     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel)} instead.
+     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)} instead.
      */
     public void disableTracking(boolean disableTracking) {
         disableTracking(disableTracking, null);
@@ -2591,12 +2591,12 @@ public class Branch {
     /**
      * Sets the consumer protection attribution level
      *
-     * @param level The consumer protection attribution level {@link Defines.BranchConsumerProtectionAttributionLevel}.
+     * @param level The consumer protection attribution level {@link Defines.BranchAttributionLevel}.
      */
-    public void setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel level) {
+    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
         prefHelper_.setConsumerProtectionAttributionLevel(level);
 
-        if (level == Defines.BranchConsumerProtectionAttributionLevel.NONE) {
+        if (level == Defines.BranchAttributionLevel.NONE) {
             trackingController.disableTracking(context_, true, null);
         } else {
             trackingController.disableTracking(context_, false, null);

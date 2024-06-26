@@ -465,20 +465,20 @@ public class MainActivity extends Activity {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("Select Consumer Protection Attribution Level")
                     .setItems(options, (dialog, which) -> {
-                        Defines.BranchConsumerProtectionAttributionLevel preference;
+                        Defines.BranchAttributionLevel preference;
                         switch (which) {
                             case 1:
-                                preference = Defines.BranchConsumerProtectionAttributionLevel.REDUCED;
+                                preference = Defines.BranchAttributionLevel.REDUCED;
                                 break;
                             case 2:
-                                preference = Defines.BranchConsumerProtectionAttributionLevel.MINIMAL;
+                                preference = Defines.BranchAttributionLevel.MINIMAL;
                                 break;
                             case 3:
-                                preference = Defines.BranchConsumerProtectionAttributionLevel.NONE;
+                                preference = Defines.BranchAttributionLevel.NONE;
                                 break;
                             case 0:
                             default:
-                                preference = Defines.BranchConsumerProtectionAttributionLevel.FULL;
+                                preference = Defines.BranchAttributionLevel.FULL;
                                 break;
                         }
                         Branch.getInstance().setConsumerProtectionAttributionLevel(preference);

@@ -1433,21 +1433,21 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Gets the {@link Defines.BranchConsumerProtectionAttributionLevel} value that has been set.</p>
+     * <p>Gets the {@link Defines.BranchAttributionLevel} value that has been set.</p>
      *
-     * @return A {@link Defines.BranchConsumerProtectionAttributionLevel} value representing the attribution level set.
+     * @return A {@link Defines.BranchAttributionLevel} value representing the attribution level set.
      */
-    public Defines.BranchConsumerProtectionAttributionLevel getConsumerProtectionAttributionLevel() {
-        int levelInt = getInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, Defines.BranchConsumerProtectionAttributionLevel.FULL.ordinal());
-        return Defines.BranchConsumerProtectionAttributionLevel.values()[levelInt];
+    public Defines.BranchAttributionLevel getConsumerProtectionAttributionLevel() {
+        int levelInt = getInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, Defines.BranchAttributionLevel.FULL.ordinal());
+        return Defines.BranchAttributionLevel.values()[levelInt];
     }
 
     /**
-     * <p>Sets the {@link Defines.BranchConsumerProtectionAttributionLevel} value via the Branch API.</p>
+     * <p>Sets the {@link Defines.BranchAttributionLevel} value via the Branch API.</p>
      *
-     * @param preference A {@link Defines.BranchConsumerProtectionAttributionLevel} value containing the desired attribution level.
+     * @param preference A {@link Defines.BranchAttributionLevel} value containing the desired attribution level.
      */
-    public void setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel preference) {
+    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel preference) {
         setInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, preference.ordinal());
     }
 }
