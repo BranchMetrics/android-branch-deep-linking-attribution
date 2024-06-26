@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -462,27 +461,27 @@ public class MainActivity extends Activity {
         });
 
         findViewById(R.id.cmdConsumerProtectionPreference).setOnClickListener(v -> {
-            final String[] options = {"Full Attribution", "Privacy Attribution", "Analytics Only", "Tracking Disabled"};
+            final String[] options = {"Full", "Reduced", "Minimal", "None"};
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("Select Consumer Protection Preference")
+            builder.setTitle("Select Consumer Protection Attribution Level")
                     .setItems(options, (dialog, which) -> {
-                        Defines.BranchConsumerProtectionPreference preference;
+                        Defines.BranchConsumerProtectionAttributionLevel preference;
                         switch (which) {
                             case 1:
-                                preference = Defines.BranchConsumerProtectionPreference.PRIVACY_ATTRIBUTION;
+                                preference = Defines.BranchConsumerProtectionAttributionLevel.REDUCED;
                                 break;
                             case 2:
-                                preference = Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY;
+                                preference = Defines.BranchConsumerProtectionAttributionLevel.MINIMAL;
                                 break;
                             case 3:
-                                preference = Defines.BranchConsumerProtectionPreference.TRACKING_DISABLED;
+                                preference = Defines.BranchConsumerProtectionAttributionLevel.NONE;
                                 break;
                             case 0:
                             default:
-                                preference = Defines.BranchConsumerProtectionPreference.FULL_ATTRIBUTION;
+                                preference = Defines.BranchConsumerProtectionAttributionLevel.FULL;
                                 break;
                         }
-                        Branch.getInstance().setConsumerProtectionPreference(preference);
+                        Branch.getInstance().setConsumerProtectionAttributionLevel(preference);
                         Toast.makeText(MainActivity.this, "Consumer Protection Preference set to " + options[which], Toast.LENGTH_SHORT).show();
                     });
             builder.create().show();

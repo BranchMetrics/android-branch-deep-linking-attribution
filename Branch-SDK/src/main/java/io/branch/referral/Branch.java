@@ -538,7 +538,7 @@ public class Branch {
      *                        ({@code false}).
      * @param callback An optional {@link TrackingStateCallback} instance for receiving callback notifications about
      *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
-     * @deprecated Use {@link #setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference)} instead.
+     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel)} instead.
      */
     public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
         trackingController.disableTracking(context_, disableTracking, callback);
@@ -551,7 +551,7 @@ public class Branch {
      *
      * @param disableTracking A boolean value indicating whether tracking should be disabled ({@code true}) or enabled
      *                        ({@code false}).
-     * @deprecated Use {@link #setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference)} instead.
+     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel)} instead.
      */
     public void disableTracking(boolean disableTracking) {
         disableTracking(disableTracking, null);
@@ -2589,19 +2589,19 @@ public class Branch {
     }
 
     /**
-     * Sets the consumer protection preference
+     * Sets the consumer protection attribution level
      *
-     * @param preference The consumer protection preference {@link Defines.BranchConsumerProtectionPreference}.
+     * @param level The consumer protection attribution level {@link Defines.BranchConsumerProtectionAttributionLevel}.
      */
-    public void setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference preference) {
-        prefHelper_.setConsumerProtectionPreference(preference);
+    public void setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel level) {
+        prefHelper_.setConsumerProtectionAttributionLevel(level);
 
-        if (preference == Defines.BranchConsumerProtectionPreference.TRACKING_DISABLED) {
+        if (level == Defines.BranchConsumerProtectionAttributionLevel.NONE) {
             trackingController.disableTracking(context_, true, null);
         } else {
             trackingController.disableTracking(context_, false, null);
         }
 
-        BranchLogger.v("Set Consumer Protection Preference to " + preference);
+        BranchLogger.v("Set Consumer Protection Preference to " + level);
     }
 }

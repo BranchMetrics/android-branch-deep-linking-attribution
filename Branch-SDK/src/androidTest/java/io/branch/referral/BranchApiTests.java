@@ -348,12 +348,6 @@ public class BranchApiTests extends BranchTest {
         Assert.assertEquals(io.branch.referral.BuildConfig.VERSION_NAME, Branch.getSdkVersionNumber());
     }
 
-    @Test
-    public void testConsumerProtectionPreference() {
-        Branch.getInstance().setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY);
-        Assert.assertEquals(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY, prefHelper.getConsumerProtectionPreference());
-    }
-
     private void getFBUrl(final FBUrl res) throws InterruptedException {
         getFBUrl(res, null, null);
     }

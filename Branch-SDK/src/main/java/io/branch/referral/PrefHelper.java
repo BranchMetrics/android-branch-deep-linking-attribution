@@ -113,7 +113,7 @@ public class PrefHelper {
     private static final String KEY_DMA_AD_PERSONALIZATION = "bnc_dma_ad_personalization";
     private static final String KEY_DMA_AD_USER_DATA = "bnc_dma_ad_user_data";
     private static final String KEY_LOG_IAP_AS_EVENTS = "bnc_log_iap_as_events";
-    private static final String KEY_CONSUMER_PROTECTION_PREFERENCE = "bnc_consumer_protection_preference";
+    private static final String KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL = "bnc_consumer_protection_attribution_level";
     static final String KEY_ORIGINAL_INSTALL_TIME = "bnc_original_install_time";
     static final String KEY_LAST_KNOWN_UPDATE_TIME = "bnc_last_known_update_time";
     static final String KEY_PREVIOUS_UPDATE_TIME = "bnc_previous_update_time";
@@ -1433,21 +1433,21 @@ public class PrefHelper {
     }
 
     /**
-     * <p>Gets the {@link Defines.BranchConsumerProtectionPreference} value that has been set.</p>
+     * <p>Gets the {@link Defines.BranchConsumerProtectionAttributionLevel} value that has been set.</p>
      *
-     * @return A {@link Defines.BranchConsumerProtectionPreference} value representing the tracking level set.
+     * @return A {@link Defines.BranchConsumerProtectionAttributionLevel} value representing the attribution level set.
      */
-    public Defines.BranchConsumerProtectionPreference getConsumerProtectionPreference() {
-        int preferenceInt = getInteger(KEY_CONSUMER_PROTECTION_PREFERENCE, Defines.BranchConsumerProtectionPreference.FULL_ATTRIBUTION.ordinal());
-        return Defines.BranchConsumerProtectionPreference.values()[preferenceInt];
+    public Defines.BranchConsumerProtectionAttributionLevel getConsumerProtectionAttributionLevel() {
+        int levelInt = getInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, Defines.BranchConsumerProtectionAttributionLevel.FULL.ordinal());
+        return Defines.BranchConsumerProtectionAttributionLevel.values()[levelInt];
     }
 
     /**
-     * <p>Sets the {@link Defines.BranchConsumerProtectionPreference} value via the Branch API.</p>
+     * <p>Sets the {@link Defines.BranchConsumerProtectionAttributionLevel} value via the Branch API.</p>
      *
-     * @param preference A {@link Defines.BranchConsumerProtectionPreference} value containing the desired tracking level.
+     * @param preference A {@link Defines.BranchConsumerProtectionAttributionLevel} value containing the desired attribution level.
      */
-    public void setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference preference) {
-        setInteger(KEY_CONSUMER_PROTECTION_PREFERENCE, preference.ordinal());
+    public void setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel preference) {
+        setInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, preference.ordinal());
     }
 }

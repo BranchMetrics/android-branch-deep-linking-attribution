@@ -225,7 +225,7 @@ public class Defines {
         DMA_Ad_User_Data("dma_ad_user_data"),
         Is_Meta_Click_Through("is_meta_ct"),
 
-        Consumer_Protection_Preference("protection_preference");
+        Consumer_Protection_Attribution_Level("consumer_protection_attribution_level");
 
         private final String key;
         
@@ -400,7 +400,7 @@ public class Defines {
      * Defines Branch Consumer Protection Preference
      * </p>
      */
-    public enum BranchConsumerProtectionPreference {
+    public enum BranchConsumerProtectionAttributionLevel {
         /**
          * Full Attribution (Default)
          * - Advertising Ids
@@ -414,16 +414,16 @@ public class Defines {
          * - Privacy Frameworks
          * - Deep Linking
          */
-        FULL_ATTRIBUTION,
+        FULL,
         /**
-         * Privacy Attribution (Non-Ads + Privacy Frameworks)
+         * Redices Attribution (Non-Ads + Privacy Frameworks)
          * - Device Ids
          * - Local IP
          * - Data Integrations Webhooks
          * - Privacy Frameworks
          * - Deep Linking
          */
-        PRIVACY_ATTRIBUTION,
+        REDUCED,
 
         /**
          * Analytics Only - No Attribution
@@ -432,13 +432,13 @@ public class Defines {
          * - Data Integrations Webhooks
          * - Deep Linking
          */
-        ANALYTICS_ONLY,
+        MINIMAL,
 
         /**
          * No Attribution - No Analytics (GDPR, CCPA)
          * - Only Deterministic Deep Linking
          * - Disables all other Branch requests
          */
-        TRACKING_DISABLED
+        NONE
     }
 }

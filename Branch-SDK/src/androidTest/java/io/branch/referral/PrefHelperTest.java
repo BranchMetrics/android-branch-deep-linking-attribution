@@ -336,11 +336,18 @@ public class PrefHelperTest extends BranchTest {
     }
 
     @Test
-    public void testSetConsumerProtectionPreference() {
-        Branch.getInstance().setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY);
-        Assert.assertEquals(prefHelper.getConsumerProtectionPreference(), Defines.BranchConsumerProtectionPreference.ANALYTICS_ONLY);
+    public void testConsumerProtectionAttributionLevel() {
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.REDUCED);
+        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.REDUCED, prefHelper.getConsumerProtectionAttributionLevel());
 
-        Branch.getInstance().setConsumerProtectionPreference(Defines.BranchConsumerProtectionPreference.FULL);
-        Assert.assertEquals(prefHelper.getConsumerProtectionPreference(), Defines.BranchConsumerProtectionPreference.FULL);
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.MINIMAL);
+        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.MINIMAL, prefHelper.getConsumerProtectionAttributionLevel());
+
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.NONE);
+        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.NONE, prefHelper.getConsumerProtectionAttributionLevel());
+
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchConsumerProtectionAttributionLevel.FULL);
+        Assert.assertEquals(Defines.BranchConsumerProtectionAttributionLevel.FULL, prefHelper.getConsumerProtectionAttributionLevel());
     }
+
 }
