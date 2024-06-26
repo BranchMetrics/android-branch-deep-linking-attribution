@@ -416,7 +416,7 @@ public class Defines {
          */
         FULL,
         /**
-         * Redices Attribution (Non-Ads + Privacy Frameworks)
+         * Reduces Attribution (Non-Ads + Privacy Frameworks)
          * - Device Ids
          * - Local IP
          * - Data Integrations Webhooks
