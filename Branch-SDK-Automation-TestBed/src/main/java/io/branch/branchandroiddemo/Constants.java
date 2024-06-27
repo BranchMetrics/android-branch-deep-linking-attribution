@@ -21,5 +21,7 @@ public interface Constants {
     String CREATE_QR_CODE = "CreateQRCode";
     String SET_DMA_Params = "SetDMAParams";
     String INIT_SESSION = "InitSession";
+
+    String SET_ATTRIBUTION_LEVEL = "SetAttributionLevel";
     String UNKNOWN = "Unknown";
 }
