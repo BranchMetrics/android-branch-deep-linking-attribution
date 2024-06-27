@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 import android.net.TrafficStats;
 import android.os.NetworkOnMainThreadException;
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -53,6 +52,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
     private int lastResponseCode = -1;
     private String lastResponseMessage = "";
+    private String lastResponseHeaders = "";
     private String lastRequestId = "";
     private PrefHelper prefHelper;
     private int retryLimit;
@@ -210,7 +210,9 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             int responseCode = connection.getResponseCode();
             lastResponseCode = responseCode;
             lastResponseMessage = connection.getResponseMessage(); // If we have the response code, this will not invoke any more data transfer
+            lastResponseHeaders = connection.getHeaderFields() != null ? connection.getHeaderFields().toString() : "";
             BranchLogger.d("lastResponseMessage " + lastResponseMessage);
+            BranchLogger.d("lastResponseHeaders " + lastResponseHeaders);
 
             if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR && retryNumber < retryLimit) {
                 try {
@@ -226,8 +228,15 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 BranchResponse result;
                 try {
                     if (responseCode != HttpsURLConnection.HTTP_OK && connection.getErrorStream() != null) {
-                        BranchLogger.e("Branch Networking Error: " + "\nURL: " + url + "" + "\nResponse Code: " + lastResponseCode + "\nResponse Message: " + lastResponseMessage + "\nRetry number: " + retryNumber + "\nFinal attempt: true" + // no retry on 4XX errors
-                                "\nrequestId: " + lastRequestId + "\nObject: " + this);
+                        BranchLogger.e("Branch Networking Error: " +
+                                "\nURL: " + url +
+                                "\nResponse Code: " + lastResponseCode +
+                                "\nResponse Message: " + lastResponseMessage +
+                                "\nResponse Headers: " + lastResponseHeaders +
+                                "\nRetry number: " + retryNumber +
+                                "\nFinal attempt: true" + // no retry on 4XX errors
+                                "\nrequestId: " + lastRequestId +
+                                "\nObject: " + this);
                         result = new BranchResponse(getResponseString(connection.getErrorStream()), responseCode);
                     }
                     else {
@@ -250,6 +259,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                                 "\nURL: " + url +
                                 "\nResponse Code: " + lastResponseCode +
                                 "\nResponse Message: " + lastResponseMessage +
+                                "\nResponse Headers: " + lastResponseHeaders +
                                 "\nRetry number: " + retryNumber +
                                 "\nrequestId: " + lastRequestId +
                                 "\nObject: " + this);
@@ -337,6 +347,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         lastRequestId = "";
         lastResponseCode = -1;
         lastResponseMessage = "";
+        lastResponseHeaders = "";
     }
 
     private String getResponseString(InputStream inputStream) {
@@ -364,6 +375,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 "\nURL: " + url +
                 "\nResponse Code: " + lastResponseCode +
                 "\nResponse Message: " + lastResponseMessage +
+                "\nResponse Headers: " + lastResponseHeaders +
                 "\nCaught exception type: " + e.getClass().getCanonicalName() +
                 "\nRetry number: " + retry +
                 "\nrequestId: " + lastRequestId +
