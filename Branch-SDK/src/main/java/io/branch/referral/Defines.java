@@ -416,7 +416,7 @@ public class Defines {
          */
         FULL,
         /**
-         * Reduces Attribution (Non-Ads + Privacy Frameworks)
+         * Reduced Attribution (Non-Ads + Privacy Frameworks)
          * - Device Ids
          * - Local IP
          * - Data Integrations Webhooks
@@ -426,7 +426,7 @@ public class Defines {
         REDUCED,
 
         /**
-         * Analytics Only - No Attribution
+         * Minimal Attribution - Analytics Only
          * - Device Ids
          * - Local IP
          * - Data Integrations Webhooks
