@@ -21,8 +21,5 @@ public final class CustomBranchApp extends Application {
         };
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE); // Pass in iBranchLoggingCallbacks to enable logging redirects
         Branch.getAutoInstance(this);
-
-        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.MINIMAL);
-
     }
 }
