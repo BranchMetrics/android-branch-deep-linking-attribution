@@ -10,7 +10,7 @@ env:
 jobs:
   unit-test-api-level-min:
     name: unit-test-api-level-$API_MIN
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -33,23 +33,27 @@ jobs:
 
   instrumented-test-api-level-min:
     name: instrumented-test-api-level-$API_MIN
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
+          SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+          echo "y" | ${SDKMANAGER} "platform-tools"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
+          echo "yes" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
+          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
         run: |
           echo "Starting emulator and waiting for boot to complete."
-          nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
+          nohup $ANDROID_SDK_ROOT/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+          $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
@@ -73,23 +77,26 @@ jobs:
             name: jacoco-test-coverage-api-level-$API_MIN
             if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
             needs: [unit-test-api-level-min, instrumented-test-api-level-min]
-            runs-on: macos-latest
+            runs-on: ubuntu-latest
             steps:
               - name: Checkout
                 uses: actions/checkout@v3
               # create an emulator with google apis, runs on java 8
               - name: Create Android emulator
                 run: |
-                  echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-                  echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;x86_64"
-                  echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
+                  SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+                  echo "y" | ${SDKMANAGER} "platform-tools"
+                  yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+                  $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
+                  echo "yes" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;arm64-v8a"
+                  echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;arm64-v8a"
               # boots and waits for the emulator to be ready
               - name: Launch Emulator
                 timeout-minutes: 30
                 run: |
                   echo "Starting emulator and waiting for boot to complete."
-                  nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-                  $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
+                  nohup $ANDROID_SDK_ROOT/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+                  $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
                   echo "Emulator has finished booting"
               # repo's gradle is configured to run on java 17
               - name: Setup java 17 for gradle
@@ -109,7 +116,7 @@ jobs:
 
   unit-test-api-level-current:
     name: unit-test-api-level-$API_CURRENT
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -131,24 +138,27 @@ jobs:
           path: ./Branch-SDK/build/
   instrumented-test-api-level-current:
     name: instrumented-test-api-level-$API_CURRENT
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       # create an emulator with google apis, runs on java 8
       - name: Create Android emulator
         run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
+          SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+          echo "y" | ${SDKMANAGER} "platform-tools"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
+          echo "yes" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
+          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager list device
+          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
         run: |
           echo "Starting emulator and waiting for boot to complete."
-          nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
+          nohup $ANDROID_SDK_ROOT/emulator/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+          $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
