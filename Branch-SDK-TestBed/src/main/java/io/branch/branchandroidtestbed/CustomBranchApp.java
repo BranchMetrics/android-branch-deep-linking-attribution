@@ -6,6 +6,7 @@ import android.util.Log;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
+import io.branch.referral.Defines;
 
 public final class CustomBranchApp extends Application {
     @Override

@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -459,6 +458,33 @@ public class MainActivity extends Activity {
                     Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_SHORT).show();
                 }
             });
+        });
+
+        findViewById(R.id.cmdConsumerProtectionPreference).setOnClickListener(v -> {
+            final String[] options = {"Full", "Reduced", "Minimal", "None"};
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Select Consumer Protection Attribution Level")
+                    .setItems(options, (dialog, which) -> {
+                        Defines.BranchAttributionLevel preference;
+                        switch (which) {
+                            case 1:
+                                preference = Defines.BranchAttributionLevel.REDUCED;
+                                break;
+                            case 2:
+                                preference = Defines.BranchAttributionLevel.MINIMAL;
+                                break;
+                            case 3:
+                                preference = Defines.BranchAttributionLevel.NONE;
+                                break;
+                            case 0:
+                            default:
+                                preference = Defines.BranchAttributionLevel.FULL;
+                                break;
+                        }
+                        Branch.getInstance().setConsumerProtectionAttributionLevel(preference);
+                        Toast.makeText(MainActivity.this, "Consumer Protection Preference set to " + options[which], Toast.LENGTH_SHORT).show();
+                    });
+            builder.create().show();
         });
 
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {

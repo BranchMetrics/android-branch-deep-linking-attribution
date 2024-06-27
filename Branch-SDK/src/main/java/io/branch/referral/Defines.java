@@ -223,7 +223,9 @@ public class Defines {
         DMA_EEA("dma_eea"),
         DMA_Ad_Personalization("dma_ad_personalization"),
         DMA_Ad_User_Data("dma_ad_user_data"),
-        Is_Meta_Click_Through("is_meta_ct");
+        Is_Meta_Click_Through("is_meta_ct"),
+
+        Consumer_Protection_Attribution_Level("consumer_protection_attribution_level");
 
         private final String key;
         
@@ -391,5 +393,52 @@ public class Defines {
         public String toString() {
             return key;
         }
+    }
+
+    /**
+     * <p>
+     * Defines Branch Attribution Level
+     * </p>
+     */
+    public enum BranchAttributionLevel {
+        /**
+         * Full Attribution (Default)
+         * - Advertising Ids
+         * - Device Ids
+         * - Local IP
+         * - Persisted Non-Aggregate Ids
+         * - Persisted Aggregate Ids
+         * - Ads Postbacks / Webhooks
+         * - Data Integrations Webhooks
+         * - SAN Callouts
+         * - Privacy Frameworks
+         * - Deep Linking
+         */
+        FULL,
+        /**
+         * Reduced Attribution (Non-Ads + Privacy Frameworks)
+         * - Device Ids
+         * - Local IP
+         * - Data Integrations Webhooks
+         * - Privacy Frameworks
+         * - Deep Linking
+         */
+        REDUCED,
+
+        /**
+         * Minimal Attribution - Analytics Only
+         * - Device Ids
+         * - Local IP
+         * - Data Integrations Webhooks
+         * - Deep Linking
+         */
+        MINIMAL,
+
+        /**
+         * No Attribution - No Analytics (GDPR, CCPA)
+         * - Only Deterministic Deep Linking
+         * - Disables all other Branch requests
+         */
+        NONE
     }
 }

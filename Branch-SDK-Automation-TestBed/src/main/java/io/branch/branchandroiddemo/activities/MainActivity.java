@@ -26,7 +26,7 @@ import io.branch.branchandroiddemo.TestData;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button  btCreateDeepLink, btNativeShare, btTrackUser,
-             btCreateQrCode, btSetDMAParams, btLogEvent, btReadLogs, btInitSession;
+             btCreateQrCode, btSetDMAParams, btLogEvent, btReadLogs, btInitSession, btSetAttributionLevel;
     private TextView tvMessage, tvUrl;
     ToggleButton trackingCntrlBtn;
 
@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btTrackUser = findViewById(R.id.bt_track_user);
         btInitSession = findViewById(R.id.bt_init_session);
         trackingCntrlBtn = findViewById(R.id.tracking_cntrl_btn);
+        btSetAttributionLevel = findViewById(R.id.bt_set_attribution_level);
 
         btCreateDeepLink.setOnClickListener(this);
         btNativeShare.setOnClickListener(this);
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btReadLogs.setOnClickListener(this);
         btTrackUser.setOnClickListener(this);
         btInitSession.setOnClickListener(this);
+        btSetAttributionLevel.setOnClickListener(this);
     }
 
     @Override
@@ -89,6 +91,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             branchWrapper.showLogWindow("",false, this, Constants.LOG_DATA);
         } else if (view == btCreateQrCode) {
             branchWrapper.getQRCode(this, getIntent(), MainActivity.this);
+        } else if (view == btSetAttributionLevel) {
+            branchWrapper.setAttributionLevel(getIntent());
         }else {
             branchWrapper.showLogWindow("",false, this, Constants.UNKNOWN);
         }

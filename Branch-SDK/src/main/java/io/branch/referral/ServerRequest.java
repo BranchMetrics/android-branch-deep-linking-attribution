@@ -197,6 +197,16 @@ public abstract class ServerRequest {
         }
     }
 
+    void updateConsumerProtectionAttributionLevel() {
+        try {
+            if (prefHelper_.getConsumerProtectionAttributionLevel() != null) {
+                params_.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().ordinal());
+            }
+        } catch (JSONException e) {
+            BranchLogger.d(e.getMessage());
+        }
+    }
+
 
     /**
      * <p>Provides the path to server for this request.
@@ -624,6 +634,7 @@ public abstract class ServerRequest {
         if (shouldAddDMAParams()) {
             addDMAParams();
         }
+        updateConsumerProtectionAttributionLevel();
     }
     
     void doFinalUpdateOnBackgroundThread() {
