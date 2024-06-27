@@ -1438,8 +1438,12 @@ public class PrefHelper {
      * @return A {@link Defines.BranchAttributionLevel} value representing the attribution level set.
      */
     public Defines.BranchAttributionLevel getConsumerProtectionAttributionLevel() {
-        int levelInt = getInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, Defines.BranchAttributionLevel.FULL.ordinal());
-        return Defines.BranchAttributionLevel.values()[levelInt];
+        int levelInt = getInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, -1);
+        if (levelInt == -1) {
+            return null;
+        } else {
+            return Defines.BranchAttributionLevel.values()[levelInt];
+        }
     }
 
     /**
