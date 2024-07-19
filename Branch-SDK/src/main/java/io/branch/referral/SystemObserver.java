@@ -267,7 +267,7 @@ abstract class SystemObserver {
             Object result = GoogleisPlayServicesAvailable.invoke(GoogleApiAvailabilityInstance, context);
             return (result instanceof Integer) && (Integer) result == 0;
         } catch (Exception e) {
-            BranchLogger.e("Caught Exception " + e.getMessage());
+            BranchLogger.e("Caught Exception isGooglePlayServicesAvailable: " + e.getMessage());
             return false;
         }
     }
@@ -608,7 +608,7 @@ abstract class SystemObserver {
             });
         }
         catch(Exception e){
-            BranchLogger.e("Caught Exception " + e.getMessage());
+            BranchLogger.e("Caught Exception SystemObserver fetchInstallReferrer " + e.getMessage());
         }
         finally {
             if(callback != null){
@@ -645,7 +645,7 @@ abstract class SystemObserver {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.e("Caught Exception " + e.getMessage());
+            BranchLogger.e("Caught Exception SystemObserver getLocalIPAddress: " + e.getMessage());
         }
 
         return ipAddress;
@@ -697,7 +697,7 @@ abstract class SystemObserver {
             }
         } catch (Exception e) {
             // Have seen reports of "DeadSystemException" from UiModeManager.
-            BranchLogger.e("Caught Exception " + e.getMessage());
+            BranchLogger.e("Caught Exception SystemObserver getUIMode" + e.getMessage());
         }
         return mode;
     }

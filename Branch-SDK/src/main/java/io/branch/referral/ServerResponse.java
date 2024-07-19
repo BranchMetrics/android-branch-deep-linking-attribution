@@ -134,7 +134,7 @@ public class ServerResponse {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.w("Caught Exception " + e.getMessage());
+            BranchLogger.w("Caught Exception ServerResponse getFailReason: "  + e.getMessage());
         }
         return causeMsg;
     }

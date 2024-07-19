@@ -171,7 +171,7 @@ public class ServerRequestQueue {
             try {
                 req = queue.get(0);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.w("Caught Exception " + e.getMessage());
+                BranchLogger.w("Caught Exception ServerRequestQueue peek: " + e.getMessage());
             }
         }
         return req;
@@ -206,7 +206,7 @@ public class ServerRequestQueue {
             try {
                 req = queue.get(index);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
-                BranchLogger.e("Caught Exception " + e.getMessage());
+                BranchLogger.e("Caught Exception ServerRequestQueue peekAt " + index + ": " + e.getMessage());
             }
         }
         return req;
@@ -391,7 +391,7 @@ public class ServerRequestQueue {
                 serverSema_.release();
             }
         } catch (Exception e) {
-            BranchLogger.e("Caught Exception " + e.getMessage() + BranchLogger.stackTraceToString(e));
+            BranchLogger.e("Caught Exception " + callingMethodName + " processNextQueueItem: " + e.getMessage() + " stacktrace: " + BranchLogger.stackTraceToString(e));
         }
     }
 

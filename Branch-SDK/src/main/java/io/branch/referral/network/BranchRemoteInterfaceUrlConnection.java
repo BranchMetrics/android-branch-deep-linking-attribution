@@ -174,7 +174,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             payload.put(RETRY_NUMBER, retryNumber);
         }
         catch (JSONException e) {
-            BranchLogger.e("Caught JSONException, retry number: " + retryNumber + " " + e.getMessage() + " stacktrace " + BranchLogger.stackTraceToString(e));
+            BranchLogger.e("Caught JSONException, retry number: " + retryNumber + " " + e.getMessage() + " stacktrace: " + BranchLogger.stackTraceToString(e));
         }
         try {
             // set the setThreadStatsTag for POST if API 26+

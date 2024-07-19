@@ -127,7 +127,7 @@ class ServerRequestCreateUrl extends ServerRequest {
                 callback_.onLinkCreate(url, null);
             }
         } catch (Exception ex) {
-            BranchLogger.e("Caught Exception " + BranchLogger.stackTraceToString(ex));
+            BranchLogger.e("Caught Exception ServerRequestCreateUrl onRequestSucceeded: " + ex.getMessage() + " stacktrace: " + BranchLogger.stackTraceToString(ex));
         }
     }
 
@@ -250,7 +250,7 @@ class ServerRequestCreateUrl extends ServerRequest {
                 longUrl = longUrl + "&data=" + urlEncodedBase64Data;
             }
         } catch (Exception exception) {
-            BranchLogger.e("Caught Exception " + BranchLogger.stackTraceToString(exception));
+            BranchLogger.e("Caught Exception ServerRequestCreateUrl generateLongUrlWithParams: " + exception.getMessage() + " stacktrace: " + BranchLogger.stackTraceToString(exception));
             callback_.onLinkCreate(null, new BranchError("Trouble creating a URL.", BranchError.ERR_BRANCH_INVALID_REQUEST));
         }
 
