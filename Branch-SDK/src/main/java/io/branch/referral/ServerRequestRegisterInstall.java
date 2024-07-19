@@ -97,7 +97,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
             
         } catch (Exception ex) {
-            BranchLogger.w("Caught Exception " + ex.getMessage());
+            BranchLogger.w("Caught Exception ServerRequestRegisterInstall onRequestSucceeded: " + ex.getMessage());
         }
         onInitSessionCompleted(resp, branch);
     }
