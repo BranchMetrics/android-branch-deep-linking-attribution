@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.12.2
+  * _*Master Release*_ - Jul 19, 2024
+  - Add minification config for optional Billing Client
+  - Add additional detail in exception messages
+
 - v5.12.1
   * _*Master Release*_ - Jun 7, 2024
   - Added support for setting FB App ID through `branch.json`
