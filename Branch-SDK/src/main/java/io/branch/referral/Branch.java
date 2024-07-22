@@ -1465,9 +1465,6 @@ public class Branch {
          initTasks(request, ignoreWaitLocks);
 
          requestQueue_.processNextQueueItem("registerAppInit");
-
-         AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
-         attributionManager.registerTrigger(context_, request);
      }
 
     private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {

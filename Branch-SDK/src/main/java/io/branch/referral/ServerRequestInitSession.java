@@ -126,6 +126,10 @@ abstract class ServerRequestInitSession extends ServerRequest {
             BranchLogger.v("Deferring userAgent string call for sync retrieval");
         }
 
+        //Register the trigger for attribution reporting manager
+        AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
+        attributionManager.registerTrigger(context_, this);
+
         BranchLogger.v("onInitSessionCompleted on thread " + Thread.currentThread().getName());
     }
 
