@@ -197,16 +197,22 @@ public abstract class ServerRequest {
         }
     }
 
-    void updateConsumerProtectionAttributionLevel() {
-        try {
-            if (prefHelper_.getConsumerProtectionAttributionLevel() != null) {
-                params_.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().ordinal());
+    private void addConsumerProtectionAttributionLevel() {
+        if (prefHelper_.isAttributionLevelInitialized()) {
+            try {
+                if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
+                    params_.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
+                } else {
+                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                    if (userDataObj != null) {
+                        userDataObj.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
+                    }
+                }
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
             }
-        } catch (JSONException e) {
-            BranchLogger.d(e.getMessage());
         }
     }
-
 
     /**
      * <p>Provides the path to server for this request.
@@ -634,7 +640,7 @@ public abstract class ServerRequest {
         if (shouldAddDMAParams()) {
             addDMAParams();
         }
-        updateConsumerProtectionAttributionLevel();
+        addConsumerProtectionAttributionLevel();
     }
     
     void doFinalUpdateOnBackgroundThread() {

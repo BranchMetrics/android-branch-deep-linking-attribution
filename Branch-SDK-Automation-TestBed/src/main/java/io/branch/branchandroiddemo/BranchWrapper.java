@@ -260,24 +260,18 @@ public class BranchWrapper {
         if (testDataStr != null) {
 
             TestData testDataObj = new TestData();
-            String level = testDataObj.getParamValue(testDataStr,"consumer_protection_attribution_level");
+            String level = testDataObj.getParamValue(testDataStr,"cpp_level");
 
             //Set the level based on the level value
-            if (Objects.equals(level, "0")) {
-                Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.FULL);
-            } else if (Objects.equals(level, "1")) {
-                Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.REDUCED);
-            } else if (Objects.equals(level, "2")) {
-                Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.MINIMAL);
-            } else if (Objects.equals(level, "3")) {
-                Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.NONE);
-            } else {
-                showLogWindow("Invalid consumer_protection_attribution_level", true, ctx, Constants.SET_ATTRIBUTION_LEVEL);
+            try {
+                Defines.BranchAttributionLevel attributionLevel = Defines.BranchAttributionLevel.valueOf(level.toUpperCase());
+                Branch.getInstance().setConsumerProtectionAttributionLevel(attributionLevel);
+            } catch (IllegalArgumentException e) {
+                showLogWindow("Invalid cpp_level", true, ctx, Constants.SET_ATTRIBUTION_LEVEL);
             }
 
-
         } else {
-            showLogWindow( "Test Data : Null" , true, ctx,Constants.SET_ATTRIBUTION_LEVEL);
+            showLogWindow( "Test Data: Null" , true, ctx,Constants.SET_ATTRIBUTION_LEVEL);
         }
     }
 }

@@ -1438,11 +1438,11 @@ public class PrefHelper {
      * @return A {@link Defines.BranchAttributionLevel} value representing the attribution level set.
      */
     public Defines.BranchAttributionLevel getConsumerProtectionAttributionLevel() {
-        int levelInt = getInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, -1);
-        if (levelInt == -1) {
-            return null;
+        String levelString = getString(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL);
+        if (levelString.equals(NO_STRING_VALUE)) {
+            return Defines.BranchAttributionLevel.FULL;
         } else {
-            return Defines.BranchAttributionLevel.values()[levelInt];
+            return Defines.BranchAttributionLevel.valueOf(levelString);
         }
     }
 
@@ -1452,6 +1452,13 @@ public class PrefHelper {
      * @param preference A {@link Defines.BranchAttributionLevel} value containing the desired attribution level.
      */
     public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel preference) {
-        setInteger(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, preference.ordinal());
+        setString(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, preference.toString());
+    }
+
+    /**
+     * Returns true if Consumer Protection Attribution Level - KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL value exist in pref helper.
+     */
+    boolean isAttributionLevelInitialized() {
+        return hasPrefValue(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL);
     }
 }
