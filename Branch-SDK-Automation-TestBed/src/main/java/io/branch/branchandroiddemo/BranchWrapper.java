@@ -18,12 +18,14 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import io.branch.branchandroiddemo.activities.LogDataActivity;
 import io.branch.branchandroiddemo.activities.ShowQRCodeActivity;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
+import io.branch.referral.Defines;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.LinkProperties;
@@ -248,6 +250,28 @@ public class BranchWrapper {
             }
         } else {
             showLogWindow("Test Data : Null", true, ctx, Constants.CREATE_QR_CODE);
+        }
+    }
+
+    public void setAttributionLevel(Intent intent){
+        Common.getInstance().clearLog();
+        String testDataStr = intent.getStringExtra("testData");
+        Log.d("Branch SDK", "Intent extra 'testData:'\n" + testDataStr);
+        if (testDataStr != null) {
+
+            TestData testDataObj = new TestData();
+            String level = testDataObj.getParamValue(testDataStr,"cpp_level");
+
+            //Set the level based on the level value
+            try {
+                Defines.BranchAttributionLevel attributionLevel = Defines.BranchAttributionLevel.valueOf(level.toUpperCase());
+                Branch.getInstance().setConsumerProtectionAttributionLevel(attributionLevel);
+            } catch (IllegalArgumentException e) {
+                showLogWindow("Invalid cpp_level", true, ctx, Constants.SET_ATTRIBUTION_LEVEL);
+            }
+
+        } else {
+            showLogWindow( "Test Data: Null" , true, ctx,Constants.SET_ATTRIBUTION_LEVEL);
         }
     }
 }
