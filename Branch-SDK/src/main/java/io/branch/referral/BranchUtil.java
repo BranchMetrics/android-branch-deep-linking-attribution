@@ -10,7 +10,6 @@ import android.os.Build;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import org.json.JSONArray;
@@ -20,7 +19,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.jar.JarFile;
 
 /**
@@ -110,8 +108,11 @@ public class BranchUtil {
 
         // check string resources as the last resort
         Resources resources = context.getResources();
-        branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
-
+        try {
+            branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
+        } catch (Resources.NotFoundException e) {
+            BranchLogger.d(e.getMessage());
+        }
         return branchKey;
     }
 
