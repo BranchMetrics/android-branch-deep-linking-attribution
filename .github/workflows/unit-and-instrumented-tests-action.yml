@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
   push:
 env:
-  JAVA_DISTRIBUTION: 'corretto'
-  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: "corretto"
+  JAVA_VERSION: "17"
 
 jobs:
   unit-tests:
@@ -33,8 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        api-level: [21, 34]
-        target: [ google_apis ]
+        api-level: [23, 34]
+        target: [google_apis]
         arch: [x86_64]
     steps:
       - name: Checkout
