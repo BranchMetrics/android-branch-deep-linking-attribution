@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "io.branch.branchsdk_link_clicktest"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "io.branch.branchsdk_link_clicktest"
