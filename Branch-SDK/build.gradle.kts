@@ -62,6 +62,7 @@ dependencies {
 }
 
 val VERSION_NAME: String by project
+val ANDROID_BUILD_TOOLS_VERSION: String by project
 val ANDROID_BUILD_SDK_VERSION_COMPILE: String by project
 val ANDROID_BUILD_SDK_VERSION_MINIMUM: String by project
 val VERSION_CODE: String by project
@@ -72,7 +73,7 @@ fun isReleaseBuild(): Boolean {
 
 android {
     compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
-
+    buildToolsVersion = ANDROID_BUILD_TOOLS_VERSION
     defaultConfig {
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
