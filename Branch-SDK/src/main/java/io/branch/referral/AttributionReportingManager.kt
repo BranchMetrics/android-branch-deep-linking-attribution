@@ -64,9 +64,15 @@ object AttributionReportingManager {
                                 triggerUri = trimmedUri
                             }
 
+                            //Append the privacy sandbox version to the end of the URI
                             val sandboxVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES).toString()
                             triggerUri = triggerUri.buildUpon()
                                 .appendQueryParameter(Defines.Jsonkey.Privacy_Sandbox_Version.key, sandboxVersion)
+                                .build()
+
+                            //Append the request type to the end of the URI
+                            triggerUri = triggerUri.buildUpon()
+                                .appendQueryParameter(Defines.Jsonkey.Request_Type.key, request.requestPath)
                                 .build()
 
                             manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
