@@ -34,6 +34,7 @@ public class BranchEvent {
     private final JSONObject standardProperties;
     private final JSONObject customProperties;
     private final List<BranchUniversalObject> buoList;
+    private final Defines.RequestPath reqPath;
 
     /**
      * Constructor.
@@ -65,6 +66,8 @@ public class BranchEvent {
 
         this.isStandardEvent = standardEvent;
         buoList = new ArrayList<>();
+
+        this.reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
     }
 
     /**
@@ -241,6 +244,28 @@ public class BranchEvent {
         return eventName;
     }
 
+    public Defines.RequestPath getReqPath() {
+        return reqPath;
+    }
+
+    //topLevelProperties
+    public HashMap<String, Object> getTopLevelProperties() {
+        return topLevelProperties;
+    }
+    //standardProperties
+    public JSONObject getStandardProperties() {
+        return standardProperties;
+    }
+    //customProperties
+    public JSONObject getCustomProperties() {
+        return customProperties;
+    }
+    //buoList
+    public List<BranchUniversalObject> getBuoList() {
+        return buoList;
+    }
+
+
     /**
      * Logs this BranchEvent to Branch for tracking and analytics
      *
@@ -265,10 +290,8 @@ public class BranchEvent {
      */
     public boolean logEvent(Context context, final BranchLogEventCallback callback) {
         boolean isReqQueued = false;
-        Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
-
         if (Branch.getInstance() != null) {
-            ServerRequest req = new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
+            ServerRequest req = new ServerRequestLogEvent(context, this.reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
                 @Override
                 public void onRequestSucceeded(ServerResponse response, Branch branch) {
                     AttributionReportingManager attributionManager = AttributionReportingManager.INSTANCE;
