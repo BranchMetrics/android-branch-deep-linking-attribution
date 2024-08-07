@@ -518,6 +518,24 @@ public class Branch {
             BranchLogger.w("setAPIUrl: URL cannot be empty or null");
         }
     }
+
+    /**
+     * <p>Sets a custom base URL for all calls to the Branch Privacy Sandbox API.  Requires https.</p>
+     * @param url The {@link String} URL base URL that the Branch Privacy Sandbox API uses.
+     */
+    public static void setPrivacySandboxAPIUrl(String url) {
+        if (!TextUtils.isEmpty(url)) {
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
+
+            PrefHelper.setPrivacySandboxAPIURL(url);
+            BranchLogger.v("setPrivacySandboxAPIUrl: URL was set to " + url);
+        } else {
+            BranchLogger.w("setPrivacySandboxAPIUrl: URL cannot be empty or null");
+        }
+    }
+
     /**
      * <p>Sets a custom CDN base URL.</p>
      * @param url The {@link String} base URL for CDN endpoints.

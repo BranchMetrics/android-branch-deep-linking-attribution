@@ -3,14 +3,10 @@ package io.branch.referral
 import android.adservices.measurement.MeasurementManager
 import android.content.Context
 import android.net.Uri
+import android.os.AsyncTask
 import android.os.Build
 import android.os.OutcomeReceiver
 import android.os.ext.SdkExtensions
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.URLEncoder
 import java.util.concurrent.Executors
@@ -51,7 +47,7 @@ object AttributionReportingManager {
                             val executor = Executors.newSingleThreadExecutor()
                             val manager = MeasurementManager.get(context)
 
-                            val branchBaseURL = PrefHelper.getInstance(context).apiBaseUrl + Defines.RequestPath.RegisterTrigger.path
+                            val branchBaseURL = PrefHelper.getInstance(context).privacySandboxAPIURL + Defines.RequestPath.RegisterTrigger.path
                             val requestJson = request.toJSON().getJSONObject("REQ_POST")
                             var triggerUri = createURIFromJSON(branchBaseURL, requestJson)
 
@@ -68,8 +64,8 @@ object AttributionReportingManager {
                             triggerUri = triggerUri.buildUpon()
                                 .appendQueryParameter(Defines.Jsonkey.Privacy_Sandbox_Version.key, sandboxVersion)
                                 .build()
-
-                            manager.registerTrigger(triggerUri, executor, object : OutcomeReceiver<Any?, Exception> {
+                            BranchLogger.d("Trigger URI: $triggerUri")
+                            manager.registerTrigger(triggerUri, executor , /* AsyncTask.THREAD_POOL_EXECUTOR, */ object : OutcomeReceiver<Any?, Exception> {
                                 override fun onResult(result: Any?) {
                                     BranchLogger.v("Trigger registered successfully with URI: $triggerUri")
                                     executor.shutdown()
@@ -80,6 +76,7 @@ object AttributionReportingManager {
                                     executor.shutdown()
                                 }
                             })
+                            BranchLogger.v("Trigger registered called.")
                         } else {
                             BranchLogger.v("Measurement API is not enabled. Did not register trigger.")
                         }

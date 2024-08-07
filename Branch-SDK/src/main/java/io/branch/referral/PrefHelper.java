@@ -35,6 +35,7 @@ public class PrefHelper {
     static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
     static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
     static final String BRANCH_EU_BASE_URL_V3 = "https://api3-eu.branch.io/";
+    static final String BRANCH_PRIV_SANDBOX_URL = "https://privacysandbox.branch.io/";
 
     /**
      * The base URL to use for all CDN calls.
@@ -169,6 +170,11 @@ public class PrefHelper {
     private static String customServerURL_ = null;
 
     /**
+     * Branch Privacy Sandbox API server url.
+     */
+    private static String privacySandboxAPIURL = null;
+
+    /**
      * Branch Custom server url.  Used by clients that want to proxy all CDN requests.
      */
     private static String customCDNBaseURL_ = null;
@@ -216,6 +222,7 @@ public class PrefHelper {
         prefHelper_ = null;
         customCDNBaseURL_ = null;
         customServerURL_ = null;
+        privacySandboxAPIURL = null;
         useEUEndpoint_ = false;
     }
 
@@ -225,6 +232,15 @@ public class PrefHelper {
      */
     static void setAPIUrl(String url) {
         customServerURL_ = url;
+    }
+
+
+    /**
+     * <p>Sets a custom base URL for all calls to the Branch Privacy Sandbox API.  Requires https.</p>
+     * @param url The {@link String} URL base URL that the Branch API uses.
+     */
+    static void setPrivacySandboxAPIURL(String url) {
+        privacySandboxAPIURL = url;
     }
 
     /**
@@ -248,6 +264,15 @@ public class PrefHelper {
         } else {
             return BRANCH_BASE_URL_V1;
         }
+    }
+
+    public String getPrivacySandboxAPIURL() {
+        // return the custom privacy sandbox API URL if set
+        if (URLUtil.isHttpsUrl(privacySandboxAPIURL)) {
+            return privacySandboxAPIURL;
+        }
+        // otherwise return the default privacy sandbox API URL
+        return BRANCH_PRIV_SANDBOX_URL;
     }
 
     /**
