@@ -1,0 +1,34 @@
+name: Run MobileBoost Tests on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Navigate to TestBed Directory
+        run: cd Branch-SDK-TestBed
+
+      - name: Setup java for gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Build Android App
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK to Mobile Boost and Run Tests
+        run: |
+          curl https://app.mobileboost.io/cli.sh | bash $PWD/app/build/outputs/apk/debug/app-debug.apk android
+        env:
+          API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
+          API_TOKEN: ${{ secrets.MOBILEBOOST_API_TOKEN }}
+          TEST_TAGS: Android
