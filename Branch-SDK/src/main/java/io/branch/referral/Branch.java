@@ -1483,11 +1483,13 @@ public class Branch {
 
             if (request instanceof ServerRequestRegisterInstall) {
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                BranchLogger.v("Adding INSTALL_REFERRER_FETCH_WAIT_LOCK");
 
                 deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents(){
                     @Override
                     public void onInstallReferrersFinished() {
                         request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                        BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
                         requestQueue_.processNextQueueItem("onInstallReferrersFinished");
                     }
                 });

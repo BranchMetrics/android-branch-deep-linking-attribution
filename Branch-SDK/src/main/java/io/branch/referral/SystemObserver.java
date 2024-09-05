@@ -600,18 +600,18 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(@NonNull Object o) {
-                    if (o != null) {
-                        InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
-                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore(), latestReferrer.isClickThrough());
+                    BranchLogger.v("fetchInstallReferrer resumeWith got result: " + o);
+                    InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
+                    AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore(), latestReferrer.isClickThrough());
+
+                    if (callback != null) {
+                        callback.onInstallReferrersFinished();
                     }
                 }
             });
-        }
-        catch(Exception e){
+        } catch(Exception e) {
             BranchLogger.e("Caught Exception SystemObserver fetchInstallReferrer " + e.getMessage());
-        }
-        finally {
-            if(callback != null){
+            if (callback != null) {
                 callback.onInstallReferrersFinished();
             }
         }
