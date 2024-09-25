@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.12.3
+  * _*Master Release*_ - Sep 25, 2024
+  - Fix to properly fetch install referrers when using deferred init in plugins
+  
 - v5.12.2
   * _*Master Release*_ - Jul 19, 2024
   - Add minification config for optional Billing Client
