@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.12.4
+  * _*Master Release*_ - Sep 30, 2024
+  - Reverted the minimum SDK build version back to 21
+  
 - v5.12.3
   * _*Master Release*_ - Sep 25, 2024
   - Fix to properly fetch install referrers when using deferred init in plugins
