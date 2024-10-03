@@ -19,6 +19,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("androidx.annotation:annotation:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     // --- optional dependencies -----
     // Please note that the Branch SDK does not require any of the below optional dependencies to operate.
