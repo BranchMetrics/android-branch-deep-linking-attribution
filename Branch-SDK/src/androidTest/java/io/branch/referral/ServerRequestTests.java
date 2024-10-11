@@ -1,8 +1,13 @@
 package io.branch.referral;
 
+import static io.branch.referral.Defines.Jsonkey.Branch_Sdk_Request_Uuid;
+
+import android.util.Log;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -11,10 +16,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Calendar;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
+import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.LinkProperties;
 
@@ -109,6 +117,32 @@ public class ServerRequestTests extends BranchTest {
                 }
             }
         });
+    }
+
+    @Test
+    public void testServerRequestUuid() {
+        new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE).logEvent(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(1, queue.getSize());
+
+        ServerRequest eventRequest = queue.peekAt(0);
+
+        // Slightly hacky, we are creating a UUID and appending a formatted date string which will always be length 11 `-yyyyMMddHH`.
+        String uuid = eventRequest.uuid.substring(0, eventRequest.uuid.length()-11);
+        // Validate that a UUID is correctly generated
+        Assert.assertNotNull(UUID.fromString(uuid));
+    }
+
+    @Test
+    public void testServerRequestTimestamp() {
+        new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE).logEvent(getTestContext());
+        final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(1, queue.getSize());
+
+        ServerRequest eventRequest = queue.peekAt(0);
+
+        // The default value is 0. Once constructed, the epoch time is set
+        Assert.assertTrue(eventRequest.creation_ts > 0);
     }
 
     private void setTimeouts(int timeout, int connectTimeout){
