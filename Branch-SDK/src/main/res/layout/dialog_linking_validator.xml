@@ -7,7 +7,7 @@
     android:background="#FFFFFF">
 
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/linkingValidatorHeader"
         android:layout_width="409dp"
         android:layout_height="100dp"
         android:orientation="horizontal"
@@ -21,7 +21,7 @@
             android:layout_weight="0.1" />
 
         <ImageView
-            android:id="@+id/imageView"
+            android:id="@+id/branchLogoImage"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_gravity="center"
@@ -29,7 +29,7 @@
             android:src="@drawable/branch_icon" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/linkingValidatorTitle"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.65"
@@ -44,16 +44,16 @@
     </LinearLayout>
 
     <Spinner
-        android:id="@+id/spinner"
+        android:id="@+id/linkingValidatorDropdownMenu"
         android:layout_width="351dp"
         android:layout_height="50dp"
-        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintBottom_toTopOf="@+id/linkingValidatorButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toBottomOf="@+id/linkingValidatorText" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/linkingValidatorText"
         android:layout_width="312dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
@@ -62,10 +62,22 @@
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/linkingValidatorHeader" />
+
+    <EditText
+        android:id="@+id/linkingValidatorEditText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Enter a value"
+        android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/linkingValidatorButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linkingValidatorText" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/linkingValidatorButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="50dp"
@@ -75,4 +87,51 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/customKVPField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/linkingValidatorButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linkingValidatorText">
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="0.1" />
+
+        <EditText
+            android:id="@+id/keyEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.35"
+            android:ems="10"
+            android:hint="key"
+            android:inputType="text"
+            android:text="" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="0.1" />
+
+        <EditText
+            android:id="@+id/valueEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.35"
+            android:ems="10"
+            android:hint="value"
+            android:inputType="text"
+            android:text="" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="0.1" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

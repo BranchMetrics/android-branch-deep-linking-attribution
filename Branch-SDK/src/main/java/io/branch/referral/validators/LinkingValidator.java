@@ -2,6 +2,7 @@ package io.branch.referral.validators;
 
 import android.content.Context;
 import android.view.WindowManager;
+import android.widget.Button;
 
 import java.util.Objects;
 
@@ -9,7 +10,7 @@ public class LinkingValidator {
     private static LinkingValidator instance;
     private LinkingValidatorDialog linkingValidatorDialog;
 
-    private LinkingValidator(Context context) { }
+    private LinkingValidator(Context context) {}
 
     public static void validate(Context context) {
         if (instance == null) {
@@ -26,5 +27,6 @@ public class LinkingValidator {
         lp.height = 1000;
         instance.linkingValidatorDialog.show();
         instance.linkingValidatorDialog.getWindow().setAttributes(lp);
+
     }
 }
