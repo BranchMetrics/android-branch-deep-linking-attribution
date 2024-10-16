@@ -139,16 +139,7 @@ public abstract class ServerRequest {
     public boolean shouldRetryOnFail() {
         return false;
     }
-    
-    /**
-     * Specifies whether this request should be persisted to memory in order to re send in the next session
-     *
-     * @return {@code true} by default. Should be override for request that need not to be persisted
-     */
-    boolean isPersistable() {
-        return true;
-    }
-    
+
     /**
      * Specifies whether this request should add the limit app tracking value
      *
@@ -418,7 +409,7 @@ public abstract class ServerRequest {
         }
         return extendedReq;
     }
-    
+
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      * Ensure that when there is a valid GAID/AID, remove the SSAID if it's being used
