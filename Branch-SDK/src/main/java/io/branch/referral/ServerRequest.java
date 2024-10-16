@@ -408,7 +408,6 @@ public abstract class ServerRequest {
      */
     private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context, boolean initiatedByClient) {
         ServerRequest extendedReq = null;
-
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
@@ -416,7 +415,6 @@ public abstract class ServerRequest {
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
             extendedReq = new ServerRequestRegisterOpen(Defines.RequestPath.RegisterOpen, post, context, initiatedByClient);
         }
-
         return extendedReq;
     }
 
