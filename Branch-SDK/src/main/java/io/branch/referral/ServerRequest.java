@@ -408,6 +408,7 @@ public abstract class ServerRequest {
      */
     private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context, boolean initiatedByClient) {
         ServerRequest extendedReq = null;
+
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
@@ -417,7 +418,7 @@ public abstract class ServerRequest {
         }
         return extendedReq;
     }
-
+    
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      * Ensure that when there is a valid GAID/AID, remove the SSAID if it's being used
