@@ -258,11 +258,6 @@ class ServerRequestCreateUrl extends ServerRequest {
     }
 
     @Override
-    boolean isPersistable() {
-        return false; // No need to retrieve create url request from previous session
-    }
-
-    @Override
     protected boolean prepareExecuteWithoutTracking() {
         // SDK-271 -- Allow creation of short links when tracking is disabled.
         return true;

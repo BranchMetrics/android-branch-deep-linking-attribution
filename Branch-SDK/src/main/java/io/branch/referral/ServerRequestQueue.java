@@ -83,50 +83,7 @@ public class ServerRequestQueue {
     private ServerRequestQueue(Context c) {
         sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
-        queue = retrieve(c);
-    }
-    
-    private void persist() {
-        try {
-            JSONArray jsonArr = new JSONArray();
-            synchronized (reqQueueLockObject) {
-                for (ServerRequest aQueue : queue) {
-                    if (aQueue.isPersistable()) {
-                        JSONObject json = aQueue.toJSON();
-                        if (json != null) {
-                            jsonArr.put(json);
-                        }
-                    }
-                }
-            }
-
-            editor.putString(PREF_KEY, jsonArr.toString()).apply();
-        } catch (Exception ex) {
-            String msg = ex.getMessage();
-            BranchLogger.e("Failed to persist queue" + (msg == null ? "" : msg));
-        }
-    }
-    
-    private List<ServerRequest> retrieve(Context context) {
-        String jsonStr = sharedPref.getString(PREF_KEY, null);
-        List<ServerRequest> result = Collections.synchronizedList(new LinkedList<ServerRequest>());
-        synchronized (reqQueueLockObject) {
-            if (jsonStr != null) {
-                try {
-                    JSONArray jsonArr = new JSONArray(jsonStr);
-                    for (int i = 0, size = Math.min(jsonArr.length(), MAX_ITEMS); i < size; i++) {
-                        JSONObject json = jsonArr.getJSONObject(i);
-                        ServerRequest req = ServerRequest.fromJSON(json, context);
-                        if (req != null) {
-                            result.add(req);
-                        }
-                    }
-                } catch (JSONException e) {
-                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                }
-            }
-        }
-        return result;
+        queue = Collections.synchronizedList(new LinkedList<ServerRequest>());
     }
     
     /**
@@ -154,7 +111,6 @@ public class ServerRequestQueue {
                 if (getSize() >= MAX_ITEMS) {
                     queue.remove(1);
                 }
-                persist();
             }
         }
     }
@@ -228,7 +184,6 @@ public class ServerRequestQueue {
                     index = queue.size();
                 }
                 queue.add(index, request);
-                persist();
             } catch (IndexOutOfBoundsException e) {
                 BranchLogger.e("Caught IndexOutOfBoundsException " + e.getMessage());
             }
@@ -250,7 +205,6 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.remove(index);
-                persist();
             } catch (IndexOutOfBoundsException e) {
                 BranchLogger.e("Caught IndexOutOfBoundsException " + e.getMessage());
             }
@@ -270,7 +224,6 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 isRemoved = queue.remove(request);
-                persist();
             } catch (UnsupportedOperationException e) {
                 BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
             }
@@ -285,7 +238,6 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 queue.clear();
-                persist();
             } catch (UnsupportedOperationException e) {
                 BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
             }

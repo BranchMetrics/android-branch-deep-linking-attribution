@@ -169,16 +169,7 @@ public abstract class ServerRequest {
     public boolean shouldRetryOnFail() {
         return false;
     }
-    
-    /**
-     * Specifies whether this request should be persisted to memory in order to re send in the next session
-     *
-     * @return {@code true} by default. Should be override for request that need not to be persisted
-     */
-    boolean isPersistable() {
-        return true;
-    }
-    
+
     /**
      * Specifies whether this request should add the limit app tracking value
      *
@@ -379,7 +370,8 @@ public abstract class ServerRequest {
         }
         return json;
     }
-    
+
+    // TODO: Replace with in-memory only ServerRequest objects.
     /**
      * <p>Converts a {@link JSONObject} object containing keys stored as key-value pairs into
      * a {@link ServerRequest}.</p>
@@ -419,13 +411,14 @@ public abstract class ServerRequest {
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
-        
+
         if (!TextUtils.isEmpty(requestPath)) {
             return getExtendedServerRequest(requestPath, post, context, initiatedByClient);
         }
         return null;
     }
-    
+
+    // TODO: Replace with in-memory only ServerRequest objects.
     /**
      * <p>Factory method for creating the specific server requests objects. Creates requests according
      * to the request path.</p>
@@ -437,7 +430,7 @@ public abstract class ServerRequest {
      */
     private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context, boolean initiatedByClient) {
         ServerRequest extendedReq = null;
-        
+
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
@@ -445,10 +438,9 @@ public abstract class ServerRequest {
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
             extendedReq = new ServerRequestRegisterOpen(Defines.RequestPath.RegisterOpen, post, context, initiatedByClient);
         }
-        
         return extendedReq;
     }
-    
+
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      * Ensure that when there is a valid GAID/AID, remove the SSAID if it's being used
