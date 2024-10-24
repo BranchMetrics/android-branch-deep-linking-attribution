@@ -24,7 +24,8 @@ public class TrackingController {
         updateTrackingState(context);
     }
 
-    void disableTracking(Context context, boolean disableTracking, @Nullable Branch.TrackingStateCallback callback) {
+    void disableTracking(Context context, boolean disableTracking, @Nullable Branch.TrackingStateCallback callback, boolean ignoreWaitLocks){
+        BranchLogger.v("disableTracking called with context " + context + " disableTracking " + disableTracking + " callback " + callback + " ignoreWaitLocks " + ignoreWaitLocks);
         // If the tracking state is already set to the desired state, then return instantly
         if (trackingDisabled == disableTracking) {
             if (callback != null) {
@@ -46,8 +47,14 @@ public class TrackingController {
                 if (callback != null) {
                     callback.onTrackingStateChanged(false, referringParams, error);
                 }
-            });
+            }, ignoreWaitLocks);
         }
+    }
+
+    // Preserve the original behavior of this API, originally ignore wait locks would have been true
+    // Which signals to the initialization process to ignore fetching advertising ID, install referrer
+    void disableTracking(Context context, boolean disableTracking, @Nullable Branch.TrackingStateCallback callback) {
+        disableTracking(context, disableTracking, callback, true);
     }
 
     boolean isTrackingDisabled() {
@@ -85,10 +92,11 @@ public class TrackingController {
         Branch.getInstance().clearPartnerParameters();
     }
     
-    private void onTrackingEnabled(Branch.BranchReferralInitListener callback) {
+    private void onTrackingEnabled(Branch.BranchReferralInitListener callback, boolean ignoreWaitLocks) {
+        BranchLogger.v("onTrackingEnabled with callback " + callback + " ignoring wait locks " + ignoreWaitLocks);
         Branch branch = Branch.getInstance();
         if (branch != null) {
-            branch.registerAppInit(branch.getInstallOrOpenRequest(callback, true), true, false);
+            branch.registerAppInit(branch.getInstallOrOpenRequest(callback, true), ignoreWaitLocks, false);
         }
     }
 }

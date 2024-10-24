@@ -538,9 +538,17 @@ public class Branch {
      *                        ({@code false}).
      * @param callback An optional {@link TrackingStateCallback} instance for receiving callback notifications about
      *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
+     * @param ignoreInitializationTasks A boolean to determine whether the SDK will execute tasks such as fetching
+     *                                  Install Referrer, Advertiser ID, or even the URI which opened the app.
+     *                                  Set to ({@code false}) if the SDK should obtain these values first before initializing.
+     *                                  Default is ({@code true}), which is the original behavior to only send an Open request
+     *                                  as soon as possible.
      */
+    public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback, boolean ignoreInitializationTasks) {
+        trackingController.disableTracking(context_, disableTracking, callback, ignoreInitializationTasks);
+    }
     public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
-        trackingController.disableTracking(context_, disableTracking, callback);
+        disableTracking(disableTracking, callback, true);
     }
     public void disableTracking(boolean disableTracking) {
         disableTracking(disableTracking, null);

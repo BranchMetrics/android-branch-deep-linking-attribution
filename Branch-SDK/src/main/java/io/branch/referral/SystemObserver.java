@@ -447,6 +447,7 @@ abstract class SystemObserver {
      * @return {@link Boolean} with true if GAID fetch process started.
      */
     public void fetchAdId(Context context, AdsParamsFetchEvents callback) {
+        BranchLogger.v("Begin fetchAdId");
         if (isFireOSDevice()) {
             setFireAdId(context, callback);
         }
@@ -469,6 +470,7 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
+                    BranchLogger.v("fetchHuaweiAdId resumeWith " + o);
                     try {
                         if (o != null) {
                             com.huawei.hms.ads.identifier.AdvertisingIdClient.Info info = (com.huawei.hms.ads.identifier.AdvertisingIdClient.Info) o;
@@ -508,6 +510,7 @@ abstract class SystemObserver {
 
 
     private void fetchGoogleAdId(Context context, AdsParamsFetchEvents callback) {
+        BranchLogger.v("Begin fetchGoogleAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
             AdvertisingIdsKt.getGoogleAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
                 @NonNull
@@ -518,6 +521,7 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(Object o) {
+                    BranchLogger.v("fetchGoogleAdId resumeWith " + o);
                     try {
                         if (o != null) {
                             AdvertisingIdClient.Info info = (AdvertisingIdClient.Info) o;
@@ -565,6 +569,7 @@ abstract class SystemObserver {
 
             @Override
             public void resumeWith(@NonNull Object o) {
+                BranchLogger.v("setFireAdId resumeWith " + o);
                 try {
                     if (o != null) {
                         Pair<Integer, String> info = (Pair<Integer, String>) o;
@@ -590,6 +595,7 @@ abstract class SystemObserver {
     }
 
     public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
+        BranchLogger.v("Begin fetchInstallReferrer");
         try {
             InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
                 @NonNull
