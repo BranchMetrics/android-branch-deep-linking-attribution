@@ -7,9 +7,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
 import io.branch.referral.Branch;
 import io.branch.referral.R;
 
@@ -86,24 +83,11 @@ public class IntegrationValidatorDialog extends Dialog {
     }
 
     private void shareLogsAsText(Context context) {
-        try {
-            Process process = Runtime.getRuntime().exec("logcat -d BranchSDK:V *:S");
-            BufferedReader bufferedReader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
-
-            StringBuilder log=new StringBuilder();
-            String line = "";
-            while ((line = bufferedReader.readLine()) != null) {
-                log.append(line + "\n");
-            }
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
-            sendIntent.putExtra(Intent.EXTRA_TEXT, new String(log));
+            sendIntent.putExtra(Intent.EXTRA_TEXT, IntegrationValidator.getLogs());
             sendIntent.setType("text/plain");
             Intent shareIntent = Intent.createChooser(sendIntent, null);
             context.startActivity(shareIntent);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
     }
 }

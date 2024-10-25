@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 
+import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
 
 public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppConfigEvents {
@@ -15,6 +16,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
     private static IntegrationValidator instance;
     private final BranchIntegrationModel integrationModel;
     private final String TAG = "BranchSDK_Doctor";
+    private final StringBuilder branchLogsStringBuilder;
 
     Context context;
 
@@ -26,14 +28,28 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
     private IntegrationValidator(Context context) {
         this.integrationModel = new BranchIntegrationModel(context);
         this.context = context;
+        this.branchLogsStringBuilder = new StringBuilder();
     }
 
     public static void validate(Context context) {
         if (instance == null) {
             instance = new IntegrationValidator(context);
         }
+        
+        IBranchLoggingCallbacks iBranchLoggingCallbacks = new IBranchLoggingCallbacks() {
+            @Override
+            public void onBranchLog(String logMessage, String severityConstantName) {
+                instance.branchLogsStringBuilder.append(logMessage);
+            }
+        };
+
+        Branch.enableLogging(iBranchLoggingCallbacks);
         instance.validateSDKIntegration(context);
         instance.integrationValidatorDialog = new IntegrationValidatorDialog(context);
+    }
+
+    public static String getLogs() {
+        return instance.branchLogsStringBuilder.toString();
     }
 
     private void validateSDKIntegration(Context context) {
