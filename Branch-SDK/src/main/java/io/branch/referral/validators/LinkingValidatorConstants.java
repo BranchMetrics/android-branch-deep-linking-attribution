@@ -6,6 +6,7 @@ public class LinkingValidatorConstants {
         public static final String customKeyPromptText = "Please enter your custom key and value for routing";
         public static final String step1ButtonText = "Next";
         public static final String step2ButtonText = "  Generate Links for Testing  ";
+        public static final String step3ButtonText = "Done";
         public static final String canonicalUrlKey = "$canonical_url";
         public static final String deeplinkPathKey = "$deeplink_path";
 }

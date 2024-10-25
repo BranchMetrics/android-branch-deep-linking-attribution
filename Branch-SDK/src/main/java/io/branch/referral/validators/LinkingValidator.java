@@ -27,6 +27,5 @@ public class LinkingValidator {
         lp.height = 1000;
         instance.linkingValidatorDialog.show();
         instance.linkingValidatorDialog.getWindow().setAttributes(lp);
-
     }
 }

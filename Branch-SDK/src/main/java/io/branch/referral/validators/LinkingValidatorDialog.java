@@ -122,6 +122,8 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     }
 
     void GenerateBranchLinks() {
+        ctaButton.setText(LinkingValidatorConstants.step3ButtonText);
+
         customKeyEditText = findViewById(R.id.keyEditText);
         customValueEditText = findViewById(R.id.valueEditText);
 
