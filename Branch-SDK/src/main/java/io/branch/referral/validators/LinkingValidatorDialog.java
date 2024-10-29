@@ -38,6 +38,7 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     private String uriFallbackBranchLink; //Branch link with URI redirect mode of 2
     private String webOnlyBranchLink; //Web-only Branch link
     private String missingDeeplinkDataBranchLink; //Branch link with empty deep link data (to test graceful handling when data is missing)
+    private LinkingValidatorDialogRowItem row1;
 
     public LinkingValidatorDialog(final Context context) {
         super(context);
@@ -123,6 +124,8 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
 
     void GenerateBranchLinks() {
         ctaButton.setText(LinkingValidatorConstants.step3ButtonText);
+        row1 = findViewById(R.id.linkingValidatorRow1);
+        row1.SetTitleText(LinkingValidatorConstants.linkingValidatorRow1Title);
 
         customKeyEditText = findViewById(R.id.keyEditText);
         customValueEditText = findViewById(R.id.valueEditText);

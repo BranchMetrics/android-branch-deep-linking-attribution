@@ -24,7 +24,7 @@ public class LinkingValidator {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.copyFrom(Objects.requireNonNull(instance.linkingValidatorDialog.getWindow()).getAttributes());
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
-        lp.height = 1000;
+        lp.height = 2000;
         instance.linkingValidatorDialog.show();
         instance.linkingValidatorDialog.getWindow().setAttributes(lp);
     }
