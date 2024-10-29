@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v5.13.0
+* _*Master Release*_ - Oct 29, 2024
+  - Removal of internal event caching behavior
+  - Addition of unique id per request in POST body
+  - Change in behavior of tracking controller, when re-enabled will run inititialization tasks.
+
 - v5.12.4
   * _*Master Release*_ - Sep 30, 2024
   - Reverted the minimum SDK build version back to 21
