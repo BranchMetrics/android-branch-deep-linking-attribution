@@ -459,6 +459,7 @@ abstract class SystemObserver {
     }
 
     private void fetchHuaweiAdId(Context context, AdsParamsFetchEvents callback) {
+        BranchLogger.v("Begin fetchHuaweiAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.huaweiAdvertisingIdClientClass)) {
             AdvertisingIdsKt.getHuaweiAdvertisingInfoObject(context, new Continuation<com.huawei.hms.ads.identifier.AdvertisingIdClient.Info>() {
                 @NonNull
@@ -508,6 +509,7 @@ abstract class SystemObserver {
 
 
     private void fetchGoogleAdId(Context context, AdsParamsFetchEvents callback) {
+        BranchLogger.v("Begin fetchGoogleAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
             AdvertisingIdsKt.getGoogleAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
                 @NonNull
@@ -555,7 +557,7 @@ abstract class SystemObserver {
     }
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
-        BranchLogger.v("setFireAdId");
+        BranchLogger.v("Begin setFireAdId");
         AdvertisingIdsKt.getAmazonFireAdvertisingInfoObject(context, new Continuation<Pair<? extends Integer, ? extends String>>() {
             @NonNull
             @Override
@@ -590,6 +592,7 @@ abstract class SystemObserver {
     }
 
     public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
+        BranchLogger.v("Begin fetchInstallReferrer");
         try {
             InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
                 @NonNull

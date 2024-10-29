@@ -1431,7 +1431,7 @@ public class Branch {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
             }
-            registerAppInit(initRequest, false, forceBranchSession);
+            registerAppInit(initRequest, forceBranchSession);
         } else if (initRequest.callback_ != null) {
             // Else, let the user know session initialization failed because it's already initialized.
             initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
@@ -1442,7 +1442,7 @@ public class Branch {
      * Registers app init with params filtered from the intent. Unless ignoreIntent = true, this
      * will wait on the wait locks to complete any pending operations
      */
-     void registerAppInit(@NonNull ServerRequestInitSession request, boolean ignoreWaitLocks, boolean forceBranchSession) {
+     void registerAppInit(@NonNull ServerRequestInitSession request, boolean forceBranchSession) {
          BranchLogger.v("registerAppInit " + request);
          setInitState(SESSION_STATE.INITIALISING);
 
@@ -1464,37 +1464,36 @@ public class Branch {
          }
          BranchLogger.v("Finished ordering init calls");
          requestQueue_.printQueue();
-         initTasks(request, ignoreWaitLocks);
+         initTasks(request);
 
          requestQueue_.processNextQueueItem("registerAppInit");
      }
 
-    private void initTasks(ServerRequest request, boolean ignoreWaitLocks) {
-         BranchLogger.v("initTasks " + request + " ignoreWaitLocks " + ignoreWaitLocks);
-        if (!ignoreWaitLocks) {
-            // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
-            // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
-            if (intentState_ != INTENT_STATE.READY  && isWaitingForIntent()) {
-                BranchLogger.v("Adding INTENT_PENDING_WAIT_LOCK");
-                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-            }
-
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-
-            if (request instanceof ServerRequestRegisterInstall) {
-                request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                BranchLogger.v("Adding INSTALL_REFERRER_FETCH_WAIT_LOCK");
-
-                deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents(){
-                    @Override
-                    public void onInstallReferrersFinished() {
-                        request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                        BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
-                        requestQueue_.processNextQueueItem("onInstallReferrersFinished");
-                    }
-                });
-            }
+    private void initTasks(ServerRequest request) {
+        BranchLogger.v("initTasks " + request);
+        // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
+        // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
+        if (intentState_ != INTENT_STATE.READY && isWaitingForIntent()) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+            BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
+
+        if (request instanceof ServerRequestRegisterInstall) {
+            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+            BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
+
+            deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
+                @Override
+                public void onInstallReferrersFinished() {
+                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                    BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
+                    requestQueue_.processNextQueueItem("onInstallReferrersFinished");
+                }
+            });
+        }
+
+        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        BranchLogger.v("Added GAID_FETCH_WAIT_LOCK");
 
         deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
             @Override

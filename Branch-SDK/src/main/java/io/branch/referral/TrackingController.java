@@ -25,6 +25,7 @@ public class TrackingController {
     }
 
     void disableTracking(Context context, boolean disableTracking, @Nullable Branch.TrackingStateCallback callback) {
+        BranchLogger.v("disableTracking context: " + context + " disableTracking: " + disableTracking + " callback: " + callback);
         // If the tracking state is already set to the desired state, then return instantly
         if (trackingDisabled == disableTracking) {
             if (callback != null) {
@@ -86,9 +87,10 @@ public class TrackingController {
     }
     
     private void onTrackingEnabled(Branch.BranchReferralInitListener callback) {
+        BranchLogger.v("onTrackingEnabled callback: " + callback);
         Branch branch = Branch.getInstance();
         if (branch != null) {
-            branch.registerAppInit(branch.getInstallOrOpenRequest(callback, true), true, false);
+            branch.registerAppInit(branch.getInstallOrOpenRequest(callback, true), false);
         }
     }
 }
