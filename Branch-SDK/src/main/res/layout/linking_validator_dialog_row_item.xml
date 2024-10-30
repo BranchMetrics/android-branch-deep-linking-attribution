@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.4"
             android:text="Title"
-            android:textSize="16sp" />
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/linkingValidatorRowInfoButton"
@@ -23,7 +23,7 @@
             android:layout_height="match_parent"
             android:layout_weight="0.15"
             android:text="Info"
-            android:textSize="10sp" />
+            android:textSize="9sp" />
 
         <Button
             android:id="@+id/linkingValidatorRowCopyButton"
@@ -31,7 +31,7 @@
             android:layout_height="match_parent"
             android:layout_weight="0.15"
             android:text="Copy"
-            android:textSize="10sp" />
+            android:textSize="9sp" />
 
         <Button
             android:id="@+id/linkingValidatorRowShareButton"
@@ -39,7 +39,7 @@
             android:layout_height="match_parent"
             android:layout_weight="0.15"
             android:text="Share"
-            android:textSize="10sp" />
+            android:textSize="9sp" />
 
         <Button
             android:id="@+id/linkingValidatorRowDebugButton"
@@ -47,7 +47,7 @@
             android:layout_height="match_parent"
             android:layout_weight="0.15"
             android:text="Debug"
-            android:textSize="10sp" />
+            android:textSize="9sp" />
 
     </LinearLayout>
 

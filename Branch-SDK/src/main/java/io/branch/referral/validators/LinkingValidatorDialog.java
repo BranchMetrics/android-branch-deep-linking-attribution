@@ -28,6 +28,7 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     private TextView linkingValidatorText;
     private EditText linkingValidatorEditText;
     private LinearLayout customKVPField;
+    private LinearLayout linkingValidatorRowsLayout;
     private int step = 1;
     private String routingKey = "";
     private String routingValue = "";
@@ -39,6 +40,9 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     private String webOnlyBranchLink; //Web-only Branch link
     private String missingDeeplinkDataBranchLink; //Branch link with empty deep link data (to test graceful handling when data is missing)
     private LinkingValidatorDialogRowItem row1;
+    private LinkingValidatorDialogRowItem row2;
+    private LinkingValidatorDialogRowItem row3;
+    private LinkingValidatorDialogRowItem row4;
 
     public LinkingValidatorDialog(final Context context) {
         super(context);
@@ -69,11 +73,18 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
         linkingValidatorText = findViewById(R.id.linkingValidatorText);
         linkingValidatorEditText = findViewById(R.id.linkingValidatorEditText);
         customKVPField = findViewById(R.id.customKVPField);
+        linkingValidatorRowsLayout = findViewById(R.id.linkingValidatorRows);
 
         linkingValidatorEditText.setVisibility(View.GONE);
         customKVPField.setVisibility(View.GONE);
+        linkingValidatorRowsLayout.setVisibility(View.GONE);
 
         routingType = ROUTING_TYPE.CANONICAL_URL;
+
+        row1 = findViewById(R.id.linkingValidatorRow1);
+        row2 = findViewById(R.id.linkingValidatorRow2);
+        row3 = findViewById(R.id.linkingValidatorRow3);
+        row4 = findViewById(R.id.linkingValidatorRow4);
     }
 
     @Override
@@ -123,9 +134,15 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     }
 
     void GenerateBranchLinks() {
+        linkingValidatorEditText.setVisibility(View.GONE);
+        linkingValidatorText.setVisibility(View.GONE);
         ctaButton.setText(LinkingValidatorConstants.step3ButtonText);
-        row1 = findViewById(R.id.linkingValidatorRow1);
-        row1.SetTitleText(LinkingValidatorConstants.linkingValidatorRow1Title);
+        linkingValidatorRowsLayout.setVisibility(View.VISIBLE);
+
+        row1.InitializeRow(LinkingValidatorConstants.linkingValidatorRow1Title, LinkingValidatorConstants.infoButton1Copy);
+        row2.InitializeRow(LinkingValidatorConstants.linkingValidatorRow2Title, LinkingValidatorConstants.infoButton2Copy);
+        row3.InitializeRow(LinkingValidatorConstants.linkingValidatorRow3Title, LinkingValidatorConstants.infoButton3Copy);
+        row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy);
 
         customKeyEditText = findViewById(R.id.keyEditText);
         customValueEditText = findViewById(R.id.valueEditText);
@@ -140,6 +157,7 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
         uriFallbackBranchLink = GenerateBranchLink("uriFallbackBranchLink", "$uri_redirect_mode", "2", routingKey, routingValue);
         webOnlyBranchLink = GenerateBranchLink("webOnlyBranchLink", "$web_only", "true", routingKey, routingValue);
         missingDeeplinkDataBranchLink = GenerateBranchLink("missingDataBranchLink", routingKey, "");
+
     }
 
     String GenerateBranchLink(String identifierForBUO, String... params) {
