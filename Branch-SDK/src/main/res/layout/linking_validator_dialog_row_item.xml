@@ -21,23 +21,15 @@
             android:id="@+id/linkingValidatorRowInfoButton"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="0.15"
+            android:layout_weight="0.2"
             android:text="Info"
-            android:textSize="9sp" />
-
-        <Button
-            android:id="@+id/linkingValidatorRowCopyButton"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.15"
-            android:text="Copy"
             android:textSize="9sp" />
 
         <Button
             android:id="@+id/linkingValidatorRowShareButton"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="0.15"
+            android:layout_weight="0.2"
             android:text="Share"
             android:textSize="9sp" />
 
@@ -45,7 +37,7 @@
             android:id="@+id/linkingValidatorRowDebugButton"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="0.15"
+            android:layout_weight="0.2"
             android:text="Debug"
             android:textSize="9sp" />
 

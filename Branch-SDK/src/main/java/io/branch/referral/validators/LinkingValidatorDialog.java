@@ -35,10 +35,6 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     private EditText customKeyEditText;
     private EditText customValueEditText;
     private Context context;
-    private String regularBranchLink; //ordinary Branch link to test App Links / Universal Links
-    private String uriFallbackBranchLink; //Branch link with URI redirect mode of 2
-    private String webOnlyBranchLink; //Web-only Branch link
-    private String missingDeeplinkDataBranchLink; //Branch link with empty deep link data (to test graceful handling when data is missing)
     private LinkingValidatorDialogRowItem row1;
     private LinkingValidatorDialogRowItem row2;
     private LinkingValidatorDialogRowItem row3;
@@ -139,11 +135,6 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
         ctaButton.setText(LinkingValidatorConstants.step3ButtonText);
         linkingValidatorRowsLayout.setVisibility(View.VISIBLE);
 
-        row1.InitializeRow(LinkingValidatorConstants.linkingValidatorRow1Title, LinkingValidatorConstants.infoButton1Copy);
-        row2.InitializeRow(LinkingValidatorConstants.linkingValidatorRow2Title, LinkingValidatorConstants.infoButton2Copy);
-        row3.InitializeRow(LinkingValidatorConstants.linkingValidatorRow3Title, LinkingValidatorConstants.infoButton3Copy);
-        row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy);
-
         customKeyEditText = findViewById(R.id.keyEditText);
         customValueEditText = findViewById(R.id.valueEditText);
 
@@ -153,19 +144,9 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
             routingValue = customValueEditText.getText().toString();
         }
 
-        regularBranchLink = GenerateBranchLink("regularBranchLink", routingKey, routingValue);
-        uriFallbackBranchLink = GenerateBranchLink("uriFallbackBranchLink", "$uri_redirect_mode", "2", routingKey, routingValue);
-        webOnlyBranchLink = GenerateBranchLink("webOnlyBranchLink", "$web_only", "true", routingKey, routingValue);
-        missingDeeplinkDataBranchLink = GenerateBranchLink("missingDataBranchLink", routingKey, "");
-
-    }
-
-    String GenerateBranchLink(String identifierForBUO, String... params) {
-        LinkProperties lp = new LinkProperties();
-        for(int i = 0; i < params.length; i+=2) {
-            lp.addControlParameter(params[i], params[i+1]);
-        }
-        BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier(identifierForBUO);
-        return buo.getShortUrl(context, lp);
+        row1.InitializeRow(LinkingValidatorConstants.linkingValidatorRow1Title, LinkingValidatorConstants.infoButton1Copy, routingKey, routingValue, "regularBranchLink");
+        row2.InitializeRow(LinkingValidatorConstants.linkingValidatorRow2Title, LinkingValidatorConstants.infoButton2Copy, routingKey, routingValue, "uriFallbackBranchLink", "$uri_redirect_mode", "2");
+        row3.InitializeRow(LinkingValidatorConstants.linkingValidatorRow3Title, LinkingValidatorConstants.infoButton3Copy, routingKey, routingValue, "webOnlyBranchLink", "$web_only", "true");
+        row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy, routingKey, "", "missingDataBranchLink");
     }
 }
