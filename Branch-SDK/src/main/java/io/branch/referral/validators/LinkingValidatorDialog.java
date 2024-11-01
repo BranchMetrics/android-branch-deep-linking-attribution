@@ -146,11 +146,11 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
             routingValue = customValueEditText.getText().toString();
         }
 
-        row1.InitializeRow(LinkingValidatorConstants.linkingValidatorRow1Title, LinkingValidatorConstants.infoButton1Copy, LinkingValidatorConstants.debugButton1Copy, routingKey, routingValue, "regularBranchLink", true);
-        row2.InitializeRow(LinkingValidatorConstants.linkingValidatorRow2Title, LinkingValidatorConstants.infoButton2Copy, LinkingValidatorConstants.debugButton2Copy, routingKey, routingValue, "uriFallbackBranchLink", true, "$uri_redirect_mode", "2");
-        row3.InitializeRow(LinkingValidatorConstants.linkingValidatorRow3Title, LinkingValidatorConstants.infoButton3Copy, LinkingValidatorConstants.debugButton3Copy, routingKey, routingValue, "webOnlyBranchLink", true, "$web_only", "true");
-        row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy, LinkingValidatorConstants.debugButton4Copy, routingKey, "", "missingDataBranchLink", true);
-        row5.InitializeRow(LinkingValidatorConstants.linkingValidatorRow5Title, LinkingValidatorConstants.infoButton5Copy, LinkingValidatorConstants.debugButton5Copy, routingKey, routingValue, "warmStartUseCase", false);
-        row6.InitializeRow(LinkingValidatorConstants.linkingValidatorRow6Title, LinkingValidatorConstants.infoButton6Copy, LinkingValidatorConstants.debugButton6Copy, routingKey, routingValue, "foregroundClickUseCase", false);
+        row1.InitializeRow(LinkingValidatorConstants.linkingValidatorRow1Title, LinkingValidatorConstants.infoButton1Copy, LinkingValidatorConstants.debugButton1Copy, routingKey, routingValue, "regularBranchLink", true, 0);
+        row2.InitializeRow(LinkingValidatorConstants.linkingValidatorRow2Title, LinkingValidatorConstants.infoButton2Copy, LinkingValidatorConstants.debugButton2Copy, routingKey, routingValue, "uriFallbackBranchLink", true, 1, "$uri_redirect_mode", "2");
+        row3.InitializeRow(LinkingValidatorConstants.linkingValidatorRow3Title, LinkingValidatorConstants.infoButton3Copy, LinkingValidatorConstants.debugButton3Copy, routingKey, routingValue, "webOnlyBranchLink", true, 2, "$web_only", "true");
+        row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy, LinkingValidatorConstants.debugButton4Copy, routingKey, "", "missingDataBranchLink", true, 3);
+        row5.InitializeRow(LinkingValidatorConstants.linkingValidatorRow5Title, LinkingValidatorConstants.infoButton5Copy, LinkingValidatorConstants.debugButton5Copy, routingKey, routingValue, "warmStartUseCase", false, 4);
+        row6.InitializeRow(LinkingValidatorConstants.linkingValidatorRow6Title, LinkingValidatorConstants.infoButton6Copy, LinkingValidatorConstants.debugButton6Copy, routingKey, routingValue, "foregroundClickUseCase", false, 5);
     }
 }

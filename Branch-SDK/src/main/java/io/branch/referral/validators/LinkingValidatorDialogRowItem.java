@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.Intent;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -46,7 +47,7 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         this.context = context;
     }
 
-    public void InitializeRow(String title, String infoText, String debugText, String routingKey, String routingValue, String canonicalIdentifier, boolean isSharableLink, String... params) {
+    public void InitializeRow(String title, String infoText, String debugText, String routingKey, String routingValue, String canonicalIdentifier, boolean isSharableLink, int index, String... params) {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.linking_validator_dialog_row_item, null);
         this.addView(view);
         titleText = view.findViewById(R.id.linkingValidatorRowTitleText);
@@ -84,7 +85,14 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         } else {
             actionButton.setText("Test");
 
+            if(index == 4) {
+                //warm start use case
 
+            } else if(index == 5) {
+                actionButton.setOnClickListener(view2 -> {
+                    HandleForegroundLinkClick();
+                });
+            }
         }
     }
 
@@ -121,6 +129,16 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         builder.setMessage(debugText).setTitle(titleText.getText() + " not working?");
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    private void HandleForegroundLinkClick() {
+        BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier(canonicalIdentifier);
+        LinkProperties lp = new LinkProperties();
+        String branchLink = buo.getShortUrl(context, lp);
+        Intent intent = new Intent(getContext(), getActivity(context).getClass());
+        intent.putExtra("branch", branchLink);
+        intent.putExtra("branch_force_new_session",true);
+        getActivity(context).startActivity(intent);
     }
 
     public Activity getActivity(Context context) {
