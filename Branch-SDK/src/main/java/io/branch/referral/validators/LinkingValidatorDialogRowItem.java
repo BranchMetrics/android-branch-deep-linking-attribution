@@ -27,7 +27,7 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
     TextView titleText;
     Button infoButton;
     String infoText;
-    Button shareButton;
+    Button actionButton;
     HashMap<String, String> linkDataParams;
     String routingKey;
     String routingValue;
@@ -46,12 +46,12 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         this.context = context;
     }
 
-    public void InitializeRow(String title, String infoText, String debugText, String routingKey, String routingValue, String canonicalIdentifier, String... params) {
+    public void InitializeRow(String title, String infoText, String debugText, String routingKey, String routingValue, String canonicalIdentifier, boolean isSharableLink, String... params) {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.linking_validator_dialog_row_item, null);
         this.addView(view);
         titleText = view.findViewById(R.id.linkingValidatorRowTitleText);
         infoButton = view.findViewById(R.id.linkingValidatorRowInfoButton);
-        shareButton = view.findViewById(R.id.linkingValidatorRowShareButton);
+        actionButton = view.findViewById(R.id.linkingValidatorRowActionButton);
         debugButton = view.findViewById(R.id.linkingValidatorRowDebugButton);
 
         titleText.setText(title);
@@ -71,13 +71,21 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
             HandleInfoButtonClicked();
         });
 
-        shareButton.setOnClickListener(view2 -> {
-            HandleShareButtonClicked();
-        });
-
         debugButton.setOnClickListener(view2 -> {
             HandleDebugButtonClicked();
         });
+
+        if(isSharableLink) {
+            actionButton.setText("Share");
+
+            actionButton.setOnClickListener(view2 -> {
+                HandleShareButtonClicked();
+            });
+        } else {
+            actionButton.setText("Test");
+
+
+        }
     }
 
     private void HandleInfoButtonClicked() {

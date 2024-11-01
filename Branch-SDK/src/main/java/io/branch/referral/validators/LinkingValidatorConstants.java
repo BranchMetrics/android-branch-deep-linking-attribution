@@ -14,6 +14,8 @@ public class LinkingValidatorConstants {
         public static final String linkingValidatorRow2Title = "Link using URI scheme";
         public static final String linkingValidatorRow3Title = "Web-only link";
         public static final String linkingValidatorRow4Title = "Link with missing data";
+        public static final String linkingValidatorRow5Title = "Warm start use case";
+        public static final String linkingValidatorRow6Title = "Foreground click use case";
 
         public static final String infoButton1Copy = "Verifies that Universal Links / App Links are working correctly for your Branch domain";
         public static final String infoButton2Copy = "Verifies that URI schemes work correctly for your Branch domain";
