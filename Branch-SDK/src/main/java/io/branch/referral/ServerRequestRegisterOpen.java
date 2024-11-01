@@ -79,7 +79,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
             
         } catch (Exception ex) {
-            BranchLogger.w("Caught Exception " + ex.getMessage());
+            BranchLogger.w("Caught Exception ServerRequestRegisterOpen onRequestSucceeded: " + ex.getMessage());
         }
         onInitSessionCompleted(resp, branch);
     }

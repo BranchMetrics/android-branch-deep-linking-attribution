@@ -13,12 +13,17 @@ import androidx.annotation.NonNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+
+import java.util.UUID;
 
 /**
  * Abstract class defining the structure of a Branch Server request.
@@ -34,6 +39,8 @@ public abstract class ServerRequest {
     
     private static final String POST_KEY = "REQ_POST";
     private static final String POST_PATH_KEY = "REQ_POST_PATH";
+    protected long creation_ts = 0;
+    protected String uuid;
 
     private JSONObject params_;
     final Defines.RequestPath requestPath_;
@@ -67,11 +74,7 @@ public abstract class ServerRequest {
      * @param requestPath Path to server for this request.
      */
     public ServerRequest(Context context, Defines.RequestPath requestPath) {
-        context_ = context;
-        requestPath_ = requestPath;
-        prefHelper_ = PrefHelper.getInstance(context);
-        params_ = new JSONObject();
-        locks_ = new HashSet<>();
+        this(requestPath, new JSONObject(), context);
     }
     
     /**
@@ -83,13 +86,40 @@ public abstract class ServerRequest {
      * @param context     Application context.
      */
     protected ServerRequest(Defines.RequestPath requestPath, JSONObject post, Context context) {
+        BranchLogger.v("ServerRequest constructor");
         context_ = context;
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
         locks_ = new HashSet<>();
+
+        creation_ts = System.currentTimeMillis();
+        String creation_ts_date_formatted = formatUnixEpochToDateFormat(creation_ts);
+        uuid =  getRequestUuid(creation_ts_date_formatted);
     }
-    
+
+    /**
+     * Returns Unix epoch time converted to readable date format: year-month-dayOfMonth-hour with - prefix
+     * Force Locale US character representation
+     * @param creationTs
+     * @return
+     */
+    private String formatUnixEpochToDateFormat(long creationTs) {
+        SimpleDateFormat sdf = new SimpleDateFormat("-yyyyMMddHH", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        return sdf.format(creationTs);
+    }
+
+    /**
+     * Appends formatted time stamp to randomly generated UUID
+     * @param creationTsDateFormatted
+     * @return
+     */
+    private String getRequestUuid(String creationTsDateFormatted) {
+        return UUID.randomUUID().toString() + creationTsDateFormatted;
+    }
+
     /**
      * <p>Should be implemented by the child class.Specifies any error associated with request.
      * If there are errors request will not be executed.</p>
@@ -139,16 +169,7 @@ public abstract class ServerRequest {
     public boolean shouldRetryOnFail() {
         return false;
     }
-    
-    /**
-     * Specifies whether this request should be persisted to memory in order to re send in the next session
-     *
-     * @return {@code true} by default. Should be override for request that need not to be persisted
-     */
-    boolean isPersistable() {
-        return true;
-    }
-    
+
     /**
      * Specifies whether this request should add the limit app tracking value
      *
@@ -241,6 +262,7 @@ public abstract class ServerRequest {
      *             as key-value pairs.
      */
     protected void setPost(JSONObject post) throws JSONException {
+        BranchLogger.v("setPost " + post);
         params_ = post;
 
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
@@ -364,7 +386,8 @@ public abstract class ServerRequest {
         }
         return json;
     }
-    
+
+    // TODO: Replace with in-memory only ServerRequest objects.
     /**
      * <p>Converts a {@link JSONObject} object containing keys stored as key-value pairs into
      * a {@link ServerRequest}.</p>
@@ -404,13 +427,14 @@ public abstract class ServerRequest {
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
-        
+
         if (!TextUtils.isEmpty(requestPath)) {
             return getExtendedServerRequest(requestPath, post, context, initiatedByClient);
         }
         return null;
     }
-    
+
+    // TODO: Replace with in-memory only ServerRequest objects.
     /**
      * <p>Factory method for creating the specific server requests objects. Creates requests according
      * to the request path.</p>
@@ -422,7 +446,7 @@ public abstract class ServerRequest {
      */
     private static ServerRequest getExtendedServerRequest(String requestPath, JSONObject post, Context context, boolean initiatedByClient) {
         ServerRequest extendedReq = null;
-        
+
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
@@ -430,10 +454,9 @@ public abstract class ServerRequest {
         } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
             extendedReq = new ServerRequestRegisterOpen(Defines.RequestPath.RegisterOpen, post, context, initiatedByClient);
         }
-        
         return extendedReq;
     }
-    
+
     /**
      * Updates the google ads parameters. This should be called only from a background thread since it involves GADS method invocation using reflection
      * Ensure that when there is a valid GAID/AID, remove the SSAID if it's being used
@@ -639,6 +662,7 @@ public abstract class ServerRequest {
     }
     
     void doFinalUpdateOnMainThread() {
+        BranchLogger.v("doFinalUpdateOnMainThread");
         updateRequestMetadata();
         if (shouldUpdateLimitFacebookTracking()) {
             updateLimitFacebookTracking();
@@ -646,10 +670,29 @@ public abstract class ServerRequest {
         if (shouldAddDMAParams()) {
             addDMAParams();
         }
-        addConsumerProtectionAttributionLevel();
+
+      addConsumerProtectionAttributionLevel();
+
+        // Always add these fields
+        addClientRequestParameters();
     }
-    
+
+    /**
+     * Put request time stamp and uuid at top level of POST body
+     */
+    private void addClientRequestParameters() {
+        if(prefHelper_ != null){
+            try {
+                params_.put(Defines.Jsonkey.Branch_Sdk_Request_Creation_Time_Stamp.getKey(), this.creation_ts);
+                params_.put(Defines.Jsonkey.Branch_Sdk_Request_Uuid.getKey(), this.uuid);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     void doFinalUpdateOnBackgroundThread() {
+        BranchLogger.v("doFinalUpdateOnBackgroundThread");
         if (this instanceof ServerRequestInitSession) {
             ((ServerRequestInitSession) this).updateLinkReferrerParams();
             if (prioritizeLinkAttribution(this.params_)) {

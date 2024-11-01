@@ -20,7 +20,7 @@ public abstract class BranchAsyncTask<Params, Progress, Result> extends AsyncTas
         try {
             return executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
         } catch (Exception t) {
-            BranchLogger.w("Caught Exception " + t.getMessage());
+            BranchLogger.w("Caught Exception in AsyncTask: " + t.getMessage());
             return execute(params);
         }
     }

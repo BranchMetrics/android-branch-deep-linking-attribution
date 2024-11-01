@@ -225,7 +225,9 @@ public class Defines {
         DMA_Ad_User_Data("dma_ad_user_data"),
         Is_Meta_Click_Through("is_meta_ct"),
 
-        Consumer_Protection_Attribution_Level("cpp_level");
+        Consumer_Protection_Attribution_Level("cpp_level"),
+        Branch_Sdk_Request_Creation_Time_Stamp("branch_sdk_request_timestamp"),
+        Branch_Sdk_Request_Uuid("branch_sdk_request_unique_id");
 
         private final String key;
         

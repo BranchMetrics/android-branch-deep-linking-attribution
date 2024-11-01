@@ -267,7 +267,7 @@ abstract class SystemObserver {
             Object result = GoogleisPlayServicesAvailable.invoke(GoogleApiAvailabilityInstance, context);
             return (result instanceof Integer) && (Integer) result == 0;
         } catch (Exception e) {
-            BranchLogger.e("Caught Exception " + e.getMessage());
+            BranchLogger.e("Caught Exception isGooglePlayServicesAvailable: " + e.getMessage());
             return false;
         }
     }
@@ -459,6 +459,7 @@ abstract class SystemObserver {
     }
 
     private void fetchHuaweiAdId(Context context, AdsParamsFetchEvents callback) {
+        BranchLogger.v("Begin fetchHuaweiAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.huaweiAdvertisingIdClientClass)) {
             AdvertisingIdsKt.getHuaweiAdvertisingInfoObject(context, new Continuation<com.huawei.hms.ads.identifier.AdvertisingIdClient.Info>() {
                 @NonNull
@@ -508,6 +509,7 @@ abstract class SystemObserver {
 
 
     private void fetchGoogleAdId(Context context, AdsParamsFetchEvents callback) {
+        BranchLogger.v("Begin fetchGoogleAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
             AdvertisingIdsKt.getGoogleAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
                 @NonNull
@@ -555,7 +557,7 @@ abstract class SystemObserver {
     }
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
-        BranchLogger.v("setFireAdId");
+        BranchLogger.v("Begin setFireAdId");
         AdvertisingIdsKt.getAmazonFireAdvertisingInfoObject(context, new Continuation<Pair<? extends Integer, ? extends String>>() {
             @NonNull
             @Override
@@ -590,6 +592,7 @@ abstract class SystemObserver {
     }
 
     public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
+        BranchLogger.v("Begin fetchInstallReferrer");
         try {
             InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
                 @NonNull
@@ -601,17 +604,21 @@ abstract class SystemObserver {
                 @Override
                 public void resumeWith(@NonNull Object o) {
                     if (o != null) {
+                        BranchLogger.v("fetchInstallReferrer resumeWith got result: " + o);
                         InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
                         AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore(), latestReferrer.isClickThrough());
+                    } else {
+                        BranchLogger.v("fetchInstallReferrer resumeWith got null result");
+                    }
+
+                    if (callback != null) {
+                        callback.onInstallReferrersFinished();
                     }
                 }
             });
-        }
-        catch(Exception e){
-            BranchLogger.e("Caught Exception " + e.getMessage());
-        }
-        finally {
-            if(callback != null){
+        } catch(Exception e) {
+            BranchLogger.e("Caught Exception SystemObserver fetchInstallReferrer " + e.getMessage());
+            if (callback != null) {
                 callback.onInstallReferrersFinished();
             }
         }
@@ -645,7 +652,7 @@ abstract class SystemObserver {
                 }
             }
         } catch (Exception e) {
-            BranchLogger.e("Caught Exception " + e.getMessage());
+            BranchLogger.e("Caught Exception SystemObserver getLocalIPAddress: " + e.getMessage());
         }
 
         return ipAddress;
@@ -697,7 +704,7 @@ abstract class SystemObserver {
             }
         } catch (Exception e) {
             // Have seen reports of "DeadSystemException" from UiModeManager.
-            BranchLogger.e("Caught Exception " + e.getMessage());
+            BranchLogger.e("Caught Exception SystemObserver getUIMode" + e.getMessage());
         }
         return mode;
     }

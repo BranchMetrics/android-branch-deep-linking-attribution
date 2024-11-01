@@ -1,4 +1,23 @@
 # Branch Android SDK change log
+- v5.13.0
+* _*Master Release*_ - Oct 29, 2024
+  - Removal of internal event caching behavior
+  - Addition of unique id per request in POST body
+  - Change in behavior of tracking controller, when re-enabled will run inititialization tasks.
+
+- v5.12.4
+  * _*Master Release*_ - Sep 30, 2024
+  - Reverted the minimum SDK build version back to 21
+  
+- v5.12.3
+  * _*Master Release*_ - Sep 25, 2024
+  - Fix to properly fetch install referrers when using deferred init in plugins
+  
+- v5.12.2
+  * _*Master Release*_ - Jul 19, 2024
+  - Add minification config for optional Billing Client
+  - Add additional detail in exception messages
+
 - v5.12.1
   * _*Master Release*_ - Jun 7, 2024
   - Added support for setting FB App ID through `branch.json`
