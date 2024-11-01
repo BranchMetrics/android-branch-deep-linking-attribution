@@ -47,12 +47,11 @@
         android:id="@+id/linkingValidatorDropdownMenu"
         android:layout_width="351dp"
         android:layout_height="50dp"
-        android:visibility="invisible"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/linkingValidatorButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linkingValidatorText"
-        tools:visibility="invisible" />
+        app:layout_constraintTop_toBottomOf="@+id/linkingValidatorText" />
 
     <TextView
         android:id="@+id/linkingValidatorText"
@@ -62,7 +61,6 @@
         android:gravity="center"
         android:text="What key do you use for deep link routing?"
         android:textSize="20sp"
-        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linkingValidatorHeader" />
@@ -146,7 +144,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         android:orientation="vertical"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/linkingValidatorButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

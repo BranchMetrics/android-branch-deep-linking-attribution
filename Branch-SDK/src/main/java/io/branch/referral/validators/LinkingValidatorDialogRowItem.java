@@ -76,7 +76,7 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
             HandleDebugButtonClicked();
         });
 
-        if(isSharableLink) {
+        if (isSharableLink) {
             actionButton.setText("Share");
 
             actionButton.setOnClickListener(view2 -> {
@@ -85,10 +85,11 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         } else {
             actionButton.setText("Test");
 
-            if(index == 4) {
-                //warm start use case
-
-            } else if(index == 5) {
+            if (index == 4) {
+                actionButton.setOnClickListener(view2 -> {
+                    HandleWarmStartClick();
+                });
+            } else if (index == 5) {
                 actionButton.setOnClickListener(view2 -> {
                     HandleForegroundLinkClick();
                 });
@@ -131,13 +132,18 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         dialog.show();
     }
 
+    private void HandleWarmStartClick() {
+        getActivity(context).moveTaskToBack(true);
+        HandleForegroundLinkClick();
+    }
+
     private void HandleForegroundLinkClick() {
         BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier(canonicalIdentifier);
         LinkProperties lp = new LinkProperties();
         String branchLink = buo.getShortUrl(context, lp);
         Intent intent = new Intent(getContext(), getActivity(context).getClass());
         intent.putExtra("branch", branchLink);
-        intent.putExtra("branch_force_new_session",true);
+        intent.putExtra("branch_force_new_session", true);
         getActivity(context).startActivity(intent);
     }
 

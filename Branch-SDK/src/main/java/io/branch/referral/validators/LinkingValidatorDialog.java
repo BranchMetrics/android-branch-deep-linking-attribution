@@ -21,18 +21,15 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
 
     private enum ROUTING_TYPE { CANONICAL_URL, DEEPLINK_PATH, CUSTOM }
     private ROUTING_TYPE routingType;
-    private Button ctaButton;
-    private Spinner linkingValidatorDropdownMenu;
-    private TextView linkingValidatorText;
-    private EditText linkingValidatorEditText;
-    private LinearLayout customKVPField;
-    private LinearLayout linkingValidatorRowsLayout;
+    private final Button ctaButton;
+    private final Spinner linkingValidatorDropdownMenu;
+    private final TextView linkingValidatorText;
+    private final EditText linkingValidatorEditText;
+    private final LinearLayout customKVPField;
+    private final LinearLayout linkingValidatorRowsLayout;
     private int step = 1;
     private String routingKey = "";
     private String routingValue = "";
-    private EditText customKeyEditText;
-    private EditText customValueEditText;
-    private Context context;
     private LinkingValidatorDialogRowItem row1;
     private LinkingValidatorDialogRowItem row2;
     private LinkingValidatorDialogRowItem row3;
@@ -42,7 +39,6 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
 
     public LinkingValidatorDialog(final Context context) {
         super(context);
-        this.context = context;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.setContentView(R.layout.dialog_linking_validator);
 
@@ -59,10 +55,16 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
         ctaButton = findViewById(R.id.linkingValidatorButton);
         ctaButton.setText(LinkingValidatorConstants.step1ButtonText);
         ctaButton.setOnClickListener(view -> {
-            if(step == 1) {
-                LoadStep2Screen();
-            } else {
-                GenerateBranchLinks();
+            switch(step) {
+                case 1:
+                    LoadStep2Screen();
+                    break;
+                case 2:
+                    GenerateBranchLinks();
+                    break;
+                case 3:
+                    CloseDialog();
+                    break;
             }
         });
 
@@ -132,13 +134,15 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     }
 
     void GenerateBranchLinks() {
+        step++;
         linkingValidatorEditText.setVisibility(View.GONE);
+        customKVPField.setVisibility(View.GONE);
         linkingValidatorText.setVisibility(View.GONE);
         ctaButton.setText(LinkingValidatorConstants.step3ButtonText);
         linkingValidatorRowsLayout.setVisibility(View.VISIBLE);
 
-        customKeyEditText = findViewById(R.id.keyEditText);
-        customValueEditText = findViewById(R.id.valueEditText);
+        EditText customKeyEditText = findViewById(R.id.keyEditText);
+        EditText customValueEditText = findViewById(R.id.valueEditText);
 
         //if routing key is empty, it is a custom key outside of $canonical_url and $deeplink_path
         if(routingKey.isEmpty()) {
@@ -152,5 +156,9 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
         row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy, LinkingValidatorConstants.debugButton4Copy, routingKey, "", "missingDataBranchLink", true, 3);
         row5.InitializeRow(LinkingValidatorConstants.linkingValidatorRow5Title, LinkingValidatorConstants.infoButton5Copy, LinkingValidatorConstants.debugButton5Copy, routingKey, routingValue, "warmStartUseCase", false, 4);
         row6.InitializeRow(LinkingValidatorConstants.linkingValidatorRow6Title, LinkingValidatorConstants.infoButton6Copy, LinkingValidatorConstants.debugButton6Copy, routingKey, routingValue, "foregroundClickUseCase", false, 5);
+    }
+
+    private void CloseDialog() {
+        this.dismiss();
     }
 }
