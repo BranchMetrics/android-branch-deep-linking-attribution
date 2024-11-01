@@ -15,9 +15,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.R;
-import io.branch.referral.util.LinkProperties;
 
 public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItemSelectedListener {
 
@@ -144,9 +142,9 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
             routingValue = customValueEditText.getText().toString();
         }
 
-        row1.InitializeRow(LinkingValidatorConstants.linkingValidatorRow1Title, LinkingValidatorConstants.infoButton1Copy, routingKey, routingValue, "regularBranchLink");
-        row2.InitializeRow(LinkingValidatorConstants.linkingValidatorRow2Title, LinkingValidatorConstants.infoButton2Copy, routingKey, routingValue, "uriFallbackBranchLink", "$uri_redirect_mode", "2");
-        row3.InitializeRow(LinkingValidatorConstants.linkingValidatorRow3Title, LinkingValidatorConstants.infoButton3Copy, routingKey, routingValue, "webOnlyBranchLink", "$web_only", "true");
-        row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy, routingKey, "", "missingDataBranchLink");
+        row1.InitializeRow(LinkingValidatorConstants.linkingValidatorRow1Title, LinkingValidatorConstants.infoButton1Copy, LinkingValidatorConstants.debugButton1Copy, routingKey, routingValue, "regularBranchLink");
+        row2.InitializeRow(LinkingValidatorConstants.linkingValidatorRow2Title, LinkingValidatorConstants.infoButton2Copy, LinkingValidatorConstants.debugButton2Copy, routingKey, routingValue, "uriFallbackBranchLink", "$uri_redirect_mode", "2");
+        row3.InitializeRow(LinkingValidatorConstants.linkingValidatorRow3Title, LinkingValidatorConstants.infoButton3Copy, LinkingValidatorConstants.debugButton3Copy, routingKey, routingValue, "webOnlyBranchLink", "$web_only", "true");
+        row4.InitializeRow(LinkingValidatorConstants.linkingValidatorRow4Title, LinkingValidatorConstants.infoButton4Copy, LinkingValidatorConstants.debugButton4Copy, routingKey, "", "missingDataBranchLink");
     }
 }

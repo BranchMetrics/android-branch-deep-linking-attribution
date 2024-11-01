@@ -33,6 +33,8 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
     String routingValue;
     String canonicalIdentifier;
     Context context;
+    Button debugButton;
+    String debugText;
 
     public LinkingValidatorDialogRowItem(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -44,15 +46,17 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         this.context = context;
     }
 
-    public void InitializeRow(String title, String infoText, String routingKey, String routingValue, String canonicalIdentifier, String... params) {
+    public void InitializeRow(String title, String infoText, String debugText, String routingKey, String routingValue, String canonicalIdentifier, String... params) {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.linking_validator_dialog_row_item, null);
         this.addView(view);
         titleText = view.findViewById(R.id.linkingValidatorRowTitleText);
         infoButton = view.findViewById(R.id.linkingValidatorRowInfoButton);
         shareButton = view.findViewById(R.id.linkingValidatorRowShareButton);
+        debugButton = view.findViewById(R.id.linkingValidatorRowDebugButton);
 
         titleText.setText(title);
         this.infoText = infoText;
+        this.debugText = debugText;
         this.routingKey = routingKey;
         this.routingValue = routingValue;
         this.canonicalIdentifier = canonicalIdentifier;
@@ -69,6 +73,10 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
 
         shareButton.setOnClickListener(view2 -> {
             HandleShareButtonClicked();
+        });
+
+        debugButton.setOnClickListener(view2 -> {
+            HandleDebugButtonClicked();
         });
     }
 
@@ -98,6 +106,13 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
                     titleText.getText().toString(),
                     infoText);
         }
+    }
+
+    private void HandleDebugButtonClicked() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage(debugText).setTitle(titleText.getText() + " not working?");
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     public Activity getActivity(Context context) {
