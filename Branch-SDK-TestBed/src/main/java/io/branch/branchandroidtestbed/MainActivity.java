@@ -414,6 +414,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.viewLogsButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, LogOutputActivity.class);
+                startActivity(intent);
+            }
+        });
 
         findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
             @Override

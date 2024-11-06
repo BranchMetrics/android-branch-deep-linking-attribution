@@ -2596,13 +2596,15 @@ public class Branch {
      */
     public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
         prefHelper_.setConsumerProtectionAttributionLevel(level);
+        BranchLogger.v("Set Consumer Protection Preference to " + level);
 
         if (level == Defines.BranchAttributionLevel.NONE) {
             trackingController.disableTracking(context_, true, null);
         } else {
-            trackingController.disableTracking(context_, false, null);
+            if (initState_ != SESSION_STATE.INITIALISED) {
+                trackingController.disableTracking(context_, false, null);
+            }
         }
 
-        BranchLogger.v("Set Consumer Protection Preference to " + level);
     }
 }

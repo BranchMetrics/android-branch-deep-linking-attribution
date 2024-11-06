@@ -134,6 +134,13 @@
                 />
 
             <Button
+                android:id="@+id/viewLogsButton"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/baseline_document_scanner_24"
+                android:text="Load Branch Logs" />
+
+
+            <Button
                 android:id="@+id/notif_btn"
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/ic_baseline_doorbell_24"
