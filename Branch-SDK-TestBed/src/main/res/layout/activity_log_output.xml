@@ -3,11 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/logOutputTextView"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp"
-        android:textSize="14sp"
-        android:text="Logs will appear here" />
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/logOutputTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:text="Logs will appear here" />
+    </ScrollView>
 </RelativeLayout>

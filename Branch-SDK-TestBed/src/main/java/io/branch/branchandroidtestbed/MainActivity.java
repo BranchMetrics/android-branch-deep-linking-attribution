@@ -598,8 +598,18 @@ public class MainActivity extends Activity {
                         .setSearchQuery("product name")
                         .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
                         .addContentItems(branchUniversalObject)
-                        .logEvent(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Sent Branch Content Event", Toast.LENGTH_SHORT).show();
+                        .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                            @Override
+                            public void onSuccess(int responseCode) {
+                                Toast.makeText(getApplicationContext(), "Sent Branch Content Event: " + responseCode, Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                Log.d("BranchSDK_Tester", e.toString());
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Content Event: " + e.toString(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
         });
 
@@ -613,8 +623,18 @@ public class MainActivity extends Activity {
                         .setDescription("User created an account")
                         .addCustomDataProperty("registrationID", "12345")
                         .addContentItems(branchUniversalObject)
-                        .logEvent(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event", Toast.LENGTH_SHORT).show();
+                        .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                            @Override
+                            public void onSuccess(int responseCode) {
+                                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event: " + responseCode, Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                Log.d("BranchSDK_Tester", e.toString());
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Lifecycle Event: " + e.toString(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
         });
 

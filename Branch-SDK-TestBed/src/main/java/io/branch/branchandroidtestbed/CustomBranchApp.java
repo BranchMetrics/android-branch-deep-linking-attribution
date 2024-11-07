@@ -17,15 +17,12 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-        IBranchLoggingCallbacks loggingCallbacks = new IBranchLoggingCallbacks() {
-            @Override
-            public void onBranchLog(String tag, String message) {
-                String logMessage = tag + ": " + message;
-                Log.d("BranchTestbed", logMessage);
-                saveLogToFile(logMessage);
-            }
+        IBranchLoggingCallbacks loggingCallbacks = (message, tag) -> {
+            Log.d("BranchTestbed", message);
+            saveLogToFile(message);
         };
         Branch.enableLogging(loggingCallbacks);
+
         Branch.getAutoInstance(this);
     }
 
