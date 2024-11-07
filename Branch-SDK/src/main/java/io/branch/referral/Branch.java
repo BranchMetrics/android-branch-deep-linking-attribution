@@ -2603,7 +2603,7 @@ public class Branch {
         if (level == Defines.BranchAttributionLevel.NONE) {
             trackingController.disableTracking(context_, true, null);
         } else {
-            if (initState_ != SESSION_STATE.INITIALISED) {
+            if (trackingController.isTrackingDisabled()) {
                 trackingController.disableTracking(context_, false, null);
             }
         }
