@@ -540,7 +540,7 @@ public class Branch {
      *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
      * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)} instead.
      */
-    public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
+    @Deprecated public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
         trackingController.disableTracking(context_, disableTracking, callback);
     }
 
@@ -553,7 +553,7 @@ public class Branch {
      *                        ({@code false}).
      * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)} instead.
      */
-    public void disableTracking(boolean disableTracking) {
+    @Deprecated public void disableTracking(boolean disableTracking) {
         disableTracking(disableTracking, null);
     }
 
