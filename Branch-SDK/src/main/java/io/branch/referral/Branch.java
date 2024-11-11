@@ -2592,21 +2592,32 @@ public class Branch {
     }
 
     /**
-     * Sets the consumer protection attribution level
+     * Sets the consumer protection attribution level.
      *
      * @param level The consumer protection attribution level {@link Defines.BranchAttributionLevel}.
      */
     public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
+        setConsumerProtectionAttributionLevel(level, null);
+    }
+
+    /**
+     * Sets the consumer protection attribution level with an optional callback.
+     *
+     * @param level    The consumer protection attribution level {@link Defines.BranchAttributionLevel}.
+     * @param callback An optional {@link TrackingStateCallback} for receiving notifications about
+     *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
+     */
+    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level, @Nullable TrackingStateCallback callback) {
         prefHelper_.setConsumerProtectionAttributionLevel(level);
         BranchLogger.v("Set Consumer Protection Preference to " + level);
 
         if (level == Defines.BranchAttributionLevel.NONE) {
-            trackingController.disableTracking(context_, true, null);
+            trackingController.disableTracking(context_, true, callback);
         } else {
             if (trackingController.isTrackingDisabled()) {
-                trackingController.disableTracking(context_, false, null);
+                trackingController.disableTracking(context_, false, callback);
             }
         }
-
     }
+
 }
