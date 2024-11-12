@@ -68,6 +68,8 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
             linkDataParams.put(params[i], params[i + 1]);
         }
 
+        linkDataParams.put(routingKey, routingValue);
+
         infoButton.setOnClickListener(view1 -> {
             HandleInfoButtonClicked();
         });
@@ -140,6 +142,10 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
     private void HandleForegroundLinkClick() {
         BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier(canonicalIdentifier);
         LinkProperties lp = new LinkProperties();
+        lp.addControlParameter(routingKey, routingValue);
+        for (int i = 0; i < linkDataParams.size(); i += 2) {
+            lp.addControlParameter(linkDataParams.get(i), linkDataParams.get(i + 1));
+        }
         String branchLink = buo.getShortUrl(context, lp);
         Intent intent = new Intent(getContext(), getActivity(context).getClass());
         intent.putExtra("branch", branchLink);

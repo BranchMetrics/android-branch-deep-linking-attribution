@@ -117,14 +117,10 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
             case CANONICAL_URL:
                 linkingValidatorEditText.setVisibility(View.VISIBLE);
                 linkingValidatorText.setText(LinkingValidatorConstants.canonicalURLPromptText);
-                routingKey = LinkingValidatorConstants.canonicalUrlKey;
-                routingValue = linkingValidatorEditText.getText().toString();
                 break;
             case DEEPLINK_PATH:
                 linkingValidatorEditText.setVisibility(View.VISIBLE);
                 linkingValidatorText.setText(LinkingValidatorConstants.deeplinkPathPromptText);
-                routingKey = LinkingValidatorConstants.deeplinkPathKey;
-                routingValue = linkingValidatorEditText.getText().toString();
                 break;
             case CUSTOM:
                 customKVPField.setVisibility(View.VISIBLE);
@@ -134,6 +130,17 @@ public class LinkingValidatorDialog extends Dialog implements AdapterView.OnItem
     }
 
     void GenerateBranchLinks() {
+        switch(routingType) {
+            case CANONICAL_URL:
+                routingKey = LinkingValidatorConstants.canonicalUrlKey;
+                routingValue = linkingValidatorEditText.getText().toString();
+                break;
+            case DEEPLINK_PATH:
+                routingKey = LinkingValidatorConstants.deeplinkPathKey;
+                routingValue = linkingValidatorEditText.getText().toString();
+                break;
+        }
+
         step++;
         linkingValidatorEditText.setVisibility(View.GONE);
         customKVPField.setVisibility(View.GONE);
