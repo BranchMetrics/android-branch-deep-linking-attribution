@@ -715,7 +715,7 @@ public class Branch {
     /**
      * Returns true if reading device id is disabled
      *
-     * @return {@link Boolean} with value true to disable reading Andoid ID
+     * @return {@link Boolean} with value true to disable reading Android ID
      */
     public static boolean isDeviceIDFetchDisabled() {
         return disableDeviceIDFetch_;
