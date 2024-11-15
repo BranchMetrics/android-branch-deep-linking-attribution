@@ -55,6 +55,7 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.validators.LinkingValidator;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -661,6 +662,7 @@ public class MainActivity extends Activity {
         // IMP : Do not make this call in your production app
 
         //IntegrationValidator.validate(MainActivity.this);
+        LinkingValidator.validate(MainActivity.this);
     }
 
 
