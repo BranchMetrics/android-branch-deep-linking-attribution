@@ -22,6 +22,7 @@ public class IntegrationValidatorDialog extends Dialog {
     IntegrationValidatorDialogRowItem test8RowItem;
 
     Button exportLogsButton;
+    Button testDeepLinkingButton;
 
     public IntegrationValidatorDialog(final Context context) {
         super(context);
@@ -40,9 +41,14 @@ public class IntegrationValidatorDialog extends Dialog {
         test8RowItem = findViewById(R.id.test_8_alternate_domain_intent_filters);
 
         exportLogsButton = findViewById(R.id.export_logs_button);
+        testDeepLinkingButton = findViewById(R.id.test_deep_linking_button);
 
         exportLogsButton.setOnClickListener(view -> {
             shareLogsAsText(context);
+        });
+
+        testDeepLinkingButton.setOnClickListener(view -> {
+            LinkingValidator.validate(context);
         });
     }
 

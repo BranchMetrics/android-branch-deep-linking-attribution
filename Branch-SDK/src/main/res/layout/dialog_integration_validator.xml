@@ -130,16 +130,39 @@
 
         </io.branch.referral.validators.IntegrationValidatorDialogRowItem>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:layout_weight="0.1">
+
         <Button
             android:id="@+id/export_logs_button"
-            android:layout_width="150dp"
-            android:layout_height="0dp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
             android:gravity="center"
             android:backgroundTint="#2A97FF"
             android:text="Export Logs"
             android:textColor="#FFFFFF"
-            android:layout_weight="0.1"/>
+            android:layout_weight="0.5"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp" />
+
+        <Button
+            android:id="@+id/test_deep_linking_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:backgroundTint="#2A97FF"
+            android:text="Test Deep Linking"
+            android:textColor="#FFFFFF"
+            android:layout_weight="0.5"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
