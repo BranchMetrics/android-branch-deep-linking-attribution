@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             branchWrapper.showLogWindow("",false, this, Constants.LOG_DATA);
         } else if (view == btCreateQrCode) {
             branchWrapper.getQRCode(this, getIntent(), MainActivity.this);
-        }else {
+        } else {
             branchWrapper.showLogWindow("",false, this, Constants.UNKNOWN);
         }
     }

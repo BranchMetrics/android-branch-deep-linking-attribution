@@ -114,6 +114,7 @@
             android:layout_marginBottom="@dimen/_2sdp"
             android:text="Send Standard Event"
             android:textAllCaps="false" />
+
         <Button
             android:id="@+id/bt_Read_Logs"
             android:layout_width="match_parent"

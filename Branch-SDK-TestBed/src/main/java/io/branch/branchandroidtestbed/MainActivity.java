@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -128,7 +127,7 @@ public class MainActivity extends Activity {
                                         if (error != null) {
                                             Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
                                         }
-                                        Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_LONG).show();
 
 
                                     }
@@ -154,10 +153,10 @@ public class MainActivity extends Activity {
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         if (error != null) {
                             Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
-                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_LONG).show();
                         } else {
                             Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
-                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -415,6 +414,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.viewLogsButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, LogOutputActivity.class);
+                startActivity(intent);
+            }
+        });
 
         findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
             @Override
@@ -454,11 +460,38 @@ public class MainActivity extends Activity {
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener((buttonView, isChecked) -> {
             Branch.getInstance().disableTracking(isChecked, (trackingDisabled, referringParams, error) -> {
                 if (trackingDisabled) {
-                    Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Enabled Tracking", Toast.LENGTH_LONG).show();
                 }
             });
+        });
+
+        findViewById(R.id.cmdConsumerProtectionPreference).setOnClickListener(v -> {
+            final String[] options = {"Full", "Reduced", "Minimal", "None"};
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Select Consumer Protection Attribution Level")
+                    .setItems(options, (dialog, which) -> {
+                        Defines.BranchAttributionLevel preference;
+                        switch (which) {
+                            case 1:
+                                preference = Defines.BranchAttributionLevel.REDUCED;
+                                break;
+                            case 2:
+                                preference = Defines.BranchAttributionLevel.MINIMAL;
+                                break;
+                            case 3:
+                                preference = Defines.BranchAttributionLevel.NONE;
+                                break;
+                            case 0:
+                            default:
+                                preference = Defines.BranchAttributionLevel.FULL;
+                                break;
+                        }
+                        Branch.getInstance().setConsumerProtectionAttributionLevel(preference);
+                        Toast.makeText(MainActivity.this, "Consumer Protection Preference set to " + options[which], Toast.LENGTH_LONG).show();
+                    });
+            builder.create().show();
         });
 
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
@@ -541,13 +574,13 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
                             public void onSuccess(int responseCode) {
-                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(Exception e) {
                                 Log.d("BranchSDK_Tester", e.toString());
-                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_LONG).show();
                             }
                         });
 
@@ -565,8 +598,18 @@ public class MainActivity extends Activity {
                         .setSearchQuery("product name")
                         .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
                         .addContentItems(branchUniversalObject)
-                        .logEvent(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Sent Branch Content Event", Toast.LENGTH_SHORT).show();
+                        .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                            @Override
+                            public void onSuccess(int responseCode) {
+                                Toast.makeText(getApplicationContext(), "Sent Branch Content Event: " + responseCode, Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                Log.d("BranchSDK_Tester", e.toString());
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Content Event: " + e.toString(), Toast.LENGTH_LONG).show();
+                            }
+                        });
             }
         });
 
@@ -580,8 +623,18 @@ public class MainActivity extends Activity {
                         .setDescription("User created an account")
                         .addCustomDataProperty("registrationID", "12345")
                         .addContentItems(branchUniversalObject)
-                        .logEvent(MainActivity.this);
-                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event", Toast.LENGTH_SHORT).show();
+                        .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                            @Override
+                            public void onSuccess(int responseCode) {
+                                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event: " + responseCode, Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                Log.d("BranchSDK_Tester", e.toString());
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Lifecycle Event: " + e, Toast.LENGTH_LONG).show();
+                            }
+                        });
             }
         });
 
@@ -592,7 +645,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
-                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_LONG).show();
                     }
                 });
 

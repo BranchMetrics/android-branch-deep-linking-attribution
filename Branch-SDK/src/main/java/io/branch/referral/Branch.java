@@ -538,11 +538,24 @@ public class Branch {
      *                        ({@code false}).
      * @param callback An optional {@link TrackingStateCallback} instance for receiving callback notifications about
      *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
-     */
-    public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
+     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)}
+     * with {@link Defines.BranchAttributionLevel#NONE} instead to disable tracking.
+     * */
+    @Deprecated public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
         trackingController.disableTracking(context_, disableTracking, callback);
     }
-    public void disableTracking(boolean disableTracking) {
+
+    /**
+     * Toggles the tracking state of the SDK. When tracking is disabled, the SDK will not track any user data or state,
+     * and it will not initiate any network calls except for deep linking operations.
+     * Re-enabling tracking will reinitialize the Branch session and resume normal SDK operations.
+     *
+     * @param disableTracking A boolean value indicating whether tracking should be disabled ({@code true}) or enabled
+     *                        ({@code false}).
+     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)}
+     * with {@link Defines.BranchAttributionLevel#NONE} instead to disable tracking.
+     * */
+    @Deprecated public void disableTracking(boolean disableTracking) {
         disableTracking(disableTracking, null);
     }
 
@@ -702,7 +715,7 @@ public class Branch {
     /**
      * Returns true if reading device id is disabled
      *
-     * @return {@link Boolean} with value true to disable reading Andoid ID
+     * @return {@link Boolean} with value true to disable reading Android ID
      */
     public static boolean isDeviceIDFetchDisabled() {
         return disableDeviceIDFetch_;
@@ -2577,4 +2590,34 @@ public class Branch {
             BranchLogger.w("setFBAppID: fbAppID cannot be empty or null");
         }
     }
+
+    /**
+     * Sets the consumer protection attribution level.
+     *
+     * @param level The consumer protection attribution level {@link Defines.BranchAttributionLevel}.
+     */
+    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
+        setConsumerProtectionAttributionLevel(level, null);
+    }
+
+    /**
+     * Sets the consumer protection attribution level with an optional callback.
+     *
+     * @param level    The consumer protection attribution level {@link Defines.BranchAttributionLevel}.
+     * @param callback An optional {@link TrackingStateCallback} for receiving notifications about
+     *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
+     */
+    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level, @Nullable TrackingStateCallback callback) {
+        prefHelper_.setConsumerProtectionAttributionLevel(level);
+        BranchLogger.v("Set Consumer Protection Preference to " + level);
+
+        if (level == Defines.BranchAttributionLevel.NONE) {
+            trackingController.disableTracking(context_, true, callback);
+        } else {
+            if (trackingController.isTrackingDisabled()) {
+                trackingController.disableTracking(context_, false, callback);
+            }
+        }
+    }
+
 }

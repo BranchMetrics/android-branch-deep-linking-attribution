@@ -114,7 +114,7 @@
         </activity>
 
         <activity android:name="io.branch.branchandroidtestbed.SettingsActivity" />
-
+        <activity android:name="io.branch.branchandroidtestbed.LogOutputActivity" />
         <activity android:name="io.branch.branchandroidtestbed.AutoDeepLinkTestActivity">
             <!-- Keys for auto deep linking this activity -->
             <meta-data

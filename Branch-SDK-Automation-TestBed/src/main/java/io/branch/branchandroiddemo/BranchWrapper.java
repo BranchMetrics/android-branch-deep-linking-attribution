@@ -1,10 +1,5 @@
 package io.branch.branchandroiddemo;
 
-import static android.content.Intent.getIntent;
-import static androidx.core.content.ContextCompat.startActivity;
-
-import static java.security.AccessController.getContext;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
-import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONObject;

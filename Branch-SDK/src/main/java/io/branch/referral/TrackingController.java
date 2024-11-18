@@ -29,6 +29,7 @@ public class TrackingController {
         // If the tracking state is already set to the desired state, then return instantly
         if (trackingDisabled == disableTracking) {
             if (callback != null) {
+                BranchLogger.v("Tracking state is already set to " + disableTracking + ". Returning the same to the callback");
                 callback.onTrackingStateChanged(trackingDisabled, Branch.getInstance().getFirstReferringParams(), null);
             }
             return;
@@ -38,11 +39,13 @@ public class TrackingController {
         PrefHelper.getInstance(context).setBool(PrefHelper.KEY_TRACKING_STATE, disableTracking);
 
         if (disableTracking) {
+            BranchLogger.v("Tracking disabled. Clearing all pending requests");
             onTrackingDisabled(context);
             if (callback != null) {
                 callback.onTrackingStateChanged(true, null, null);
             }
         } else {
+            BranchLogger.v("Tracking enabled. Registering app init");
             onTrackingEnabled((referringParams, error) -> {
                 if (callback != null) {
                     callback.onTrackingStateChanged(false, referringParams, error);

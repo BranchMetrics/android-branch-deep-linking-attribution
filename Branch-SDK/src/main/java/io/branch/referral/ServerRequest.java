@@ -218,6 +218,22 @@ public abstract class ServerRequest {
         }
     }
 
+    private void addConsumerProtectionAttributionLevel() {
+        if (prefHelper_.isAttributionLevelInitialized()) {
+            try {
+                if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
+                    params_.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
+                } else {
+                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+                    if (userDataObj != null) {
+                        userDataObj.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
+                    }
+                }
+            } catch (JSONException e) {
+                BranchLogger.d(e.getMessage());
+            }
+        }
+    }
 
     /**
      * <p>Provides the path to server for this request.
@@ -451,9 +467,11 @@ public abstract class ServerRequest {
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
         if (!TextUtils.isEmpty(gaid)) {
-            updateAdvertisingIdsObject(gaid);
-            // gaid is put in the request body below, calling to remove hardware id from request now
-            replaceHardwareIdOnValidAdvertisingId();
+            if (prefHelper_.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.FULL || !prefHelper_.isAttributionLevelInitialized()) {
+                updateAdvertisingIdsObject(gaid);
+                // gaid is put in the request body below, calling to remove hardware id from request now
+                replaceHardwareIdOnValidAdvertisingId();
+            }
         }
         try {
             if (version == BRANCH_API_VERSION.V1) {
@@ -462,7 +480,9 @@ public abstract class ServerRequest {
                     if (!SystemObserver.isHuaweiMobileServicesAvailable(context_)) {
                         // Fire OS overloads ad id (representing it as Google ad id at the top level),
                         // HUAWEI only reports ad id in the advertising_ids object
-                        params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                        if (prefHelper_.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.FULL || !prefHelper_.isAttributionLevelInitialized()) {
+                            params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                        }
                     }
                     params_.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                 } else if (!payloadContainsDeviceIdentifiers(params_) &&
@@ -477,7 +497,9 @@ public abstract class ServerRequest {
                         if (!SystemObserver.isHuaweiMobileServicesAvailable(context_)) {
                             // Fire OS overloads ad id (representing it as Google ad id at the top level),
                             // HUAWEI only reports ad id in the advertising_ids object
-                            userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
+                            if (prefHelper_.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.FULL || !prefHelper_.isAttributionLevelInitialized()) {
+                                userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
+                            }
                         }
                         userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
                     } else if (!payloadContainsDeviceIdentifiers(userDataObj) &&
@@ -649,6 +671,8 @@ public abstract class ServerRequest {
             addDMAParams();
         }
 
+      addConsumerProtectionAttributionLevel();
+
         // Always add these fields
         addClientRequestParameters();
     }
@@ -681,6 +705,7 @@ public abstract class ServerRequest {
         updateDisableAdNetworkCallouts();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.
+
         if (isGAdsParamsRequired()) {
             updateGAdsParams();
         }
@@ -774,11 +799,13 @@ public abstract class ServerRequest {
                 String externalIntentUri = prefHelper_.getExternalIntentUri();
                 utility.parseReferringURL(externalIntentUri);
 
-                JSONObject urlQueryParams = utility.getURLQueryParamsForRequest(this);
+                if (prefHelper_.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.FULL || !prefHelper_.isAttributionLevelInitialized()) {
+                    JSONObject urlQueryParams = utility.getURLQueryParamsForRequest(this);
 
-                for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
-                    String key = it.next();
-                    this.params_.put(key, urlQueryParams.get(key));
+                    for (Iterator<String> it = urlQueryParams.keys(); it.hasNext(); ) {
+                        String key = it.next();
+                        this.params_.put(key, urlQueryParams.get(key));
+                    }
                 }
 
             } catch (Exception e) {

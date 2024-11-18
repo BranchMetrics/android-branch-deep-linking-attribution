@@ -334,4 +334,20 @@ public class PrefHelperTest extends BranchTest {
         Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),true);
         Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),false);
     }
+
+    @Test
+    public void testConsumerProtectionAttributionLevel() {
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.REDUCED);
+        Assert.assertEquals(Defines.BranchAttributionLevel.REDUCED, prefHelper.getConsumerProtectionAttributionLevel());
+
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.MINIMAL);
+        Assert.assertEquals(Defines.BranchAttributionLevel.MINIMAL, prefHelper.getConsumerProtectionAttributionLevel());
+
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.NONE);
+        Assert.assertEquals(Defines.BranchAttributionLevel.NONE, prefHelper.getConsumerProtectionAttributionLevel());
+
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.FULL);
+        Assert.assertEquals(Defines.BranchAttributionLevel.FULL, prefHelper.getConsumerProtectionAttributionLevel());
+    }
+
 }

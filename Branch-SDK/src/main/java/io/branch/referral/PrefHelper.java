@@ -113,7 +113,7 @@ public class PrefHelper {
     private static final String KEY_DMA_AD_PERSONALIZATION = "bnc_dma_ad_personalization";
     private static final String KEY_DMA_AD_USER_DATA = "bnc_dma_ad_user_data";
     private static final String KEY_LOG_IAP_AS_EVENTS = "bnc_log_iap_as_events";
-
+    private static final String KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL = "bnc_consumer_protection_attribution_level";
     static final String KEY_ORIGINAL_INSTALL_TIME = "bnc_original_install_time";
     static final String KEY_LAST_KNOWN_UPDATE_TIME = "bnc_last_known_update_time";
     static final String KEY_PREVIOUS_UPDATE_TIME = "bnc_previous_update_time";
@@ -1430,5 +1430,35 @@ public class PrefHelper {
             partnerData.put(e.getKey(), individualPartnerParams);
         }
         body.put(Defines.Jsonkey.PartnerData.getKey(), partnerData);
+    }
+
+    /**
+     * <p>Gets the {@link Defines.BranchAttributionLevel} value that has been set.</p>
+     *
+     * @return A {@link Defines.BranchAttributionLevel} value representing the attribution level set.
+     */
+    public Defines.BranchAttributionLevel getConsumerProtectionAttributionLevel() {
+        String levelString = getString(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL);
+        if (levelString.equals(NO_STRING_VALUE)) {
+            return Defines.BranchAttributionLevel.FULL;
+        } else {
+            return Defines.BranchAttributionLevel.valueOf(levelString);
+        }
+    }
+
+    /**
+     * <p>Sets the {@link Defines.BranchAttributionLevel} value via the Branch API.</p>
+     *
+     * @param preference A {@link Defines.BranchAttributionLevel} value containing the desired attribution level.
+     */
+    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel preference) {
+        setString(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL, preference.toString());
+    }
+
+    /**
+     * Returns true if Consumer Protection Attribution Level - KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL value exist in pref helper.
+     */
+    boolean isAttributionLevelInitialized() {
+        return hasPrefValue(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL);
     }
 }

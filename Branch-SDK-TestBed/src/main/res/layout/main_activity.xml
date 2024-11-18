@@ -90,6 +90,12 @@
                 android:textOff="Disable Tracking"
                 android:textOn="Enable Tracking" />
 
+            <Button
+                android:id="@+id/cmdConsumerProtectionPreference"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_security_24"
+                android:text="Consumer Protection Preference" />
+
             <TextView
                 style="@style/testbed_text_view"
                 android:text="Events"
@@ -126,6 +132,13 @@
                 style="@style/testbed_text_view"
                 android:text="Misc."
                 />
+
+            <Button
+                android:id="@+id/viewLogsButton"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/baseline_document_scanner_24"
+                android:text="Load Branch Logs" />
+
 
             <Button
                 android:id="@+id/notif_btn"
