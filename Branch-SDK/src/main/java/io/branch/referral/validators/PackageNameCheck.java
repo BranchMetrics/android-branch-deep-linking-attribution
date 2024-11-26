@@ -1,5 +1,7 @@
 package io.branch.referral.validators;
 
+import static io.branch.referral.validators.IntegrationValidatorConstants.packageNameMoreInfoDocsLink;
+
 import android.content.Context;
 
 import org.json.JSONObject;
@@ -8,7 +10,7 @@ public class PackageNameCheck extends IntegrationValidatorCheck {
 
     String name = "Package Name";
     String errorMessage = "Incorrect package name in Branch dashboard. Please correct your package name in dashboard -> Configuration page.";
-    String moreInfoLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=package%3D%22com.example.android%22\">More info</a>";
+    String moreInfoLink = packageNameMoreInfoDocsLink;
     BranchIntegrationModel integrationModel;
     JSONObject branchAppConfig;
 

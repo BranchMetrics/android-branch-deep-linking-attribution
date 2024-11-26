@@ -1,5 +1,7 @@
 package io.branch.referral.validators;
 
+import static io.branch.referral.validators.IntegrationValidatorConstants.appLinksMoreInfoDocsLink;
+
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -9,7 +11,7 @@ public class AppLinksCheck extends IntegrationValidatorCheck {
 
     String name = "App Links";
     String errorMessage = "Could not find any App Link hosts to support Android AppLinks. Please add intent filter for handling AppLinks in your Android Manifest file";
-    String moreInfoLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=%3C!%2D%2D%20Branch%20App%20Links%20%2D%20Live,%3C/intent%2Dfilter%3E\">More info</a>";
+    String moreInfoLink = appLinksMoreInfoDocsLink;
     BranchIntegrationModel integrationModel;
     JSONObject branchAppConfig;
 

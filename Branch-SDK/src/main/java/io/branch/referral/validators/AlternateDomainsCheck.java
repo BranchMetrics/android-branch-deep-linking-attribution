@@ -1,5 +1,7 @@
 package io.branch.referral.validators;
 
+import static io.branch.referral.validators.IntegrationValidatorConstants.alternateDomainsMoreInfoDocsLink;
+
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -8,7 +10,7 @@ import org.json.JSONObject;
 public class AlternateDomainsCheck extends IntegrationValidatorCheck {
     String name = "Alt Domains";
     String errorMessage = "Could not find intent filter to support alternate link domain. Please add intent filter for handling alternate link domain in your Android Manifest file";
-    String moreInfoLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=The%20%2Dalternate.app.link%20domain%20associated%20with%20your%20app\">More info</a>";
+    String moreInfoLink = alternateDomainsMoreInfoDocsLink;
     BranchIntegrationModel integrationModel;
     JSONObject branchAppConfig;
 

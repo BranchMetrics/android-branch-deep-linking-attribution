@@ -1,5 +1,7 @@
 package io.branch.referral.validators;
 
+import static io.branch.referral.validators.IntegrationValidatorConstants.branchInstanceCreationMoreInfoDocsLink;
+
 import android.content.Context;
 
 import io.branch.referral.Branch;
@@ -8,7 +10,7 @@ public class BranchInstanceCreationValidatorCheck extends IntegrationValidatorCh
 
     String name = "Branch instance";
     String errorMessage = "Branch is not initialised from your Application class. Please add `Branch.getAutoInstance(this);` to your Application#onCreate() method.";
-    String moreInfoLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=Branch.getAutoInstance(this)\">More info</a>";
+    String moreInfoLink = branchInstanceCreationMoreInfoDocsLink;
 
     public BranchInstanceCreationValidatorCheck() {
         super.name = name;

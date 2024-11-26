@@ -1,5 +1,8 @@
 package io.branch.referral.validators;
 
+import static io.branch.referral.validators.IntegrationValidatorConstants.uriSchemeAppMoreInfoDocsLink;
+import static io.branch.referral.validators.IntegrationValidatorConstants.uriSchemeDashboardMoreInfoDocsLink;
+
 import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
@@ -17,8 +20,8 @@ public class URISchemeCheck extends IntegrationValidatorCheck {
     String uriSchemeNotSetInBranchDashboardErrorMessage = "Uri Scheme to open your app is not specified in Branch dashboard. Please add URI scheme in Branch dashboard.";
     String uriSchemesDoNotMatchErrorMessage = "Uri scheme specified in Branch dashboard doesn't match with the deep link intent in manifest file.";
 
-    String moreInfoLinkApp = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#4-configure-app:~:text=%3Cintent%2Dfilter%3E%0A%09%09%09%09%3C!%2D%2D%20If,/%3E%0A%09%09%09%3C/intent%2Dfilter%3E\">More info</a>";
-    String moreInfoLinkDashboard = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#1-configure-branch-dashboard:~:text=%22Android%20URI%20Scheme%22\">More info</a>";
+    String moreInfoLinkApp = uriSchemeAppMoreInfoDocsLink;
+    String moreInfoLinkDashboard = uriSchemeDashboardMoreInfoDocsLink;
 
     BranchIntegrationModel integrationModel;
     JSONObject branchAppConfig;

@@ -1,5 +1,7 @@
 package io.branch.referral.validators;
 
+import static io.branch.referral.validators.IntegrationValidatorConstants.customDomainMoreInfoDocsLink;
+
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -9,7 +11,7 @@ public class CustomDomainCheck extends IntegrationValidatorCheck {
 
     String name = "Custom Domain";
     String errorMessage = "Could not find intent filter to support Branch default link domain. Please add intent filter for handling custom link domain in your Android Manifest file";
-    String moreInfoLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app\">More info</a>";
+    String moreInfoLink = customDomainMoreInfoDocsLink;
     BranchIntegrationModel integrationModel;
     JSONObject branchAppConfig;
 
