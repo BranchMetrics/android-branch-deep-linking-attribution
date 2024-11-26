@@ -54,6 +54,7 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.validators.IntegrationValidator;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -713,7 +714,7 @@ public class MainActivity extends Activity {
         // Please look for "BranchSDK_Doctor" in the logcat to see the results.
         // IMP : Do not make this call in your production app
 
-        //IntegrationValidator.validate(MainActivity.this);
+        IntegrationValidator.validate(MainActivity.this);
     }
 
 
