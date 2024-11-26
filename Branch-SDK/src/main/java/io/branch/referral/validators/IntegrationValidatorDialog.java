@@ -12,14 +12,14 @@ import io.branch.referral.R;
 
 public class IntegrationValidatorDialog extends Dialog {
 
-    IntegrationValidatorDialogRowItem test1RowItem;
-    IntegrationValidatorDialogRowItem test2RowItem;
-    IntegrationValidatorDialogRowItem test3RowItem;
-    IntegrationValidatorDialogRowItem test4RowItem;
-    IntegrationValidatorDialogRowItem test5RowItem;
-    IntegrationValidatorDialogRowItem test6RowItem;
-    IntegrationValidatorDialogRowItem test7RowItem;
-    IntegrationValidatorDialogRowItem test8RowItem;
+    IntegrationValidatorDialogRowItem autoInstanceValidatorRowItem;
+    IntegrationValidatorDialogRowItem verifyBranchKeysRowItem;
+    IntegrationValidatorDialogRowItem verifyPackageNameRowItem;
+    IntegrationValidatorDialogRowItem verifyURISchemeRowItem;
+    IntegrationValidatorDialogRowItem verifyAppLinksRowItem;
+    IntegrationValidatorDialogRowItem verifyCustomDomainRowItem;
+    IntegrationValidatorDialogRowItem domainIntentFiltersRowItem;
+    IntegrationValidatorDialogRowItem alternateDomainIntentFiltersRowItem;
 
     Button exportLogsButton;
     Button testDeepLinkingButton;
@@ -31,14 +31,14 @@ public class IntegrationValidatorDialog extends Dialog {
         TextView sdkVersionTextView = findViewById(R.id.sdk_version);
         sdkVersionTextView.setText("SDK Version: " + Branch.getSdkVersionNumber());
 
-        test1RowItem = findViewById(R.id.test_1_auto_instance_validator_row);
-        test2RowItem = findViewById(R.id.test_2_verify_branch_keys);
-        test3RowItem = findViewById(R.id.test_3_verify_package_name);
-        test4RowItem = findViewById(R.id.test_4_verify_uri_scheme);
-        test5RowItem = findViewById(R.id.test_5_verify_app_links);
-        test6RowItem = findViewById(R.id.test_6_verify_custom_domain);
-        test7RowItem = findViewById(R.id.test_7_domain_intent_filters);
-        test8RowItem = findViewById(R.id.test_8_alternate_domain_intent_filters);
+        autoInstanceValidatorRowItem = findViewById(R.id.test_1_auto_instance_validator_row);
+        verifyBranchKeysRowItem = findViewById(R.id.test_2_verify_branch_keys);
+        verifyPackageNameRowItem = findViewById(R.id.test_3_verify_package_name);
+        verifyURISchemeRowItem = findViewById(R.id.test_4_verify_uri_scheme);
+        verifyAppLinksRowItem = findViewById(R.id.test_5_verify_app_links);
+        verifyCustomDomainRowItem = findViewById(R.id.test_6_verify_custom_domain);
+        domainIntentFiltersRowItem = findViewById(R.id.test_7_domain_intent_filters);
+        alternateDomainIntentFiltersRowItem = findViewById(R.id.test_8_alternate_domain_intent_filters);
 
         exportLogsButton = findViewById(R.id.export_logs_button);
         testDeepLinkingButton = findViewById(R.id.test_deep_linking_button);
@@ -52,31 +52,31 @@ public class IntegrationValidatorDialog extends Dialog {
         });
     }
 
-    public void setTestResult(int testNumber, String name, boolean didTestPass, String detailsMessage, String moreInfoLink) {
+    public void SetTestResultForRowItem(int testNumber, String name, boolean didTestPass, String detailsMessage, String moreInfoLink) {
         switch (testNumber) {
             case 1:
-                setResult(test1RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(autoInstanceValidatorRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
             case 2:
-                setResult(test2RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(verifyBranchKeysRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
             case 3:
-                setResult(test3RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(verifyPackageNameRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
             case 4:
-                setResult(test4RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(verifyURISchemeRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
             case 5:
-                setResult(test5RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(verifyAppLinksRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
             case 6:
-                setResult(test6RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(verifyCustomDomainRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
             case 7:
-                setResult(test7RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(domainIntentFiltersRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
             case 8:
-                setResult(test8RowItem, name, didTestPass, detailsMessage, moreInfoLink);
+                setResult(alternateDomainIntentFiltersRowItem, name, didTestPass, detailsMessage, moreInfoLink);
                 break;
         }
     }

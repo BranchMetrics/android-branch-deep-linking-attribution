@@ -65,49 +65,49 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         // 1. Verify Branch Auto instance
         BranchInstanceCreationValidatorCheck branchInstanceCreationValidatorCheck = new BranchInstanceCreationValidatorCheck();
         boolean result = branchInstanceCreationValidatorCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(1, branchInstanceCreationValidatorCheck.GetTestName(), result, branchInstanceCreationValidatorCheck.GetOutput(context, result), branchInstanceCreationValidatorCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(1, branchInstanceCreationValidatorCheck.GetTestName(), result, branchInstanceCreationValidatorCheck.GetOutput(context, result), branchInstanceCreationValidatorCheck.GetMoreInfoLink());
         logOutputForTest(result, "1. Verifying Branch instance creation", "Branch is not initialised from your Application class. Please add `Branch.getAutoInstance(this);` to your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
 
         // 2. Verify Branch Keys
         BranchKeysValidatorCheck branchKeysValidatorCheck = new BranchKeysValidatorCheck();
         result = branchKeysValidatorCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(2, branchKeysValidatorCheck.GetTestName(), result, branchKeysValidatorCheck.GetOutput(context, result), branchKeysValidatorCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(2, branchKeysValidatorCheck.GetTestName(), result, branchKeysValidatorCheck.GetOutput(context, result), branchKeysValidatorCheck.GetMoreInfoLink());
         logOutputForTest(result, "2. Checking Branch keys", "Unable to read Branch keys from your application. Did you forget to add Branch keys in your application?.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
 
         // 3. Verify the package name of app with Branch dash board settings
         PackageNameCheck packageNameCheck = new PackageNameCheck(integrationModel, branchAppConfig);
         result = packageNameCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(3, packageNameCheck.GetTestName(), result, packageNameCheck.GetOutput(context, result), packageNameCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(3, packageNameCheck.GetTestName(), result, packageNameCheck.GetOutput(context, result), packageNameCheck.GetMoreInfoLink());
         logOutputForTest(result, "3. Verifying application package name", packageNameCheck.errorMessage, "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-branch-dashboard");
 
         // 4. Verify the URI scheme setup
         URISchemeCheck uriSchemeCheck = new URISchemeCheck(integrationModel, branchAppConfig);
         result = uriSchemeCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(4, uriSchemeCheck.GetTestName(), result, uriSchemeCheck.GetOutput(context, result), uriSchemeCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(4, uriSchemeCheck.GetTestName(), result, uriSchemeCheck.GetOutput(context, result), uriSchemeCheck.GetMoreInfoLink());
         logOutputForTest(result, "4. Checking Android Manifest for URI based deep link config", uriSchemeCheck.errorMessage, "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
 
         //5. Check AndroidManifest for AppLink config
         AppLinksCheck appLinksCheck = new AppLinksCheck(integrationModel, branchAppConfig);
         result = appLinksCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(5, appLinksCheck.GetTestName(), result, appLinksCheck.GetOutput(context, result), appLinksCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(5, appLinksCheck.GetTestName(), result, appLinksCheck.GetOutput(context, result), appLinksCheck.GetMoreInfoLink());
         logOutputForTest(result, "5. Checking AndroidManifest for AppLink config.", "Could not find any App Link hosts to support Android AppLinks. Please add intent filter for handling AppLinks in your Android Manifest file", "https://help.branch.io/using-branch/docs/android-app-links#section-add-intent-filter-to-manifest");
 
         //6. Look for any custom domains specified in the dash board and has matching intent filter
         CustomDomainCheck customDomainCheck = new CustomDomainCheck(integrationModel, branchAppConfig);
         result = customDomainCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(6, customDomainCheck.GetTestName(), result, customDomainCheck.GetOutput(context, result), customDomainCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(6, customDomainCheck.GetTestName(), result, customDomainCheck.GetOutput(context, result), customDomainCheck.GetMoreInfoLink());
         logOutputForTest(result, "6. Verifying any supported custom link domains.", String.format("Could not find intent filter to support custom link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", branchAppConfig.optString("short_url_domain")), "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
 
         // 7. Check for matching intent filter for default app link domains
         DefaultDomainsCheck defaultDomainsCheck = new DefaultDomainsCheck(integrationModel, branchAppConfig);
         result = defaultDomainsCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(7, defaultDomainsCheck.GetTestName(), result, defaultDomainsCheck.GetOutput(context, result), defaultDomainsCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(7, defaultDomainsCheck.GetTestName(), result, defaultDomainsCheck.GetOutput(context, result), defaultDomainsCheck.GetMoreInfoLink());
         logOutputForTest(result,  "7. Verifying default link domains integrations.", String.format("Could not find intent filter to support Branch default link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", branchAppConfig.optString("default_short_url_domain")), "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
 
         // 8. Check for matching intent filter for alternate app link domains
         AlternateDomainsCheck alternateDomainsCheck = new AlternateDomainsCheck(integrationModel, branchAppConfig);
         result = alternateDomainsCheck.RunTests(context);
-        integrationValidatorDialog.setTestResult(8, alternateDomainsCheck.GetTestName(), result, alternateDomainsCheck.GetOutput(context, result), alternateDomainsCheck.GetMoreInfoLink());
+        integrationValidatorDialog.SetTestResultForRowItem(8, alternateDomainsCheck.GetTestName(), result, alternateDomainsCheck.GetOutput(context, result), alternateDomainsCheck.GetMoreInfoLink());
         logOutputForTest(result, "8. Verifying alternate link domains integrations.", String.format("Could not find intent filter to support alternate link domain '%s'. Please add intent filter for handling custom link domain in your Android Manifest file ", branchAppConfig.optString("alternate_short_url_domain")), "https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app");
 
         finishTestingOutput();

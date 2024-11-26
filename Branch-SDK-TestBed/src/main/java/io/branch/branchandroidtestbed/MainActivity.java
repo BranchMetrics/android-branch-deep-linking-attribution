@@ -439,7 +439,7 @@ public class MainActivity extends Activity {
                         .setContentIntent(pendingIntent)
                         .setAutoCancel(true);
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                //notificationManager.notify(1, builder.build());
+                notificationManager.notify(1, builder.build());
                 Log.d("BranchSDK_Tester", "Sent notification");
             }
         });

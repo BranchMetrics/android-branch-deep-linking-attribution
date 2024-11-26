@@ -17,19 +17,19 @@ public class LinkingValidatorConstants {
         public static final String linkingValidatorRow5Title = "Warm start use case";
         public static final String linkingValidatorRow6Title = "Foreground click use case";
 
-        public static final String infoButton1Copy = "Verifies that Universal Links / App Links are working correctly for your Branch domain";
-        public static final String infoButton2Copy = "Verifies that URI schemes work correctly for your Branch domain";
-        public static final String infoButton3Copy = "Verifies that web-only links are handled correctly to take you to the mobile web";
-        public static final String infoButton4Copy = "Verifies that your app gracefully handles Branch links missing deep link data";
-        public static final String infoButton5Copy = "Click the button to simulate a deep link click for the warm start use case";
-        public static final String infoButton6Copy = "Click the button to simulate a deep link click for the foreground use case";
+        public static final String infoButton1Text = "Verifies that Universal Links / App Links are working correctly for your Branch domain";
+        public static final String infoButton2Text = "Verifies that URI schemes work correctly for your Branch domain";
+        public static final String infoButton3Text = "Verifies that web-only links are handled correctly to take you to the mobile web";
+        public static final String infoButton4Text = "Verifies that your app gracefully handles Branch links missing deep link data";
+        public static final String infoButton5Text = "Click the button to simulate a deep link click for the warm start use case";
+        public static final String infoButton6Text = "Click the button to simulate a deep link click for the foreground use case";
 
-        public static final String debugButton1Copy = "Ensure you’ve entered the correct SHA 256s on the dashboard and added your Branch domains to the Android Manifest";
-        public static final String debugButton2Copy = "Ensure that you’ve added a unique Branch URI scheme to the dashboard and Android Manifest";
-        public static final String debugButton3Copy = "Ensure that your code checks for $web-only in the link data, and if it is true routes the user to the mobile web";
-        public static final String debugButton4Copy = "Ensure that your code gracefully handles missing or invalid deep link data like taking them to the home screen";
-        public static final String debugButton5Copy = "Ensure that you are initializing Branch inside of onStart() and that the code is called anytime the app enters the foreground";
-        public static final String debugButton6Copy = "Ensure that you are calling reInit() inside of onNewIntent() after checking if branch_force_new_session is true";
+        public static final String debugButton1Text = "Ensure you’ve entered the correct SHA 256s on the dashboard and added your Branch domains to the Android Manifest";
+        public static final String debugButton2Text = "Ensure that you’ve added a unique Branch URI scheme to the dashboard and Android Manifest";
+        public static final String debugButton3Text = "Ensure that your code checks for $web-only in the link data, and if it is true routes the user to the mobile web";
+        public static final String debugButton4Text = "Ensure that your code gracefully handles missing or invalid deep link data like taking them to the home screen";
+        public static final String debugButton5Text = "Ensure that you are initializing Branch inside of onStart() and that the code is called anytime the app enters the foreground";
+        public static final String debugButton6Text = "Ensure that you are calling reInit() inside of onNewIntent() after checking if branch_force_new_session is true";
 
 
 }
