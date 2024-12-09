@@ -156,6 +156,12 @@ public class BranchUtil {
         }
     }
 
+    public static void setCPPLevel(Context context) {
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        Defines.BranchAttributionLevel cppLevel = Defines.BranchAttributionLevel.valueOf(jsonConfig.getConsumerProtectionAttributionLevel());
+        Branch.getInstance().setConsumerProtectionAttributionLevel(cppLevel);
+    }
+
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
      * This value can be overridden via. {@link Branch#enableTestMode()}

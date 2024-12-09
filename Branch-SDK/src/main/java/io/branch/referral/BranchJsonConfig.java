@@ -31,7 +31,8 @@ public class BranchJsonConfig {
         enableLogging,
         deferInitForPluginRuntime,
         apiUrl,
-        fbAppId
+        fbAppId,
+        cppLevel
     }
 
     /*
@@ -48,7 +49,8 @@ public class BranchJsonConfig {
             "enableLogging": true,
             "deferInitForPluginRuntime": true,
             "apiUrl": "https://api2.branch.io",
-            "fbAppId": "xyz123456789"
+            "fbAppId": "xyz123456789",
+            "consumerProtectionAttributionLevel: "Reduced"
        }
     */
 
@@ -217,6 +219,25 @@ public class BranchJsonConfig {
             }
             
             return mConfiguration.getString(BranchJsonKey.fbAppId.toString());
+        }
+        catch (JSONException exception) {
+            Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
+            return null;
+        }
+    }
+
+    @Nullable
+    public String getConsumerProtectionAttributionLevel() {
+        if (mConfiguration == null) {
+            return null;
+        }
+
+        try {
+            if (!mConfiguration.has(BranchJsonKey.cppLevel.toString())) {
+                return null;
+            }
+
+            return mConfiguration.getString(BranchJsonKey.cppLevel.toString());
         }
         catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
