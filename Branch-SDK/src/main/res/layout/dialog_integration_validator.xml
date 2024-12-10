@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#96FFFFFF">
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Space
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.1" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:src="@drawable/branch_icon" />
+
+        <Space
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.1" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.4"
+            android:gravity="center"
+            android:text="Branch Integration Validator"
+            android:textSize="24sp" />
+
+        <Space
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.1" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+        android:weightSum="1">
+
+        <TextView
+            android:id="@+id/sdk_version"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:text="TextView"
+            android:textSize="20sp"
+            tools:text="SDK Version: "
+            android:layout_weight="0.1"/>
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_1_auto_instance_validator_row"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1" />
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_2_verify_branch_keys"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1"/>
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_3_verify_package_name"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1"/>
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_4_verify_uri_scheme"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1"/>
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_5_verify_app_links"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1"/>
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_6_verify_custom_domain"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1"/>
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_7_domain_intent_filters"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1">
+
+        </io.branch.referral.validators.IntegrationValidatorDialogRowItem>
+
+        <io.branch.referral.validators.IntegrationValidatorDialogRowItem
+            android:id="@+id/test_8_alternate_domain_intent_filters"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="start"
+            android:layout_weight="0.1">
+
+        </io.branch.referral.validators.IntegrationValidatorDialogRowItem>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:layout_weight="0.1">
+
+        <Button
+            android:id="@+id/export_logs_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:backgroundTint="#2A97FF"
+            android:text="Export Logs"
+            android:textColor="#FFFFFF"
+            android:layout_weight="0.5"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp" />
+
+        <Button
+            android:id="@+id/test_deep_linking_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:backgroundTint="#2A97FF"
+            android:text="Test Deep Linking"
+            android:textColor="#FFFFFF"
+            android:layout_weight="0.5"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
