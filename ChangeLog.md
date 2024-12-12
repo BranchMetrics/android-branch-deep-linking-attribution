@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.15.0
+* _*Master Release*_ - Dec 12, 2024
+  - New extended Integration Validator UI
+
 - v5.14.0
 * _*Master Release*_ - Nov 18, 2024
   - Added `setConsumerProtectionAttributionLevel` for controlling attribution data collection
