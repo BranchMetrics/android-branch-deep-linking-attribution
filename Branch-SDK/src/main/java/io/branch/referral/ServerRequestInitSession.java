@@ -133,6 +133,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
      */
     void updateLinkReferrerParams() {
         // Add link identifier if present
+
+        //TODO: Remove this
         String linkIdentifier = prefHelper_.getLinkClickIdentifier();
         if (!linkIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
             try {

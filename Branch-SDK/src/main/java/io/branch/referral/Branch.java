@@ -863,7 +863,7 @@ public class Branch {
         return pluginName;
     }
 
-    private void readAndStripParam(Uri data, Activity activity) {
+    private void readAndStripParam(Uri data, Activity activity, ServerRequestInitSession initRequest) {
         BranchLogger.v("Read params uri: " + data + " bypassCurrentActivityIntentState: " + bypassCurrentActivityIntentState_ + " intent state: " + intentState_);
         if (enableInstantDeepLinking) {
 
@@ -885,18 +885,23 @@ public class Branch {
             intentState_ = INTENT_STATE.READY;
         }
 
+        //TODO: Fix this area
         if (intentState_ == INTENT_STATE.READY) {
 
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             extractExternalUriAndIntentExtras(data, activity);
 
             // if branch link is detected we don't need to look for click ID or app link anymore and can terminate early
-            if (extractBranchLinkFromIntentExtra(activity)) return;
+            if (extractBranchLinkFromIntentExtra(activity)) {
+                return;
+            }
 
             // Check for link click id or app link
             if (!isActivityLaunchedFromHistory(activity)) {
                 // if click ID is detected we don't need to look for app link anymore and can terminate early
-                if (extractClickID(data, activity)) return;
+                if (extractClickID(data, activity)) {
+                    return;
+                }
 
                 // Check if the clicked url is an app link pointing to this app
                 extractAppLink(data, activity);
@@ -1530,15 +1535,22 @@ public class Branch {
     }
     
     void onIntentReady(@NonNull Activity activity) {
-        BranchLogger.v("onIntentReady " + activity + " removing INTENT_PENDING_WAIT_LOCK");
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        BranchLogger.v("onIntentReady " + activity + " removed INTENT_PENDING_WAIT_LOCK");
 
-        boolean grabIntentParams = activity.getIntent() != null && getInitState() != Branch.SESSION_STATE.INITIALISED;
+        Intent currentIntent = activity.getIntent();
+        Branch.SESSION_STATE sessionState = getInitState();
+        boolean grabIntentParams = currentIntent != null &&  getInitState() != Branch.SESSION_STATE.INITIALISED;
 
+        BranchLogger.v("onIntentReady currentIntent " + currentIntent);
+        BranchLogger.v("onIntentReady sessionState " + sessionState);
+        BranchLogger.v("onIntentReady grabIntentParams " + grabIntentParams);
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
-            readAndStripParam(intentData, activity);
+            //TODO: Pass the correct instance of open request
+            // Test with multiple opens queued up
+            readAndStripParam(intentData, activity, null);
         }
         requestQueue_.processNextQueueItem("onIntentReady");
     }
@@ -2233,10 +2245,11 @@ public class Branch {
     }
 
     private void extractExternalUriAndIntentExtras(Uri data, Activity activity) {
-        BranchLogger.v("extractExternalUriAndIntentExtras " + data + " " + activity);
+        BranchLogger.v("extractExternalUriAndIntentExtras data: " + data + " activity: " + activity);
         try {
             if (!isIntentParamsAlreadyConsumed(activity)) {
                 String strippedUrl = UniversalResourceAnalyser.getInstance(context_).getStrippedURL(data.toString());
+                BranchLogger.v("setExternalIntentUri: " + strippedUrl);
                 prefHelper_.setExternalIntentUri(strippedUrl);
 
                 if (strippedUrl.equals(data.toString())) {
@@ -2417,11 +2430,14 @@ public class Branch {
                 PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
             }
 
+            ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
+            BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
+
             if (uri != null) {
-                branch.readAndStripParam(uri, activity);
+                branch.readAndStripParam(uri, activity, initRequest);
             }
             else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
-                branch.readAndStripParam(intent != null ? intent.getData() : null, activity);
+                branch.readAndStripParam(intent != null ? intent.getData() : null, activity, initRequest);
             }
             else if (isReInitializing) {
                 // User called reInit but isRestartSessionRequested = false, meaning the new intent was
@@ -2453,8 +2469,6 @@ public class Branch {
                 expectDelayedSessionInitialization(true);
             }
 
-            ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
-            BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
             branch.initializeSession(initRequest, delay);
         }
 
