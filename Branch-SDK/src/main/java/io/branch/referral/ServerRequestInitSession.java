@@ -19,7 +19,7 @@ import kotlin.coroutines.EmptyCoroutineContext;
  * Abstract for Session init request. All request which do initialize session should extend from this.
  * </p>
  */
-abstract class ServerRequestInitSession extends ServerRequest {
+public abstract class ServerRequestInitSession extends ServerRequest {
     static final String ACTION_OPEN = "open";
     static final String ACTION_INSTALL = "install";
     private final Context context_;
