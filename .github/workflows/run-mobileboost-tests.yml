@@ -25,9 +25,14 @@ jobs:
       - name: Build Android App
         run: ./gradlew Branch-SDK-TestBed:assembleDebug
 
+      - name: Build Android App
+        run: ./gradlew Liking-Testbeds/DelayedInitTest:assembleDebug
+
       - name: Upload APK to Mobile Boost and Run Tests
         run: |
           curl -s https://app.mobileboost.io/cli.sh | tr -d '\r' | /bin/bash -s -- "$PWD/Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk" android
+
+          curl -s https://app.mobileboost.io/cli.sh | tr -d '\r' | /bin/bash -s -- "$PWD/Liking-Testbeds/DelayedInitTest/build/outputs/apk/debug/DelayedInitTest-debug.apk" android
         env:
           API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
           API_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
