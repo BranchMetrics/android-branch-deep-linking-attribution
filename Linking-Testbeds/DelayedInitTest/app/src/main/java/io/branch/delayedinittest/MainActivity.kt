@@ -12,6 +12,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.branch.delayedinittest.ui.theme.DelayedInitTestTheme
 import io.branch.referral.Branch
+import android.content.Intent
+import android.app.PendingIntent
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,41 +32,66 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeBranch() {
-        // Initialize the Branch SDK
         Branch.sessionBuilder(this).withCallback { branchUniversalObject, linkProperties, error ->
             if (error != null) {
-                Log.e("BranchSDK_Tester", "branch init failed. Caused by -" + error.message)
+                Log.e("BranchSDK_Tester", "Branch init failed. Caused by - ${error.message}")
             } else {
-                Log.i("BranchSDK_Tester", "branch init complete!")
-                if (branchUniversalObject != null) {
-                    Log.i("BranchSDK_Tester", "title " + branchUniversalObject.title)
-                    Log.i("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.canonicalIdentifier)
-                    Log.i("BranchSDK_Tester", "metadata " + branchUniversalObject.contentMetadata.convertToJson())
+                Log.i("BranchSDK_Tester", "Branch init complete!")
+
+                val deepLinkDetails = StringBuilder()
+                branchUniversalObject?.let {
+                    deepLinkDetails.append("Title: ${it.title}\n")
+                    deepLinkDetails.append("Canonical Identifier: ${it.canonicalIdentifier}\n")
+                    deepLinkDetails.append("Metadata: ${it.contentMetadata.convertToJson()}\n")
                 }
-                if (linkProperties != null) {
-                    Log.i("BranchSDK_Tester", "Channel " + linkProperties.channel)
-                    Log.i("BranchSDK_Tester", "control params " + linkProperties.controlParams)
+                linkProperties?.let {
+                    deepLinkDetails.append("Channel: ${it.channel}\n")
+                    deepLinkDetails.append("Control Params: ${it.controlParams}\n")
+                }
+
+                if (deepLinkDetails.isNotEmpty()) {
+                    showDeepLinkAlert(deepLinkDetails.toString())
                 }
             }
         }.withData(this.intent.data).init()
     }
 
-//    fun onNewIntent(intent: Intent?) {
-//        if (intent != null) {
-//            super.onNewIntent(intent)
-//        }
-//        this.setIntent(intent);
-//        if (intent != null && intent.hasExtra("branch_force_new_session") && intent.getBooleanExtra("branch_force_new_session",false)) {
-//            Branch.sessionBuilder(this).withCallback { referringParams, error ->
-//                if (error != null) {
-//                    Log.e("BranchSDK_Tester", error.message)
-//                } else if (referringParams != null) {
-//                    Log.i("BranchSDK_Tester", referringParams.toString())
-//                }
-//            }.reInit()
-//        }
-//    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        this.intent = intent
 
+        if (intent.hasExtra("branch_force_new_session") && intent.getBooleanExtra("branch_force_new_session", false)) {
+            Branch.sessionBuilder(this).withCallback { branchUniversalObject, linkProperties, error ->
+                if (error != null) {
+                    Log.e("BranchSDK_Tester", error.message ?: "Unknown error")
+                } else {
+                    val deepLinkDetails = StringBuilder()
+                    branchUniversalObject?.let {
+                        deepLinkDetails.append("Title: ${it.title}\n")
+                        deepLinkDetails.append("Canonical Identifier: ${it.canonicalIdentifier}\n")
+                        deepLinkDetails.append("Metadata: ${it.contentMetadata.convertToJson()}\n")
+                    }
+                    linkProperties?.let {
+                        deepLinkDetails.append("Channel: ${it.channel}\n")
+                        deepLinkDetails.append("Control Params: ${it.controlParams}\n")
+                    }
+
+                    if (deepLinkDetails.isNotEmpty()) {
+                        showDeepLinkAlert(deepLinkDetails.toString())
+                    }
+                }
+            }.reInit()
+        }
+    }
+
+    // Function to display an alert dialog
+    private fun showDeepLinkAlert(details: String) {
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle("Deep Link Details")
+        builder.setMessage(details)
+        builder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+        builder.create().show()
+    }
 }
 
 @Composable
