@@ -20,7 +20,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.jar.JarFile;
 
 /**
@@ -156,10 +155,15 @@ public class BranchUtil {
         }
     }
 
-    public static void setCPPLevel(Context context) {
+    public static void setCPPLevelFromConfig(Context context) {
         BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
-        Defines.BranchAttributionLevel cppLevel = Defines.BranchAttributionLevel.valueOf(jsonConfig.getConsumerProtectionAttributionLevel());
-        Branch.getInstance().setConsumerProtectionAttributionLevel(cppLevel);
+        String jsonString = jsonConfig.getConsumerProtectionAttributionLevel();
+
+        // If there is no entry, do not change the setting or any default behavior.
+        if(!TextUtils.isEmpty(jsonString)) {
+            Defines.BranchAttributionLevel cppLevel = Defines.BranchAttributionLevel.valueOf(jsonString);
+            Branch.getInstance().setConsumerProtectionAttributionLevel(cppLevel);
+        }
     }
 
     /**

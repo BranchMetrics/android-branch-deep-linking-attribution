@@ -381,7 +381,7 @@ public class Branch {
 
             BranchUtil.setFbAppIdFromConfig(context);
 
-            BranchUtil.setCPPLevel(context);
+            BranchUtil.setCPPLevelFromConfig(context);
 
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
@@ -412,7 +412,7 @@ public class Branch {
 
             BranchUtil.setAPIBaseUrlFromConfig(context);
             BranchUtil.setFbAppIdFromConfig(context);
-            BranchUtil.setCPPLevel(context);
+            BranchUtil.setCPPLevelFromConfig(context);
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {
