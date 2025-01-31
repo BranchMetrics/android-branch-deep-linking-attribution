@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.15.1
+* _*Master Release*_ - Jan 31, 2025
+  - Add JSON config for CPP feature
+  
 - v5.15.0
 * _*Master Release*_ - Dec 12, 2024
   - New extended Integration Validator UI
