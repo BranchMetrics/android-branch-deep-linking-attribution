@@ -714,7 +714,7 @@ public class MainActivity extends Activity {
         // Please look for "BranchSDK_Doctor" in the logcat to see the results.
         // IMP : Do not make this call in your production app
 
-        IntegrationValidator.validate(MainActivity.this);
+        //IntegrationValidator.validate(MainActivity.this);
     }
 
 

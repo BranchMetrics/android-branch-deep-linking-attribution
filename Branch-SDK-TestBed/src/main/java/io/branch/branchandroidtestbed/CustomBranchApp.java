@@ -17,11 +17,11 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-        IBranchLoggingCallbacks loggingCallbacks = (message, tag) -> {
-            Log.d("BranchTestbed", message);
-            saveLogToFile(message);
-        };
-        Branch.enableLogging(loggingCallbacks);
+//        IBranchLoggingCallbacks loggingCallbacks = (message, tag) -> {
+//            Log.d("BranchTestbed", message);
+//            saveLogToFile(message);
+//        };
+        Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
 
         Branch.getAutoInstance(this);
     }
@@ -44,6 +44,4 @@ public final class CustomBranchApp extends Application {
             Log.e("BranchTestbed", "Error writing to log file", e);
         }
     }
-
-
 }
