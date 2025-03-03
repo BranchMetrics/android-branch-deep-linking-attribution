@@ -892,6 +892,7 @@ public class Branch {
 
             // Capture the intent URI and extra for analytics in case started by external intents such as google app search
             extractExternalUriAndIntentExtras(data, activity);
+            extractInitialReferrer(activity);
 
             // if branch link is detected we don't need to look for click ID or app link anymore and can terminate early
             if (extractBranchLinkFromIntentExtra(activity)) return;
@@ -2264,6 +2265,19 @@ public class Branch {
         }
     }
 
+    private void extractInitialReferrer(Activity activity){
+        BranchLogger.v("extractInitialReferrer " + activity);
+
+        if(activity != null){
+            Uri initialReferrer = ActivityCompat.getReferrer(activity);
+            BranchLogger.v("Initial referrer: " + initialReferrer);
+
+            if(initialReferrer != null) {
+                prefHelper_.setInitialReferrer(initialReferrer.toString());
+            }
+        }
+    }
+
     @Nullable Activity getCurrentActivity() {
         if (currentActivityReference_ == null) return null;
         return currentActivityReference_.get();
@@ -2415,9 +2429,17 @@ public class Branch {
 
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
+            Uri initialReferrer = null;
 
-            if (activity != null && intent != null && ActivityCompat.getReferrer(activity) != null) {
-                PrefHelper.getInstance(activity).setInitialReferrer(ActivityCompat.getReferrer(activity).toString());
+            if(activity != null) {
+             initialReferrer = ActivityCompat.getReferrer(activity);
+            }
+
+            BranchLogger.v("Activity: " + activity);
+            BranchLogger.v("Intent: " + intent);
+            BranchLogger.v("Initial Referrer: " + initialReferrer);
+            if (activity != null && intent != null &&  initialReferrer!= null) {
+                PrefHelper.getInstance(activity).setInitialReferrer(initialReferrer.toString());
             }
 
             if (uri != null) {
