@@ -1132,6 +1132,7 @@ public class PrefHelper {
      * @param initialReferrer android.intent.extra.REFERRER
      */
     public void setInitialReferrer(String initialReferrer) {
+        BranchLogger.v("setInitialReferrer " + initialReferrer);
         setString(KEY_INITIAL_REFERRER, initialReferrer);
     }
 
@@ -1141,7 +1142,9 @@ public class PrefHelper {
      * @return {@link String} android.intent.extra.REFERRER
      */
     public String getInitialReferrer() {
-        return getString(KEY_INITIAL_REFERRER);
+        String initialReferrer = getString(KEY_INITIAL_REFERRER);
+        BranchLogger.v("getInitialReferrer " + initialReferrer);
+        return initialReferrer;
     }
 
 

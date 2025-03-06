@@ -54,9 +54,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
         if (!DeviceInfo.isNullOrEmptyOrBlank(appVersion)) {
             post.put(Defines.Jsonkey.AppVersion.getKey(), appVersion);
         }
-        if(!TextUtils.isEmpty(prefHelper_.getInitialReferrer()) && !prefHelper_.getInitialReferrer().equals(PrefHelper.NO_STRING_VALUE)) {
-            post.put(Defines.Jsonkey.InitialReferrer.getKey(), prefHelper_.getInitialReferrer());
-        }
 
         updateInstallStateAndTimestamps(post);
         updateEnvironment(context_, post);
@@ -191,18 +188,30 @@ abstract class ServerRequestInitSession extends ServerRequest {
         super.onPreExecute();
         JSONObject post = getPost();
         try {
-            if (!prefHelper_.getAppLink().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), prefHelper_.getAppLink());
+            String appLink = prefHelper_.getAppLink();
+            if (!appLink.equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), appLink);
             }
-            if (!prefHelper_.getPushIdentifier().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put(Defines.Jsonkey.AndroidPushIdentifier.getKey(), prefHelper_.getPushIdentifier());
+
+            String pushIdentifier = prefHelper_.getPushIdentifier();
+            if (!pushIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.AndroidPushIdentifier.getKey(), pushIdentifier);
             }
+
             // External URI or Extras if exist
-            if (!prefHelper_.getExternalIntentUri().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put(Defines.Jsonkey.External_Intent_URI.getKey(), prefHelper_.getExternalIntentUri());
+            String externalIntentUri = prefHelper_.getExternalIntentUri();
+            if (!externalIntentUri.equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.External_Intent_URI.getKey(), externalIntentUri);
             }
-            if (!prefHelper_.getExternalIntentExtra().equals(PrefHelper.NO_STRING_VALUE)) {
-                post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), prefHelper_.getExternalIntentExtra());
+
+            String externalIntentExtra = prefHelper_.getExternalIntentExtra();
+            if (!externalIntentExtra.equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), externalIntentExtra);
+            }
+
+            String initialReferrer = prefHelper_.getInitialReferrer();
+            if(!TextUtils.isEmpty(initialReferrer) && !initialReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
+                post.put(Defines.Jsonkey.InitialReferrer.getKey(), initialReferrer);
             }
 
         } catch (JSONException e) {
