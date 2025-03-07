@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.15.2
+* _*Master Release*_ - Mar 6, 2025
+  - Fix bug with initial referrer not being set on warm starts.
+
 - v5.15.1
 * _*Master Release*_ - Jan 31, 2025
   - Add JSON config for CPP feature
