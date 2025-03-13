@@ -34,7 +34,7 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
 
             client.startConnection(object : InstallReferrerStateListener {
                 override fun onInstallReferrerSetupFinished(responseInt: Int) {
-                    BranchLogger.w("Caught getGooglePlayStoreReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+                    BranchLogger.v("getGooglePlayStoreReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
 
                     if (responseInt == InstallReferrerClient.InstallReferrerResponse.OK) {
                         deferredReferrerDetails.complete(
@@ -84,7 +84,7 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferre
                 client.startConnection(object :
                     com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener {
                     override fun onInstallReferrerSetupFinished(responseInt: Int) {
-                        BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+                        BranchLogger.v("getHuaweiAppGalleryReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
 
                         if (responseInt == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
@@ -141,7 +141,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                 client.startConnection(object :
                     com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
                     override fun onInstallReferrerSetupFinished(p0: Int) {
-                        BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails onInstallReferrerSetupFinished response code: $p0")
+                        BranchLogger.v("getSamsungGalaxyStoreReferrerDetails onInstallReferrerSetupFinished response code: $p0")
 
                         if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
@@ -193,7 +193,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
 
                 client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
                     override fun onGetAppsReferrerSetupFinished(state: Int) {
-                        BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails onInstallReferrerSetupFinished response code: $state")
+                        BranchLogger.v("getXiaomiGetAppsReferrerDetails onInstallReferrerSetupFinished response code: $state")
 
                         if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
@@ -243,32 +243,26 @@ suspend fun getMetaInstallReferrerDetails(context: Context): InstallReferrerResu
             BranchLogger.d("No Facebook App ID provided. Can't check for Meta Install Referrer")
             null
         } else {
-            queryMetaInstallReferrer(context, fbAppID)
+            BranchLogger.v("Begin getMetaInstallReferrerDetails")
+            queryMetaInstallReferrers(context, fbAppID)
         }
     } catch (exception: Exception) {
         BranchLogger.e("Exception in getMetaInstallReferrerDetails: $exception")
         null
     }
 }
-private fun queryMetaInstallReferrer(context: Context, fbAppId: String): InstallReferrerResult? {
+
+private fun queryMetaInstallReferrers(context: Context, fbAppId: String): InstallReferrerResult? {
     val facebookProvider = "content://com.facebook.katana.provider.InstallReferrerProvider/$fbAppId"
     val instagramProvider = "content://com.instagram.contentprovider.InstallReferrerProvider/$fbAppId"
+    val facebookLiteProvider = "content://com.facebook.lite.provider.InstallReferrerProvider/$fbAppId"
 
     val facebookResult = queryProvider(context, facebookProvider)
     val instagramResult = queryProvider(context, instagramProvider)
+    val facebookLiteResult = queryProvider(context, facebookLiteProvider)
 
-    // Check both Facebook and Instagram for install referrers and return the latest one
-    val result: InstallReferrerResult?
-
-    if (facebookResult != null && instagramResult != null) {
-        if (facebookResult.latestClickTimestamp > instagramResult.latestClickTimestamp) {
-            result = facebookResult
-        } else {
-            result = instagramResult
-        }
-    } else {
-         result = facebookResult ?: instagramResult
-    }
+    // Check all of Meta's install referrers and return latest.
+    val result = getLatestInstallTimeStamp(mutableListOf(facebookResult, instagramResult, facebookLiteResult))
 
     return result
 }
@@ -358,12 +352,18 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
  * with install and click timestamp of 0. All other stores return null string.
  */
 fun getLatestValidReferrerStore(allReferrers: List<InstallReferrerResult?>): InstallReferrerResult? {
-    val result = allReferrers.filterNotNull().maxByOrNull {
-        it.latestInstallTimestamp
-    }
+    val result = getLatestInstallTimeStamp(allReferrers)
 
     if (allReferrers.filterNotNull().any { it.appStore == Jsonkey.Meta_Install_Referrer.key }) {
         return handleMetaInstallReferrer(allReferrers, result!!)
+    }
+
+    return result
+}
+
+fun getLatestInstallTimeStamp(allReferrers: List<InstallReferrerResult?>): InstallReferrerResult? {
+    val result = allReferrers.filterNotNull().maxByOrNull {
+        it.latestInstallTimestamp
     }
 
     return result
