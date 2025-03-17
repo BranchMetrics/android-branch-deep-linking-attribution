@@ -531,7 +531,7 @@ public class ServerRequestQueue {
                 }
             }
             catch (Exception e){
-                BranchLogger.v("BranchPostTask doInBackground exception caught: " + e.getMessage());
+                BranchLogger.v("BranchPostTask doInBackground caught exception: " + e.getMessage());
             }
             return result;
         }
