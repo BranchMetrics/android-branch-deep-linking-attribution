@@ -517,15 +517,21 @@ public class ServerRequestQueue {
                 return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "");
             }
             String branchKey = Branch.getInstance().prefHelper_.getBranchKey();
-            ServerResponse result;
-            if (thisReq_.isGetRequest()) {
-                result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
-            } else {
-                BranchLogger.v("Beginning rest post for " + thisReq_);
-                result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
+            ServerResponse result = null;
+
+            try {
+                if (thisReq_.isGetRequest()) {
+                    result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
+                } else {
+                    BranchLogger.v("BranchPostTask doInBackground beginning rest post for " + thisReq_);
+                    result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
+                }
+                if (latch_ != null) {
+                    latch_.countDown();
+                }
             }
-            if (latch_ != null) {
-                latch_.countDown();
+            catch (Exception e){
+                BranchLogger.v("BranchPostTask doInBackground exception caught: " + e.getMessage());
             }
             return result;
         }
@@ -542,7 +548,7 @@ public class ServerRequestQueue {
                 latch_.countDown();
             }
             if (serverResponse == null) {
-                thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
+                thisReq_.handleFailure(BranchError.ERR_OTHER, "Null response.");
                 return;
             }
 

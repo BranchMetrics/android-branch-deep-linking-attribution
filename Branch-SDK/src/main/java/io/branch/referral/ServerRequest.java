@@ -339,6 +339,8 @@ public abstract class ServerRequest {
             BranchLogger.d(e.getMessage());
         } catch (ConcurrentModificationException ex) {
             extendedPost = params_;
+        } catch (Exception e) {
+            BranchLogger.v("ServerRequest " + this + " getPostWithInstrumentationValues caught exception: " + e.getMessage());
         }
         return extendedPost;
     }
