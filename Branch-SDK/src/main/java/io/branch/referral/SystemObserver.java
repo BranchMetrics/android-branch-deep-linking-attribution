@@ -606,7 +606,7 @@ abstract class SystemObserver {
                     if (o != null) {
                         BranchLogger.v("fetchInstallReferrer resumeWith got result: " + o);
                         InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
-                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getLatestRawReferrer(), latestReferrer.getLatestClickTimestamp(), latestReferrer.getLatestInstallTimestamp(), latestReferrer.getAppStore(), latestReferrer.isClickThrough());
+                        AppStoreReferrer.processReferrerInfo(context_, latestReferrer.getInstallReferrer(), latestReferrer.getReferrerClickTimestampSeconds(), latestReferrer.getInstallBeginTimestampSeconds(), latestReferrer.getAppStore(), latestReferrer.isClickThrough());
                     } else {
                         BranchLogger.v("fetchInstallReferrer resumeWith got null result");
                     }
