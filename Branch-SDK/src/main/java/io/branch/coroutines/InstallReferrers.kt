@@ -43,7 +43,10 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
                                 InstallReferrerResult(Jsonkey.Google_Play_Store.key,
                                     result.installBeginTimestampSeconds,
                                     result.installReferrer,
-                                    result.referrerClickTimestampSeconds)
+                                    result.referrerClickTimestampSeconds,
+                                    result.installBeginTimestampServerSeconds,
+                                    result.referrerClickTimestampServerSeconds
+                                )
                             }
                             catch (e: Exception) {
                                 BranchLogger.w("Caught getGooglePlayStoreReferrerDetails installReferrer exception: $e")
@@ -97,7 +100,9 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferre
                                         Jsonkey.Huawei_App_Gallery.key,
                                         result.installBeginTimestampSeconds,
                                         result.installReferrer,
-                                        result.referrerClickTimestampSeconds
+                                        result.referrerClickTimestampSeconds,
+                                        null,
+                                        null
                                     )
                                 } catch (e: Exception) {
                                     BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails exception: $e")
@@ -154,7 +159,9 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                                         Jsonkey.Samsung_Galaxy_Store.key,
                                         result.installBeginTimestampSeconds,
                                         result.installReferrer,
-                                        result.referrerClickTimestampSeconds
+                                        result.referrerClickTimestampSeconds,
+                                        null,
+                                        null
                                     )
                                 } catch (e: RemoteException) {
                                     BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
@@ -206,7 +213,9 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                                         Jsonkey.Xiaomi_Get_Apps.key,
                                         result.installBeginTimestampSeconds,
                                         result.installReferrer,
-                                        result.referrerClickTimestampSeconds
+                                        result.referrerClickTimestampSeconds,
+                                        result.installBeginTimestampServerSeconds,
+                                        result.referrerClickTimestampServerSeconds
                                     )
                                 } catch (e: RemoteException) {
                                     BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails exception: $e")
@@ -316,6 +325,8 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
                 latestInstallTimestamp,
                 installReferrerString,
                 actualTimestamp,
+                null,
+                null,
                 isClickThrough
             )
         } catch (e: JSONException) {
