@@ -15,7 +15,14 @@ public class AppStoreReferrer {
     /* Link identifier on installing app from play store. */
     private static String installID_ = PrefHelper.NO_STRING_VALUE;
 
-    public static void processReferrerInfo(Context context, String rawReferrerString, long referrerClickTS, long installClickTS, String store, Boolean isClickThrough) {
+    public static void processReferrerInfo(Context context,
+                                           String rawReferrerString,
+                                           long referrerClickTS,
+                                           long installClickTS,
+                                           String store,
+                                           Boolean isClickThrough,
+                                           Long installBeginTimestampServerSeconds,
+                                           Long referrerClickTimestampServerSeconds) {
         PrefHelper prefHelper = PrefHelper.getInstance(context);
         if(!TextUtils.isEmpty(store)){
             prefHelper.setAppStoreSource(store);
@@ -76,6 +83,12 @@ public class AppStoreReferrer {
             } catch (IllegalArgumentException e) {
                 BranchLogger.w("Caught IllegalArgumentException " + e.getMessage());
             }
+        }
+        if(installBeginTimestampServerSeconds != null && installBeginTimestampServerSeconds > 0){
+            prefHelper.setLong(PrefHelper.KEY_INSTALL_BEGIN_SERVER_TS, installBeginTimestampServerSeconds);
+        }
+        if(referrerClickTimestampServerSeconds != null && referrerClickTimestampServerSeconds > 0){
+            prefHelper.setLong(PrefHelper.KEY_REFERRER_CLICK_SERVER_TS, referrerClickTimestampServerSeconds);
         }
     }
 

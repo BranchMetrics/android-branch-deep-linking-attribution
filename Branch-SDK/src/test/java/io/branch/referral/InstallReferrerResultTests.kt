@@ -19,7 +19,10 @@ class InstallReferrerResultTests {
             1,
             "test1",
             1,
+            1,
+            1,
             true
+
         )
 
         val test2 = InstallReferrerResult(
@@ -27,6 +30,8 @@ class InstallReferrerResultTests {
             Long.MAX_VALUE,
             "test2",
             Long.MAX_VALUE,
+            1,
+            1,
             true
         )
 
@@ -35,6 +40,8 @@ class InstallReferrerResultTests {
             2,
             "test3",
             2,
+            1,
+            1,
             true
         )
 
@@ -43,6 +50,8 @@ class InstallReferrerResultTests {
             3,
             "test4",
             3,
+            1,
+            1,
             true
         )
 
@@ -75,6 +84,8 @@ class InstallReferrerResultTests {
             1,
             "test1",
             1,
+            1,
+            1,
             true
         )
 
@@ -89,26 +100,30 @@ class InstallReferrerResultTests {
     fun testMetaInstallReferrerCases() {
         // Case 1: Meta referrer is click-through with non-organic Play Store referrer
         var metaReferrerClickThrough =
-            InstallReferrerResult("Meta", 1700000050, "referrer", 1700000000, true)
+            InstallReferrerResult("Meta", 1700000050, "referrer", 1700000000, 1, 1, true)
         val playStoreReferrer = InstallReferrerResult(
             "PlayStore",
             1700000030,
             "utm_source=google-play&utm_medium=cpc",
             1700000000,
+            1,
+            1,
             true
         )
-        var allReferrers = Arrays.asList(metaReferrerClickThrough, playStoreReferrer)
+        var allReferrers = listOf(metaReferrerClickThrough, playStoreReferrer)
         var result = getLatestValidReferrerStore(allReferrers)
         Assert.assertEquals(metaReferrerClickThrough, result)
 
         // Case 2: Meta referrer is view-through with organic Play Store referrer
         var metaReferrerViewThrough =
-            InstallReferrerResult("Meta", 1700000050, "referrer", 1700000000, false)
+            InstallReferrerResult("Meta", 1700000050, "referrer", 1700000000, 1, 1, false)
         var latestPlayStoreReferrer = InstallReferrerResult(
             "PlayStore",
             1700000030,
             "utm_source=google-play&utm_medium=organic",
             0,
+            1,
+            1,
             true
         )
         allReferrers = Arrays.asList(metaReferrerViewThrough, latestPlayStoreReferrer)
@@ -117,12 +132,14 @@ class InstallReferrerResultTests {
 
         // Case 3: Meta referrer is view-through with non-organic Play Store referrer
         metaReferrerViewThrough =
-            InstallReferrerResult("Meta", 1700000050, "referrer", 1700000000, false)
+            InstallReferrerResult("Meta", 1700000050, "referrer", 1700000000, 1, 1, false)
         latestPlayStoreReferrer = InstallReferrerResult(
             "PlayStore",
             1700000030,
             "utm_source=google-play&utm_medium=cpc",
             1700000000,
+            1,
+            1,
             true
         )
         allReferrers = Arrays.asList(metaReferrerViewThrough, latestPlayStoreReferrer)
@@ -131,12 +148,14 @@ class InstallReferrerResultTests {
 
         // Case 4: Meta referrer is outdated click-through with non-organic Play Store referrer
         metaReferrerClickThrough =
-            InstallReferrerResult("Meta", 1700000030, "referrer", 1700000000, true)
+            InstallReferrerResult("Meta", 1700000030, "referrer", 1700000000, 1, 1, true)
         latestPlayStoreReferrer = InstallReferrerResult(
             "PlayStore",
             1700000500,
             "utm_source=google-play&utm_medium=cpc",
             1700000450,
+            1,
+            1,
             true
         )
         allReferrers = Arrays.asList(metaReferrerClickThrough, latestPlayStoreReferrer)
@@ -145,12 +164,14 @@ class InstallReferrerResultTests {
 
         // Case 5: Meta, Google Play, and Samsung Referrer (latest) are available
         metaReferrerClickThrough =
-            InstallReferrerResult("Meta", 1700000000, "referrer", 1700000000, true)
+            InstallReferrerResult("Meta", 1700000000, "referrer", 1700000000, 1, 1, true)
         latestPlayStoreReferrer = InstallReferrerResult(
             "PlayStore",
             1700000000,
             "utm_source=google-play&utm_medium=cpc",
             1700000000,
+            1,
+            1,
             true
         )
         val samsungReferrer = InstallReferrerResult(
@@ -158,6 +179,8 @@ class InstallReferrerResultTests {
             1700001000,
             "utm_source=samsung-store&utm_medium=cpc",
             1700001000,
+            1,
+            1,
             true
         )
         allReferrers =
@@ -168,10 +191,10 @@ class InstallReferrerResultTests {
 
     @Test
     fun testLatestInstallReferrerSort() {
-        val referrer1 = InstallReferrerResult("Test1", 100, "test1Referrer", 100)
-        val referrer2 = InstallReferrerResult("Test2", 1, "test1Referrer", 1)
+        val referrer1 = InstallReferrerResult("Test1", 100, "test1Referrer", 1, 1,100)
+        val referrer2 = InstallReferrerResult("Test2", 1, "test1Referrer", 1,1, 1)
         val referrer3 = null
-        val referrer4 = InstallReferrerResult("Test1", 101, "test1Referrer", 101)
+        val referrer4 = InstallReferrerResult("Test1", 101, "test1Referrer", 101, 1,1)
 
         val result = getLatestInstallTimeStamp((mutableListOf(referrer1, referrer2, referrer3, referrer4)))
 
