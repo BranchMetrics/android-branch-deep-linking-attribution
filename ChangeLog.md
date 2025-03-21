@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v5.16.0
+* _*Master Release*_ - Mar 21, 2025
+  - Add support for Facebook Lite install referrer
+  - Add server time stamps for Play Store Install Referrer
+  - Fix exception handling for rare crash
+
 - v5.15.2
 * _*Master Release*_ - Mar 6, 2025
   - Fix bug with initial referrer not being set on warm starts.
