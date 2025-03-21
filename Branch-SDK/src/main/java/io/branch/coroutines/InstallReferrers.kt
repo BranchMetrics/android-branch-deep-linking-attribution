@@ -40,7 +40,13 @@ suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrer
                         deferredReferrerDetails.complete(
                             try {
                                 val result = client.installReferrer
-                                InstallReferrerResult(Jsonkey.Google_Play_Store.key, result.installBeginTimestampSeconds, result.installReferrer, result.referrerClickTimestampSeconds)
+                                InstallReferrerResult(Jsonkey.Google_Play_Store.key,
+                                    result.installBeginTimestampSeconds,
+                                    result.installReferrer,
+                                    result.referrerClickTimestampSeconds,
+                                    result.installBeginTimestampServerSeconds,
+                                    result.referrerClickTimestampServerSeconds
+                                )
                             }
                             catch (e: Exception) {
                                 BranchLogger.w("Caught getGooglePlayStoreReferrerDetails installReferrer exception: $e")
@@ -94,7 +100,9 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferre
                                         Jsonkey.Huawei_App_Gallery.key,
                                         result.installBeginTimestampSeconds,
                                         result.installReferrer,
-                                        result.referrerClickTimestampSeconds
+                                        result.referrerClickTimestampSeconds,
+                                        null,
+                                        null
                                     )
                                 } catch (e: Exception) {
                                     BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails exception: $e")
@@ -151,7 +159,9 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                                         Jsonkey.Samsung_Galaxy_Store.key,
                                         result.installBeginTimestampSeconds,
                                         result.installReferrer,
-                                        result.referrerClickTimestampSeconds
+                                        result.referrerClickTimestampSeconds,
+                                        null,
+                                        null
                                     )
                                 } catch (e: RemoteException) {
                                     BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
@@ -203,7 +213,9 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                                         Jsonkey.Xiaomi_Get_Apps.key,
                                         result.installBeginTimestampSeconds,
                                         result.installReferrer,
-                                        result.referrerClickTimestampSeconds
+                                        result.referrerClickTimestampSeconds,
+                                        result.installBeginTimestampServerSeconds,
+                                        result.referrerClickTimestampServerSeconds
                                     )
                                 } catch (e: RemoteException) {
                                     BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails exception: $e")
@@ -313,6 +325,8 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
                 latestInstallTimestamp,
                 installReferrerString,
                 actualTimestamp,
+                null,
+                null,
                 isClickThrough
             )
         } catch (e: JSONException) {
@@ -363,7 +377,7 @@ fun getLatestValidReferrerStore(allReferrers: List<InstallReferrerResult?>): Ins
 
 fun getLatestInstallTimeStamp(allReferrers: List<InstallReferrerResult?>): InstallReferrerResult? {
     val result = allReferrers.filterNotNull().maxByOrNull {
-        it.latestInstallTimestamp
+        it.installBeginTimestampSeconds
     }
 
     return result
@@ -378,7 +392,7 @@ private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>
         //The Meta Referrer is click through. Return it if it or the matching Play Store referrer is the latest
         if (latestReferrer.appStore == Jsonkey.Google_Play_Store.key) {
             //Deduplicate the Meta and Play Store referrers
-            if (latestReferrer.latestClickTimestamp == metaReferrer.latestClickTimestamp) {
+            if (latestReferrer.referrerClickTimestampSeconds == metaReferrer.referrerClickTimestampSeconds) {
                 return  metaReferrer
             }
         }
@@ -387,12 +401,12 @@ private fun handleMetaInstallReferrer(allReferrers: List<InstallReferrerResult?>
     } else {
         //The Meta Referrer is view through. Return it if the Play Store referrer is organic (latestClickTimestamp is 0)
         val googleReferrer = allReferrers.filterNotNull().firstOrNull { it.appStore == Jsonkey.Google_Play_Store.key }
-        if (googleReferrer?.latestClickTimestamp == 0L) {
+        if (googleReferrer?.referrerClickTimestampSeconds == 0L) {
             result =  metaReferrer
         } else {
             val referrersWithoutMeta = allReferrers.filterNotNull().filterNot { it.appStore == Jsonkey.Meta_Install_Referrer.key }
             result = referrersWithoutMeta.maxByOrNull {
-                it.latestInstallTimestamp
+                it.installBeginTimestampSeconds
             }
         }
     }

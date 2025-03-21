@@ -16,11 +16,13 @@ public class Defines {
         GoogleSearchInstallReferrer("google_search_install_referrer"),
         GooglePlayInstallReferrer("install_referrer_extras"),
         ClickedReferrerTimeStamp("clicked_referrer_ts"),
+        ClickedReferrerServerTimeStamp("clicked_referrer_server_ts"),
         Gclid("gclid"), //The parameter that is passed in the url
         IsDeeplinkGclid("is_deeplink_gclid"),
         ReferrerGclid("referrer_gclid"), //Key APIOpen expects for gclid in event
         ReferringUrlQueryParameters("bnc_referringUrlQueryParameters"),
         InstallBeginTimeStamp("install_begin_ts"),
+        InstallBeginServerTimeStamp("install_begin_server_ts"),
         @Deprecated BranchLinkUsed("branch_used"),          //use Defines.IntentKeys.BranchLinkUsed
         ReferringBranchIdentity("referring_branch_identity"),
         BranchIdentity("branch_identity"),

@@ -42,6 +42,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
         super.onPreExecute();
         long clickedReferrerTS = prefHelper_.getLong(PrefHelper.KEY_REFERRER_CLICK_TS);
         long installBeginTS = prefHelper_.getLong(PrefHelper.KEY_INSTALL_BEGIN_TS);
+        long clickedReferrerServerTS = prefHelper_.getLong(PrefHelper.KEY_REFERRER_CLICK_SERVER_TS);
+        long installReferrerServerTS = prefHelper_.getLong(PrefHelper.KEY_INSTALL_BEGIN_SERVER_TS);
+
         try {
             if (clickedReferrerTS > 0) {
                 getPost().put(Defines.Jsonkey.ClickedReferrerTimeStamp.getKey(), clickedReferrerTS);
@@ -51,6 +54,12 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             }
             if (!AppStoreReferrer.getInstallationID().equals(PrefHelper.NO_STRING_VALUE)) {
                 getPost().put(Defines.Jsonkey.LinkClickID.getKey(), AppStoreReferrer.getInstallationID());
+            }
+            if(clickedReferrerServerTS > 0){
+                getPost().put(Defines.Jsonkey.ClickedReferrerServerTimeStamp.getKey(), clickedReferrerServerTS);
+            }
+            if(installReferrerServerTS > 0){
+                getPost().put(Defines.Jsonkey.InstallBeginServerTimeStamp.getKey(), installReferrerServerTS);
             }
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
