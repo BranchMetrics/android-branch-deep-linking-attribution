@@ -1933,10 +1933,10 @@ public class Branch {
     }
 
     /**
-     * Enable Logging, independent of Debug Mode. Defaults to DEBUG level.
+     * Enable Logging, independent of Debug Mode. Defaults to VERBOSE level.
      */
     public static void enableLogging() {
-        enableLogging(null, BranchLogger.BranchLogLevel.DEBUG);
+        enableLogging(null, BranchLogger.BranchLogLevel.VERBOSE);
     }
 
     /**
