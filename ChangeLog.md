@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.16.1
+* _*Master Release*_ - Mar 27, 2025
+  - Emit `VERBOSE` logging by default.
+
 - v5.16.0
 * _*Master Release*_ - Mar 21, 2025
   - Add support for Facebook Lite install referrer
