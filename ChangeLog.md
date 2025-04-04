@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.16.2
+* _*Master Release*_ - Apr 4, 2025
+  - Forward real HTTP error codes through error callback.
+
 - v5.16.1
 * _*Master Release*_ - Mar 27, 2025
   - Emit `VERBOSE` logging by default.
