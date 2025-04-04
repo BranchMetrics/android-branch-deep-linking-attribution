@@ -94,7 +94,7 @@ public abstract class BranchRemoteInterface {
         if (addCommonParams(params, branchKey)) {
             modifiedUrl += this.convertJSONtoString(params);
         } else {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "");
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "Invalid key");
         }
 
         long reqStartTime = System.currentTimeMillis();
@@ -128,7 +128,7 @@ public abstract class BranchRemoteInterface {
         body = body != null ? body : new JSONObject();
 
         if (!addCommonParams(body, branchKey)) {
-            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "");
+            return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "Failed to set common parameters, body: " + body + " key: " + branchKey);
         }
         BranchLogger.v("posting to " + url);
         BranchLogger.v("Post value = " + body.toString());
@@ -137,7 +137,7 @@ public abstract class BranchRemoteInterface {
             BranchResponse response = doRestfulPost(url, body);
             return processEntityForJSON(response, tag, response.requestId);
         } catch (BranchRemoteException branchError) {
-            return new ServerResponse(tag, branchError.branchErrorCode, "", branchError.branchErrorMessage);
+            return new ServerResponse(tag, branchError.branchErrorCode, "",  "Failed network request. " + branchError.branchErrorMessage);
         } finally {
             if (Branch.getInstance() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
@@ -201,6 +201,7 @@ public abstract class BranchRemoteInterface {
     }
 
     private boolean addCommonParams(JSONObject post, String branch_key) {
+        BranchLogger.v("addCommonParams post: " + post + " key: " + branch_key);
         try {
             if (!post.has(Defines.Jsonkey.UserData.getKey())) { // user data already has the sdk in it as part of v2 request
                 post.put(Defines.Jsonkey.SDK.getKey(), "android" + Branch.getSdkVersionNumber());
