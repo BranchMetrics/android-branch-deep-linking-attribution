@@ -131,14 +131,14 @@ public class BranchError {
             errMsg = " Session initialization already happened. To force a new session, " +
                     "set intent extra, \"branch_force_new_session\", to true.";
         } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
-            errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
+            errorCode_ = statusCode;
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
         } else if (statusCode == 409 || statusCode == ERR_BRANCH_RESOURCE_CONFLICT) {
-            errorCode_ = ERR_BRANCH_RESOURCE_CONFLICT;
+            errorCode_ = statusCode;
             errMsg = " A resource with this identifier already exists.";
         } else if (statusCode >= 400 || statusCode == ERR_BRANCH_INVALID_REQUEST) {
-            errorCode_ = ERR_BRANCH_INVALID_REQUEST;
-            errMsg = " The request was invalid.";
+            errorCode_ = statusCode;
+            errMsg = " The request was invalid";
         } else if (statusCode == ERR_IMPROPER_REINITIALIZATION) {
             errorCode_ = ERR_IMPROPER_REINITIALIZATION;
             errMsg = "Intra-app linking (i.e. session reinitialization) requires an intent flag, \"branch_force_new_session\".";
