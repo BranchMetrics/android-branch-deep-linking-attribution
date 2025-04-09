@@ -37,7 +37,7 @@ public class URISchemeCheck extends IntegrationValidatorCheck {
     @Override
     public boolean RunTests(Context context) {
         String branchAppUriScheme = branchAppConfig.optString("android_uri_scheme").substring(0, branchAppConfig.optString("android_uri_scheme").length() - 3);
-        String dashboardUriScheme = String.valueOf(integrationModel.deeplinkUriScheme.keys().next());
+        String dashboardUriScheme = checkBranchKey(integrationModel.deeplinkUriScheme.keys(), branchAppUriScheme);
         boolean isUriSchemeProperlySetOnDashboard = !TextUtils.isEmpty(branchAppUriScheme);
         boolean isUriSchemeIntentProperlySetup = checkIfIntentAddedForURIScheme(branchAppConfig.optString("android_uri_scheme")) && integrationModel.appSettingsAvailable;
         boolean doUriSchemesMatch = branchAppUriScheme.trim().equals(dashboardUriScheme.trim());
@@ -56,6 +56,17 @@ public class URISchemeCheck extends IntegrationValidatorCheck {
         }
 
         return doUriSchemesMatch && isUriSchemeProperlySetOnDashboard && isUriSchemeIntentProperlySetup;
+    }
+
+    private String checkBranchKey(Iterator<String> keys, String branchAppUriScheme) {
+        String targetKey = branchAppUriScheme.replace("://", "");
+        while (keys.hasNext()) {
+            String key = keys.next();
+            if (targetKey.equals(key)) {
+                return key;
+            }
+        }
+        return "";
     }
 
     @Override
