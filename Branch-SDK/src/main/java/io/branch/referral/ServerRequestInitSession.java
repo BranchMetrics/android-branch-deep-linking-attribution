@@ -92,32 +92,6 @@ abstract class ServerRequestInitSession extends ServerRequest {
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
-
-        // Run this after session init, ahead of any V2 event, in the background.
-        if (!Branch.userAgentSync && TextUtils.isEmpty(Branch._userAgentString)) {
-            DeviceSignalsKt.getUserAgentAsync(branch.getApplicationContext(), new Continuation<String>() {
-                @NonNull
-                @Override
-                public CoroutineContext getContext() {
-                    return EmptyCoroutineContext.INSTANCE;
-                }
-
-                @Override
-                public void resumeWith(@NonNull Object o) {
-                    if (o != null) {
-                        BranchLogger.v("onInitSessionCompleted resumeWith userAgent " + o + " on thread " + Thread.currentThread().getName());
-                        Branch._userAgentString = (String) o;
-                    }
-
-                    Branch.getInstance().requestQueue_.unlockProcessWait(PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                    Branch.getInstance().requestQueue_.processNextQueueItem("getUserAgentAsync resumeWith");
-                }
-            });
-        }
-        else {
-            BranchLogger.v("Deferring userAgent string call for sync retrieval");
-        }
-
         BranchLogger.v("onInitSessionCompleted on thread " + Thread.currentThread().getName());
     }
 

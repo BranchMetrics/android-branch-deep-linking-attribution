@@ -256,6 +256,7 @@ public class ServerRequestQueue {
     ServerRequestInitSession getSelfInitRequest() {
         synchronized (reqQueueLockObject) {
             for (ServerRequest req : queue) {
+                BranchLogger.v("Checking if " + req + " is instanceof ServerRequestInitSession");
                 if (req instanceof ServerRequestInitSession) {
                     ServerRequestInitSession r = (ServerRequestInitSession) req;
                     if (r.initiatedByClient) {
@@ -350,6 +351,7 @@ public class ServerRequestQueue {
     }
 
     void insertRequestAtFront(ServerRequest req) {
+        BranchLogger.v("insertRequestAtFront " + req + " networkCount_: " + networkCount_);
         if (networkCount_ == 0) {
             this.insert(req, 0);
         } else {

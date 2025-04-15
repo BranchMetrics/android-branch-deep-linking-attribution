@@ -1465,6 +1465,7 @@ public class Branch {
 
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
          BranchLogger.v("Ordering init calls");
+         BranchLogger.v("Self init request: " + r);
          requestQueue_.printQueue();
 
          // if forceBranchSession aka reInit is true, we want to preserve the callback order in case
@@ -1555,8 +1556,12 @@ public class Branch {
     }
 
     private void setActivityLifeCycleObserver(Application application) {
+        BranchLogger.v("setActivityLifeCycleObserver activityLifeCycleObserver: " + activityLifeCycleObserver
+                + " application: " + application);
         try {
             activityLifeCycleObserver = new BranchActivityLifecycleObserver();
+            BranchLogger.v("setActivityLifeCycleObserver set new activityLifeCycleObserver: " + activityLifeCycleObserver
+                    + " application: " + application);
             /* Set an observer for activity life cycle events. */
             application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
             application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);

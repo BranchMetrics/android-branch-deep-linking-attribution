@@ -707,7 +707,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.d("BranchSDK_Tester", "initSession");
 
-        //initSessionsWithTests();
+        initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -720,7 +720,7 @@ public class MainActivity extends Activity {
 
     private void initSessionsWithTests() {
         boolean testUserAgent = true;
-        userAgentTests(testUserAgent, 10);
+        userAgentTests(testUserAgent, 1);
     }
 
     // Enqueue several v2 events prior to init to simulate worst timing conditions for user agent fetch
