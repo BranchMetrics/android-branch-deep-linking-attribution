@@ -1841,8 +1841,8 @@ public class Branch {
                         }
                     }
                 }
+                BranchLogger.v("deepLinkActivity " + deepLinkActivity + " getCurrentActivity " + getCurrentActivity());
                 if (deepLinkActivity != null && getCurrentActivity() != null) {
-                    BranchLogger.v("deepLinkActivity " + deepLinkActivity + " getCurrentActivity " + getCurrentActivity());
                     Activity currentActivity = getCurrentActivity();
 
                     Intent intent = new Intent(currentActivity, Class.forName(deepLinkActivity));
