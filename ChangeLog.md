@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.16.3
+* _*Master Release*_ - Apr 17, 2025
+  - Only query user agent string when needed for v2/events
+  - Integration validator fix when multiple URI schemes are present in manifest
+
 - v5.16.2
 * _*Master Release*_ - Apr 4, 2025
   - Forward real HTTP error codes through error callback.
