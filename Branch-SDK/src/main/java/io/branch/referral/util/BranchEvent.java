@@ -287,7 +287,7 @@ public class BranchEvent {
             BranchLogger.v("Preparing V2 event, user agent is " + Branch._userAgentString);
 
             if(TextUtils.isEmpty(Branch._userAgentString)){
-                BranchLogger.v("handleNewRequest adding process wait lock USER_AGENT_STRING_LOCK");
+                BranchLogger.v("User agent is empty, handleNewRequest adding process wait lock USER_AGENT_STRING_LOCK");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
             }
 

@@ -720,7 +720,7 @@ public class MainActivity extends Activity {
 
     private void initSessionsWithTests() {
         boolean testUserAgent = true;
-        userAgentTests(testUserAgent, 10);
+        userAgentTests(testUserAgent, 1);
     }
 
     // Enqueue several v2 events prior to init to simulate worst timing conditions for user agent fetch

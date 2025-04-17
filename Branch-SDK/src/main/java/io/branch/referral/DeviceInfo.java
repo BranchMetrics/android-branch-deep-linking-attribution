@@ -312,6 +312,8 @@ class DeviceInfo {
         }
         catch (Exception exception){
             BranchLogger.w("Caught exception trying to set userAgent " + exception.getMessage());
+            Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+            Branch.getInstance().requestQueue_.processNextQueueItem("getUserAgentAsync");
         }
     }
 
