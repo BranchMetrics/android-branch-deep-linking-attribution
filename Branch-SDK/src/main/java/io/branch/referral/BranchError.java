@@ -4,7 +4,6 @@ package io.branch.referral;
  * Returns a general error if the server back-end is down.
  */
 public class BranchError {
-
     String errorMessage_ = "";
     int errorCode_ = ERR_OTHER;
 
@@ -56,7 +55,6 @@ public class BranchError {
     public String getMessage() {
         return errorMessage_;
     }
-
     /**
      * <p>Returns an error code for this Branch Error. </p>
      *
@@ -65,7 +63,6 @@ public class BranchError {
     public int getErrorCode() {
         return errorCode_;
     }
-
     /**
      * <p>Overridden toString method for this object; returns the error message rather than the
      * object's address.</p>
@@ -76,11 +73,9 @@ public class BranchError {
     public String toString() {
         return getMessage();
     }
-
     public BranchError(String failMsg, int statusCode) {
         errorMessage_ = failMsg + initErrorCodeAndGetLocalisedMessage(statusCode);
     }
-
     /*
      * <p> Provides localised error messages for the gives status code </p>
      *

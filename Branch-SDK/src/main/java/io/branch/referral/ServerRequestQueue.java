@@ -72,7 +72,6 @@ public class ServerRequestQueue {
             SharedInstance = null;
         }
     }
-
     /**
      * <p>The main constructor of the ServerRequestQueue class is private because the class uses the
      * Singleton pattern.</p>
@@ -87,7 +86,6 @@ public class ServerRequestQueue {
         queue = Collections.synchronizedList(new LinkedList<ServerRequest>());
         BranchLogger.v("Created queue " + queue);
     }
-
     /**
      * <p>Gets the number of {@link ServerRequest} objects currently queued up for submission to
      * the Branch API.</p>
@@ -100,7 +98,6 @@ public class ServerRequestQueue {
             return queue.size();
         }
     }
-
     /**
      * <p>Adds a {@link ServerRequest} object to the queue.</p>
      *
@@ -116,7 +113,6 @@ public class ServerRequestQueue {
             }
         }
     }
-
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index 0 within the queue
      * without removing it.</p>
@@ -147,7 +143,6 @@ public class ServerRequestQueue {
             }
         }
     }
-
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index specified in the supplied
      * parameter, within the queue. Like {@link #peek()}, the item is not removed from the queue.</p>
@@ -169,7 +164,6 @@ public class ServerRequestQueue {
         }
         return req;
     }
-
     /**
      * <p>As the method name implies, inserts a {@link ServerRequest} into the queue at the index
      * position specified.</p>
@@ -191,7 +185,6 @@ public class ServerRequestQueue {
             }
         }
     }
-
     /**
      * <p>As the method name implies, removes the {@link ServerRequest} object, at the position
      * indicated by the {@link Integer} parameter supplied.</p>
@@ -213,7 +206,6 @@ public class ServerRequestQueue {
         }
         return req;
     }
-
     /**
      * <p>As the method name implies, removes {@link ServerRequest} supplied in the parameter if it
      * is present in the queue.</p>
@@ -232,7 +224,6 @@ public class ServerRequestQueue {
         }
         return isRemoved;
     }
-
     /**
      * <p> Clears all pending requests in the queue </p>
      */
@@ -245,7 +236,6 @@ public class ServerRequestQueue {
             }
         }
     }
-
     /**
      * <p>Determines whether the queue contains an install/register request.</p>
      *
@@ -266,7 +256,6 @@ public class ServerRequestQueue {
         }
         return null;
     }
-
     /**
      * Set Process wait lock to false for any open / install request in the queue
      */
