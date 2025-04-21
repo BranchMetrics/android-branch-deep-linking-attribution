@@ -72,7 +72,7 @@ public class ServerRequestQueue {
             SharedInstance = null;
         }
     }
-    
+
     /**
      * <p>The main constructor of the ServerRequestQueue class is private because the class uses the
      * Singleton pattern.</p>
@@ -81,11 +81,13 @@ public class ServerRequestQueue {
      */
     @SuppressLint("CommitPrefEdits")
     private ServerRequestQueue(Context c) {
+        BranchLogger.v("Creating ServerRequestQueue " + c);
         sharedPref = c.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
         queue = Collections.synchronizedList(new LinkedList<ServerRequest>());
+        BranchLogger.v("Created queue " + queue);
     }
-    
+
     /**
      * <p>Gets the number of {@link ServerRequest} objects currently queued up for submission to
      * the Branch API.</p>
@@ -98,7 +100,7 @@ public class ServerRequestQueue {
             return queue.size();
         }
     }
-    
+
     /**
      * <p>Adds a {@link ServerRequest} object to the queue.</p>
      *
@@ -114,7 +116,7 @@ public class ServerRequestQueue {
             }
         }
     }
-    
+
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index 0 within the queue
      * without removing it.</p>
@@ -145,7 +147,7 @@ public class ServerRequestQueue {
             }
         }
     }
-    
+
     /**
      * <p>Gets the queued {@link ServerRequest} object at position with index specified in the supplied
      * parameter, within the queue. Like {@link #peek()}, the item is not removed from the queue.</p>
@@ -167,7 +169,7 @@ public class ServerRequestQueue {
         }
         return req;
     }
-    
+
     /**
      * <p>As the method name implies, inserts a {@link ServerRequest} into the queue at the index
      * position specified.</p>
@@ -189,7 +191,7 @@ public class ServerRequestQueue {
             }
         }
     }
-    
+
     /**
      * <p>As the method name implies, removes the {@link ServerRequest} object, at the position
      * indicated by the {@link Integer} parameter supplied.</p>
@@ -211,7 +213,7 @@ public class ServerRequestQueue {
         }
         return req;
     }
-    
+
     /**
      * <p>As the method name implies, removes {@link ServerRequest} supplied in the parameter if it
      * is present in the queue.</p>
@@ -230,7 +232,7 @@ public class ServerRequestQueue {
         }
         return isRemoved;
     }
-    
+
     /**
      * <p> Clears all pending requests in the queue </p>
      */
@@ -243,7 +245,7 @@ public class ServerRequestQueue {
             }
         }
     }
-    
+
     /**
      * <p>Determines whether the queue contains an install/register request.</p>
      *
@@ -264,7 +266,7 @@ public class ServerRequestQueue {
         }
         return null;
     }
-    
+
     /**
      * Set Process wait lock to false for any open / install request in the queue
      */
@@ -321,12 +323,12 @@ public class ServerRequestQueue {
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             BranchLogger.d("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
+                            req.handleFailure(BranchError.ERR_NO_SESSION, "Request " + req + " has no session.");
                         }
                         // Determine if a session is needed to execute (SDK-271)
                         else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
                             networkCount_ = 0;
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "");
+                            req.handleFailure(BranchError.ERR_NO_SESSION, "Request " + req + " has no session.");
                         } else {
                             executeTimedBranchPostTask(req, Branch.getInstance().prefHelper_.getTaskTimeout());
                         }
@@ -434,7 +436,7 @@ public class ServerRequestQueue {
         try {
             if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                 postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", ""));
+                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", "Thread task timed out. Timeout: " + timeout));
             }
         } catch (InterruptedException e) {
             BranchLogger.e("Caught InterruptedException " + e.getMessage());
@@ -455,8 +457,9 @@ public class ServerRequestQueue {
         BranchLogger.d("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
         if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
-            BranchLogger.d("Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]");
-            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "");
+            String errMsg = "Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]";
+            BranchLogger.d(errMsg);
+            req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, errMsg);
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
@@ -514,18 +517,24 @@ public class ServerRequestQueue {
             // update queue wait time
             thisReq_.doFinalUpdateOnBackgroundThread();
             if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
-                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "");
+                return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "Tracking is disabled");
             }
             String branchKey = Branch.getInstance().prefHelper_.getBranchKey();
-            ServerResponse result;
-            if (thisReq_.isGetRequest()) {
-                result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
-            } else {
-                BranchLogger.v("Beginning rest post for " + thisReq_);
-                result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
+            ServerResponse result = null;
+
+            try {
+                if (thisReq_.isGetRequest()) {
+                    result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
+                } else {
+                    BranchLogger.v("BranchPostTask doInBackground beginning rest post for " + thisReq_);
+                    result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
+                }
+                if (latch_ != null) {
+                    latch_.countDown();
+                }
             }
-            if (latch_ != null) {
-                latch_.countDown();
+            catch (Exception e){
+                BranchLogger.v("BranchPostTask doInBackground caught exception: " + e.getMessage());
             }
             return result;
         }
@@ -542,7 +551,7 @@ public class ServerRequestQueue {
                 latch_.countDown();
             }
             if (serverResponse == null) {
-                thisReq_.handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Null response.");
+                thisReq_.handleFailure(BranchError.ERR_OTHER, "Null response.");
                 return;
             }
 
@@ -656,7 +665,7 @@ public class ServerRequestQueue {
                 //On Network error or Branch is down fail all the pending requests in the queue except
                 //for request which need to be replayed on failure.
                 ServerRequestQueue.this.networkCount_ = 0;
-                thisReq_.handleFailure(status, serverResponse.getFailReason() + " " + serverResponse.getMessage());
+                thisReq_.handleFailure(status, serverResponse.getFailReason() + status + " " + serverResponse.getMessage());
             }
 
             boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;

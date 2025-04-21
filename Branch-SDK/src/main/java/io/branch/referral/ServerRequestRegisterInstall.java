@@ -111,7 +111,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             } catch (JSONException ex) {
                 BranchLogger.w("Caught JSONException " + ex.getMessage());
             }
-            callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch. " + causeMsg, statusCode));
+            callback_.onInitFinished(obj, new BranchError("Trouble initializing Branch. " + this + " failed. " + causeMsg, statusCode));
         }
     }
     

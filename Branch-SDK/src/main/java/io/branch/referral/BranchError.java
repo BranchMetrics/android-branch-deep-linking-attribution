@@ -4,7 +4,7 @@ package io.branch.referral;
  * Returns a general error if the server back-end is down.
  */
 public class BranchError {
-    
+
     String errorMessage_ = "";
     int errorCode_ = ERR_OTHER;
 
@@ -56,7 +56,7 @@ public class BranchError {
     public String getMessage() {
         return errorMessage_;
     }
-    
+
     /**
      * <p>Returns an error code for this Branch Error. </p>
      *
@@ -65,7 +65,7 @@ public class BranchError {
     public int getErrorCode() {
         return errorCode_;
     }
-    
+
     /**
      * <p>Overridden toString method for this object; returns the error message rather than the
      * object's address.</p>
@@ -76,11 +76,11 @@ public class BranchError {
     public String toString() {
         return getMessage();
     }
-    
+
     public BranchError(String failMsg, int statusCode) {
         errorMessage_ = failMsg + initErrorCodeAndGetLocalisedMessage(statusCode);
     }
-    
+
     /*
      * <p> Provides localised error messages for the gives status code </p>
      *
@@ -131,14 +131,14 @@ public class BranchError {
             errMsg = " Session initialization already happened. To force a new session, " +
                     "set intent extra, \"branch_force_new_session\", to true.";
         } else if (statusCode >= 500 || statusCode == ERR_BRANCH_UNABLE_TO_REACH_SERVERS) {
-            errorCode_ = ERR_BRANCH_UNABLE_TO_REACH_SERVERS;
+            errorCode_ = statusCode;
             errMsg = " Unable to reach the Branch servers, please try again shortly.";
         } else if (statusCode == 409 || statusCode == ERR_BRANCH_RESOURCE_CONFLICT) {
-            errorCode_ = ERR_BRANCH_RESOURCE_CONFLICT;
+            errorCode_ = statusCode;
             errMsg = " A resource with this identifier already exists.";
         } else if (statusCode >= 400 || statusCode == ERR_BRANCH_INVALID_REQUEST) {
-            errorCode_ = ERR_BRANCH_INVALID_REQUEST;
-            errMsg = " The request was invalid.";
+            errorCode_ = statusCode;
+            errMsg = " The request was invalid";
         } else if (statusCode == ERR_IMPROPER_REINITIALIZATION) {
             errorCode_ = ERR_IMPROPER_REINITIALIZATION;
             errMsg = "Intra-app linking (i.e. session reinitialization) requires an intent flag, \"branch_force_new_session\".";
