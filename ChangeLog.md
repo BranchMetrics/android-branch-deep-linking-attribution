@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.17.0
+* _*Master Release*_ - Apr 24, 2025
+  - Make formerly private `enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level)` public
+
 - v5.16.3
 * _*Master Release*_ - Apr 17, 2025
   - Only query user agent string when needed for v2/events
