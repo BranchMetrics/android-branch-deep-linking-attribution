@@ -25,8 +25,8 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
-        BranchLogger.v("onActivityCreated, activity = " + activity);
         Branch branch = Branch.getInstance();
+        BranchLogger.v("onActivityCreated, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) return;
 
         branch.setIntentState(Branch.INTENT_STATE.PENDING);
@@ -34,8 +34,8 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
-        BranchLogger.v("onActivityStarted, activity = " + activity);
         Branch branch = Branch.getInstance();
+        BranchLogger.v("onActivityStarted, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) {
             return;
         }
@@ -50,13 +50,15 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
-        BranchLogger.v("onActivityResumed, activity = " + activity);
         Branch branch = Branch.getInstance();
+        BranchLogger.v("onActivityResumed, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) return;
 
         // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
         // activity also to make sure we do not override the intent data
-        if (!Branch.bypassCurrentActivityIntentState()) {
+        boolean bypassIntentState = Branch.bypassCurrentActivityIntentState();
+        BranchLogger.v("bypassIntentState: " + bypassIntentState);
+        if (!bypassIntentState) {
             branch.onIntentReady(activity);
         }
 
@@ -78,8 +80,8 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityPaused(@NonNull Activity activity) {
-        BranchLogger.v("onActivityPaused, activity = " + activity);
         Branch branch = Branch.getInstance();
+        BranchLogger.v("onActivityPaused, activity = " + activity  + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) return;
 
         /* Close any opened sharing dialog.*/
@@ -90,11 +92,12 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
-        BranchLogger.v("onActivityStopped, activity = " + activity);
         Branch branch = Branch.getInstance();
+        BranchLogger.v("onActivityStopped, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
         activityCnt_--; // Check if this is the last activity. If so, stop the session.
+        BranchLogger.v("activityCnt_: " + activityCnt_);
         if (activityCnt_ < 1) {
             branch.setInstantDeepLinkPossible(false);
             branch.closeSessionInternal();
@@ -107,8 +110,8 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
-        BranchLogger.v("onActivityDestroyed, activity = " + activity);
         Branch branch = Branch.getInstance();
+        BranchLogger.v("onActivityDestroyed, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) return;
 
         if (branch.getCurrentActivity() == activity) {
@@ -124,6 +127,9 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
             // don't think this is possible
             return false;
         }
+
+        BranchLogger.v("activitiesOnStack_: " + activitiesOnStack_ + " Current Activity: " + branch.getCurrentActivity());
+
         return activitiesOnStack_.contains(branch.getCurrentActivity().toString());
     }
 }

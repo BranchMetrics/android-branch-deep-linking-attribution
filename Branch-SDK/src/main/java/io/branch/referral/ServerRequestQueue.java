@@ -108,9 +108,11 @@ public class ServerRequestQueue {
      */
     void enqueue(ServerRequest request) {
         synchronized (reqQueueLockObject) {
+            BranchLogger.v("Queue operation enqueue. Request: " + request);
             if (request != null) {
                 queue.add(request);
                 if (getSize() >= MAX_ITEMS) {
+                    BranchLogger.v("Queue maxed out. Removing index 1.");
                     queue.remove(1);
                 }
             }
@@ -163,6 +165,7 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 req = queue.get(index);
+                BranchLogger.v("Queue operation peekAt " + req);
             } catch (IndexOutOfBoundsException | NoSuchElementException e) {
                 BranchLogger.e("Caught Exception ServerRequestQueue peekAt " + index + ": " + e.getMessage());
             }
@@ -182,6 +185,7 @@ public class ServerRequestQueue {
     void insert(ServerRequest request, int index) {
         synchronized (reqQueueLockObject) {
             try {
+                BranchLogger.v("Queue operation insert. Request: " + request + " Size: " + queue.size() + " Index: " + index);
                 if (queue.size() < index) {
                     index = queue.size();
                 }
@@ -213,7 +217,7 @@ public class ServerRequestQueue {
         }
         return req;
     }
-    
+
     /**
      * <p>As the method name implies, removes {@link ServerRequest} supplied in the parameter if it
      * is present in the queue.</p>
@@ -225,7 +229,9 @@ public class ServerRequestQueue {
         boolean isRemoved = false;
         synchronized (reqQueueLockObject) {
             try {
+                BranchLogger.v("Queue operation remove. Request: " + request);
                 isRemoved = queue.remove(request);
+                BranchLogger.v("Queue operation remove. Removed: " + isRemoved);
             } catch (UnsupportedOperationException e) {
                 BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
             }
@@ -239,7 +245,9 @@ public class ServerRequestQueue {
     void clear() {
         synchronized (reqQueueLockObject) {
             try {
+                BranchLogger.v("Queue operation clear");
                 queue.clear();
+                BranchLogger.v("Queue cleared.");
             } catch (UnsupportedOperationException e) {
                 BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
             }
@@ -259,6 +267,7 @@ public class ServerRequestQueue {
                 BranchLogger.v("Checking if " + req + " is instanceof ServerRequestInitSession");
                 if (req instanceof ServerRequestInitSession) {
                     ServerRequestInitSession r = (ServerRequestInitSession) req;
+                    BranchLogger.v(r + " is initiated by client: " + r.initiatedByClient);
                     if (r.initiatedByClient) {
                         return r;
                     }
@@ -324,11 +333,13 @@ public class ServerRequestQueue {
                         if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
                             BranchLogger.d("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
+                            BranchLogger.v("Invoking " + req + " handleFailure. Has no session. hasUser: " + hasUser());
                             req.handleFailure(BranchError.ERR_NO_SESSION, "Request " + req + " has no session.");
                         }
                         // Determine if a session is needed to execute (SDK-271)
                         else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
                             networkCount_ = 0;
+                            BranchLogger.v("Invoking " + req + " handleFailure. Has no session.");
                             req.handleFailure(BranchError.ERR_NO_SESSION, "Request " + req + " has no session.");
                         } else {
                             executeTimedBranchPostTask(req, Branch.getInstance().prefHelper_.getTaskTimeout());
@@ -351,7 +362,7 @@ public class ServerRequestQueue {
     }
 
     void insertRequestAtFront(ServerRequest req) {
-        BranchLogger.v("insertRequestAtFront " + req + " networkCount_: " + networkCount_);
+        BranchLogger.v("Queue operation insertRequestAtFront " + req + " networkCount_: " + networkCount_);
         if (networkCount_ == 0) {
             this.insert(req, 0);
         } else {
@@ -393,6 +404,7 @@ public class ServerRequestQueue {
         try {
             for (int i = 0; i < this.getSize(); i++) {
                 ServerRequest req = this.peekAt(i);
+                BranchLogger.v("Queue operation updateAllRequestsInQueue updating: " + req);
                 if (req != null) {
                     JSONObject reqJson = req.getPost();
                     if (reqJson != null) {
