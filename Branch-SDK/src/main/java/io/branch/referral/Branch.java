@@ -876,6 +876,8 @@ public class Branch {
             boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
                     !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
 
+            BranchLogger.v("activityHasValidIntent: " + activityHasValidIntent);
+
             // Skip IDL if intent contains an unused Branch link.
             boolean noUnusedBranchLinkInIntent = !isRestartSessionRequested(activity != null ? activity.getIntent() : null);
 
@@ -1460,7 +1462,7 @@ public class Branch {
      * will wait on the wait locks to complete any pending operations
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean forceBranchSession) {
-         BranchLogger.v("registerAppInit " + request);
+         BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
          setInitState(SESSION_STATE.INITIALISING);
 
          ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
@@ -1471,7 +1473,7 @@ public class Branch {
          // if forceBranchSession aka reInit is true, we want to preserve the callback order in case
          // there is one still in flight
          if (r == null || forceBranchSession) {
-             BranchLogger.v("Moving " + request + " " + " to front of the queue or behind network-in-progress request");
+             BranchLogger.v("Moving " + request + " " + "to front of the queue or behind network-in-progress request");
              requestQueue_.insertRequestAtFront(request);
          }
          else {
@@ -1930,7 +1932,7 @@ public class Branch {
      * @param iBranchLogging Optional interface to receive logging from the SDK.
      * @param level The minimum log level for logging output.
      */
-    private static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
+    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
         BranchLogger.setLoggerCallback(iBranchLogging);
         BranchLogger.setLoggingLevel(level);
         BranchLogger.setLoggingEnabled(true);
@@ -2303,7 +2305,9 @@ public class Branch {
                 // currentActivityReference_ is set in onActivityCreated (before initSession), which should happen if
                 // users follow Android guidelines and call super.onStart as the first thing in Activity.onStart,
                 // however, if they don't, we try to set currentActivityReference_ here too.
+                BranchLogger.v("currentActivityReference_ was " + branch.currentActivityReference_);
                 branch.currentActivityReference_ = new WeakReference<>(activity);
+                BranchLogger.v("currentActivityReference_ is now set to " + branch.currentActivityReference_);
             }
         }
 
