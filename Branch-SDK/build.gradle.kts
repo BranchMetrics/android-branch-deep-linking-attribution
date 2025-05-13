@@ -42,6 +42,10 @@ dependencies {
     // Google Play Billing library
     compileOnly("com.android.billingclient:billing:6.0.1")
 
+    // In app browser experience
+    compileOnly("androidx.browser:browser:1.8.0")
+
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")
@@ -74,7 +78,6 @@ fun isReleaseBuild(): Boolean {
 
 android {
     compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
-    buildToolsVersion = ANDROID_BUILD_TOOLS_VERSION
     defaultConfig {
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

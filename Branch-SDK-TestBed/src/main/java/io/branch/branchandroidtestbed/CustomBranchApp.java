@@ -1,7 +1,11 @@
 package io.branch.branchandroidtestbed;
 
+import static androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK;
+
 import android.app.Application;
 import android.util.Log;
+
+import androidx.browser.customtabs.CustomTabsIntent;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,8 +26,11 @@ public final class CustomBranchApp extends Application {
 //            saveLogToFile(message);
 //        };
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
-
         Branch.getAutoInstance(this);
+        CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
+                .setColorScheme(COLOR_SCHEME_DARK)
+                .build();
+        Branch.getInstance().setCustomTabsIntent(customTabsIntent);
     }
 
     private void saveLogToFile(String logMessage) {

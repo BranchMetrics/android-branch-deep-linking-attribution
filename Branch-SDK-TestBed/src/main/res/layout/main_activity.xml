@@ -134,6 +134,12 @@
                 />
 
             <Button
+                android:id="@+id/openInAppBrowser"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/baseline_document_scanner_24"
+                android:text="Browser Test" />
+
+            <Button
                 android:id="@+id/viewLogsButton"
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/baseline_document_scanner_24"

@@ -30,6 +30,8 @@ import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.QueryProductDetailsParams;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -54,7 +56,6 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
-import io.branch.referral.validators.IntegrationValidator;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -657,6 +658,24 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 Branch.notifyNativeToInit();
+            }
+        });
+
+        findViewById(R.id.openInAppBrowser).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    JSONObject invokeFeatures = new JSONObject();
+                    invokeFeatures.put("enhanced_web_link_ux", "IN_APP_WEBVIEW");
+                    invokeFeatures.put("web_link_redirect_url", "https://branch.io");
+
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("invoke_features", invokeFeatures);
+
+                    Branch.getInstance().openBrowserExperience(invokeFeatures);
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
