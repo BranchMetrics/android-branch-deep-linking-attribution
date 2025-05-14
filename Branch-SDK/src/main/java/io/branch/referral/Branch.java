@@ -2722,8 +2722,23 @@ public class Branch {
     }
 
     /**
-     * Set a CustomTabsIntent to open web urls through an in-app or external browser experience.
-     * @param customTabsIntent
+     * Set a CustomTabsIntent to open web urls through an in-app browser experience.
+     * This allows customization of the in-app browser appearance and behavior.
+     * 
+     * <p>
+     * Example usage:
+     * <pre>
+     * CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
+     *     .setColorScheme(COLOR_SCHEME_DARK)
+     *     .setShowTitle(true)
+     *     .build();
+     * Branch.getInstance().setCustomTabsIntent(customTabsIntent);
+     * </pre>
+     * </p>
+     * 
+     * @param customTabsIntent A configured CustomTabsIntent instance that will be used
+     *                         when opening web links in-app. If null, the default CustomTabsIntent
+     *                         will be used.
      */
     public void setCustomTabsIntent(CustomTabsIntent customTabsIntent){
         this.customTabsIntentOverride = customTabsIntent;
