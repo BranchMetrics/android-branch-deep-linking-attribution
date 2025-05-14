@@ -229,7 +229,15 @@ public class Defines {
 
         Consumer_Protection_Attribution_Level("cpp_level"),
         Branch_Sdk_Request_Creation_Time_Stamp("branch_sdk_request_timestamp"),
-        Branch_Sdk_Request_Uuid("branch_sdk_request_unique_id");
+        Branch_Sdk_Request_Uuid("branch_sdk_request_unique_id"),
+        Invoke_Features("invoke_features"),
+        IN_APP_WEBVIEW("IN_APP_WEBVIEW"),
+        EXTERNAL_BROWSER("EXTERNAL_BROWSER"),
+        Enhanced_Web_Link_UX("enhanced_web_link_ux"),
+        Web_Link_Redirect_URL("web_link_redirect_url"),
+        Web_Link_Context("web_link_context"),
+        UX_Type("ux_type"),
+        URL_Load_MS("url_load_ms");
 
         private final String key;
         

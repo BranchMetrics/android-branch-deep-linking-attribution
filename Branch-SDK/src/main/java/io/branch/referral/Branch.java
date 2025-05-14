@@ -3,6 +3,10 @@ package io.branch.referral;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
+import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
+import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
+import static io.branch.referral.PrefHelper.KEY_ENHANCED_WEB_LINK_UX_USED;
+import static io.branch.referral.PrefHelper.KEY_URL_LOAD_MS;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
 import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
@@ -25,6 +29,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
 
 import com.android.billingclient.api.Purchase;
@@ -54,6 +59,7 @@ import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
+import io.branch.referral.util.DependencyUtilsKt;
 import io.branch.referral.util.LinkProperties;
 
 /**
@@ -87,45 +93,45 @@ public class Branch {
      * The redirect URL provided when the link is handled by a desktop client.
      */
     public static final String REDIRECT_DESKTOP_URL = "$desktop_url";
-    
+
     /**
      * The redirect URL provided when the link is handled by an Android device.
      */
     public static final String REDIRECT_ANDROID_URL = "$android_url";
-    
+
     /**
      * The redirect URL provided when the link is handled by an iOS device.
      */
     public static final String REDIRECT_IOS_URL = "$ios_url";
-    
+
     /**
      * The redirect URL provided when the link is handled by a large form-factor iOS device such as
      * an iPad.
      */
     public static final String REDIRECT_IPAD_URL = "$ipad_url";
-    
+
     /**
      * The redirect URL provided when the link is handled by an Amazon Fire device.
      */
     public static final String REDIRECT_FIRE_URL = "$fire_url";
-    
+
     /**
      * The redirect URL provided when the link is handled by a Blackberry device.
      */
     public static final String REDIRECT_BLACKBERRY_URL = "$blackberry_url";
-    
+
     /**
      * The redirect URL provided when the link is handled by a Windows Phone device.
      */
     public static final String REDIRECT_WINDOWS_PHONE_URL = "$windows_phone_url";
-    
+
     /**
      * Open Graph: The title of your object as it should appear within the graph, e.g., "The Rock".
      *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_TITLE = "$og_title";
-    
+
     /**
      * The description of the object to appear in social media feeds that use
      * Facebook's Open Graph specification.
@@ -133,7 +139,7 @@ public class Branch {
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_DESC = "$og_description";
-    
+
     /**
      * An image URL which should represent your object to appear in social media feeds that use
      * Facebook's Open Graph specification.
@@ -141,33 +147,33 @@ public class Branch {
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_IMAGE_URL = "$og_image_url";
-    
+
     /**
      * A URL to a video file that complements this object.
      *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_VIDEO = "$og_video";
-    
+
     /**
      * The canonical URL of your object that will be used as its permanent ID in the graph.
      *
      * @see <a href="http://ogp.me/#metadata">Open Graph - Basic Metadata</a>
      */
     public static final String OG_URL = "$og_url";
-    
+
     /**
      * Unique identifier for the app in use.
      */
     public static final String OG_APP_ID = "$og_app_id";
-    
+
     /**
      * {@link String} value denoting the deep link path to override Branch's default one. By
      * default, Branch will use yourapp://open?link_click_id=12345. If you specify this key/value,
      * Branch will use yourapp://'$deeplink_path'?link_click_id=12345
      */
     public static final String DEEPLINK_PATH = "$deeplink_path";
-    
+
     /**
      * {@link String} value indicating whether the link should always initiate a deep link action.
      * By default, unless overridden on the dashboard, Branch will only open the app if they are
@@ -181,7 +187,7 @@ public class Branch {
      * unlimited number of times.
      */
     public static final int LINK_TYPE_UNLIMITED_USE = 0;
-    
+
     /**
      * An {@link Integer} value indicating the link type. In this case, the link can be used only
      * once. After initial use, subsequent attempts will not validate.
@@ -200,17 +206,17 @@ public class Branch {
 
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
-    
+
     private static boolean disableDeviceIDFetch_;
 
     static boolean bypassWaitingForIntent_ = false;
-    
+
     private static boolean bypassCurrentActivityIntentState_ = false;
 
     static boolean disableAutoSessionInitialization;
 
     static boolean referringLinkAttributionForPreinstalledAppsEnabled = false;
-    
+
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
      * the class during application runtime.</p>
@@ -231,7 +237,7 @@ public class Branch {
 
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
-
+    private CustomTabsIntent customTabsIntentOverride;
 
     /* Enumeration for defining session initialisation state. */
     enum SESSION_STATE {
@@ -2654,4 +2660,112 @@ public class Branch {
         }
     }
 
+    /**
+     * Internal method to display an in app web browser.
+     * Launches default browser that supports CustomTabs.
+     */
+    public void openBrowserExperience(JSONObject jsonObject) {
+        BranchLogger.v("openBrowserExperience JSONObject: " + String.valueOf(jsonObject));
+        try {
+            if (jsonObject == null) {
+                BranchLogger.e("openBrowserExperience: jsonObject is null");
+                return;
+            }
+            
+            String experienceType = null;
+            String weblinkUrl = null;
+
+            if(jsonObject.has(Defines.Jsonkey.Enhanced_Web_Link_UX.getKey())){
+                experienceType = jsonObject.optString(Defines.Jsonkey.Enhanced_Web_Link_UX.getKey(), null);
+            }
+
+            if(jsonObject.has(Defines.Jsonkey.Web_Link_Redirect_URL.getKey())){
+                weblinkUrl = jsonObject.optString(Defines.Jsonkey.Web_Link_Redirect_URL.getKey(), null);
+            }
+
+            if(weblinkUrl == null || weblinkUrl.isEmpty()){
+                BranchLogger.e("openBrowserExperience: weblinkUrl is null or empty");
+                return;
+            }
+
+            boolean customTabsImported = classExists(DependencyUtilsKt.androidBrowserClass);
+
+            if (IN_APP_WEBVIEW.getKey().equals(experienceType) && customTabsImported) {
+                // If developer passed their own, use that
+                if(customTabsIntentOverride != null){
+                    BranchLogger.v("Using developer specified CustomTabs");
+                    launchCustomTabBrowser(customTabsIntentOverride, weblinkUrl, getCurrentActivity());
+                }
+                else{
+                    BranchLogger.v("Using default CustomTabs");
+                    launchCustomTabBrowser(weblinkUrl, getCurrentActivity());
+                }
+            }
+            // This would be executed if either experienceType.equals("EXTERNAL_BROWSER")
+            // Or if the androidx.browser:browser is not imported
+            else {
+                BranchLogger.v("customTabsImported " + customTabsImported);
+                BranchLogger.v("Opening in external browser.");
+                launchExternalBrowser(weblinkUrl);
+            }
+        }
+        catch (Exception ex){
+            BranchLogger.e("openBrowserExperience caught exception: " + ex);
+        }
+    }
+
+    private void launchCustomTabBrowser(String url, Activity activity) {
+        androidx.browser.customtabs.CustomTabsIntent customTabsIntent =
+                new androidx.browser.customtabs.CustomTabsIntent.Builder()
+                        .build();
+        launchCustomTabBrowser(customTabsIntent, url, activity);
+    }
+
+    /**
+     * Set a CustomTabsIntent to open web urls through an in-app browser experience.
+     * This allows customization of the in-app browser appearance and behavior.
+     * 
+     * <p>
+     * Example usage:
+     * <pre>
+     * CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
+     *     .setColorScheme(COLOR_SCHEME_DARK)
+     *     .setShowTitle(true)
+     *     .build();
+     * Branch.getInstance().setCustomTabsIntent(customTabsIntent);
+     * </pre>
+     * </p>
+     * 
+     * @param customTabsIntent A configured CustomTabsIntent instance that will be used
+     *                         when opening web links in-app. If null, the default CustomTabsIntent
+     *                         will be used.
+     */
+    public void setCustomTabsIntent(CustomTabsIntent customTabsIntent){
+        this.customTabsIntentOverride = customTabsIntent;
+    }
+
+    private void launchCustomTabBrowser(CustomTabsIntent customTabsIntent, String url, Activity activity) {
+        try {
+            prefHelper_.setWebLinkUxTypeUsed(IN_APP_WEBVIEW.getKey());
+            prefHelper_.setWebLinkLoadTime(System.currentTimeMillis());
+            customTabsIntent.launchUrl(activity, Uri.parse(url));
+        }
+        catch (Exception ex){
+            BranchLogger.e("launchCustomTabBrowser caught exception: " + ex);
+        }
+    }
+
+    private void launchExternalBrowser(String url) {
+        try {
+            prefHelper_.setWebLinkUxTypeUsed(EXTERNAL_BROWSER.getKey());
+            prefHelper_.setWebLinkLoadTime(System.currentTimeMillis());
+
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context_.startActivity(intent);
+        }
+        catch (Exception ex){
+            BranchLogger.e("launchExternalBrowser caught exception: " + ex);
+        }
+    }
 }

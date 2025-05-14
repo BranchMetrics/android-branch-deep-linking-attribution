@@ -64,18 +64,29 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             } else {
                 prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE);
             }
-            
-            if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
-                String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
-                prefHelper_.setSessionParams(params);
-            } else {
-                prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+
+            // Prioritize showing enhanced web link over any returned params
+            if(resp.getObject().has(Defines.Jsonkey.Invoke_Features.getKey()) &&
+                    resp.getObject().getJSONObject(Defines.Jsonkey.Invoke_Features.getKey()).has("enhanced_web_link_ux")){
+                JSONObject invokeFeaturesJson = resp.getObject().getJSONObject(Defines.Jsonkey.Invoke_Features.getKey());
+
+                BranchLogger.v("Opening browser from open request.");
+                branch.openBrowserExperience(invokeFeaturesJson);
+            }
+            else {
+                if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
+                    String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
+                    prefHelper_.setSessionParams(params);
+                }
+                else {
+                    prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+                }
+
+                if (callback_ != null && !Branch.getInstance().isIDLSession()) {
+                    callback_.onInitFinished(branch.getLatestReferringParams(), null);
+                }
             }
 
-            if (callback_ != null && !Branch.getInstance().isIDLSession()) {
-                callback_.onInitFinished(branch.getLatestReferringParams(), null);
-            }
-            
             prefHelper_.setAppVersion(DeviceInfo.getInstance().getAppVersion());
             
         } catch (Exception ex) {

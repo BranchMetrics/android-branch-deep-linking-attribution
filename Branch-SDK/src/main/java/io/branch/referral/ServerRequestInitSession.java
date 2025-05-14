@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
+
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -60,7 +62,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
         String identity = Branch.installDeveloperId;
 
-        if(!TextUtils.isEmpty(identity) && !identity.equals(PrefHelper.NO_STRING_VALUE)){
+        if(!TextUtils.isEmpty(identity) && !identity.equals(NO_STRING_VALUE)){
             post.put(Defines.Jsonkey.Identity.getKey(), identity);
         }
     }
@@ -105,7 +107,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     void updateLinkReferrerParams() {
         // Add link identifier if present
         String linkIdentifier = prefHelper_.getLinkClickIdentifier();
-        if (!linkIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
+        if (!linkIdentifier.equals(NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);
             } catch (JSONException e) {
@@ -114,7 +116,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         // Add Google search install referrer if present
         String googleSearchInstallIdentifier = prefHelper_.getGoogleSearchInstallIdentifier();
-        if (!googleSearchInstallIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
+        if (!googleSearchInstallIdentifier.equals(NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey(), googleSearchInstallIdentifier);
             } catch (JSONException e) {
@@ -123,7 +125,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         // Add Google play raw referrer if present
         String googlePlayReferrer = prefHelper_.getAppStoreReferrer();
-        if (!googlePlayReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
+        if (!googlePlayReferrer.equals(NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.GooglePlayInstallReferrer.getKey(), googlePlayReferrer);
             } catch (JSONException e) {
@@ -132,7 +134,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
 
         String appStore = prefHelper_.getAppStoreSource();
-        if(!PrefHelper.NO_STRING_VALUE.equals(appStore)) {
+        if(!NO_STRING_VALUE.equals(appStore)) {
             try {
                 //Handle Meta Install Referrer by setting store as Google Play Store and adding is_meta_click_through
                 if (appStore.equals(Defines.Jsonkey.Meta_Install_Referrer.getKey())) {
@@ -163,29 +165,44 @@ abstract class ServerRequestInitSession extends ServerRequest {
         JSONObject post = getPost();
         try {
             String appLink = prefHelper_.getAppLink();
-            if (!appLink.equals(PrefHelper.NO_STRING_VALUE)) {
+            if (!appLink.equals(NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.AndroidAppLinkURL.getKey(), appLink);
             }
 
             String pushIdentifier = prefHelper_.getPushIdentifier();
-            if (!pushIdentifier.equals(PrefHelper.NO_STRING_VALUE)) {
+            if (!pushIdentifier.equals(NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.AndroidPushIdentifier.getKey(), pushIdentifier);
             }
 
             // External URI or Extras if exist
             String externalIntentUri = prefHelper_.getExternalIntentUri();
-            if (!externalIntentUri.equals(PrefHelper.NO_STRING_VALUE)) {
+            if (!externalIntentUri.equals(NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_URI.getKey(), externalIntentUri);
             }
 
             String externalIntentExtra = prefHelper_.getExternalIntentExtra();
-            if (!externalIntentExtra.equals(PrefHelper.NO_STRING_VALUE)) {
+            if (!externalIntentExtra.equals(NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.External_Intent_Extra.getKey(), externalIntentExtra);
             }
 
             String initialReferrer = prefHelper_.getInitialReferrer();
-            if(!TextUtils.isEmpty(initialReferrer) && !initialReferrer.equals(PrefHelper.NO_STRING_VALUE)) {
+            if(!TextUtils.isEmpty(initialReferrer) && !initialReferrer.equals(NO_STRING_VALUE)) {
                 post.put(Defines.Jsonkey.InitialReferrer.getKey(), initialReferrer);
+            }
+
+            String lastUsedWebLinkType = prefHelper_.getWebLinkUxTypeUsed();
+            long lastWebLinkLoadTs = prefHelper_.getWebLinkLoadTime();
+            // If we opened an enhanced web link in the last open, check if we saved which type and ts
+            if(!TextUtils.isEmpty(lastUsedWebLinkType) && !NO_STRING_VALUE.equals(lastUsedWebLinkType)){
+                JSONObject web_link_context = new JSONObject();
+                web_link_context.put(Defines.Jsonkey.UX_Type.getKey(), lastUsedWebLinkType);
+                web_link_context.put(Defines.Jsonkey.URL_Load_MS.getKey(), lastWebLinkLoadTs);
+
+                post.put(Defines.Jsonkey.Web_Link_Context.getKey(), web_link_context);
+
+                // These values are only used once, per web link open.
+                prefHelper_.setWebLinkUxTypeUsed(null);
+                prefHelper_.setWebLinkLoadTime(0);
             }
 
         } catch (JSONException e) {
@@ -217,7 +234,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         long firstInstallTime = DeviceInfo.getInstance().getFirstInstallTime();
         long lastUpdateTime = DeviceInfo.getInstance().getLastUpdateTime();
 
-        if (PrefHelper.NO_STRING_VALUE.equals(prefHelper_.getAppVersion())) {
+        if (NO_STRING_VALUE.equals(prefHelper_.getAppVersion())) {
             // if no app version is in storage, this must be the first time Branch is here, register an install
             installOrUpdateState = STATE_FRESH_INSTALL;
 

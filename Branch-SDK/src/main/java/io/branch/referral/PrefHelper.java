@@ -131,6 +131,9 @@ public class PrefHelper {
 
     static final String KEY_IS_META_CLICKTHROUGH = "bnc_is_meta_clickthrough";
 
+    static final String KEY_ENHANCED_WEB_LINK_UX_USED = "bnc_enhanced_web_link_ux_used";
+    static final String KEY_URL_LOAD_MS = "bnc_url_load_ms";
+
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -1465,5 +1468,21 @@ public class PrefHelper {
      */
     boolean isAttributionLevelInitialized() {
         return hasPrefValue(KEY_CONSUMER_PROTECTION_ATTRIBUTION_LEVEL);
+    }
+
+    public void setWebLinkUxTypeUsed(String key) {
+        setString(KEY_ENHANCED_WEB_LINK_UX_USED, key);
+    }
+
+    public void setWebLinkLoadTime(long l) {
+        setLong(KEY_URL_LOAD_MS, l);
+    }
+
+    public String getWebLinkUxTypeUsed(){
+        return getString(KEY_ENHANCED_WEB_LINK_UX_USED);
+    }
+
+    public long getWebLinkLoadTime(){
+        return getLong(KEY_URL_LOAD_MS);
     }
 }
