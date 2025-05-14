@@ -2685,7 +2685,7 @@ public class Branch {
 
             if(weblinkUrl == null || weblinkUrl.isEmpty()){
                 BranchLogger.e("openBrowserExperience: weblinkUrl is null or empty");
-                return; //TODO?
+                return;
             }
 
             boolean customTabsImported = classExists(DependencyUtilsKt.androidBrowserClass);
@@ -2712,7 +2712,6 @@ public class Branch {
         catch (Exception ex){
             BranchLogger.e("openBrowserExperience caught exception: " + ex);
         }
-    }
     }
 
     private void launchCustomTabBrowser(String url, Activity activity) {
