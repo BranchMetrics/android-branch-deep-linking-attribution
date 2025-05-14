@@ -2667,18 +2667,24 @@ public class Branch {
     public void openBrowserExperience(JSONObject jsonObject) {
         BranchLogger.v("openBrowserExperience JSONObject: " + String.valueOf(jsonObject));
         try {
+            if (jsonObject == null) {
+                BranchLogger.e("openBrowserExperience: jsonObject is null");
+                return;
+            }
+            
             String experienceType = null;
             String weblinkUrl = null;
 
             if(jsonObject.has(Defines.Jsonkey.Enhanced_Web_Link_UX.getKey())){
-                experienceType = jsonObject.getString(Defines.Jsonkey.Enhanced_Web_Link_UX.getKey());
+                experienceType = jsonObject.optString(Defines.Jsonkey.Enhanced_Web_Link_UX.getKey(), null);
             }
 
             if(jsonObject.has(Defines.Jsonkey.Web_Link_Redirect_URL.getKey())){
-                weblinkUrl = jsonObject.getString(Defines.Jsonkey.Web_Link_Redirect_URL.getKey());
+                weblinkUrl = jsonObject.optString(Defines.Jsonkey.Web_Link_Redirect_URL.getKey(), null);
             }
 
             if(weblinkUrl == null || weblinkUrl.isEmpty()){
+                BranchLogger.e("openBrowserExperience: weblinkUrl is null or empty");
                 return; //TODO?
             }
 
@@ -2706,6 +2712,7 @@ public class Branch {
         catch (Exception ex){
             BranchLogger.e("openBrowserExperience caught exception: " + ex);
         }
+    }
     }
 
     private void launchCustomTabBrowser(String url, Activity activity) {
