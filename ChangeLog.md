@@ -1,4 +1,11 @@
 # Branch Android SDK change log
+- v5.18.0
+* _*Master Release*_ - May 14, 2025
+  - Add browser experience for apps that have opted in.
+    - Add method to set CustomTabsIntent `public void setCustomTabsIntent(CustomTabsIntent customTabsIntent)`
+    - Should be set prior to session init. If not imported, default will be used.
+    - Otherwise if `androidx.browser:browser:1.8.0` is not imported, user's default browser will launch.
+
 - v5.17.0
 * _*Master Release*_ - Apr 24, 2025
   - Make formerly private `enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level)` public
