@@ -669,9 +669,6 @@ public class MainActivity extends Activity {
                     invokeFeatures.put("enhanced_web_link_ux", "IN_APP_WEBVIEW");
                     invokeFeatures.put("web_link_redirect_url", "https://branch.io");
 
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("invoke_features", invokeFeatures);
-
                     Branch.getInstance().openBrowserExperience(invokeFeatures);
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
