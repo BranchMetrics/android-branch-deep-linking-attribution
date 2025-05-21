@@ -1793,7 +1793,7 @@ public class Branch {
     private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
         @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
             return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
+                    prefHelper_.getAPIBaseUrl(true) + Defines.RequestPath.GetURL.getPath(),
                     Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
         }
     }

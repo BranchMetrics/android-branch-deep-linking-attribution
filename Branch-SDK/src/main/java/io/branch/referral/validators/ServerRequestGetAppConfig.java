@@ -43,7 +43,7 @@ class ServerRequestGetAppConfig extends ServerRequest {
 
     @Override
     public String getRequestUrl() {
-        return prefHelper_.getAPIBaseUrl() + getRequestPath() + "/" + prefHelper_.getBranchKey();
+        return prefHelper_.getAPIBaseUrl(false) + getRequestPath() + "/" + prefHelper_.getBranchKey();
     }
 
     @Override
