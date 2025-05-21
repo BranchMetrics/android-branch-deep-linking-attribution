@@ -54,7 +54,7 @@ public class SettingsActivity extends Activity {
     void setupApiUrlText() {
         final EditText apiUrlText = findViewById(R.id.api_url_text);
         final PrefHelper prefHelper = PrefHelper.getInstance(this);
-        String currentApiUrl = prefHelper.getAPIBaseUrl();
+        String currentApiUrl = prefHelper.getAPIBaseUrl(true);
 
         apiUrlText.setText(currentApiUrl);
 
