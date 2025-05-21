@@ -55,8 +55,9 @@ public class SettingsActivity extends Activity {
         final EditText apiUrlText = findViewById(R.id.api_url_text);
         final PrefHelper prefHelper = PrefHelper.getInstance(this);
         String currentApiUrl = prefHelper.getAPIBaseUrl(true);
-
-        apiUrlText.setText(currentApiUrl);
+        if (currentApiUrl != null) {
+            apiUrlText.setText(currentApiUrl);
+        }
 
         apiUrlText.setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_DONE) {
