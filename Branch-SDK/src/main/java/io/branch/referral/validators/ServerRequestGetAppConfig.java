@@ -43,6 +43,7 @@ class ServerRequestGetAppConfig extends ServerRequest {
 
     @Override
     public String getRequestUrl() {
+        // Always use default URL for app config validation endpoint for security reasons
         return prefHelper_.getAPIBaseUrl(false) + getRequestPath() + "/" + prefHelper_.getBranchKey();
     }
 
