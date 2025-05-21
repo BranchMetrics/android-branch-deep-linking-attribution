@@ -239,8 +239,8 @@ public class PrefHelper {
      * @return A {@link String} variable containing the hard-coded base URL that the Branch
      * API uses.
      */
-    public String getAPIBaseUrl() {
-        if (URLUtil.isHttpsUrl(customServerURL_)) {
+    public String getAPIBaseUrl(boolean useCustom) {
+        if (useCustom && URLUtil.isHttpsUrl(customServerURL_)) {
             return customServerURL_;
         }
 
