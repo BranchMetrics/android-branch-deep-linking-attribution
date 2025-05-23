@@ -51,7 +51,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
-        BranchLogger.v("onActivityResumed, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
+        BranchLogger.v("onActivityResumed, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
         // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
@@ -76,18 +76,22 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         // must be called after session initialization, which relies on checking whether activity
         // that is initializing the session is being launched from stack or anew
         activitiesOnStack_.add(activity.toString());
+        BranchLogger.v("activityCnt_: " + activityCnt_);
+        BranchLogger.v("activitiesOnStack_: " + activitiesOnStack_);
     }
 
     @Override
     public void onActivityPaused(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
-        BranchLogger.v("onActivityPaused, activity = " + activity  + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
+        BranchLogger.v("onActivityPaused, activity = " + activity  + " branch: " + branch);
         if (branch == null) return;
 
         /* Close any opened sharing dialog.*/
         if (branch.getShareLinkManager() != null) {
             branch.getShareLinkManager().cancelShareLinkDialog(true);
         }
+        BranchLogger.v("activityCnt_: " + activityCnt_);
+        BranchLogger.v("activitiesOnStack_: " + activitiesOnStack_);
     }
 
     @Override
@@ -101,7 +105,17 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         if (activityCnt_ < 1) {
             branch.setInstantDeepLinkPossible(false);
             branch.closeSessionInternal();
+
+            /* It is possible some integrations do not call Branch.getAutoInstance() before the first
+            activity's lifecycle methods execute.
+            In such cases, activityCnt_ could be set to -1, which could cause the above line to clear
+            session parameters. Just reset to 0 if we're here.
+            */
+            activityCnt_ = 0;
+            BranchLogger.v("activityCnt_: reset to 0");
         }
+
+        BranchLogger.v("activitiesOnStack_: " + activitiesOnStack_);
     }
 
     @Override
@@ -111,7 +125,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
         Branch branch = Branch.getInstance();
-        BranchLogger.v("onActivityDestroyed, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
+        BranchLogger.v("onActivityDestroyed, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
         if (branch.getCurrentActivity() == activity) {
@@ -119,6 +133,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
         }
 
         activitiesOnStack_.remove(activity.toString());
+        BranchLogger.v("activitiesOnStack_: " + activitiesOnStack_);
     }
 
     boolean isCurrentActivityLaunchedFromStack() {
