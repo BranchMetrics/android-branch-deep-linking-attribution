@@ -163,8 +163,9 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                                         null,
                                         null
                                     )
-                                } catch (e: RemoteException) {
-                                    BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
+                                }
+                                catch (e: Exception) {
+                                    BranchLogger.e("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
                                     null
                                 }
                             )
@@ -196,6 +197,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
 
 suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
+        // Install Referrer API availability varies between Xiaomi's MIUI and HyperOS
         if(classExists(xiaomiInstallReferrerClass)) {
             try {
                 val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
@@ -217,8 +219,8 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                                         result.installBeginTimestampServerSeconds,
                                         result.referrerClickTimestampServerSeconds
                                     )
-                                } catch (e: RemoteException) {
-                                    BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails exception: $e")
+                                } catch (e: Exception) {
+                                    BranchLogger.e("Caught getXiaomiGetAppsReferrerDetails exception: $e")
                                     null
                                 }
                             )
