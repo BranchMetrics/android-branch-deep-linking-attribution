@@ -163,9 +163,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                                         null,
                                         null
                                     )
-                                } catch (e: Exception) {
-                                    BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
-                                    null
+                                } catch (e: Exception) {\n                                      BranchLogger.e(\"Caught getSamsungGalaxyStoreReferrerDetails exception: $e\")\n                                      null\n                                  }
                                 }
                             )
                         } else {
