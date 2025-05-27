@@ -197,7 +197,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
 
 suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
-        // Install Referrer API availability between Xiaomi's OSs
+        // Install Referrer API availability varies between Xiaomi's MIUI and HyperOS
         if(classExists(xiaomiInstallReferrerClass)) {
             try {
                 val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
