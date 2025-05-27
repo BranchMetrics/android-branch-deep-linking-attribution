@@ -11,7 +11,6 @@ import io.branch.referral.Defines.Jsonkey
 import io.branch.referral.PrefHelper
 import io.branch.referral.util.classExists
 import io.branch.referral.util.huaweiInstallReferrerClass
-import io.branch.referral.util.isHyperOS
 import io.branch.referral.util.samsungInstallReferrerClass
 import io.branch.referral.util.xiaomiInstallReferrerClass
 import kotlinx.coroutines.CompletableDeferred
