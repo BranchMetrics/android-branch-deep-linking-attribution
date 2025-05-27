@@ -210,7 +210,6 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                         if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
                                 try {
-                                    BranchLogger.v("Client is $client")
                                     val result = client.installReferrer
                                     InstallReferrerResult(
                                         Jsonkey.Xiaomi_Get_Apps.key,
