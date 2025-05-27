@@ -11,6 +11,7 @@ import io.branch.referral.Defines.Jsonkey
 import io.branch.referral.PrefHelper
 import io.branch.referral.util.classExists
 import io.branch.referral.util.huaweiInstallReferrerClass
+import io.branch.referral.util.isHyperOS
 import io.branch.referral.util.samsungInstallReferrerClass
 import io.branch.referral.util.xiaomiInstallReferrerClass
 import kotlinx.coroutines.CompletableDeferred
@@ -163,7 +164,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
                                         null,
                                         null
                                     )
-                                } catch (e: RemoteException) {
+                                } catch (e: Exception) {
                                     BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
                                     null
                                 }
@@ -196,6 +197,7 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
 
 suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
+        // Install Referrer API availability between Xiaomi's OSs
         if(classExists(xiaomiInstallReferrerClass)) {
             try {
                 val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
@@ -208,6 +210,7 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                         if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
                             deferredReferrerDetails.complete(
                                 try {
+                                    BranchLogger.v("Client is $client")
                                     val result = client.installReferrer
                                     InstallReferrerResult(
                                         Jsonkey.Xiaomi_Get_Apps.key,
@@ -217,8 +220,8 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
                                         result.installBeginTimestampServerSeconds,
                                         result.referrerClickTimestampServerSeconds
                                     )
-                                } catch (e: RemoteException) {
-                                    BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails exception: $e")
+                                } catch (e: Exception) {
+                                    BranchLogger.e("Caught getXiaomiGetAppsReferrerDetails exception: $e")
                                     null
                                 }
                             )
