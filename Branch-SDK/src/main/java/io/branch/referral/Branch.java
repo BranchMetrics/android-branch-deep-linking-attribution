@@ -5,8 +5,6 @@ import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
 import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
-import static io.branch.referral.PrefHelper.KEY_ENHANCED_WEB_LINK_UX_USED;
-import static io.branch.referral.PrefHelper.KEY_URL_LOAD_MS;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
 import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
@@ -230,6 +228,7 @@ public class Branch {
     private final Context context_;
 
     private final BranchQRCodeCache branchQRCodeCache_;
+    private final BranchConfigurationController branchConfigurationController_;
 
     public final ServerRequestQueue requestQueue_;
 
@@ -325,6 +324,7 @@ public class Branch {
         deviceInfo_ = new DeviceInfo(context);
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
+        branchConfigurationController_ = new BranchConfigurationController();
         requestQueue_ = ServerRequestQueue.getInstance(context);
     }
 
@@ -511,6 +511,9 @@ public class Branch {
      */
     public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
         disableAutoSessionInitialization = expectDelayedInit;
+        if (expectDelayedInit && Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setDelayedSessionInitUsed(true);
+        }
     }
 
     /**
@@ -1386,6 +1389,10 @@ public class Branch {
 
     public BranchQRCodeCache getBranchQRCodeCache() {
         return branchQRCodeCache_;
+    }
+
+    public BranchConfigurationController getConfigurationController() {
+        return branchConfigurationController_;
     }
 
     PrefHelper getPrefHelper() {

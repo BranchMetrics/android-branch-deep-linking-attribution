@@ -123,6 +123,7 @@ public class PrefHelper {
     static final String KEY_INSTALL_BEGIN_SERVER_TS = "bnc_install_begin_server_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
+    static final String KEY_DELAYED_SESSION_INIT_USED = "bnc_delayed_session_init_used";
 
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
 
@@ -1484,5 +1485,30 @@ public class PrefHelper {
 
     public long getWebLinkLoadTime(){
         return getLong(KEY_URL_LOAD_MS);
+    }
+
+    /**
+     * Sets whether delayed session initialization was used.
+     * This flag is used to track if the app has used delayed session initialization,
+     * which is important for analytics and debugging purposes.
+     * The value is stored in SharedPreferences and can be retrieved using {@link #getDelayedSessionInitUsed()}.
+     *
+     * @param used Boolean indicating if delayed session initialization was used
+     * @see Branch#expectDelayedSessionInitialization(boolean)
+     */
+    public void setDelayedSessionInitUsed(boolean used) {
+        setBool(KEY_DELAYED_SESSION_INIT_USED, used);
+    }
+
+    /**
+     * Gets whether delayed session initialization was used.
+     * This can be used to check if the app has previously used delayed session initialization.
+     * The value is retrieved from SharedPreferences and is set using {@link #setDelayedSessionInitUsed(boolean)}.
+     *
+     * @return Boolean indicating if delayed session initialization was used
+     * @see Branch#expectDelayedSessionInitialization(boolean)
+     */
+    public boolean getDelayedSessionInitUsed() {
+        return getBool(KEY_DELAYED_SESSION_INIT_USED);
     }
 }
