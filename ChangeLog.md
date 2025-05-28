@@ -1,4 +1,10 @@
 # Branch Android SDK change log
+- v5.18.1
+* _*Master Release*_ - May 27, 2025
+  - Fixes a bug affecting Xiaomi devices.
+  - Fix for rare instances of session parameters getting cleared.
+
+
 - v5.18.0
 * _*Master Release*_ - May 14, 2025
   - Add browser experience for apps that have opted in.
