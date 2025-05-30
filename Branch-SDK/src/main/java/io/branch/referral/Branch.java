@@ -467,7 +467,11 @@ public class Branch {
      * </p>
      */
     public static void enableTestMode() {
-        BranchUtil.setTestMode(true);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(true);
+        } else {
+            BranchUtil.setTestMode(true);
+        }
         BranchLogger.logAlways("enableTestMode has been changed. It now uses the test key but will not" +
                 " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
                 " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
@@ -480,7 +484,11 @@ public class Branch {
      * </p>
      */
     public static void disableTestMode() {
-        BranchUtil.setTestMode(false);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(false);
+        } else {
+            BranchUtil.setTestMode(false);
+        }
     }
 
     /**
@@ -554,6 +562,9 @@ public class Branch {
      * with {@link Defines.BranchAttributionLevel#NONE} instead to disable tracking.
      * */
     @Deprecated public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
+        if (branchConfigurationController_ != null) {
+            branchConfigurationController_.setTrackingDisabled(disableTracking);
+        }
         trackingController.disableTracking(context_, disableTracking, callback);
     }
 

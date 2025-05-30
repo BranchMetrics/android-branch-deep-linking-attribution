@@ -38,7 +38,7 @@ class BranchConfigurationController {
      * 
      * @return Boolean indicating if test mode is enabled
      */
-    private fun isTestModeEnabled(): Boolean {
+    fun isTestModeEnabled(): Boolean {
         return BranchUtil.isTestModeEnabled()
     }
 
@@ -48,7 +48,29 @@ class BranchConfigurationController {
      * @return Boolean indicating if tracking is disabled
      */
     fun isTrackingDisabled(): Boolean {
-        return Branch.getInstance().prefHelper_.getBool("bnc_tracking_disabled")
+        return Branch.getInstance()?.prefHelper_?.getBool("bnc_tracking_disabled") ?: false
+    }
+
+    /**
+     * Sets whether tracking should be disabled.
+     * When tracking is disabled, the SDK will not track any user data or state,
+     * and it will not initiate any network calls except for deep linking operations.
+     * 
+     * @param disabled Boolean indicating if tracking should be disabled
+     */
+    fun setTrackingDisabled(disabled: Boolean) {
+        Branch.getInstance()?.prefHelper_?.setBool("bnc_tracking_disabled", disabled)
+    }
+
+    /**
+     * Sets whether test mode should be enabled.
+     * When test mode is enabled, the SDK will use test keys and endpoints.
+     * This is useful for development and testing purposes.
+     * 
+     * @param enabled Boolean indicating if test mode should be enabled
+     */
+    fun setTestModeEnabled(enabled: Boolean) {
+        BranchUtil.setTestMode(enabled)
     }
 
     /**
