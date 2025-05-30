@@ -592,7 +592,11 @@ public class Branch {
      * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
      */
     public static void disableInstantDeepLinking(boolean disableIDL) {
-        enableInstantDeepLinking = !disableIDL;
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setInstantDeepLinkingEnabled(!disableIDL);
+        } else {
+            enableInstantDeepLinking = !disableIDL;
+        }
     }
 
     // Package Private
@@ -877,7 +881,7 @@ public class Branch {
 
     private void readAndStripParam(Uri data, Activity activity) {
         BranchLogger.v("Read params uri: " + data + " bypassCurrentActivityIntentState: " + bypassCurrentActivityIntentState_ + " intent state: " + intentState_);
-        if (enableInstantDeepLinking) {
+        if (branchConfigurationController_.isInstantDeepLinkingEnabled()) {
 
             // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
             // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.

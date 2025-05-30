@@ -52,12 +52,22 @@ class BranchConfigurationController {
     }
 
     /**
+     * Sets whether instant deep linking is enabled.
+     * This flag controls whether the SDK should attempt to perform instant deep linking.
+     * 
+     * @param enabled Boolean indicating if instant deep linking should be enabled
+     */
+    fun setInstantDeepLinkingEnabled(enabled: Boolean) {
+        Branch.getInstance()?.prefHelper_?.setBool("bnc_instant_deep_linking_enabled", enabled)
+    }
+
+    /**
      * Gets whether instant deep linking is enabled.
      * 
      * @return Boolean indicating if instant deep linking is enabled
      */
-    private fun isInstantDeepLinkingEnabled(): Boolean {
-        return Branch.getInstance().prefHelper_.getBool("bnc_instant_deep_linking_enabled")
+    fun isInstantDeepLinkingEnabled(): Boolean {
+        return Branch.getInstance()?.prefHelper_?.getBool("bnc_instant_deep_linking_enabled") ?: false
     }
 
     /**
@@ -77,7 +87,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if plugin runtime initialization is deferred
      */
     private fun isDeferInitForPluginRuntime(): Boolean {
-        return Branch.getInstance().prefHelper_.getBool("bnc_defer_init_for_plugin_runtime")
+        return Branch.getInstance()?.prefHelper_?.getBool("bnc_defer_init_for_plugin_runtime") ?: false
     }
 
     /**
