@@ -95,11 +95,16 @@ class BranchConfigurationController {
      * @return JSONObject containing the current configuration state
      */
     fun serializeConfiguration(): JSONObject {
-        return JSONObject().apply {
-            put("expectDelayedSessionInitialization", getDelayedSessionInitUsed())
-            put("testMode", isTestModeEnabled())
-            put("trackingDisabled", isTrackingDisabled())
-            put("instantDeepLinkingEnabled", isInstantDeepLinkingEnabled())
+        return try {
+            JSONObject().apply {
+                put(\"expectDelayedSessionInitialization\", getDelayedSessionInitUsed())
+                put(\"testMode\", isTestModeEnabled())
+                put(\"trackingDisabled\", isTrackingDisabled())
+                put(\"instantDeepLinkingEnabled\", isInstantDeepLinkingEnabled())
+            }
+        } catch (e: Exception) {
+            BranchLogger.w(\"Error serializing configuration: ${e.message}\")
+            JSONObject()
         }
     }
 } 
