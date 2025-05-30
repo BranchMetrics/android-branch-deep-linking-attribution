@@ -39,15 +39,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if test mode is enabled
      */
     private fun isTestModeEnabled(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool(PrefHelper.KEY_TEST_MODE) ?: false
-    }
-
-    /**
-     * Sets whether tracking is disabled.
-     * This flag is used to track if the app has disabled tracking.
-     */
-    fun setTrackingDisabled(disabled: Boolean) {
-        Branch.getInstance().prefHelper_.setBool("bnc_tracking_disabled", disabled)
+        return BranchUtil.isTestModeEnabled()
     }
 
     /**
@@ -69,6 +61,26 @@ class BranchConfigurationController {
     }
 
     /**
+     * Sets whether plugin runtime initialization should be deferred.
+     * This is used for cross-process communication scenarios like React Native,
+     * where we need to wait for the plugin to signal when it's ready before initializing.
+     * 
+     * @param deferred Boolean indicating if plugin runtime initialization should be deferred
+     */
+    fun setDeferInitForPluginRuntime(deferred: Boolean) {
+        Branch.getInstance()?.prefHelper_?.setBool("bnc_defer_init_for_plugin_runtime", deferred)
+    }
+
+    /**
+     * Gets whether plugin runtime initialization is deferred.
+     * 
+     * @return Boolean indicating if plugin runtime initialization is deferred
+     */
+    private fun isDeferInitForPluginRuntime(): Boolean {
+        return Branch.getInstance().prefHelper_.getBool("bnc_defer_init_for_plugin_runtime")
+    }
+
+    /**
      * Serializes the current configuration state into a JSONObject.
      * This is used to send configuration data to the server.
      * 
@@ -77,13 +89,14 @@ class BranchConfigurationController {
     fun serializeConfiguration(): JSONObject {
         return try {
             JSONObject().apply {
-                put(\"expectDelayedSessionInitialization\", getDelayedSessionInitUsed())
-                put(\"testMode\", isTestModeEnabled())
-                put(\"trackingDisabled\", isTrackingDisabled())
-                put(\"instantDeepLinkingEnabled\", isInstantDeepLinkingEnabled())
+                put("expectDelayedSessionInitialization", getDelayedSessionInitUsed())
+                put("testMode", isTestModeEnabled())
+                put("trackingDisabled", isTrackingDisabled())
+                put("instantDeepLinkingEnabled", isInstantDeepLinkingEnabled())
+                put("deferInitForPluginRuntime", isDeferInitForPluginRuntime())
             }
         } catch (e: Exception) {
-            BranchLogger.w(\"Error serializing configuration: ${e.message}\")
+            BranchLogger.w("Error serializing configuration: ${e.message}")
             JSONObject()
         }
     }

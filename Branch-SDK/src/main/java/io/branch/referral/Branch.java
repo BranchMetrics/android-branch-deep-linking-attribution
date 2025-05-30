@@ -2581,7 +2581,10 @@ public class Branch {
 
         deferInitForPluginRuntime = isDeferred;
         if(isDeferred){
-            expectDelayedSessionInitialization(isDeferred);
+            expectDelayedSessionInitialization(true);
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().branchConfigurationController_.setDeferInitForPluginRuntime(true);
+            }
         }
     }
 
