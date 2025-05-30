@@ -17,7 +17,9 @@ class BranchConfigurationController {
      * @see Branch.expectDelayedSessionInitialization
      */
     fun setDelayedSessionInitUsed(used: Boolean) {
-        Branch.getInstance().prefHelper_.delayedSessionInitUsed = used
+        Branch.getInstance()?.let { branch ->
+            branch.prefHelper_.delayedSessionInitUsed = used
+        }
     }
 
     /**
