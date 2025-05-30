@@ -51,7 +51,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if test mode is enabled
      */
     private fun isTestModeEnabled(): Boolean {
-        return Branch.getInstance().prefHelper_.getBool("bnc_test_mode")
+        return Branch.getInstance()?.prefHelper_?.getBool(PrefHelper.KEY_TEST_MODE) ?: false
     }
 
     /**
