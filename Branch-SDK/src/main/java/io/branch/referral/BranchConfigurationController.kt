@@ -30,7 +30,7 @@ class BranchConfigurationController {
      * @see Branch.expectDelayedSessionInitialization
      */
     private fun getDelayedSessionInitUsed(): Boolean {
-        return Branch.getInstance().prefHelper_.delayedSessionInitUsed
+        return Branch.getInstance()?.prefHelper_?.delayedSessionInitUsed ?: false
     }
 
     /**
