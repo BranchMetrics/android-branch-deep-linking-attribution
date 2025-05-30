@@ -34,18 +34,6 @@ class BranchConfigurationController {
     }
 
     /**
-     * Sets whether test mode is enabled.
-     * This flag is used to track if the app is running in test mode.
-     */
-    fun setTestModeEnabled(enabled: Boolean) {
-        if (enabled) {
-            Branch.enableTestMode()
-        } else {
-            Branch.disableTestMode()
-        }
-    }
-
-    /**
      * Gets whether test mode is enabled.
      * 
      * @return Boolean indicating if test mode is enabled
@@ -69,14 +57,6 @@ class BranchConfigurationController {
      */
     fun isTrackingDisabled(): Boolean {
         return Branch.getInstance().prefHelper_.getBool("bnc_tracking_disabled")
-    }
-
-    /**
-     * Sets whether instant deep linking is enabled.
-     * This flag is used to track if the app has enabled instant deep linking.
-     */
-    fun setInstantDeepLinkingEnabled(enabled: Boolean) {
-        Branch.getInstance().prefHelper_.setBool("bnc_instant_deep_linking_enabled", enabled)
     }
 
     /**

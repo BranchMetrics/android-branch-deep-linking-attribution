@@ -511,7 +511,7 @@ public class Branch {
      */
     public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
         disableAutoSessionInitialization = expectDelayedInit;
-        if (expectDelayedInit && Branch.getInstance() != null) {
+        if (Branch.getInstance() != null && expectDelayedInit) {
             Branch.getInstance().branchConfigurationController_.setDelayedSessionInitUsed(true);
         }
     }
