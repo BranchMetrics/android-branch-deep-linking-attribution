@@ -121,15 +121,22 @@ class BranchConfigurationController {
     fun serializeConfiguration(): JSONObject {
         return try {
             JSONObject().apply {
-                put("expectDelayedSessionInitialization", getDelayedSessionInitUsed())
-                put("testMode", isTestModeEnabled())
-                put("trackingDisabled", isTrackingDisabled())
-                put("instantDeepLinkingEnabled", isInstantDeepLinkingEnabled())
-                put("deferInitForPluginRuntime", isDeferInitForPluginRuntime())
+                put(\"expectDelayedSessionInitialization\", getDelayedSessionInitUsed())
+                put(\"testMode\", isTestModeEnabled())
+                put(\"trackingDisabled\", isTrackingDisabled())
+                put(\"instantDeepLinkingEnabled\", isInstantDeepLinkingEnabled())
+                put(\"deferInitForPluginRuntime\", isDeferInitForPluginRuntime())
             }
+        } catch (e: NullPointerException) {
+            BranchLogger.w(\"Error serializing configuration - null reference: ${e.message}\")
+            JSONObject()
+        } catch (e: JSONException) {
+            BranchLogger.w(\"Error serializing configuration - JSON error: ${e.message}\")
+            JSONObject()
         } catch (e: Exception) {
-            BranchLogger.w("Error serializing configuration: ${e.message}")
+            BranchLogger.w(\"Error serializing configuration - unexpected error: ${e.message}\")
             JSONObject()
         }
+    }
     }
 } 
