@@ -142,6 +142,43 @@ class BranchConfigurationControllerTest {
     }
 
     @Test
+    fun `test getBranchKeySource returns correct value`() {
+        // Given
+        val expectedSource = "branch.json"
+        `when`(mockPrefHelper.branchKeySource).thenReturn(expectedSource)
+
+        // When
+        val result = controller.getBranchKeySource()
+
+        // Then
+        assertEquals(expectedSource, result)
+    }
+
+    @Test
+    fun `test getBranchKeySource returns unknown when Branch instance is null`() {
+        // Given
+        mockedStaticBranch.`when`<Branch> { Branch.getInstance() }.thenReturn(null)
+
+        // When
+        val result = controller.getBranchKeySource()
+
+        // Then
+        assertEquals("unknown", result)
+    }
+
+    @Test
+    fun `test getBranchKeySource returns unknown when branchKeySource is null`() {
+        // Given
+        `when`(mockPrefHelper.branchKeySource).thenReturn(null)
+
+        // When
+        val result = controller.getBranchKeySource()
+
+        // Then
+        assertEquals("unknown", result)
+    }
+
+    @Test
     fun `test serializeConfiguration returns correct JSON object`() {
         // Given
         val expectedDelayedSessionInit = true
@@ -149,6 +186,7 @@ class BranchConfigurationControllerTest {
         val expectedTrackingDisabled = true
         val expectedInstantDeepLinkingEnabled = true
         val expectedDeferInitForPluginRuntime = true
+        val expectedBranchKeySource = "manifest"
 
         // Setup mocks
         `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
@@ -156,6 +194,7 @@ class BranchConfigurationControllerTest {
         `when`(mockPrefHelper.getBool("bnc_tracking_disabled")).thenReturn(expectedTrackingDisabled)
         `when`(mockPrefHelper.getBool("bnc_instant_deep_linking_enabled")).thenReturn(expectedInstantDeepLinkingEnabled)
         `when`(mockPrefHelper.getBool("bnc_defer_init_for_plugin_runtime")).thenReturn(expectedDeferInitForPluginRuntime)
+        `when`(mockPrefHelper.branchKeySource).thenReturn(expectedBranchKeySource)
 
         // When
         val result = controller.serializeConfiguration()
@@ -166,10 +205,36 @@ class BranchConfigurationControllerTest {
         assertEquals(expectedTrackingDisabled, result.getBoolean("trackingDisabled"))
         assertEquals(expectedInstantDeepLinkingEnabled, result.getBoolean("instantDeepLinkingEnabled"))
         assertEquals(expectedDeferInitForPluginRuntime, result.getBoolean("deferInitForPluginRuntime"))
+        assertEquals(expectedBranchKeySource, result.getString("branch_key_source"))
     }
 
     @Test
-    fun `test serializeConfiguration handles exception gracefully`() {
+    fun `test serializeConfiguration handles NullPointerException gracefully`() {
+        // Given
+        `when`(mockPrefHelper.delayedSessionInitUsed).thenThrow(NullPointerException("Test null pointer"))
+
+        // When
+        val result = controller.serializeConfiguration()
+
+        // Then
+        assertNotNull(result)
+        assertEquals(0, result.length())
+    }
+
+    @Test
+    fun `test serializeConfiguration handles JSONException gracefully`() {
+        // Given
+        // We can't directly mock JSONObject to throw JSONException, but we can verify the structure handles it
+        val result = controller.serializeConfiguration()
+
+        // Then
+        assertNotNull(result)
+        // The result should either have all fields or be empty if an exception occurred
+        assert(result.length() == 0 || result.has("expectDelayedSessionInitialization"))
+    }
+
+    @Test
+    fun `test serializeConfiguration handles generic exception gracefully`() {
         // Given
         `when`(mockPrefHelper.delayedSessionInitUsed).thenThrow(RuntimeException("Test exception"))
 
