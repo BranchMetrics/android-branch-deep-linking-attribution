@@ -2,11 +2,12 @@ package io.branch.referral
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnitRunner
@@ -21,17 +22,24 @@ class BranchConfigurationControllerTest {
     private lateinit var mockPrefHelper: PrefHelper
 
     private lateinit var controller: BranchConfigurationController
+    private lateinit var mockedStaticBranch: MockedStatic<Branch>
+    private lateinit var mockedStaticBranchUtil: MockedStatic<BranchUtil>
 
     @Before
     fun setup() {
         controller = BranchConfigurationController()
-        // Mock Branch.getInstance() to return our mock instance
-        val branchField = Branch::class.java.getDeclaredField("branchReferral_")
-        branchField.isAccessible = true
-        branchField.set(null, mockBranch)
         
-        // Mock prefHelper_ to return our mock instance
-        `when`(mockBranch.prefHelper_).thenReturn(mockPrefHelper)
+        // Set up static mocking
+        mockedStaticBranch = Mockito.mockStatic(Branch::class.java)
+        mockedStaticBranchUtil = Mockito.mockStatic(BranchUtil::class.java)
+        
+        // Mock Branch.getInstance() to return our mock
+        mockedStaticBranch.`when`<Branch> { Branch.getInstance() }.thenReturn(mockBranch)
+        
+        // Use reflection to set the prefHelper_ field
+        val prefHelperField = Branch::class.java.getDeclaredField("prefHelper_")
+        prefHelperField.isAccessible = true
+        prefHelperField.set(mockBranch, mockPrefHelper)
     }
 
     @Test
@@ -50,7 +58,7 @@ class BranchConfigurationControllerTest {
     fun `test isTestModeEnabled returns correct value`() {
         // Given
         val expectedValue = true
-        BranchUtil.setTestMode(expectedValue)
+        mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedValue)
 
         // When
         val result = controller.isTestModeEnabled()
@@ -93,7 +101,7 @@ class BranchConfigurationControllerTest {
         controller.setTestModeEnabled(expectedValue)
 
         // Then
-        assertTrue(BranchUtil.isTestModeEnabled())
+        mockedStaticBranchUtil.verify { BranchUtil.setTestMode(expectedValue) }
     }
 
     @Test
@@ -144,7 +152,7 @@ class BranchConfigurationControllerTest {
 
         // Setup mocks
         `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
-        BranchUtil.setTestMode(expectedTestMode)
+        mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedTestMode)
         `when`(mockPrefHelper.getBool("bnc_tracking_disabled")).thenReturn(expectedTrackingDisabled)
         `when`(mockPrefHelper.getBool("bnc_instant_deep_linking_enabled")).thenReturn(expectedInstantDeepLinkingEnabled)
         `when`(mockPrefHelper.getBool("bnc_defer_init_for_plugin_runtime")).thenReturn(expectedDeferInitForPluginRuntime)
@@ -171,5 +179,12 @@ class BranchConfigurationControllerTest {
         // Then
         assertNotNull(result)
         assertEquals(0, result.length())
+    }
+
+    @org.junit.After
+    fun tearDown() {
+        // Clean up static mocks
+        mockedStaticBranch.close()
+        mockedStaticBranchUtil.close()
     }
 } 
