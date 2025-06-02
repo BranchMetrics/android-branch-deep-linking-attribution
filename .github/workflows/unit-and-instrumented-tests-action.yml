@@ -36,11 +36,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       # create an emulator with google apis, runs on java 8
-      - name: Create Android emulator
+      - name: Setup java 8 for emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}      
+        - name: Create Android emulator
         run: |
-          export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-          echo which sdkmanager
-          echo sdkmanager --version 
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
