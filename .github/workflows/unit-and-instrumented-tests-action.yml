@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
 env:
-  API_CURRENT: 34
+  API_CURRENT: 35
   JAVA_DISTRIBUTION: 'corretto'
   JAVA_VERSION: '17'
 jobs:
@@ -44,9 +44,9 @@ jobs:
       - name: Create Android emulator
         run: |
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;darwin_aarch64"
+          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;darwin_aarch64"
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;arm64-v8a"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
         timeout-minutes: 30
