@@ -897,6 +897,7 @@ public class Branch {
 
             // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
             // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.
+        }
             // In the latter case, IDL works only partially because the callback is delayed until onResume.
             boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
                     !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
