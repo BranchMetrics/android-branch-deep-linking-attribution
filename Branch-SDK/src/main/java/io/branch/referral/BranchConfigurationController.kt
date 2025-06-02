@@ -1,5 +1,6 @@
 package io.branch.referral
 
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -12,7 +13,7 @@ class BranchConfigurationController {
      * Sets whether delayed session initialization was used.
      * This flag is used to track if the app has used delayed session initialization,
      * which is important for analytics and debugging purposes.
-     * 
+     *
      * @param used Boolean indicating if delayed session initialization was used
      * @see Branch.expectDelayedSessionInitialization
      */
@@ -25,7 +26,7 @@ class BranchConfigurationController {
     /**
      * Gets whether delayed session initialization was used.
      * This can be used to check if the app has previously used delayed session initialization.
-     * 
+     *
      * @return Boolean indicating if delayed session initialization was used
      * @see Branch.expectDelayedSessionInitialization
      */
@@ -35,7 +36,7 @@ class BranchConfigurationController {
 
     /**
      * Gets whether test mode is enabled.
-     * 
+     *
      * @return Boolean indicating if test mode is enabled
      */
     fun isTestModeEnabled(): Boolean {
@@ -44,7 +45,7 @@ class BranchConfigurationController {
 
     /**
      * Gets whether tracking is disabled.
-     * 
+     *
      * @return Boolean indicating if tracking is disabled
      */
     fun isTrackingDisabled(): Boolean {
@@ -55,7 +56,7 @@ class BranchConfigurationController {
      * Sets whether tracking should be disabled.
      * When tracking is disabled, the SDK will not track any user data or state,
      * and it will not initiate any network calls except for deep linking operations.
-     * 
+     *
      * @param disabled Boolean indicating if tracking should be disabled
      */
     fun setTrackingDisabled(disabled: Boolean) {
@@ -66,7 +67,7 @@ class BranchConfigurationController {
      * Sets whether test mode should be enabled.
      * When test mode is enabled, the SDK will use test keys and endpoints.
      * This is useful for development and testing purposes.
-     * 
+     *
      * @param enabled Boolean indicating if test mode should be enabled
      */
     fun setTestModeEnabled(enabled: Boolean) {
@@ -76,7 +77,7 @@ class BranchConfigurationController {
     /**
      * Sets whether instant deep linking is enabled.
      * This flag controls whether the SDK should attempt to perform instant deep linking.
-     * 
+     *
      * @param enabled Boolean indicating if instant deep linking should be enabled
      */
     fun setInstantDeepLinkingEnabled(enabled: Boolean) {
@@ -85,18 +86,19 @@ class BranchConfigurationController {
 
     /**
      * Gets whether instant deep linking is enabled.
-     * 
+     *
      * @return Boolean indicating if instant deep linking is enabled
      */
     fun isInstantDeepLinkingEnabled(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool("bnc_instant_deep_linking_enabled") ?: false
+        return Branch.getInstance()?.prefHelper_?.getBool("bnc_instant_deep_linking_enabled")
+            ?: false
     }
 
     /**
      * Sets whether plugin runtime initialization should be deferred.
      * This is used for cross-process communication scenarios like React Native,
      * where we need to wait for the plugin to signal when it's ready before initializing.
-     * 
+     *
      * @param deferred Boolean indicating if plugin runtime initialization should be deferred
      */
     fun setDeferInitForPluginRuntime(deferred: Boolean) {
@@ -105,38 +107,38 @@ class BranchConfigurationController {
 
     /**
      * Gets whether plugin runtime initialization is deferred.
-     * 
+     *
      * @return Boolean indicating if plugin runtime initialization is deferred
      */
     private fun isDeferInitForPluginRuntime(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool("bnc_defer_init_for_plugin_runtime") ?: false
+        return Branch.getInstance()?.prefHelper_?.getBool("bnc_defer_init_for_plugin_runtime")
+            ?: false
     }
 
     /**
      * Serializes the current configuration state into a JSONObject.
      * This is used to send configuration data to the server.
-     * 
+     *
      * @return JSONObject containing the current configuration state
      */
     fun serializeConfiguration(): JSONObject {
         return try {
             JSONObject().apply {
-                put(\"expectDelayedSessionInitialization\", getDelayedSessionInitUsed())
-                put(\"testMode\", isTestModeEnabled())
-                put(\"trackingDisabled\", isTrackingDisabled())
-                put(\"instantDeepLinkingEnabled\", isInstantDeepLinkingEnabled())
-                put(\"deferInitForPluginRuntime\", isDeferInitForPluginRuntime())
+                put("expectDelayedSessionInitialization", getDelayedSessionInitUsed())
+                put("testMode", isTestModeEnabled())
+                put("trackingDisabled", isTrackingDisabled())
+                put("instantDeepLinkingEnabled", isInstantDeepLinkingEnabled())
+                put("deferInitForPluginRuntime", isDeferInitForPluginRuntime())
             }
         } catch (e: NullPointerException) {
-            BranchLogger.w(\"Error serializing configuration - null reference: ${e.message}\")
+            BranchLogger.w("Error serializing configuration - null reference: ${e.message}")
             JSONObject()
         } catch (e: JSONException) {
-            BranchLogger.w(\"Error serializing configuration - JSON error: ${e.message}\")
+            BranchLogger.w("Error serializing configuration - JSON error: ${e.message}")
             JSONObject()
         } catch (e: Exception) {
-            BranchLogger.w(\"Error serializing configuration - unexpected error: ${e.message}\")
+            BranchLogger.w("Error serializing configuration - unexpected error: ${e.message}")
             JSONObject()
         }
     }
-    }
-} 
+}
