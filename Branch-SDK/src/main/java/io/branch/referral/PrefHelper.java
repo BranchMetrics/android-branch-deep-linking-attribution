@@ -124,6 +124,7 @@ public class PrefHelper {
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
     static final String KEY_DELAYED_SESSION_INIT_USED = "bnc_delayed_session_init_used";
+    static final String KEY_BRANCH_KEY_SOURCE = "bnc_branch_key_source";
 
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
 
@@ -1510,5 +1511,24 @@ public class PrefHelper {
      */
     public boolean getDelayedSessionInitUsed() {
         return getBool(KEY_DELAYED_SESSION_INIT_USED);
+    }
+
+    /**
+     * Sets the source of the Branch key configuration.
+     * This is used to track where the Branch key was configured from (e.g., branch.json, manifest, strings.xml, constructor, public function).
+     *
+     * @param source String indicating the source of the Branch key (e.g., "branch_json", "manifest", "strings", "constructor", "public_function")
+     */
+    public void setBranchKeySource(String source) {
+        setString(KEY_BRANCH_KEY_SOURCE, source);
+    }
+
+    /**
+     * Gets the source of the Branch key configuration.
+     *
+     * @return String indicating the source of the Branch key
+     */
+    public String getBranchKeySource() {
+        return getString(KEY_BRANCH_KEY_SOURCE);
     }
 }

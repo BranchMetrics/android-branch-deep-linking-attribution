@@ -354,6 +354,10 @@ public class Branch {
             branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
         } else {
             branchReferral_.prefHelper_.setBranchKey(branchKey);
+            // Set the source to "public_function" since this method is called via getAutoInstance with explicit key
+            if (!branchKey.equals(BranchUtil.readBranchKey(context))) {
+                branchReferral_.prefHelper_.setBranchKeySource("public_function");
+            }
         }
 
         /* If {@link Application} is instantiated register for activity life cycle events. */
@@ -727,6 +731,23 @@ public class Branch {
     public void setReferrerGclidValidForWindow(long window){
         if(prefHelper_ != null){
             prefHelper_.setReferrerGclidValidForWindow(window);
+        }
+    }
+
+    /**
+     * Sets the Branch key dynamically. This method allows setting the Branch key at runtime,
+     * which is useful for scenarios where the key needs to be determined programmatically.
+     * Note: This should be called before initializing a Branch session.
+     *
+     * @param branchKey A {@link String} value containing the Branch key to use.
+     */
+    public void setBranchKey(@NonNull String branchKey) {
+        if (prefHelper_ != null && !TextUtils.isEmpty(branchKey)) {
+            if (prefHelper_.setBranchKey(branchKey)) {
+                // Key was changed, clear any existing session
+                resetUserSession();
+            }
+            prefHelper_.setBranchKeySource("constructor");
         }
     }
     

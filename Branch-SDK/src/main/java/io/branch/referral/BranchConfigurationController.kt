@@ -90,8 +90,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if instant deep linking is enabled
      */
     fun isInstantDeepLinkingEnabled(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool("bnc_instant_deep_linking_enabled")
-            ?: false
+        return Branch.getInstance()?.prefHelper_?.getBool("bnc_instant_deep_linking_enabled") ?: false
     }
 
     /**
@@ -111,8 +110,17 @@ class BranchConfigurationController {
      * @return Boolean indicating if plugin runtime initialization is deferred
      */
     private fun isDeferInitForPluginRuntime(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool("bnc_defer_init_for_plugin_runtime")
-            ?: false
+        return Branch.getInstance()?.prefHelper_?.getBool("bnc_defer_init_for_plugin_runtime") ?: false
+    }
+
+    /**
+     * Gets the source of the Branch key configuration.
+     * This indicates where the Branch key was configured from (e.g., branch.json, manifest, strings.xml, constructor, public_function).
+     * 
+     * @return String indicating the source of the Branch key, or "unknown" if not set
+     */
+    fun getBranchKeySource(): String {
+        return Branch.getInstance()?.prefHelper_?.branchKeySource ?: "unknown"
     }
 
     /**
@@ -129,6 +137,7 @@ class BranchConfigurationController {
                 put("trackingDisabled", isTrackingDisabled())
                 put("instantDeepLinkingEnabled", isInstantDeepLinkingEnabled())
                 put("deferInitForPluginRuntime", isDeferInitForPluginRuntime())
+                put("branch_key_source", getBranchKeySource())
             }
         } catch (e: NullPointerException) {
             BranchLogger.w("Error serializing configuration - null reference: ${e.message}")

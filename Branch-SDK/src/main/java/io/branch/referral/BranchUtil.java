@@ -89,7 +89,10 @@ public class BranchUtil {
         // branch.json overrides manifest or string resources configurations
         BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
         if (jsonConfig.isValid()) branchKey = jsonConfig.getBranchKey();
-        if (branchKey != null) return branchKey;
+        if (branchKey != null) {
+            PrefHelper.getInstance(context).setBranchKeySource("branch_json");
+            return branchKey;
+        }
 
         String metaDataKey = isTestModeEnabled() ? "io.branch.sdk.BranchKey.test" : "io.branch.sdk.BranchKey";
         // manifest overrides string resources
@@ -101,6 +104,9 @@ public class BranchUtil {
                     // If test mode is enabled, but the test key cannot be found, fall back to the live key.
                     branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
                 }
+                if (branchKey != null) {
+                    PrefHelper.getInstance(context).setBranchKeySource("manifest");
+                }
             }
         } catch (final PackageManager.NameNotFoundException e) {
             BranchLogger.d(e.getMessage());
@@ -110,6 +116,9 @@ public class BranchUtil {
         // check string resources as the last resort
         Resources resources = context.getResources();
         branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
+        if (!branchKey.isEmpty()) {
+            PrefHelper.getInstance(context).setBranchKeySource("strings");
+        }
 
         return branchKey;
     }
