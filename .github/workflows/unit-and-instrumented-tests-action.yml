@@ -43,6 +43,8 @@ jobs:
           java-version: 8      
       - name: Create Android emulator
         run: |
+          brew install --cask android-platform-tools 
+          sdkmanager --list
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
