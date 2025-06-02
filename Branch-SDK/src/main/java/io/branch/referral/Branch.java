@@ -517,12 +517,13 @@ public class Branch {
      *
      * @param expectDelayedInit A {@link Boolean} to set the expectation flag.
      */
-    public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
-        disableAutoSessionInitialization = expectDelayedInit;
-        if (Branch.getInstance() != null && expectDelayedInit) {
-            Branch.getInstance().branchConfigurationController_.setDelayedSessionInitUsed(true);
-        }
-    }
+      public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
+          disableAutoSessionInitialization = expectDelayedInit;
+          Branch instance = Branch.getInstance();
+          if (instance != null && expectDelayedInit) {
+              instance.branchConfigurationController_.setDelayedSessionInitUsed(true);
+          }
+      }
 
     /**
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
