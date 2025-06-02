@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
 env:
-  API_MIN: 21
+  API_MIN: 23
   API_CURRENT: 34
   JAVA_DISTRIBUTION: 'corretto'
   JAVA_VERSION: '17'
