@@ -154,19 +154,54 @@ class BranchConfigurationControllerTest {
     }
 
     @Test
+    fun `test isBranchKeyFallbackUsed returns true when branch key source is branchKey`() {
+        // Given
+        `when`(mockPrefHelper.branchKeySource).thenReturn("branchKey")
+
+        // When
+        val result = controller.isBranchKeyFallbackUsed()
+
+        // Then
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun `test isBranchKeyFallbackUsed returns false when branch key source is not branchKey`() {
+        // Given
+        `when`(mockPrefHelper.branchKeySource).thenReturn("manifest")
+
+        // When
+        val result = controller.isBranchKeyFallbackUsed()
+
+        // Then
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun `test isBranchKeyFallbackUsed returns false when Branch instance is null`() {
+        // Given
+        mockedStaticBranch.`when`<Branch> { Branch.getInstance() }.thenReturn(null)
+
+        // When
+        val result = controller.isBranchKeyFallbackUsed()
+
+        // Then
+        assertEquals(false, result)
+    }
+
+    @Test
     fun `test serializeConfiguration returns correct JSON object`() {
         // Given
         val expectedDelayedSessionInit = true
         val expectedTestMode = true
-        val expectedTrackingDisabled = true
         val expectedInstantDeepLinkingEnabled = true
         val expectedDeferInitForPluginRuntime = true
         val expectedBranchKeySource = "manifest"
+        val expectedBranchKeyFallbackUsed = false
 
         // Setup mocks
         `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
         mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedTestMode)
-        `when`(mockPrefHelper.getBool("bnc_tracking_disabled")).thenReturn(expectedTrackingDisabled)
         `when`(mockPrefHelper.getBool("bnc_instant_deep_linking_enabled")).thenReturn(expectedInstantDeepLinkingEnabled)
         `when`(mockPrefHelper.getBool("bnc_defer_init_for_plugin_runtime")).thenReturn(expectedDeferInitForPluginRuntime)
         `when`(mockPrefHelper.branchKeySource).thenReturn(expectedBranchKeySource)
@@ -177,10 +212,39 @@ class BranchConfigurationControllerTest {
         // Then
         assertEquals(expectedDelayedSessionInit, result.getBoolean("expectDelayedSessionInitialization"))
         assertEquals(expectedTestMode, result.getBoolean("testMode"))
-        assertEquals(expectedTrackingDisabled, result.getBoolean("trackingDisabled"))
         assertEquals(expectedInstantDeepLinkingEnabled, result.getBoolean("instantDeepLinkingEnabled"))
         assertEquals(expectedDeferInitForPluginRuntime, result.getBoolean("deferInitForPluginRuntime"))
         assertEquals(expectedBranchKeySource, result.getString("branch_key_source"))
+        assertEquals(expectedBranchKeyFallbackUsed, result.getBoolean("branch_key_fallback_used"))
+    }
+
+    @Test
+    fun `test serializeConfiguration with branch key fallback used`() {
+        // Given
+        val expectedDelayedSessionInit = false
+        val expectedTestMode = false
+        val expectedInstantDeepLinkingEnabled = false
+        val expectedDeferInitForPluginRuntime = false
+        val expectedBranchKeySource = "branchKey"
+        val expectedBranchKeyFallbackUsed = true
+
+        // Setup mocks
+        `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
+        mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedTestMode)
+        `when`(mockPrefHelper.getBool("bnc_instant_deep_linking_enabled")).thenReturn(expectedInstantDeepLinkingEnabled)
+        `when`(mockPrefHelper.getBool("bnc_defer_init_for_plugin_runtime")).thenReturn(expectedDeferInitForPluginRuntime)
+        `when`(mockPrefHelper.branchKeySource).thenReturn(expectedBranchKeySource)
+
+        // When
+        val result = controller.serializeConfiguration()
+
+        // Then
+        assertEquals(expectedDelayedSessionInit, result.getBoolean("expectDelayedSessionInitialization"))
+        assertEquals(expectedTestMode, result.getBoolean("testMode"))
+        assertEquals(expectedInstantDeepLinkingEnabled, result.getBoolean("instantDeepLinkingEnabled"))
+        assertEquals(expectedDeferInitForPluginRuntime, result.getBoolean("deferInitForPluginRuntime"))
+        assertEquals(expectedBranchKeySource, result.getString("branch_key_source"))
+        assertEquals(expectedBranchKeyFallbackUsed, result.getBoolean("branch_key_fallback_used"))
     }
 
     @Test
