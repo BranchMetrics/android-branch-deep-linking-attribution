@@ -354,9 +354,9 @@ public class Branch {
             branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
         } else {
             branchReferral_.prefHelper_.setBranchKey(branchKey);
-            // Set the source to "public_function" since this method is called via getAutoInstance with explicit key
+            // Set the source to "init_function" since this method is called via getAutoInstance with explicit key
             if (!branchKey.equals(BranchUtil.readBranchKey(context))) {
-                branchReferral_.prefHelper_.setBranchKeySource("public_function");
+                branchReferral_.prefHelper_.setBranchKeySource("init_function");
             }
         }
 
