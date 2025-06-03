@@ -567,9 +567,6 @@ public class Branch {
      * with {@link Defines.BranchAttributionLevel#NONE} instead to disable tracking.
      * */
     @Deprecated public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
-        if (branchConfigurationController_ != null) {
-            branchConfigurationController_.setTrackingDisabled(disableTracking);
-        }
         trackingController.disableTracking(context_, disableTracking, callback);
     }
 

@@ -68,31 +68,6 @@ class BranchConfigurationControllerTest {
     }
 
     @Test
-    fun `test isTrackingDisabled returns correct value`() {
-        // Given
-        val expectedValue = true
-        `when`(mockPrefHelper.getBool("bnc_tracking_disabled")).thenReturn(expectedValue)
-
-        // When
-        val result = controller.isTrackingDisabled()
-
-        // Then
-        assertEquals(expectedValue, result)
-    }
-
-    @Test
-    fun `test setTrackingDisabled sets the correct value`() {
-        // Given
-        val expectedValue = true
-
-        // When
-        controller.setTrackingDisabled(expectedValue)
-
-        // Then
-        verify(mockPrefHelper).setBool("bnc_tracking_disabled", expectedValue)
-    }
-
-    @Test
     fun `test setTestModeEnabled sets the correct value`() {
         // Given
         val expectedValue = true
