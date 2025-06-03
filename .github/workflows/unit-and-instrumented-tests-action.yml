@@ -46,7 +46,7 @@ jobs:
           echo "Yes licenses"
           Yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
           echo "sdkmanager version"
-          echo $ANDROID_HOME/tools/bin/sdkmanager --version
+          $ANDROID_HOME/tools/bin/sdkmanager --version
           echo "Yes install image"
           Yes | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-36;google_apis_playstore;x86_64"
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-36;google_apis_playstore;x86_64"
