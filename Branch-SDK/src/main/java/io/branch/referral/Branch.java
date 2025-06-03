@@ -744,7 +744,7 @@ public class Branch {
                 // Key was changed, clear any existing session
                 resetUserSession();
             }
-            prefHelper_.setBranchKeySource("constructor");
+            prefHelper_.setBranchKeySource("public_setter");
         }
     }
     
