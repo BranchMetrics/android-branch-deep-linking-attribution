@@ -43,10 +43,12 @@ jobs:
           java-version: 8      
       - name: Create Android emulator
         run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+          echo "Yes licenses"
+          Yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+          echo "sdkmanager version"
           echo $ANDROID_HOME/tools/bin/sdkmanager --version
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-36;google_apis_playstore;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
+          echo "Yes install image"
+          Yes | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-36;google_apis_playstore;x86_64"
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-36;google_apis_playstore;x86_64"
       # boots and waits for the emulator to be ready
       - name: Launch Emulator
