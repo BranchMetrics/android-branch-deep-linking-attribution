@@ -103,8 +103,12 @@ public class BranchUtil {
                 if (branchKey == null && isTestModeEnabled()) {
                     // If test mode is enabled, but the test key cannot be found, fall back to the live key.
                     branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
-                }
-                if (branchKey != null) {
+                    if (branchKey != null) {
+                        PrefHelper.getInstance(context).setBranchKey(branchKey);
+                        PrefHelper.getInstance(context).setBranchKeySource("branchKey");
+                    }
+                } else if (branchKey != null) {
+                    PrefHelper.getInstance(context).setBranchKey(branchKey);
                     PrefHelper.getInstance(context).setBranchKeySource("manifest");
                 }
             }
