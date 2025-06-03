@@ -64,7 +64,7 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
 
             if (Branch.getInstance() != null) {
                 JSONObject configurations = Branch.getInstance().getConfigurationController().serializeConfiguration();
-                if (configurations != null && configurations.length() > 0) {
+                if (configurations != null) {
                     getPost().put(Defines.Jsonkey.OperationalMetrics.getKey(), configurations);
                 }
             }
