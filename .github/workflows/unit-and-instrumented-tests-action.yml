@@ -61,7 +61,7 @@ jobs:
           echo $ANDROID_HOME/platform-tools/adb devices
           $ANDROID_HOME/platform-tools/adb devices
           echo "Starting emulator"
-          nohup $ANDROID_HOME/tools/emulator -avd test -no-metrics -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
+          nohup $ANDROID_HOME/tools/emulator -avd test -no-metrics -no-audio -no-boot-anim -no-snapshot-load -camera-back none -camera-front none -qemu -m 2048 2>&1 &
           $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
