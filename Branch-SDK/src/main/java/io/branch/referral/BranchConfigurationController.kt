@@ -9,6 +9,12 @@ import org.json.JSONObject
  * It is used internally by the Branch SDK to manage configuration states.
  */
 class BranchConfigurationController {
+    
+    companion object {
+        const val KEY_INSTANT_DEEP_LINKING_ENABLED = "bnc_instant_deep_linking_enabled"
+        const val KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME = "bnc_defer_init_for_plugin_runtime"
+    }
+
     /**
      * Sets whether delayed session initialization was used.
      * This flag is used to track if the app has used delayed session initialization,
@@ -57,7 +63,7 @@ class BranchConfigurationController {
      * @param enabled Boolean indicating if instant deep linking should be enabled
      */
     fun setInstantDeepLinkingEnabled(enabled: Boolean) {
-        Branch.getInstance()?.prefHelper_?.setBool("bnc_instant_deep_linking_enabled", enabled)
+        Branch.getInstance()?.prefHelper_?.setBool(KEY_INSTANT_DEEP_LINKING_ENABLED, enabled)
     }
 
     /**
@@ -65,7 +71,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if instant deep linking is enabled
      */
     fun isInstantDeepLinkingEnabled(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool("bnc_instant_deep_linking_enabled") ?: false
+        return Branch.getInstance()?.prefHelper_?.getBool(KEY_INSTANT_DEEP_LINKING_ENABLED) ?: false
     }
 
     /**
@@ -75,7 +81,7 @@ class BranchConfigurationController {
      * @param deferred Boolean indicating if plugin runtime initialization should be deferred
      */
     fun setDeferInitForPluginRuntime(deferred: Boolean) {
-        Branch.getInstance()?.prefHelper_?.setBool("bnc_defer_init_for_plugin_runtime", deferred)
+        Branch.getInstance()?.prefHelper_?.setBool(KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME, deferred)
     }
 
     /**
@@ -83,7 +89,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if plugin runtime initialization is deferred
      */
     private fun isDeferInitForPluginRuntime(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool("bnc_defer_init_for_plugin_runtime") ?: false
+        return Branch.getInstance()?.prefHelper_?.getBool(KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME) ?: false
     }
 
     /**

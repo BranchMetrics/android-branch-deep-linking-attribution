@@ -88,14 +88,14 @@ class BranchConfigurationControllerTest {
         controller.setInstantDeepLinkingEnabled(expectedValue)
 
         // Then
-        verify(mockPrefHelper).setBool("bnc_instant_deep_linking_enabled", expectedValue)
+        verify(mockPrefHelper).setBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED, expectedValue)
     }
 
     @Test
     fun `test isInstantDeepLinkingEnabled returns correct value`() {
         // Given
         val expectedValue = true
-        `when`(mockPrefHelper.getBool("bnc_instant_deep_linking_enabled")).thenReturn(expectedValue)
+        `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED)).thenReturn(expectedValue)
 
         // When
         val result = controller.isInstantDeepLinkingEnabled()
@@ -113,7 +113,7 @@ class BranchConfigurationControllerTest {
         controller.setDeferInitForPluginRuntime(expectedValue)
 
         // Then
-        verify(mockPrefHelper).setBool("bnc_defer_init_for_plugin_runtime", expectedValue)
+        verify(mockPrefHelper).setBool(BranchConfigurationController.KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME, expectedValue)
     }
 
     @Test
@@ -202,8 +202,8 @@ class BranchConfigurationControllerTest {
         // Setup mocks
         `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
         mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedTestMode)
-        `when`(mockPrefHelper.getBool("bnc_instant_deep_linking_enabled")).thenReturn(expectedInstantDeepLinkingEnabled)
-        `when`(mockPrefHelper.getBool("bnc_defer_init_for_plugin_runtime")).thenReturn(expectedDeferInitForPluginRuntime)
+        `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED)).thenReturn(expectedInstantDeepLinkingEnabled)
+        `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME)).thenReturn(expectedDeferInitForPluginRuntime)
         `when`(mockPrefHelper.branchKeySource).thenReturn(expectedBranchKeySource)
 
         // When
@@ -231,8 +231,8 @@ class BranchConfigurationControllerTest {
         // Setup mocks
         `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
         mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedTestMode)
-        `when`(mockPrefHelper.getBool("bnc_instant_deep_linking_enabled")).thenReturn(expectedInstantDeepLinkingEnabled)
-        `when`(mockPrefHelper.getBool("bnc_defer_init_for_plugin_runtime")).thenReturn(expectedDeferInitForPluginRuntime)
+        `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED)).thenReturn(expectedInstantDeepLinkingEnabled)
+        `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME)).thenReturn(expectedDeferInitForPluginRuntime)
         `when`(mockPrefHelper.branchKeySource).thenReturn(expectedBranchKeySource)
 
         // When
