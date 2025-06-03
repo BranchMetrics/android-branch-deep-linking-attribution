@@ -44,6 +44,8 @@ jobs:
       - name: Create Android emulator
         run: |
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+          sdkmanager --version
+          avdmanager --version
           echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
           echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
