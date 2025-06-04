@@ -78,5 +78,18 @@ jobs:
         run: |
           APK_PATH="./app-repo/app/build/outputs/apk/debug/app-debug.apk"
           echo "Generated APK location: $APK_PATH"
-          # You can also use 'find' to be more dynamic if the name might change
-          # find ./app-repo/app/build/outputs/apk -name "*.apk"
+
+      # --- Step 7: Upload APK and other artifacts ---
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BranchLinkSimulator-App-Debug-Build
+          path: ./app-repo/app/build/outputs/apk/debug/app-debug.apk
+          # If you have other artifacts you want to save, you can add them here.
+          # For example, to save all APKs:
+          # path: ./app-repo/app/build/outputs/apk/
+          # Or specific files:
+          # path: |
+          #   ./app-repo/app/build/outputs/apk/debug/app-debug.apk
+          #   ./app-repo/app/build/reports/
+          #   ./app-repo/some_other_file.log
