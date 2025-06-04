@@ -32,6 +32,16 @@ public class BranchUtil {
 
     private static Boolean testModeEnabledViaCompileTimeConfiguration = null;
 
+    // Constants for branch key configuration
+    private static final String BRANCH_KEY_LIVE = "io.branch.sdk.BranchKey";
+    private static final String BRANCH_KEY_TEST = "io.branch.sdk.BranchKey.test";
+    
+    // Source type constants
+    private static final String SOURCE_BRANCH_JSON = "branch_json";
+    private static final String SOURCE_MANIFEST = "manifest";
+    private static final String SOURCE_MANIFEST_TEST_FALLBACK = "manifest_test_fallback";
+    private static final String SOURCE_STRINGS = "strings";
+
     // Package Private
     static void shutDown() {
         isTestModeEnabled_ = false;
@@ -84,47 +94,86 @@ public class BranchUtil {
     }
 
     public static String readBranchKey(Context context) {
-        String branchKey = null;
-
-        // branch.json overrides manifest or string resources configurations
-        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
-        if (jsonConfig.isValid()) branchKey = jsonConfig.getBranchKey();
+        // 1. Try branch.json first (highest priority)
+        String branchKey = readBranchKeyFromJson(context);
         if (branchKey != null) {
-            PrefHelper.getInstance(context).setBranchKeySource("branch_json");
+            setBranchKeyAndSource(context, branchKey, SOURCE_BRANCH_JSON);
             return branchKey;
         }
 
-        String metaDataKey = isTestModeEnabled() ? "io.branch.sdk.BranchKey.test" : "io.branch.sdk.BranchKey";
-        // manifest overrides string resources
+        // 2. Try manifest (medium priority)
+        branchKey = readBranchKeyFromManifest(context);
+        if (branchKey != null) {
+            return branchKey;
+        }
+
+        // 3. Try string resources (lowest priority)
+        return readBranchKeyFromStringResources(context);
+    }
+
+    private static String readBranchKeyFromJson(Context context) {
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        return jsonConfig.isValid() ? jsonConfig.getBranchKey() : null;
+    }
+
+    private static String readBranchKeyFromManifest(Context context) {
         try {
-            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                branchKey = ai.metaData.getString(metaDataKey);
-                if (branchKey == null && isTestModeEnabled()) {
-                    // If test mode is enabled, but the test key cannot be found, fall back to the live key.
-                    branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
-                    if (branchKey != null) {
-                        PrefHelper.getInstance(context).setBranchKey(branchKey);
-                        PrefHelper.getInstance(context).setBranchKeySource("branchKey");
-                    }
-                } else if (branchKey != null) {
-                    PrefHelper.getInstance(context).setBranchKey(branchKey);
-                    PrefHelper.getInstance(context).setBranchKeySource("manifest");
-                }
+            ApplicationInfo ai = context.getPackageManager()
+                    .getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            
+            if (ai.metaData == null) {
+                return null;
             }
-        } catch (final PackageManager.NameNotFoundException e) {
+
+            return readBranchKeyFromMetaData(context, ai);
+        } catch (PackageManager.NameNotFoundException e) {
             BranchLogger.d(e.getMessage());
+            return null;
         }
-        if (branchKey != null) return branchKey;
+    }
 
-        // check string resources as the last resort
+    private static String readBranchKeyFromMetaData(Context context, ApplicationInfo ai) {
+        String metaDataKey = isTestModeEnabled() ? BRANCH_KEY_TEST : BRANCH_KEY_LIVE;
+        String branchKey = ai.metaData.getString(metaDataKey);
+
+        if (branchKey != null) {
+            setBranchKeyAndSource(context, branchKey, SOURCE_MANIFEST);
+            return branchKey;
+        }
+
+        // Handle test mode fallback
+        return handleTestModeFallback(context, ai);
+    }
+
+    private static String handleTestModeFallback(Context context, ApplicationInfo ai) {
+        if (!isTestModeEnabled()) {
+            return null;
+        }
+
+        // If test mode is enabled but test key is not found, fall back to live key
+        String liveKey = ai.metaData.getString(BRANCH_KEY_LIVE);
+        if (liveKey != null) {
+            setBranchKeyAndSource(context, liveKey, SOURCE_MANIFEST_TEST_FALLBACK);
+        }
+        return liveKey;
+    }
+
+    private static String readBranchKeyFromStringResources(Context context) {
+        String metaDataKey = isTestModeEnabled() ? BRANCH_KEY_TEST : BRANCH_KEY_LIVE;
         Resources resources = context.getResources();
-        branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
-        if (!branchKey.isEmpty()) {
-            PrefHelper.getInstance(context).setBranchKeySource("strings");
+        String branchKey = resources.getString(
+                resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
+        
+        if (!TextUtils.isEmpty(branchKey)) {
+            setBranchKeyAndSource(context, branchKey, SOURCE_STRINGS);
         }
-
         return branchKey;
+    }
+
+    private static void setBranchKeyAndSource(Context context, String branchKey, String source) {
+        PrefHelper prefHelper = PrefHelper.getInstance(context);
+        prefHelper.setBranchKey(branchKey);
+        prefHelper.setBranchKeySource(source);
     }
 
     public static boolean getEnableLoggingConfig(Context context) {
