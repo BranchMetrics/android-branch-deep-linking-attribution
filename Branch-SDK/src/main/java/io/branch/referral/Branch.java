@@ -5,8 +5,6 @@ import static io.branch.referral.BranchPreinstall.getPreinstallSystemData;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
 import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
-import static io.branch.referral.PrefHelper.KEY_ENHANCED_WEB_LINK_UX_USED;
-import static io.branch.referral.PrefHelper.KEY_URL_LOAD_MS;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
 import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
@@ -230,6 +228,7 @@ public class Branch {
     private final Context context_;
 
     private final BranchQRCodeCache branchQRCodeCache_;
+    private final BranchConfigurationController branchConfigurationController_;
 
     public final ServerRequestQueue requestQueue_;
 
@@ -325,6 +324,7 @@ public class Branch {
         deviceInfo_ = new DeviceInfo(context);
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
+        branchConfigurationController_ = new BranchConfigurationController();
         requestQueue_ = ServerRequestQueue.getInstance(context);
     }
 
@@ -354,6 +354,10 @@ public class Branch {
             branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
         } else {
             branchReferral_.prefHelper_.setBranchKey(branchKey);
+            // Set the source to "init_function" since this method is called via getAutoInstance with explicit key
+            if (!branchKey.equals(BranchUtil.readBranchKey(context))) {
+                branchReferral_.prefHelper_.setBranchKeySource("init_function");
+            }
         }
 
         /* If {@link Application} is instantiated register for activity life cycle events. */
@@ -467,7 +471,11 @@ public class Branch {
      * </p>
      */
     public static void enableTestMode() {
-        BranchUtil.setTestMode(true);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(true);
+        } else {
+            BranchUtil.setTestMode(true);
+        }
         BranchLogger.logAlways("enableTestMode has been changed. It now uses the test key but will not" +
                 " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
                 " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
@@ -480,7 +488,11 @@ public class Branch {
      * </p>
      */
     public static void disableTestMode() {
-        BranchUtil.setTestMode(false);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(false);
+        } else {
+            BranchUtil.setTestMode(false);
+        }
     }
 
     /**
@@ -509,9 +521,13 @@ public class Branch {
      *
      * @param expectDelayedInit A {@link Boolean} to set the expectation flag.
      */
-    public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
-        disableAutoSessionInitialization = expectDelayedInit;
-    }
+      public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
+          disableAutoSessionInitialization = expectDelayedInit;
+          Branch instance = Branch.getInstance();
+          if (instance != null && expectDelayedInit) {
+              instance.branchConfigurationController_.setDelayedSessionInitUsed(true);
+          }
+      }
 
     /**
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
@@ -589,7 +605,11 @@ public class Branch {
      * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
      */
     public static void disableInstantDeepLinking(boolean disableIDL) {
-        enableInstantDeepLinking = !disableIDL;
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setInstantDeepLinkingEnabled(!disableIDL);
+        } else {
+            enableInstantDeepLinking = !disableIDL;
+        }
     }
 
     // Package Private
@@ -708,6 +728,23 @@ public class Branch {
     public void setReferrerGclidValidForWindow(long window){
         if(prefHelper_ != null){
             prefHelper_.setReferrerGclidValidForWindow(window);
+        }
+    }
+
+    /**
+     * Sets the Branch key dynamically. This method allows setting the Branch key at runtime,
+     * which is useful for scenarios where the key needs to be determined programmatically.
+     * Note: This should be called before initializing a Branch session.
+     *
+     * @param branchKey A {@link String} value containing the Branch key to use.
+     */
+    public void setBranchKey(@NonNull String branchKey) {
+        if (prefHelper_ != null && !TextUtils.isEmpty(branchKey)) {
+            if (prefHelper_.setBranchKey(branchKey)) {
+                // Key was changed, clear any existing session
+                resetUserSession();
+            }
+            prefHelper_.setBranchKeySource("public_setter");
         }
     }
     
@@ -874,10 +911,11 @@ public class Branch {
 
     private void readAndStripParam(Uri data, Activity activity) {
         BranchLogger.v("Read params uri: " + data + " bypassCurrentActivityIntentState: " + bypassCurrentActivityIntentState_ + " intent state: " + intentState_);
-        if (enableInstantDeepLinking) {
+        if (branchConfigurationController_.isInstantDeepLinkingEnabled()) {
 
             // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
             // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.
+
             // In the latter case, IDL works only partially because the callback is delayed until onResume.
             boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
                     !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
@@ -1386,6 +1424,10 @@ public class Branch {
 
     public BranchQRCodeCache getBranchQRCodeCache() {
         return branchQRCodeCache_;
+    }
+
+    public BranchConfigurationController getConfigurationController() {
+        return branchConfigurationController_;
     }
 
     PrefHelper getPrefHelper() {
@@ -2574,7 +2616,10 @@ public class Branch {
 
         deferInitForPluginRuntime = isDeferred;
         if(isDeferred){
-            expectDelayedSessionInitialization(isDeferred);
+            expectDelayedSessionInitialization(true);
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().branchConfigurationController_.setDeferInitForPluginRuntime(true);
+            }
         }
     }
 
