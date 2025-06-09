@@ -93,3 +93,10 @@ jobs:
           #   ./app-repo/app/build/outputs/apk/debug/app-debug.apk
           #   ./app-repo/app/build/reports/
           #   ./app-repo/some_other_file.log
+          steps:
+    - name: Run GPTDriver tests
+      run: curl https://app.mobileboost.io/cli.sh | bash ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
+      env:
+        API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
+        API_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
+        TEST_TAGS: Release
