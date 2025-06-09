@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: BranchMetrics/android-branch-deep-linking-attribution
-          ref: master # Assuming 'master' is the current release branch for the SDK
+          ref: ${{ github.ref }} # Use the same branch that triggered the workflow
           path: ./branch-sdk-repo # Checkout into a subdirectory
 
       # --- Step 2: Build the Branch SDK AAR ---
@@ -93,11 +93,12 @@ jobs:
           #   ./app-repo/app/build/outputs/apk/debug/app-debug.apk
           #   ./app-repo/app/build/reports/
           #   ./app-repo/some_other_file.log
-          steps:
+      - name: Make script executable
+        run: chmod +x gptdriverrunscript.sh
       - name: Run GPTDriver tests
         run: |
           ls -alR
-          sh ./gptdriverrunscript.sh ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
+          sh gptdriverrunscript.sh ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
         env:
           API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
           API_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
