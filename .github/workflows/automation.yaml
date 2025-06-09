@@ -96,8 +96,8 @@ jobs:
       - name: Run GPTDriver tests
         run: |
           ls -alR
-          chmod +x gptdriverrunscript.sh
-          sh gptdriverrunscript.sh ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
+          chmod +x ./branch-sdk-repo/.github/gptdriverrunscript.sh
+          sh ./branch-sdk-repo/.github/gptdriverrunscript.sh ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
         env:
           API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
           API_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
