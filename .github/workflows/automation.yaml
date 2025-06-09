@@ -96,8 +96,7 @@ jobs:
           steps:
       - name: Run GPTDriver tests
         run: |
-          echo ls
-          ls
+          ls -alR
           sh ./gptdriverrunscript.sh ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
         env:
           API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
