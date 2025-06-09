@@ -95,7 +95,6 @@ jobs:
           #   ./app-repo/some_other_file.log
       - name: Run GPTDriver tests
         run: |
-          ls -alR
           chmod +x ./branch-sdk-repo/.github/gptdriverrunscript.sh
           sh ./branch-sdk-repo/.github/gptdriverrunscript.sh ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
         env:
