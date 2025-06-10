@@ -1,0 +1,98 @@
+name: Release Version Extraction and Local AAR Build
+
+on:
+  push:
+    branches:
+      - 'Release-*' # Trigger for branches starting with "Release-"
+
+jobs:
+  BuildAndTestAppOnGPTDriver: # Updated job name
+    runs-on: ubuntu-latest
+    steps:
+      # --- Step 1: Extract version from branch name ---
+      - name: Extract version from branch name
+        id: extract_version_step
+        run: |
+          BRANCH_NAME="${{ github.ref }}"
+          # Remove 'refs/heads/' prefix
+          BRANCH_NAME_WITHOUT_PREFIX="${BRANCH_NAME#refs/heads/}"
+          # Extract version after "Release-"
+          VERSION=$(echo "$BRANCH_NAME_WITHOUT_PREFIX" | sed -n 's/^Release-\([0-9]*\.[0-9]*\.[0-9]*\)$/\1/p')
+
+          if [ -z "$VERSION" ]; then
+            echo "Error: Could not extract version from branch name '$BRANCH_NAME_WITHOUT_PREFIX'. Expected format: Release-X.Y.Z"
+            exit 1
+          fi
+
+          echo "Extracted version: $VERSION"
+          echo "VERSION_STRING=$VERSION" >> $GITHUB_ENV
+
+      # --- Step 2: Checkout the Branch SDK repository ---
+      - name: Checkout BranchMetrics/android-branch-deep-linking-attribution (SDK)
+        uses: actions/checkout@v4
+        with:
+          repository: BranchMetrics/android-branch-deep-linking-attribution
+          ref: ${{ github.ref }} # Use the same branch that triggered the workflow
+          path: ./branch-sdk-repo # Checkout into a subdirectory
+
+      # --- Step 3: Build the Branch SDK AAR ---
+      - name: Set up JDK for SDK build
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17' # Ensure this matches the SDK's build requirements
+
+      - name: Build Branch SDK AAR
+        run: ./gradlew :Branch-SDK:assembleDebug # Use the specific module command
+        working-directory: ./branch-sdk-repo # Run Gradle from the SDK's checkout directory
+
+      # --- Step 4: Checkout the BranchLinkSimulatorAndroid repository ---
+      - name: Checkout BranchMetrics/BranchLinkSimulatorAndroid (App)
+        uses: actions/checkout@v4
+        with:
+          repository: BranchMetrics/BranchLinkSimulatorAndroid
+          ref: gptdriver/linkingTests # Checkout the specific app branch
+          path: ./app-repo # Checkout into another subdirectory
+
+      # --- Step 5: Copy the generated AAR to the App's libs directory ---
+      - name: Copy generated AAR to App's libs directory
+        run: |
+          mkdir -p ./app-repo/app/libs # Create libs directory if it doesn't exist
+          cp ./branch-sdk-repo/Branch-SDK/build/outputs/aar/Branch-SDK-debug.aar ./app-repo/app/libs/branch-sdk-debug.aar
+          # Adjust the AAR name (Branch-SDK-debug.aar) if the actual output name is different
+          # The path within the SDK repo might vary based on its build structure
+        working-directory: ${{ github.workspace }} # Run from the root of the GITHUB_WORKSPACE
+
+      # --- Step 6: Build the BranchLinkSimulatorAndroid App using the local AAR ---
+      - name: Set up JDK for App build
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17' # Ensure this matches the App's build requirements
+
+      - name: Build App with local AAR and pass version
+        run: ./gradlew build -PversionNameFromCi=${{ env.VERSION_STRING }}
+        working-directory: ./app-repo # Run Gradle from the App's checkout directory
+
+      # --- Step 7: Echo the location of the generated APK file ---
+      - name: Echo APK location
+        run: |
+          APK_PATH="./app-repo/app/build/outputs/apk/debug/app-debug.apk"
+          echo "Generated APK location: $APK_PATH"
+
+      # --- Step 8: Upload Build Artifacts ---
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BranchLinkSimulator-App-Debug-Build
+          path: ./app-repo/app/build/outputs/apk/debug/app-debug.apk
+
+      # --- Step 9: Upload and run tests on GPTDriver service. ---
+      - name: Run GPTDriver tests
+        run: |
+          chmod +x ./branch-sdk-repo/.github/gptdriverrunscript.sh
+          bash ./branch-sdk-repo/.github/gptdriverrunscript.sh ./app-repo/app/build/outputs/apk/debug/app-debug.apk android
+        env:
+          API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
+          API_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
+          TEST_TAGS: Release
