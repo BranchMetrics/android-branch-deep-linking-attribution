@@ -231,7 +231,7 @@ public class Branch {
 
     private final BranchQRCodeCache branchQRCodeCache_;
 
-    public final ServerRequestQueue requestQueue_;
+    public final BranchRequestQueueAdapter requestQueue_;
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
 
@@ -325,7 +325,7 @@ public class Branch {
         deviceInfo_ = new DeviceInfo(context);
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
-        requestQueue_ = ServerRequestQueue.getInstance(context);
+        requestQueue_ = BranchRequestQueueAdapter.getInstance(context);
     }
 
     /**
@@ -595,7 +595,8 @@ public class Branch {
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
-        ServerRequestQueue.shutDown();
+        BranchRequestQueueAdapter.shutDown();
+        BranchRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();
 
