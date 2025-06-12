@@ -1,6 +1,8 @@
 package io.branch.referral
 
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.branch.referral.Defines.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
@@ -8,6 +10,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlinx.coroutines.delay
+import org.json.JSONObject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -57,8 +60,15 @@ class BranchMigrationTest : BranchTest() {
         Assert.assertEquals("Adapter and queue peek should match", adapter.peek(), queue.peek())
         
         // Test adapter-specific operations
-        adapter.insertRequestAtFront(createTestRequest("front"))
-        Assert.assertEquals("Front request should be first", "front", adapter.peek()?.tag)
+        val frontRequest = createTestRequest("front")
+        adapter.insertRequestAtFront(frontRequest)
+        Assert.assertEquals("Front request should be first", frontRequest, adapter.peek())
+        
+        // Test instrumentation data
+        val testKey = "test_key"
+        val testValue = "test_value"
+        adapter.addExtraInstrumentationData(testKey, testValue)
+        Assert.assertEquals("Instrumentation data should be accessible", testValue, adapter.instrumentationExtraData_[testKey])
         
         adapter.clear()
         delay(100) // Wait for async operation
@@ -70,9 +80,13 @@ class BranchMigrationTest : BranchTest() {
         // Test session initialization
         Assert.assertNull("No init request in empty queue", adapter.getSelfInitRequest())
         
-        val initRequest = object : ServerRequestInitSession(testContext, true) {
+        val initRequest = object : ServerRequestInitSession(RequestPath.RegisterInstall, JSONObject(), testContext, true) {
             override fun onRequestSucceeded(resp: ServerResponse, branch: Branch) {}
             override fun handleFailure(statusCode: Int, error: String) {}
+            override fun handleErrors(context: Context): Boolean = false
+            override fun isGetRequest(): Boolean = false
+            override fun clearCallbacks() {}
+            override fun getRequestActionName(): String = ""
         }
         
         adapter.handleNewRequest(initRequest)
@@ -102,11 +116,14 @@ class BranchMigrationTest : BranchTest() {
     @Test
     fun testErrorHandling() = runTest {
         var errorCaught = false
-        val failingRequest = object : ServerRequest(Defines.RequestPath.GetURL, "failing", true) {
+        val failingRequest = object : ServerRequest(RequestPath.GetURL, JSONObject(), testContext) {
             override fun onRequestSucceeded(resp: ServerResponse, branch: Branch) {}
             override fun handleFailure(statusCode: Int, error: String) {
                 errorCaught = true
             }
+            override fun handleErrors(context: Context): Boolean = false
+            override fun isGetRequest(): Boolean = false
+            override fun clearCallbacks() {}
         }
         
         adapter.handleNewRequest(failingRequest)
@@ -114,10 +131,13 @@ class BranchMigrationTest : BranchTest() {
         Assert.assertTrue("Error should be caught and handled", errorCaught)
     }
 
-    private fun createTestRequest(tag: String): ServerRequest {
-        return object : ServerRequest(Defines.RequestPath.GetURL, tag, false) {
+    private fun createTestRequest(requestId: String): ServerRequest {
+        return object : ServerRequest(RequestPath.GetURL, JSONObject().apply { put("id", requestId) }, testContext) {
             override fun onRequestSucceeded(resp: ServerResponse, branch: Branch) {}
             override fun handleFailure(statusCode: Int, error: String) {}
+            override fun handleErrors(context: Context): Boolean = false
+            override fun isGetRequest(): Boolean = false
+            override fun clearCallbacks() {}
         }
     }
 } 

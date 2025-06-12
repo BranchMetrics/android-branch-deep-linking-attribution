@@ -1472,7 +1472,7 @@ public class Branch {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
          setInitState(SESSION_STATE.INITIALISING);
 
-         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+         ServerRequestInitSession r = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
          BranchLogger.v("Ordering init calls");
          BranchLogger.v("Self init request: " + r);
          requestQueue_.printQueue();

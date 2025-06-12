@@ -41,9 +41,11 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
         
         @JvmStatic
-        internal fun shutDown() {
-            INSTANCE?.shutdown()
-            INSTANCE = null
+        fun shutDown() {
+            INSTANCE?.let {
+                it.shutdown()
+                INSTANCE = null
+            }
         }
     }
     
@@ -68,7 +70,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     
     // Track active requests and instrumentation data
     private val activeRequests = ConcurrentHashMap<String, ServerRequest>()
-    val instrumentationExtraData = ConcurrentHashMap<String, String>()
+    val instrumentationExtraData: ConcurrentHashMap<String, String> = ConcurrentHashMap()
     
     enum class QueueState {
         IDLE, PROCESSING, PAUSED, SHUTDOWN
@@ -543,7 +545,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     /**
      * Shutdown the queue
      */
-    private fun shutdown() {
+    fun shutdown() {
         _queueState.value = QueueState.SHUTDOWN
         requestChannel.close()
         queueScope.cancel("Queue shutdown")

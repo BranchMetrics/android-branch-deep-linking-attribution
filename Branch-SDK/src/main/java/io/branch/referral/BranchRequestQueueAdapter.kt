@@ -12,6 +12,10 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     private val newQueue = BranchRequestQueue.getInstance(context)
     private val adapterScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
+    // Make instrumentationExtraData public and match original name with underscore
+    @JvmField
+    val instrumentationExtraData_ = newQueue.instrumentationExtraData
+    
     companion object {
         @Volatile
         private var INSTANCE: BranchRequestQueueAdapter? = null
@@ -24,9 +28,11 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         }
         
         @JvmStatic
-        internal fun shutDown() {
-            INSTANCE?.shutdown()
-            INSTANCE = null
+        fun shutDown() {
+            INSTANCE?.let {
+                it.shutdown()
+                INSTANCE = null
+            }
         }
     }
     
@@ -85,16 +91,17 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     fun postInitClear() = newQueue.postInitClear()
     
     /**
+     * Get self init request - for compatibility with Java
+     */
+    @JvmName("getSelfInitRequest")
+    internal fun getSelfInitRequest(): ServerRequestInitSession? = newQueue.getSelfInitRequest()
+    
+    /**
      * Instrumentation and debugging
      */
     fun addExtraInstrumentationData(key: String, value: String) = newQueue.addExtraInstrumentationData(key, value)
     fun printQueue() = newQueue.printQueue()
     fun clear() = adapterScope.launch { newQueue.clear() }
-    
-    /**
-     * Internal methods
-     */
-    internal fun getSelfInitRequest(): ServerRequestInitSession? = newQueue.getSelfInitRequest()
     
     private fun requestNeedsSession(request: ServerRequest): Boolean = when (request) {
         is ServerRequestInitSession -> false
@@ -104,5 +111,6 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     
     private fun shutdown() {
         adapterScope.cancel("Adapter shutdown")
+        newQueue.shutdown()
     }
 } 
