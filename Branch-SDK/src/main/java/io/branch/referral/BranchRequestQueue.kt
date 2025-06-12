@@ -1,6 +1,7 @@
 package io.branch.referral
 
 import android.content.Context
+import android.content.SharedPreferences
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,18 +10,32 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Collections
 
 /**
  * Modern Kotlin-based request queue using Coroutines and Channels
  * Replaces the manual queueing system with a more robust, thread-safe solution
+ * Maintains compatibility with ServerRequestQueue.java functionality
  */
 class BranchRequestQueue private constructor(private val context: Context) {
+    
+    // Queue size limit (matches ServerRequestQueue.java)
+    companion object {
+        private const val MAX_ITEMS = 25
+        private const val PREF_KEY = "BNCServerRequestQueue"
+    }
     
     // Coroutine scope for managing queue operations
     private val queueScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
-    // Channel for queuing requests (unbounded to prevent blocking)
+    // Channel for queuing requests (bounded to match original behavior)
     private val requestChannel = Channel<ServerRequest>(capacity = Channel.UNLIMITED)
+    
+    // Queue list for compatibility with original peek/remove operations
+    private val queueList = Collections.synchronizedList(mutableListOf<ServerRequest>())
+    
+    // SharedPreferences for persistence (matches original)
+    private val sharedPrefs = context.getSharedPreferences("BNC_Server_Request_Queue", Context.MODE_PRIVATE)
     
     // State management
     private val _queueState = MutableStateFlow(QueueState.IDLE)
@@ -59,7 +74,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Enqueue a new request
+     * Enqueue a new request (with MAX_ITEMS limit like original)
      */
     suspend fun enqueue(request: ServerRequest) {
         if (_queueState.value == QueueState.SHUTDOWN) {
@@ -68,6 +83,18 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
         
         BranchLogger.v("Enqueuing request: $request")
+        
+        synchronized(queueList) {
+            // Apply MAX_ITEMS limit like original ServerRequestQueue
+            queueList.add(request)
+            if (queueList.size >= MAX_ITEMS) {
+                BranchLogger.v("Queue maxed out. Removing index 1.")
+                if (queueList.size > 1) {
+                    queueList.removeAt(1) // Remove second item, keep first like original
+                }
+            }
+        }
+        
         request.onRequestQueued()
         
         try {
@@ -258,10 +285,201 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Get current queue size (for compatibility)
+     * Get current queue size (matches original API)
      */
     fun getSize(): Int {
-        return activeRequests.size
+        synchronized(queueList) {
+            return queueList.size
+        }
+    }
+    
+    /**
+     * Peek at first request without removing (matches original API)
+     */
+    fun peek(): ServerRequest? {
+        synchronized(queueList) {
+            return try {
+                queueList.getOrNull(0)
+            } catch (e: Exception) {
+                BranchLogger.w("Caught Exception ServerRequestQueue peek: ${e.message}")
+                null
+            }
+        }
+    }
+    
+    /**
+     * Peek at request at specific index (matches original API)
+     */
+    fun peekAt(index: Int): ServerRequest? {
+        synchronized(queueList) {
+            return try {
+                val req = queueList.getOrNull(index)
+                BranchLogger.v("Queue operation peekAt $req")
+                req
+            } catch (e: Exception) {
+                BranchLogger.e("Caught Exception ServerRequestQueue peekAt $index: ${e.message}")
+                null
+            }
+        }
+    }
+    
+    /**
+     * Insert request at specific index (matches original API)
+     */
+    fun insert(request: ServerRequest, index: Int) {
+        synchronized(queueList) {
+            try {
+                BranchLogger.v("Queue operation insert. Request: $request Size: ${queueList.size} Index: $index")
+                val actualIndex = if (queueList.size < index) queueList.size else index
+                queueList.add(actualIndex, request)
+            } catch (e: Exception) {
+                BranchLogger.e("Caught IndexOutOfBoundsException ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Remove request at specific index (matches original API)
+     */
+    fun removeAt(index: Int): ServerRequest? {
+        synchronized(queueList) {
+            return try {
+                queueList.removeAt(index)
+            } catch (e: Exception) {
+                BranchLogger.e("Caught IndexOutOfBoundsException ${e.message}")
+                null
+            }
+        }
+    }
+    
+    /**
+     * Remove specific request (matches original API)
+     */
+    fun remove(request: ServerRequest?): Boolean {
+        synchronized(queueList) {
+            return try {
+                BranchLogger.v("Queue operation remove. Request: $request")
+                val removed = queueList.remove(request)
+                BranchLogger.v("Queue operation remove. Removed: $removed")
+                removed
+            } catch (e: Exception) {
+                BranchLogger.e("Caught UnsupportedOperationException ${e.message}")
+                false
+            }
+        }
+    }
+    
+    /**
+     * Insert request at front (matches original API)
+     */
+    fun insertRequestAtFront(request: ServerRequest) {
+        BranchLogger.v("Queue operation insertRequestAtFront $request networkCount_: ${networkCount.get()}")
+        if (networkCount.get() == 0) {
+            insert(request, 0)
+        } else {
+            insert(request, 1)
+        }
+    }
+    
+    /**
+     * Get self init request (matches original API)
+     */
+    fun getSelfInitRequest(): ServerRequestInitSession? {
+        synchronized(queueList) {
+            for (req in queueList) {
+                BranchLogger.v("Checking if $req is instanceof ServerRequestInitSession")
+                if (req is ServerRequestInitSession) {
+                    BranchLogger.v("$req is initiated by client: ${req.initiatedByClient}")
+                    if (req.initiatedByClient) {
+                        return req
+                    }
+                }
+            }
+        }
+        return null
+    }
+    
+    /**
+     * Unlock process wait for requests (matches original API)
+     */
+    fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) {
+        synchronized(queueList) {
+            for (req in queueList) {
+                req?.removeProcessWaitLock(lock)
+            }
+        }
+    }
+    
+    /**
+     * Update all requests in queue with new session data (matches original API)
+     */
+    fun updateAllRequestsInQueue() {
+        try {
+            synchronized(queueList) {
+                for (i in 0 until queueList.size) {
+                    val req = queueList[i]
+                    BranchLogger.v("Queue operation updateAllRequestsInQueue updating: $req")
+                    req?.let { request ->
+                        val reqJson = request.post
+                        if (reqJson != null) {
+                            val branch = Branch.getInstance()
+                            if (reqJson.has(Defines.Jsonkey.SessionID.key)) {
+                                reqJson.put(Defines.Jsonkey.SessionID.key, branch.prefHelper_.sessionID)
+                            }
+                            if (reqJson.has(Defines.Jsonkey.RandomizedBundleToken.key)) {
+                                reqJson.put(Defines.Jsonkey.RandomizedBundleToken.key, branch.prefHelper_.randomizedBundleToken)
+                            }
+                            if (reqJson.has(Defines.Jsonkey.RandomizedDeviceToken.key)) {
+                                reqJson.put(Defines.Jsonkey.RandomizedDeviceToken.key, branch.prefHelper_.randomizedDeviceToken)
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            BranchLogger.e("Caught JSONException ${e.message}")
+        }
+    }
+    
+    /**
+     * Check if init data can be cleared (matches original API)
+     */
+    fun canClearInitData(): Boolean {
+        var result = 0
+        synchronized(queueList) {
+            for (i in 0 until queueList.size) {
+                if (queueList[i] is ServerRequestInitSession) {
+                    result++
+                }
+            }
+        }
+        return result <= 1
+    }
+    
+    /**
+     * Post init clear (matches original API)
+     */
+    fun postInitClear() {
+        val prefHelper = Branch.getInstance().prefHelper_
+        val canClear = canClearInitData()
+        BranchLogger.v("postInitClear $prefHelper can clear init data $canClear")
+        
+        if (canClear) {
+            prefHelper.linkClickIdentifier = PrefHelper.NO_STRING_VALUE
+            prefHelper.googleSearchInstallIdentifier = PrefHelper.NO_STRING_VALUE
+            prefHelper.appStoreReferrer = PrefHelper.NO_STRING_VALUE
+            prefHelper.externalIntentUri = PrefHelper.NO_STRING_VALUE
+            prefHelper.externalIntentExtra = PrefHelper.NO_STRING_VALUE
+            prefHelper.appLink = PrefHelper.NO_STRING_VALUE
+            prefHelper.pushIdentifier = PrefHelper.NO_STRING_VALUE
+            prefHelper.installReferrerParams = PrefHelper.NO_STRING_VALUE
+            prefHelper.isFullAppConversion = false
+            prefHelper.initialReferrer = PrefHelper.NO_STRING_VALUE
+            
+            if (prefHelper.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0L) {
+                prefHelper.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME))
+            }
+        }
     }
     
     /**
@@ -279,15 +497,24 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Clear all pending requests
+     * Clear all pending requests (matches original API)
      */
     suspend fun clear() {
+        synchronized(queueList) {
+            try {
+                BranchLogger.v("Queue operation clear")
+                queueList.clear()
+                BranchLogger.v("Queue cleared.")
+            } catch (e: Exception) {
+                BranchLogger.e("Caught UnsupportedOperationException ${e.message}")
+            }
+        }
+        
         activeRequests.clear()
         // Drain the channel
         while (!requestChannel.isEmpty) {
             requestChannel.tryReceive()
         }
-        BranchLogger.v("Queue cleared")
     }
     
     /**

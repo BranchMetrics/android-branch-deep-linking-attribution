@@ -123,10 +123,77 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      * Get self init request - for compatibility
      */
     internal fun getSelfInitRequest(): ServerRequestInitSession? {
-        // This is complex to implement with the new queue system
-        // For now, return null and let the new system handle it
-        BranchLogger.v("getSelfInitRequest - not supported in new queue system")
-        return null
+        return newQueue.getSelfInitRequest()
+    }
+    
+    /**
+     * Peek at first request - for compatibility
+     */
+    fun peek(): ServerRequest? {
+        return newQueue.peek()
+    }
+    
+    /**
+     * Peek at specific index - for compatibility
+     */
+    fun peekAt(index: Int): ServerRequest? {
+        return newQueue.peekAt(index)
+    }
+    
+    /**
+     * Insert request at specific index - for compatibility
+     */
+    fun insert(request: ServerRequest, index: Int) {
+        newQueue.insert(request, index)
+    }
+    
+    /**
+     * Remove request at specific index - for compatibility
+     */
+    fun removeAt(index: Int): ServerRequest? {
+        return newQueue.removeAt(index)
+    }
+    
+    /**
+     * Remove specific request - for compatibility
+     */
+    fun remove(request: ServerRequest?): Boolean {
+        return newQueue.remove(request)
+    }
+    
+    /**
+     * Insert request at front - for compatibility
+     */
+    fun insertRequestAtFront(request: ServerRequest) {
+        newQueue.insertRequestAtFront(request)
+    }
+    
+    /**
+     * Unlock process wait - for compatibility
+     */
+    fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) {
+        newQueue.unlockProcessWait(lock)
+    }
+    
+    /**
+     * Update all requests in queue - for compatibility
+     */
+    fun updateAllRequestsInQueue() {
+        newQueue.updateAllRequestsInQueue()
+    }
+    
+    /**
+     * Check if init data can be cleared - for compatibility
+     */
+    fun canClearInitData(): Boolean {
+        return newQueue.canClearInitData()
+    }
+    
+    /**
+     * Post init clear - for compatibility
+     */
+    fun postInitClear() {
+        newQueue.postInitClear()
     }
     
     /**
