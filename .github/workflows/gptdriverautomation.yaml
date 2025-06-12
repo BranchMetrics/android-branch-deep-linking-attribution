@@ -1,4 +1,4 @@
-name: Release Version Extraction and Local AAR Build
+name: GPTDriver Test Suite Automation 
 
 on:
   push:
