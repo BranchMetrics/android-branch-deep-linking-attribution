@@ -19,12 +19,6 @@ import java.util.Collections
  */
 class BranchRequestQueue private constructor(private val context: Context) {
     
-    // Queue size limit (matches ServerRequestQueue.java)
-    companion object {
-        private const val MAX_ITEMS = 25
-        private const val PREF_KEY = "BNCServerRequestQueue"
-    }
-    
     // Coroutine scope for managing queue operations
     private val queueScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
@@ -53,6 +47,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     companion object {
+        // Queue size limit (matches ServerRequestQueue.java)
+        private const val MAX_ITEMS = 25
+        private const val PREF_KEY = "BNCServerRequestQueue"
+        
         @Volatile
         private var INSTANCE: BranchRequestQueue? = null
         
@@ -384,7 +382,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     /**
      * Get self init request (matches original API)
      */
-    fun getSelfInitRequest(): ServerRequestInitSession? {
+    internal fun getSelfInitRequest(): ServerRequestInitSession? {
         synchronized(queueList) {
             for (req in queueList) {
                 BranchLogger.v("Checking if $req is instanceof ServerRequestInitSession")
@@ -465,16 +463,16 @@ class BranchRequestQueue private constructor(private val context: Context) {
         BranchLogger.v("postInitClear $prefHelper can clear init data $canClear")
         
         if (canClear) {
-            prefHelper.linkClickIdentifier = PrefHelper.NO_STRING_VALUE
-            prefHelper.googleSearchInstallIdentifier = PrefHelper.NO_STRING_VALUE
-            prefHelper.appStoreReferrer = PrefHelper.NO_STRING_VALUE
-            prefHelper.externalIntentUri = PrefHelper.NO_STRING_VALUE
-            prefHelper.externalIntentExtra = PrefHelper.NO_STRING_VALUE
-            prefHelper.appLink = PrefHelper.NO_STRING_VALUE
-            prefHelper.pushIdentifier = PrefHelper.NO_STRING_VALUE
-            prefHelper.installReferrerParams = PrefHelper.NO_STRING_VALUE
-            prefHelper.isFullAppConversion = false
-            prefHelper.initialReferrer = PrefHelper.NO_STRING_VALUE
+            prefHelper.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setExternalIntentUri(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setAppLink(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setPushIdentifier(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE)
+            prefHelper.setIsFullAppConversion(false)
+            prefHelper.setInitialReferrer(PrefHelper.NO_STRING_VALUE)
             
             if (prefHelper.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0L) {
                 prefHelper.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME))
