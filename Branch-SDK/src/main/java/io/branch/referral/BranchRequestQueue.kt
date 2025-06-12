@@ -1,16 +1,22 @@
 package io.branch.referral
 
 import android.content.Context
-import android.content.SharedPreferences
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Modern Kotlin-based request queue using Coroutines and Channels
@@ -18,6 +24,28 @@ import java.util.Collections
  * Maintains compatibility with ServerRequestQueue.java functionality
  */
 class BranchRequestQueue private constructor(private val context: Context) {
+    
+    companion object {
+        // Queue size limit (matches ServerRequestQueue.java)
+        private const val MAX_ITEMS = 25
+        private const val PREF_KEY = "BNCServerRequestQueue"
+        
+        @Volatile
+        private var INSTANCE: BranchRequestQueue? = null
+        
+        @JvmStatic
+        fun getInstance(context: Context): BranchRequestQueue {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: BranchRequestQueue(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+        
+        @JvmStatic
+        internal fun shutDown() {
+            INSTANCE?.shutdown()
+            INSTANCE = null
+        }
+    }
     
     // Coroutine scope for managing queue operations
     private val queueScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -44,27 +72,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
     
     enum class QueueState {
         IDLE, PROCESSING, PAUSED, SHUTDOWN
-    }
-    
-    companion object {
-        // Queue size limit (matches ServerRequestQueue.java)
-        private const val MAX_ITEMS = 25
-        private const val PREF_KEY = "BNCServerRequestQueue"
-        
-        @Volatile
-        private var INSTANCE: BranchRequestQueue? = null
-        
-        fun getInstance(context: Context): BranchRequestQueue {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: BranchRequestQueue(context.applicationContext).also { INSTANCE = it }
-            }
-        }
-        
-        // For testing and cleanup
-        internal fun shutDown() {
-            INSTANCE?.shutdown()
-            INSTANCE = null
-        }
     }
     
     init {
@@ -463,19 +470,21 @@ class BranchRequestQueue private constructor(private val context: Context) {
         BranchLogger.v("postInitClear $prefHelper can clear init data $canClear")
         
         if (canClear) {
-            prefHelper.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setExternalIntentUri(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setAppLink(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setPushIdentifier(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE)
-            prefHelper.setIsFullAppConversion(false)
-            prefHelper.setInitialReferrer(PrefHelper.NO_STRING_VALUE)
-            
-            if (prefHelper.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0L) {
-                prefHelper.setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, prefHelper.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME))
+            with(prefHelper) {
+                linkClickIdentifier = PrefHelper.NO_STRING_VALUE
+                googleSearchInstallIdentifier = PrefHelper.NO_STRING_VALUE
+                appStoreReferrer = PrefHelper.NO_STRING_VALUE
+                externalIntentUri = PrefHelper.NO_STRING_VALUE
+                externalIntentExtra = PrefHelper.NO_STRING_VALUE
+                appLink = PrefHelper.NO_STRING_VALUE
+                pushIdentifier = PrefHelper.NO_STRING_VALUE
+                installReferrerParams = PrefHelper.NO_STRING_VALUE
+                setIsFullAppConversion(false)
+                setInitialReferrer(PrefHelper.NO_STRING_VALUE)
+                
+                if (getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0L) {
+                    setLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME, getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME))
+                }
             }
         }
     }
@@ -545,6 +554,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     /**
      * Print queue state for debugging
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun printQueue() {
         if (BranchLogger.loggingLevel.level >= BranchLogger.BranchLogLevel.VERBOSE.level) {
             val activeCount = activeRequests.size

@@ -16,12 +16,14 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         @Volatile
         private var INSTANCE: BranchRequestQueueAdapter? = null
         
+        @JvmStatic
         fun getInstance(context: Context): BranchRequestQueueAdapter {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: BranchRequestQueueAdapter(context.applicationContext).also { INSTANCE = it }
             }
         }
         
+        @JvmStatic
         internal fun shutDown() {
             INSTANCE?.shutdown()
             INSTANCE = null
@@ -60,166 +62,44 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     
     /**
-     * Insert request at front - simulate priority queuing
-     */
-    fun insertRequestAtFront(request: ServerRequest) {
-        // For now, just enqueue normally
-        // TODO: Implement priority queuing in BranchRequestQueue if needed
-        handleNewRequest(request)
-    }
-    
-    /**
-     * Unlock process wait locks for all requests
-     */
-    fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) {
-        // This is handled automatically in the new queue system
-        // The new system doesn't use manual locks, so this is a no-op
-        BranchLogger.v("unlockProcessWait for $lock - handled automatically in new queue")
-    }
-    
-    /**
      * Process next queue item - trigger processing
      */
     fun processNextQueueItem(callingMethodName: String) {
         BranchLogger.v("processNextQueueItem $callingMethodName - processing is automatic in new queue")
-        // Processing is automatic in the new queue system
-        // This method exists for compatibility but doesn't need to do anything
     }
     
     /**
-     * Get queue size
+     * Queue operations - delegating to new queue implementation
      */
     fun getSize(): Int = newQueue.getSize()
-    
-    /**
-     * Check if queue has user
-     */
     fun hasUser(): Boolean = newQueue.hasUser()
+    fun peek(): ServerRequest? = newQueue.peek()
+    fun peekAt(index: Int): ServerRequest? = newQueue.peekAt(index)
+    fun insert(request: ServerRequest, index: Int) = newQueue.insert(request, index)
+    fun removeAt(index: Int): ServerRequest? = newQueue.removeAt(index)
+    fun remove(request: ServerRequest?): Boolean = newQueue.remove(request)
+    fun insertRequestAtFront(request: ServerRequest) = newQueue.insertRequestAtFront(request)
+    fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) = newQueue.unlockProcessWait(lock)
+    fun updateAllRequestsInQueue() = newQueue.updateAllRequestsInQueue()
+    fun canClearInitData(): Boolean = newQueue.canClearInitData()
+    fun postInitClear() = newQueue.postInitClear()
     
     /**
-     * Add instrumentation data
+     * Instrumentation and debugging
      */
-    fun addExtraInstrumentationData(key: String, value: String) {
-        newQueue.addExtraInstrumentationData(key, value)
-    }
+    fun addExtraInstrumentationData(key: String, value: String) = newQueue.addExtraInstrumentationData(key, value)
+    fun printQueue() = newQueue.printQueue()
+    fun clear() = adapterScope.launch { newQueue.clear() }
     
     /**
-     * Clear all pending requests
+     * Internal methods
      */
-    fun clear() {
-        adapterScope.launch {
-            newQueue.clear()
-        }
-    }
+    internal fun getSelfInitRequest(): ServerRequestInitSession? = newQueue.getSelfInitRequest()
     
-    /**
-     * Print queue for debugging
-     */
-    fun printQueue() {
-        newQueue.printQueue()
-    }
-    
-    /**
-     * Get self init request - for compatibility
-     */
-    internal fun getSelfInitRequest(): ServerRequestInitSession? {
-        return newQueue.getSelfInitRequest()
-    }
-    
-    /**
-     * Peek at first request - for compatibility
-     */
-    fun peek(): ServerRequest? {
-        return newQueue.peek()
-    }
-    
-    /**
-     * Peek at specific index - for compatibility
-     */
-    fun peekAt(index: Int): ServerRequest? {
-        return newQueue.peekAt(index)
-    }
-    
-    /**
-     * Insert request at specific index - for compatibility
-     */
-    fun insert(request: ServerRequest, index: Int) {
-        newQueue.insert(request, index)
-    }
-    
-    /**
-     * Remove request at specific index - for compatibility
-     */
-    fun removeAt(index: Int): ServerRequest? {
-        return newQueue.removeAt(index)
-    }
-    
-    /**
-     * Remove specific request - for compatibility
-     */
-    fun remove(request: ServerRequest?): Boolean {
-        return newQueue.remove(request)
-    }
-    
-    /**
-     * Insert request at front - for compatibility
-     */
-    fun insertRequestAtFront(request: ServerRequest) {
-        newQueue.insertRequestAtFront(request)
-    }
-    
-    /**
-     * Unlock process wait - for compatibility
-     */
-    fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) {
-        newQueue.unlockProcessWait(lock)
-    }
-    
-    /**
-     * Update all requests in queue - for compatibility
-     */
-    fun updateAllRequestsInQueue() {
-        newQueue.updateAllRequestsInQueue()
-    }
-    
-    /**
-     * Check if init data can be cleared - for compatibility
-     */
-    fun canClearInitData(): Boolean {
-        return newQueue.canClearInitData()
-    }
-    
-    /**
-     * Post init clear - for compatibility
-     */
-    fun postInitClear() {
-        newQueue.postInitClear()
-    }
-    
-    /**
-     * Check if can clear init data
-     */
-    fun canClearInitData(): Boolean {
-        // Simplified logic for new system
-        return true
-    }
-    
-    /**
-     * Post init clear - for compatibility
-     */
-    fun postInitClear() {
-        BranchLogger.v("postInitClear - handled automatically in new queue")
-    }
-    
-    /**
-     * Private helper methods
-     */
-    private fun requestNeedsSession(request: ServerRequest): Boolean {
-        return when (request) {
-            is ServerRequestInitSession -> false
-            is ServerRequestCreateUrl -> false
-            else -> true
-        }
+    private fun requestNeedsSession(request: ServerRequest): Boolean = when (request) {
+        is ServerRequestInitSession -> false
+        is ServerRequestCreateUrl -> false
+        else -> true
     }
     
     private fun shutdown() {
