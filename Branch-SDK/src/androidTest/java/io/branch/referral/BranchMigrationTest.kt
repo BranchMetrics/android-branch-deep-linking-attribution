@@ -147,6 +147,7 @@ class BranchMigrationTest : BranchTest() {
             override fun handleErrors(context: Context): Boolean = false
             override fun isGetRequest(): Boolean = false
             override fun clearCallbacks() {}
+            override fun getRequestActionName() = ""
         }
     }
 
@@ -157,11 +158,12 @@ class BranchMigrationTest : BranchTest() {
             override fun handleErrors(context: Context): Boolean = false
             override fun isGetRequest(): Boolean = false
             override fun clearCallbacks() {}
+            override fun getRequestActionName() = ""
         }
     }
 
     private fun createEventRequest(): ServerRequest {
-        return object : ServerRequest(RequestPath.LogCustomEvent, JSONObject().apply { 
+        return object : ServerRequest(RequestPath.TrackCustomEvent, JSONObject().apply {
             put("event_name", "test_event")
             put("metadata", JSONObject().apply { put("test_key", "test_value") })
         }, testContext) {
