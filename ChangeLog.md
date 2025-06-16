@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.18.2
+* _*Master Release*_ - Jun 16, 2025
+  - Add some operational metrics.
+
 - v5.18.1
 * _*Master Release*_ - May 27, 2025
   - Fixes a bug affecting Xiaomi devices.
