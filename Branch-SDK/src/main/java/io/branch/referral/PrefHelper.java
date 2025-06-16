@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.URLUtil;
 
 import androidx.annotation.NonNull;
@@ -239,6 +240,26 @@ public class PrefHelper {
      * @return A {@link String} variable containing the hard-coded base URL that the Branch
      * API uses.
      */
+    public String getAPIBaseUrl() {
+        if (URLUtil.isHttpsUrl(customServerURL_)) {
+            return customServerURL_;
+        }
+
+        if (useEUEndpoint_) {
+            return BRANCH_EU_BASE_URL_V3;
+        }
+
+        if (Build.VERSION.SDK_INT >= 20) {
+            return BRANCH_BASE_URL_V2;
+        } else {
+            return BRANCH_BASE_URL_V1;
+        }
+    }
+
+    /**
+    * Overloaded version of the getAPIBaseUrl() function that allows specifying if the custom URL should be used
+     * Important for endpoints that do not have a protected version, such as the App Settings endpoint used by the Integration Validator
+    */
     public String getAPIBaseUrl(boolean useCustom) {
         if (useCustom && URLUtil.isHttpsUrl(customServerURL_)) {
             return customServerURL_;

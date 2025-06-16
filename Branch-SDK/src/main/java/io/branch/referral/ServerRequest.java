@@ -252,7 +252,7 @@ public abstract class ServerRequest {
      * @return A url for executing this request against the server.
      */
     public String getRequestUrl() {
-        return prefHelper_.getAPIBaseUrl(true) + requestPath_.getPath();
+        return prefHelper_.getAPIBaseUrl() + requestPath_.getPath();
     }
     
     /**
