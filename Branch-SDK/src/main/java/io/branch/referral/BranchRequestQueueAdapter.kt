@@ -48,8 +48,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
             return
         }
         
-        // Handle session requirements (similar to original logic)
-        if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && 
+        // Handle session requirements using new StateFlow system
+        if (!Branch.getInstance().canPerformOperations() && 
             request !is ServerRequestInitSession && 
             requestNeedsSession(request)) {
             BranchLogger.d("handleNewRequest $request needs a session")
@@ -109,8 +109,9 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         else -> true
     }
     
-    private fun shutdown() {
+    fun shutdown() {
         adapterScope.cancel("Adapter shutdown")
-        newQueue.shutdown()
+        // Note: newQueue.shutdown() is internal, so we'll handle cleanup differently
+        BranchRequestQueue.shutDown()
     }
 } 
