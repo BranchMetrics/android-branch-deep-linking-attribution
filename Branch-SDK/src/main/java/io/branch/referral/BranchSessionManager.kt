@@ -1,92 +1,77 @@
 package io.branch.referral
 
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Kotlin extension class to handle Branch SDK session state management using StateFlow
- * This class works alongside the existing Branch.java implementation
+ * Interface to safely expose Branch session states
  */
-class BranchSessionManager private constructor() {
-    
-    companion object {
-        @Volatile
-        private var INSTANCE: BranchSessionManager? = null
-        
-        fun getInstance(): BranchSessionManager {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: BranchSessionManager().also { INSTANCE = it }
-            }
-        }
-        
-        fun shutDown() {
-            INSTANCE = null
-        }
-    }
+interface BranchSessionStateProvider {
+    fun isInitialized(): Boolean
+    fun isInitializing(): Boolean
+    fun isUninitialized(): Boolean
+}
 
-    // StateFlow for session state
-    private val _sessionState = MutableStateFlow<SessionState>(SessionState.UNINITIALIZED)
-    val sessionState: StateFlow<SessionState> = _sessionState.asStateFlow()
-
-    // List of session state listeners
-    private val sessionStateListeners = mutableListOf<BranchSessionStateListener>()
+/**
+ * Manages the session state of the Branch SDK.
+ * This class serves as a facade for the BranchSessionStateManager, providing a simpler interface
+ * for the rest of the SDK to interact with session state.
+ */
+class BranchSessionManager {
+    private val stateManager = BranchSessionStateManager()
 
     /**
-     * Add a listener for session state changes
+     * Gets the current session state.
+     * @return The current BranchSessionState
+     */
+    fun getSessionState(): BranchSessionState = stateManager.getCurrentState()
+
+    /**
+     * Gets the session state as a StateFlow for reactive programming.
+     * @return A StateFlow containing the current session state
+     */
+    val sessionState: StateFlow<BranchSessionState> = stateManager.sessionState
+
+    /**
+     * Adds a listener for session state changes.
      * @param listener The listener to add
      */
     fun addSessionStateListener(listener: BranchSessionStateListener) {
-        sessionStateListeners.add(listener)
-        // Immediately notify the new listener of current state
-        listener.onSessionStateChanged(_sessionState.value)
+        stateManager.addListener(listener)
     }
 
     /**
-     * Remove a session state listener
+     * Removes a listener for session state changes.
      * @param listener The listener to remove
      */
     fun removeSessionStateListener(listener: BranchSessionStateListener) {
-        sessionStateListeners.remove(listener)
+        stateManager.removeListener(listener)
     }
 
     /**
-     * Get the current session state
+     * Updates the session state based on the current state of the Branch instance.
+     * This method ensures that the session state is synchronized with the Branch instance.
+     * @param branch The Branch instance to check the state from
      */
-    fun getSessionState(): SessionState = _sessionState.value
+    fun updateFromBranchState(branch: Branch) {
+        val currentState = stateManager.getCurrentState()
+        val branchState = branch.getInitState()
 
-    /**
-     * Set the session state and notify listeners
-     * @param newState The new session state
-     */
-    fun setSessionState(newState: SessionState) {
-        _sessionState.value = newState
-        notifySessionStateListeners()
-    }
-
-    /**
-     * Notify all session state listeners of a state change
-     */
-    private fun notifySessionStateListeners() {
-        val currentState = _sessionState.value
-        sessionStateListeners.forEach { listener ->
-            try {
-                listener.onSessionStateChanged(currentState)
-            } catch (e: Exception) {
-                BranchLogger.e("Error notifying session state listener: ${e.message}")
+        when {
+            branchState == Branch.SESSION_STATE.INITIALISED && currentState !is BranchSessionState.Initialized -> {
+                stateManager.transitionToInitialized()
+            }
+            branchState == Branch.SESSION_STATE.INITIALISING && currentState !is BranchSessionState.Initializing -> {
+                stateManager.transitionToInitializing()
+            }
+            branchState == Branch.SESSION_STATE.UNINITIALISED && currentState !is BranchSessionState.Uninitialized -> {
+                stateManager.transitionToUninitialized()
             }
         }
     }
 
     /**
-     * Update session state based on Branch.java state
-     * This method should be called whenever the Branch.java state changes
+     * Gets debug information about the current state.
+     * @return A string containing debug information
      */
-    fun updateFromBranchState(branch: Branch) {
-        when (branch.getInitState()) {
-            Branch.SESSION_STATE.INITIALISED -> setSessionState(SessionState.INITIALIZED)
-            Branch.SESSION_STATE.INITIALISING -> setSessionState(SessionState.INITIALIZING)
-            Branch.SESSION_STATE.UNINITIALISED -> setSessionState(SessionState.UNINITIALIZED)
-        }
-    }
+    fun getDebugInfo(): String = stateManager.getDebugInfo()
 } 

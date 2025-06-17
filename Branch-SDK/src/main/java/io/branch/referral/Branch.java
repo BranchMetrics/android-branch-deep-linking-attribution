@@ -251,7 +251,7 @@ public class Branch {
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
     
     // New StateFlow-based session state manager
-    private final BranchSessionStateManager sessionStateManager = BranchSessionStateManager.getInstance();
+    private final BranchSessionStateManager sessionStateManager = new BranchSessionStateManager();
 
     /* */
     static boolean deferInitForPluginRuntime = false;
@@ -306,6 +306,26 @@ public class Branch {
     private BranchReferralInitListener deferredCallback;
     private Uri deferredUri;
     private InitSessionBuilder deferredSessionBuilder;
+
+    private int networkCount_ = 0;
+    private ServerResponse serverResponse_;
+
+    /**
+     * Enum to track the state of the intent processing
+     */
+    public enum INTENT_STATE {
+        PENDING,
+        READY
+    }
+
+    /**
+     * Enum to track the state of the session
+     */
+    public enum SESSION_STATE {
+        UNINITIALISED,
+        INITIALISING,
+        INITIALISED
+    }
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1246,10 +1266,12 @@ public class Branch {
     public JSONObject getLatestReferringParamsSync() {
         getLatestReferringParamsLatch = new CountDownLatch(1);
         try {
-            if (sessionState != SessionState.INITIALIZED) {
+            BranchSessionState currentState = sessionStateManager.getCurrentState();
+            if (!(currentState instanceof BranchSessionState.Initialized)) {
                 getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {
+            // Log the interruption if needed
         }
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);

@@ -9,35 +9,14 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Thread-safe session state manager using StateFlow.
- * Replaces the manual lock-based SESSION_STATE system with a deterministic, observable state management.
+ * Manages the session state of the Branch SDK using Kotlin's StateFlow.
+ * This class is thread-safe and provides a reactive way to observe session state changes.
  */
-class BranchSessionStateManager private constructor() {
-    
-    companion object {
-        @Volatile
-        private var INSTANCE: BranchSessionStateManager? = null
-        
-        fun getInstance(): BranchSessionStateManager {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: BranchSessionStateManager().also { INSTANCE = it }
-            }
-        }
-        
-        @JvmStatic
-        fun resetInstance() {
-            synchronized(this) {
-                INSTANCE = null
-            }
-        }
-    }
-    
-    // Core StateFlow for session state - thread-safe and observable
+class BranchSessionStateManager {
     private val _sessionState = MutableStateFlow<BranchSessionState>(BranchSessionState.Uninitialized)
     val sessionState: StateFlow<BranchSessionState> = _sessionState.asStateFlow()
     
-    // Thread-safe listener management
-    private val listeners = CopyOnWriteArrayList<BranchSessionStateListener>()
+    private val listeners = mutableListOf<BranchSessionStateListener>()
     
     // Previous state tracking for listener notifications
     private val previousState = AtomicReference<BranchSessionState?>(null)
@@ -243,6 +222,42 @@ class BranchSessionStateManager private constructor() {
             append("Can Perform Operations: ${current.canPerformOperations()}\n")
             append("Has Active Session: ${current.hasActiveSession()}\n")
             append("Is Error State: ${current.isErrorState()}")
+        }
+    }
+
+    /**
+     * Transitions to the Initialized state.
+     * This is a terminal state that can only be reached from Initializing.
+     */
+    fun transitionToInitialized() {
+        if (_sessionState.value is BranchSessionState.Initializing) {
+            val oldState = _sessionState.value
+            _sessionState.value = BranchSessionState.Initialized
+            notifyListeners(oldState, BranchSessionState.Initialized)
+        }
+    }
+
+    /**
+     * Transitions to the Initializing state.
+     * This state can be reached from Uninitialized.
+     */
+    fun transitionToInitializing() {
+        if (_sessionState.value is BranchSessionState.Uninitialized) {
+            val oldState = _sessionState.value
+            _sessionState.value = BranchSessionState.Initializing
+            notifyListeners(oldState, BranchSessionState.Initializing)
+        }
+    }
+
+    /**
+     * Transitions to the Uninitialized state.
+     * This is the initial state and can be reached from any other state.
+     */
+    fun transitionToUninitialized() {
+        if (_sessionState.value !is BranchSessionState.Uninitialized) {
+            val oldState = _sessionState.value
+            _sessionState.value = BranchSessionState.Uninitialized
+            notifyListeners(oldState, BranchSessionState.Uninitialized)
         }
     }
 } 
