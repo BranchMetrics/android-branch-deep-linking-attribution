@@ -1599,6 +1599,17 @@ public class Branch {
     }
 
     /**
+     * A method to manually remove the pending intent wait lock. In rare cases, it is possible
+     * that the activity lifecycle callbacks may not execute.
+     */
+    public void unlockPendingIntent() {
+        BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
+        setIntentState(Branch.INTENT_STATE.READY);
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        requestQueue_.processNextQueueItem("unlockPendingIntent");
+    }
+
+    /**
      * Notify Branch when network is available in order to process the next request in the queue.
      */
     public void notifyNetworkAvailable() {
