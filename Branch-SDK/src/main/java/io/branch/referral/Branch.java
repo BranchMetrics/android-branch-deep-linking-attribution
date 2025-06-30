@@ -50,6 +50,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.interfaces.IBranchLoggingCallbacks;
@@ -231,7 +232,7 @@ public class Branch {
 
     private final BranchQRCodeCache branchQRCodeCache_;
 
-    public final ServerRequestQueue requestQueue_;
+    public final BranchRequestQueueAdapter requestQueue_;
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
 
@@ -239,22 +240,18 @@ public class Branch {
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
     private CustomTabsIntent customTabsIntentOverride;
 
-    /* Enumeration for defining session initialisation state. */
-    enum SESSION_STATE {
-        INITIALISED, INITIALISING, UNINITIALISED
-    }
-    
-    
-    enum INTENT_STATE {
-        PENDING,
-        READY
-    }
+    // Replace SESSION_STATE enum with SessionState
+    // Legacy session state lock - kept for backward compatibility
+    private final Object sessionStateLock = new Object();
 
     /* Holds the current intent state. Default is set to PENDING. */
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
+    
+    // New StateFlow-based session state manager
+    private final BranchSessionStateManager sessionStateManager = new BranchSessionStateManager();
 
     /* */
     static boolean deferInitForPluginRuntime = false;
@@ -310,6 +307,26 @@ public class Branch {
     private Uri deferredUri;
     private InitSessionBuilder deferredSessionBuilder;
 
+    private int networkCount_ = 0;
+    private ServerResponse serverResponse_;
+
+    /**
+     * Enum to track the state of the intent processing
+     */
+    public enum INTENT_STATE {
+        PENDING,
+        READY
+    }
+
+    /**
+     * Enum to track the state of the session
+     */
+    public enum SESSION_STATE {
+        UNINITIALISED,
+        INITIALISING,
+        INITIALISED
+    }
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -325,7 +342,7 @@ public class Branch {
         deviceInfo_ = new DeviceInfo(context);
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
-        requestQueue_ = ServerRequestQueue.getInstance(context);
+        requestQueue_ = BranchRequestQueueAdapter.getInstance(context);
     }
 
     /**
@@ -595,7 +612,8 @@ public class Branch {
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
-        ServerRequestQueue.shutDown();
+        BranchRequestQueueAdapter.shutDown();
+        BranchRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();
 
@@ -624,6 +642,74 @@ public class Branch {
      */
     public void resetUserSession() {
         setInitState(SESSION_STATE.UNINITIALISED);
+    }
+
+    // ===== NEW STATEFLOW-BASED SESSION STATE API =====
+    
+    /**
+     * Add a listener to observe session state changes using the new StateFlow-based system.
+     * This provides deterministic state observation for SDK clients.
+     * 
+     * @param listener The listener to add
+     */
+    public void addSessionStateObserver(@NonNull BranchSessionStateListener listener) {
+        sessionStateManager.addListener(listener, true);
+    }
+    
+    /**
+     * Add a simple listener to observe session state changes.
+     * 
+     * @param listener The simple listener to add
+     */
+    public void addSessionStateObserver(@NonNull SimpleBranchSessionStateListener listener) {
+        sessionStateManager.addListener(listener, true);
+    }
+    
+    /**
+     * Remove a session state observer.
+     * 
+     * @param listener The listener to remove
+     */
+    public void removeSessionStateObserver(@NonNull BranchSessionStateListener listener) {
+        sessionStateManager.removeListener(listener);
+    }
+    
+    /**
+     * Get the current session state using the new StateFlow-based system.
+     * 
+     * @return The current session state
+     */
+    @NonNull
+    public BranchSessionState getCurrentSessionState() {
+        return sessionStateManager.getCurrentState();
+    }
+    
+    /**
+     * Check if the SDK can currently perform operations.
+     * 
+     * @return true if operations can be performed, false otherwise
+     */
+    public boolean canPerformOperations() {
+        return sessionStateManager.canPerformOperations();
+    }
+    
+    /**
+     * Check if there's an active session.
+     * 
+     * @return true if there's an active session, false otherwise
+     */
+    public boolean hasActiveSession() {
+        return sessionStateManager.hasActiveSession();
+    }
+    
+    /**
+     * Get the StateFlow for observing session state changes in Kotlin code.
+     * 
+     * @return StateFlow of BranchSessionState
+     */
+    @NonNull
+    public kotlinx.coroutines.flow.StateFlow<BranchSessionState> getSessionStateFlow() {
+        return sessionStateManager.getSessionState();
     }
     
     /**
@@ -854,9 +940,8 @@ public class Branch {
      * closed application event to the Branch API.</p>
      */
     private void executeClose() {
-        if (initState_ != SESSION_STATE.UNINITIALISED) {
-            setInitState(SESSION_STATE.UNINITIALISED);
-        }
+        // Reset session state via StateFlow system
+        sessionStateManager.reset();
     }
 
     public static void registerPlugin(String name, String version) {
@@ -1181,10 +1266,12 @@ public class Branch {
     public JSONObject getLatestReferringParamsSync() {
         getLatestReferringParamsLatch = new CountDownLatch(1);
         try {
-            if (initState_ != SESSION_STATE.INITIALISED) {
+            BranchSessionState currentState = sessionStateManager.getCurrentState();
+            if (!(currentState instanceof BranchSessionState.Initialized)) {
                 getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {
+            // Log the interruption if needed
         }
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);
@@ -1401,7 +1488,22 @@ public class Branch {
     }
 
     void setInitState(SESSION_STATE initState) {
-        this.initState_ = initState;
+        synchronized (sessionStateLock) {
+            initState_ = initState;
+        }
+        
+        // Update the StateFlow-based session state manager
+        switch (initState) {
+            case UNINITIALISED:
+                sessionStateManager.reset();
+                break;
+            case INITIALISING:
+                sessionStateManager.initialize();
+                break;
+            case INITIALISED:
+                sessionStateManager.initializeComplete();
+                break;
+        }
     }
 
     SESSION_STATE getInitState() {
@@ -1419,10 +1521,12 @@ public class Branch {
     private void initializeSession(ServerRequestInitSession initRequest, int delay) {
         BranchLogger.v("initializeSession " + initRequest + " delay " + delay);
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
-            setInitState(SESSION_STATE.UNINITIALISED);
+            // Report key error using new StateFlow system
+            BranchError keyError = new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID);
+            sessionStateManager.initializeFailed(keyError);
             //Report Key error on callback
             if (initRequest.callback_ != null) {
-                initRequest.callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
+                initRequest.callback_.onInitFinished(null, keyError);
             }
             BranchLogger.w("Warning: Please enter your branch_key in your project's manifest");
             return;
@@ -1450,9 +1554,9 @@ public class Branch {
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
 
-        SESSION_STATE sessionState = getInitState();
+        BranchSessionState sessionState = getCurrentSessionState();
         BranchLogger.v("Intent: " + intent + " forceBranchSession: " + forceBranchSession + " initState: " + sessionState);
-        if (sessionState == SESSION_STATE.UNINITIALISED || forceBranchSession) {
+        if (sessionState instanceof BranchSessionState.Uninitialized || forceBranchSession) {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
             }
@@ -1471,7 +1575,7 @@ public class Branch {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
          setInitState(SESSION_STATE.INITIALISING);
 
-         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+         ServerRequestInitSession r = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
          BranchLogger.v("Ordering init calls");
          BranchLogger.v("Self init request: " + r);
          requestQueue_.printQueue();
