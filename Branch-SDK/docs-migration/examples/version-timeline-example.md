@@ -1,17 +1,29 @@
-# Branch SDK Version Timeline Example
+# Branch SDK Version Timeline: Practical Usage Examples
+
+**Document Type:** Practical Examples and Use Cases  
+**Created:** June 2025  
+**Last Updated:** June 2025  
+**Version:** 1.0  
+**Author:** Branch SDK Team  
+
+---
+
+## Document Purpose
+
+This document provides detailed practical examples of how to use the API-specific versioning system to plan releases, generate migration reports, and integrate with CI/CD pipelines. It includes complete code examples and real-world usage scenarios.
 
 ## Overview
 
-Este documento demonstra como usar o sistema de versionamento específico por API para planejar releases e comunicar mudanças aos desenvolvedores.
+This document demonstrates how to use the API-specific versioning system to plan releases and communicate changes to developers.
 
-## Exemplo Prático
+## Practical Examples
 
-### 1. Configuração de APIs com Diferentes Cronogramas
+### 1. API Configuration with Different Timelines
 
 ```kotlin
 class ApiRegistrationExample {
     fun registerExampleApis(registry: PublicApiRegistry) {
-        // APIs Críticas - Cronograma Estendido
+        // Critical APIs - Extended Timeline
         registry.registerApi(
             methodName = "getInstance",
             signature = "Branch.getInstance()",
@@ -20,10 +32,10 @@ class ApiRegistrationExample {
             removalTimeline = "Q2 2025",
             modernReplacement = "ModernBranchCore.getInstance()",
             deprecationVersion = "5.0.0",
-            removalVersion = "7.0.0" // Suporte estendido
+            removalVersion = "7.0.0" // Extended support
         )
         
-        // APIs Problemáticas - Remoção Acelerada
+        // Problematic APIs - Accelerated Removal
         registry.registerApi(
             methodName = "getFirstReferringParamsSync",
             signature = "Branch.getFirstReferringParamsSync()",
@@ -32,11 +44,11 @@ class ApiRegistrationExample {
             removalTimeline = "Q1 2025",
             modernReplacement = "dataManager.getFirstReferringParamsAsync()",
             breakingChanges = listOf("Converted from synchronous to asynchronous operation"),
-            deprecationVersion = "4.0.0", // Depreciação precoce
-            removalVersion = "5.0.0"     // Remoção rápida devido ao impacto na performance
+            deprecationVersion = "4.0.0", // Early deprecation
+            removalVersion = "5.0.0"     // Fast removal due to performance impact
         )
         
-        // APIs Padrão - Cronograma Normal
+        // Standard APIs - Normal Timeline
         registry.registerApi(
             methodName = "setIdentity",
             signature = "Branch.setIdentity(String)",
@@ -45,20 +57,20 @@ class ApiRegistrationExample {
             removalTimeline = "Q3 2025",
             modernReplacement = "identityManager.setIdentity(String)",
             deprecationVersion = "5.0.0",
-            removalVersion = "6.0.0" // Cronograma padrão
+            removalVersion = "6.0.0" // Standard timeline
         )
     }
 }
 ```
 
-### 2. Geração de Relatórios de Timeline
+### 2. Timeline Report Generation
 
 ```kotlin
 class ReleaseManager {
     fun generateReleaseReport(context: Context) {
         val preservationManager = BranchApiPreservationManager.getInstance(context)
         
-        // Relatório completo de timeline
+        // Complete timeline report
         val timelineReport = preservationManager.generateVersionTimelineReport()
         
         println("=== BRANCH SDK VERSION TIMELINE ===")
@@ -66,7 +78,7 @@ class ReleaseManager {
         println("Busiest version: ${timelineReport.summary.busiestVersion}")
         println()
         
-        // Detalhes por versão
+        // Details by version
         timelineReport.versionDetails.forEach { versionDetail ->
             println("Version ${versionDetail.version}:")
             
@@ -100,7 +112,7 @@ class ReleaseManager {
         
         println("=== CHANGES IN VERSION $targetVersion ===")
         
-        // APIs sendo depreciadas nesta versão
+        // APIs being deprecated in this version
         val deprecatedApis = preservationManager.getApisForDeprecationInVersion(targetVersion)
         if (deprecatedApis.isNotEmpty()) {
             println("\n📢 APIs Deprecated in $targetVersion:")
@@ -114,7 +126,7 @@ class ReleaseManager {
             }
         }
         
-        // APIs sendo removidas nesta versão
+        // APIs being removed in this version
         val removedApis = preservationManager.getApisForRemovalInVersion(targetVersion)
         if (removedApis.isNotEmpty()) {
             println("\n🚨 APIs Removed in $targetVersion:")
@@ -138,7 +150,7 @@ class ReleaseManager {
 }
 ```
 
-### 3. Exemplo de Saída do Relatório
+### 3. Report Output Example
 
 ```
 === BRANCH SDK VERSION TIMELINE ===
@@ -189,20 +201,20 @@ Version 7.0.0:
   ⚡ BREAKING CHANGES IN THIS VERSION
 ```
 
-### 4. Integração com CI/CD
+### 4. CI/CD Integration
 
 ```kotlin
 class ContinuousIntegration {
     fun validateReleaseChanges(context: Context, plannedVersion: String) {
         val preservationManager = BranchApiPreservationManager.getInstance(context)
         
-        // Verificar se há mudanças breaking na versão planejada
+        // Check for breaking changes in the planned version
         val removedApis = preservationManager.getApisForRemovalInVersion(plannedVersion)
         
         if (removedApis.isNotEmpty()) {
             println("⚠️  WARNING: Version $plannedVersion contains ${removedApis.size} breaking changes")
             
-            // Verificar se é uma versão major (pode ter breaking changes)
+            // Check if it's a major version (can have breaking changes)
             val isMajorVersion = plannedVersion.split(".")[0].toInt() > 
                                 getCurrentVersion().split(".")[0].toInt()
             
@@ -213,7 +225,7 @@ class ContinuousIntegration {
             }
         }
         
-        // Gerar changelog automático
+        // Generate automatic changelog
         generateChangelogForVersion(preservationManager, plannedVersion)
     }
     
@@ -251,16 +263,16 @@ class ContinuousIntegration {
             }
         }
         
-        // Salvar changelog
+        // Save changelog
         writeChangelogToFile(changelog, version)
     }
 }
 ```
 
-## Benefícios do Sistema
+## System Benefits
 
-1. **Flexibilidade**: Cada API pode ter seu próprio cronograma
-2. **Planejamento**: Relatórios detalhados para planning de releases
-3. **Comunicação**: Informações claras para desenvolvedores
-4. **Automação**: Integração com pipelines de CI/CD
-5. **Gradualidade**: Permite migração suave e controlada 
+1. **Flexibility**: Each API can have its own timeline
+2. **Planning**: Detailed reports for release planning
+3. **Communication**: Clear information for developers
+4. **Automation**: Integration with CI/CD pipelines
+5. **Gradual Migration**: Enables smooth and controlled migration 

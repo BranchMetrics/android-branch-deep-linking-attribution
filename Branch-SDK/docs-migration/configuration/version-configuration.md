@@ -1,4 +1,16 @@
-# Branch SDK Version Configuration
+# Branch SDK Version Configuration System
+
+**Document Type:** Configuration Guide  
+**Created:** June 2025  
+**Last Updated:** June 2025  
+**Version:** 1.0  
+**Author:** Branch SDK Team  
+
+---
+
+## Document Purpose
+
+This document describes the Branch SDK version configuration system, which enables management of API deprecation and removal timelines through external configuration files. The system provides complete flexibility for different environments and migration strategies.
 
 ## Overview
 

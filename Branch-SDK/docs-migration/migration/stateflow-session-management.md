@@ -1,4 +1,12 @@
-# Branch SDK StateFlow-Based Session State Management
+# Branch SDK Migration: StateFlow-Based Session State Management
+
+**Document Type:** Migration Implementation Guide  
+**Created:** June 2025  
+**Last Updated:** June 2025  
+**Version:** 1.0  
+**Author:** Branch SDK Team  
+
+---
 
 ## Current Status ✅
 

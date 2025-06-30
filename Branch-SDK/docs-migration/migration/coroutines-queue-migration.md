@@ -1,4 +1,12 @@
-# Branch SDK Coroutines-Based Queue Implementation
+# Branch SDK Migration: Coroutines-Based Queue Implementation
+
+**Document Type:** Migration Implementation Guide  
+**Created:** June 2025  
+**Last Updated:** June 2025  
+**Version:** 1.0  
+**Author:** Branch SDK Team  
+
+---
 
 ## Current Status ✅
 
