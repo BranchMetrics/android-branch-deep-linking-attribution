@@ -35,8 +35,8 @@ class BranchApiPreservationManager private constructor() {
     private val activeCallsCache = ConcurrentHashMap<String, Long>()
     
     companion object {
-        private const val DEPRECATION_VERSION = "6.0.0"
-        private const val REMOVAL_VERSION = "7.0.0"
+        private const val DEPRECATION_VERSION = "5.0.0"
+        private const val REMOVAL_VERSION = "6.0.0"
         private const val MIGRATION_GUIDE_URL = "https://branch.io/migration-guide"
         
         @Volatile

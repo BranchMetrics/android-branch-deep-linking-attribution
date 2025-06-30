@@ -47,8 +47,8 @@ class PublicApiRegistry {
             category = category,
             breakingChanges = breakingChanges,
             migrationNotes = migrationNotes,
-            deprecationVersion = "6.0.0",
-            removalVersion = "7.0.0"
+            deprecationVersion = "5.0.0",
+            removalVersion = "6.0.0"
         )
         
         // Register in main catalog
