@@ -1,5 +1,6 @@
 package io.branch.referral.modernization.registry
 
+import io.branch.referral.modernization.core.VersionConfiguration
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -16,7 +17,9 @@ import java.util.concurrent.ConcurrentHashMap
  * - Generate migration reports and analytics
  * - Provide deprecation guidance and warnings
  */
-class PublicApiRegistry {
+class PublicApiRegistry(
+    private val versionConfiguration: VersionConfiguration
+) {
     
     private val apiCatalog = ConcurrentHashMap<String, ApiMethodInfo>()
     private val apisByCategory = ConcurrentHashMap<String, MutableList<String>>()
@@ -25,6 +28,18 @@ class PublicApiRegistry {
     
     /**
      * Register a public API method in the preservation catalog.
+     * 
+     * @param methodName Name of the API method
+     * @param signature Full method signature
+     * @param usageImpact Impact level of this API
+     * @param complexity Migration complexity level
+     * @param removalTimeline Human-readable timeline for removal
+     * @param modernReplacement Modern API replacement
+     * @param category API category (auto-inferred if not provided)
+     * @param breakingChanges List of breaking changes in migration
+     * @param migrationNotes Additional migration guidance
+     * @param deprecationVersion Specific deprecation version for this API (uses global if not provided)
+     * @param removalVersion Specific removal version for this API (uses global if not provided)
      */
     fun registerApi(
         methodName: String,
@@ -35,7 +50,9 @@ class PublicApiRegistry {
         modernReplacement: String,
         category: String = inferCategory(signature),
         breakingChanges: List<String> = emptyList(),
-        migrationNotes: String = ""
+        migrationNotes: String = "",
+        deprecationVersion: String? = null,
+        removalVersion: String? = null
     ) {
         val apiInfo = ApiMethodInfo(
             methodName = methodName,
@@ -47,8 +64,8 @@ class PublicApiRegistry {
             category = category,
             breakingChanges = breakingChanges,
             migrationNotes = migrationNotes,
-            deprecationVersion = "5.0.0",
-            removalVersion = "6.0.0"
+            deprecationVersion = deprecationVersion ?: versionConfiguration.getDeprecationVersion(),
+            removalVersion = removalVersion ?: versionConfiguration.getRemovalVersion()
         )
         
         // Register in main catalog
@@ -96,6 +113,72 @@ class PublicApiRegistry {
      */
     fun getAllCategories(): Set<String> = apisByCategory.keys.toSet()
     
+    /**
+     * Generate version-specific migration timeline report.
+     * 
+     * @return Detailed timeline showing which APIs are affected in each version
+     */
+    fun generateVersionTimelineReport(): VersionTimelineReport {
+        val deprecationTimeline = getApisByDeprecationVersion()
+        val removalTimeline = getApisByRemovalVersion()
+        
+        // Get all unique versions and sort them
+        val allVersions = (deprecationTimeline.keys + removalTimeline.keys).toSortedSet { v1, v2 ->
+            compareVersions(v1, v2)
+        }
+        
+        val versionDetails = allVersions.map { version ->
+            VersionDetails(
+                version = version,
+                deprecatedApis = deprecationTimeline[version] ?: emptyList(),
+                removedApis = removalTimeline[version] ?: emptyList()
+            )
+        }
+        
+        return VersionTimelineReport(
+            totalVersions = allVersions.size,
+            versionDetails = versionDetails,
+            summary = generateTimelineSummary(versionDetails)
+        )
+    }
+    
+    /**
+     * Compare two version strings for sorting.
+     */
+    private fun compareVersions(v1: String, v2: String): Int {
+        val parts1 = v1.split(".").map { it.replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0 }
+        val parts2 = v2.split(".").map { it.replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0 }
+        
+        for (i in 0 until maxOf(parts1.size, parts2.size)) {
+            val part1 = parts1.getOrNull(i) ?: 0
+            val part2 = parts2.getOrNull(i) ?: 0
+            if (part1 != part2) return part1.compareTo(part2)
+        }
+        return 0
+    }
+    
+    /**
+     * Generate summary statistics for version timeline.
+     */
+    private fun generateTimelineSummary(versionDetails: List<VersionDetails>): TimelineSummary {
+        val maxDeprecations = versionDetails.maxOfOrNull { it.deprecatedApis.size } ?: 0
+        val maxRemovals = versionDetails.maxOfOrNull { it.removedApis.size } ?: 0
+        val totalDeprecations = versionDetails.sumOf { it.deprecatedApis.size }
+        val totalRemovals = versionDetails.sumOf { it.removedApis.size }
+        
+        val busiestVersion = versionDetails.maxByOrNull { 
+            it.deprecatedApis.size + it.removedApis.size 
+        }?.version
+        
+        return TimelineSummary(
+            maxDeprecationsInSingleVersion = maxDeprecations,
+            maxRemovalsInSingleVersion = maxRemovals,
+            totalDeprecations = totalDeprecations,
+            totalRemovals = totalRemovals,
+            busiestVersion = busiestVersion
+        )
+    }
+
     /**
      * Generate comprehensive migration report with analytics.
      */
@@ -188,12 +271,41 @@ class PublicApiRegistry {
     }
     
     /**
-     * Get APIs that should be removed in the next version.
+     * Get APIs that should be removed in a specific version.
+     * 
+     * @param targetVersion Version to check for removal (uses current removal version if not provided)
      */
-    fun getApisForRemoval(): List<ApiMethodInfo> {
+    fun getApisForRemoval(targetVersion: String? = null): List<ApiMethodInfo> {
+        val versionToCheck = targetVersion ?: versionConfiguration.getRemovalVersion()
         return apiCatalog.values.filter { api ->
-            api.removalTimeline.contains("Q1 2025") // High priority removal
+            api.removalVersion == versionToCheck
         }
+    }
+    
+    /**
+     * Get APIs that should be deprecated in a specific version.
+     * 
+     * @param targetVersion Version to check for deprecation (uses current deprecation version if not provided)
+     */
+    fun getApisForDeprecation(targetVersion: String? = null): List<ApiMethodInfo> {
+        val versionToCheck = targetVersion ?: versionConfiguration.getDeprecationVersion()
+        return apiCatalog.values.filter { api ->
+            api.deprecationVersion == versionToCheck
+        }
+    }
+    
+    /**
+     * Get APIs grouped by their removal version.
+     */
+    fun getApisByRemovalVersion(): Map<String, List<ApiMethodInfo>> {
+        return apiCatalog.values.groupBy { it.removalVersion }
+    }
+    
+    /**
+     * Get APIs grouped by their deprecation version.
+     */
+    fun getApisByDeprecationVersion(): Map<String, List<ApiMethodInfo>> {
+        return apiCatalog.values.groupBy { it.deprecationVersion }
     }
     
     /**
@@ -273,4 +385,36 @@ data class MigrationReport(
     val recommendedTimeline: String,
     val riskFactors: List<String>,
     val usageStatistics: Map<String, Int>
+)
+
+/**
+ * Version timeline report showing deprecation and removal schedule.
+ */
+data class VersionTimelineReport(
+    val totalVersions: Int,
+    val versionDetails: List<VersionDetails>,
+    val summary: TimelineSummary
+)
+
+/**
+ * Details for a specific version in the timeline.
+ */
+data class VersionDetails(
+    val version: String,
+    val deprecatedApis: List<ApiMethodInfo>,
+    val removedApis: List<ApiMethodInfo>
+) {
+    val totalChanges: Int = deprecatedApis.size + removedApis.size
+    val hasBreakingChanges: Boolean = removedApis.isNotEmpty()
+}
+
+/**
+ * Summary statistics for the entire timeline.
+ */
+data class TimelineSummary(
+    val maxDeprecationsInSingleVersion: Int,
+    val maxRemovalsInSingleVersion: Int,
+    val totalDeprecations: Int,
+    val totalRemovals: Int,
+    val busiestVersion: String?
 ) 
