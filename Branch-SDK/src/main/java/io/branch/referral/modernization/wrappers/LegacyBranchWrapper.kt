@@ -26,8 +26,14 @@ import org.json.JSONObject
 @Suppress("DEPRECATION")
 class LegacyBranchWrapper private constructor() {
     
-    private val preservationManager = BranchApiPreservationManager.getInstance()
+    private lateinit var preservationManager: BranchApiPreservationManager
     private val callbackRegistry = CallbackAdapterRegistry.getInstance()
+    
+    private fun initializePreservationManager(context: Context) {
+        if (!::preservationManager.isInitialized) {
+            preservationManager = BranchApiPreservationManager.getInstance(context)
+        }
+    }
     
     companion object {
         @Volatile

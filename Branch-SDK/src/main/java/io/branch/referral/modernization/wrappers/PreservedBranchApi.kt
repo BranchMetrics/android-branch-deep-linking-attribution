@@ -23,8 +23,14 @@ import org.json.JSONObject
 @Suppress("DEPRECATION")
 object PreservedBranchApi {
     
-    private val preservationManager = BranchApiPreservationManager.getInstance()
+    private lateinit var preservationManager: BranchApiPreservationManager
     private val callbackRegistry = CallbackAdapterRegistry.getInstance()
+    
+    private fun initializePreservationManager(context: Context) {
+        if (!::preservationManager.isInitialized) {
+            preservationManager = BranchApiPreservationManager.getInstance(context)
+        }
+    }
     
     /**
      * Legacy Branch.getInstance() wrapper.
@@ -37,13 +43,16 @@ object PreservedBranchApi {
         level = DeprecationLevel.WARNING
     )
     fun getInstance(): Branch {
+        // Initialize with a default context - in real usage this would be passed from the application
+        initializePreservationManager(Branch.getInstance().applicationContext)
+        
         val result = preservationManager.handleLegacyApiCall(
             methodName = "getInstance",
             parameters = emptyArray()
         )
         
-        // Return wrapped modern implementation as Branch instance
-        return LegacyBranchWrapper.getInstance()
+        // Return actual Branch instance
+        return Branch.getInstance()
     }
     
     /**
@@ -56,12 +65,14 @@ object PreservedBranchApi {
         level = DeprecationLevel.WARNING
     )
     fun getInstance(context: Context): Branch {
+        initializePreservationManager(context)
+        
         val result = preservationManager.handleLegacyApiCall(
             methodName = "getInstance",
             parameters = arrayOf(context)
         )
         
-        return LegacyBranchWrapper.getInstance()
+        return Branch.getInstance()
     }
     
     /**
@@ -74,12 +85,14 @@ object PreservedBranchApi {
         level = DeprecationLevel.WARNING
     )
     fun getAutoInstance(context: Context): Branch {
+        initializePreservationManager(context)
+        
         val result = preservationManager.handleLegacyApiCall(
             methodName = "getAutoInstance",
             parameters = arrayOf(context)
         )
         
-        return LegacyBranchWrapper.getInstance()
+        return Branch.getAutoInstance(context)
     }
     
     /**
@@ -259,13 +272,13 @@ object PreservedBranchApi {
         replaceWith = ReplaceWith("ModernBranchCore.getInstance().sessionManager.initSession(activity)"),
         level = DeprecationLevel.WARNING
     )
-    fun sessionBuilder(activity: Activity): SessionBuilder {
+    fun sessionBuilder(activity: Activity): Branch.InitSessionBuilder {
         preservationManager.handleLegacyApiCall(
             methodName = "sessionBuilder",
             parameters = arrayOf(activity)
         )
         
-        return SessionBuilder(activity)
+        return Branch.sessionBuilder(activity)
     }
     
     /**
@@ -301,35 +314,4 @@ object PreservedBranchApi {
     }
 }
 
-/**
- * Legacy SessionBuilder wrapper for maintaining API compatibility.
- */
-@Deprecated("Use ModernBranchCore sessionManager instead")
-class SessionBuilder(private val activity: Activity) {
-    
-    private val preservationManager = BranchApiPreservationManager.getInstance()
-    
-    fun withCallback(callback: Branch.BranchReferralInitListener): SessionBuilder {
-        preservationManager.handleLegacyApiCall(
-            methodName = "sessionBuilder.withCallback",
-            parameters = arrayOf(callback)
-        )
-        return this
-    }
-    
-    fun withData(data: JSONObject): SessionBuilder {
-        preservationManager.handleLegacyApiCall(
-            methodName = "sessionBuilder.withData",
-            parameters = arrayOf(data)
-        )
-        return this
-    }
-    
-    fun init(): Boolean {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "sessionBuilder.init",
-            parameters = arrayOf(activity)
-        )
-        return result as? Boolean ?: false
-    }
-} 
+ 
