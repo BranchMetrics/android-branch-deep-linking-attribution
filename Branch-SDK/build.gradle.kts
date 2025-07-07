@@ -64,6 +64,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
+    testImplementation("org.mockito:mockito-core:4.11.0")
+    testImplementation("org.mockito:mockito-inline:4.11.0")
 }
 
 val VERSION_NAME: String by project
