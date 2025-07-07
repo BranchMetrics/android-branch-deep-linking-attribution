@@ -48,9 +48,11 @@ interface ModernBranchCore {
 /**
  * Default implementation of ModernBranchCore.
  */
-class ModernBranchCoreImpl private constructor() : ModernBranchCore {
+class ModernBranchCoreImpl private constructor(
+    dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate
+) : ModernBranchCore {
     
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     
     // Manager implementations
     override val sessionManager: SessionManager = SessionManagerImpl(scope)
@@ -79,6 +81,9 @@ class ModernBranchCoreImpl private constructor() : ModernBranchCore {
                 instance ?: ModernBranchCoreImpl().also { instance = it }
             }
         }
+        
+        // For testing: allow custom dispatcher
+        fun newTestInstance(dispatcher: CoroutineDispatcher): ModernBranchCore = ModernBranchCoreImpl(dispatcher)
     }
     
     override suspend fun initialize(context: Context): Result<Unit> {
