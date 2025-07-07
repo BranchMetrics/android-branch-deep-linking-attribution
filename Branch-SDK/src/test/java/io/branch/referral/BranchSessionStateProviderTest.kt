@@ -5,6 +5,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.mockito.Mockito.*
+import org.mockito.MockitoAnnotations
 
 /**
  * Unit tests for BranchSessionStateProvider extension function.
@@ -12,20 +14,21 @@ import org.junit.runners.JUnit4
 @RunWith(JUnit4::class)
 class BranchSessionStateProviderTest {
 
-    private lateinit var mockBranch: MockBranch
+    private lateinit var mockBranch: Branch
     private lateinit var stateProvider: BranchSessionStateProvider
 
     @Before
     fun setUp() {
-        mockBranch = MockBranch()
+        MockitoAnnotations.openMocks(this)
+        mockBranch = mock(Branch::class.java)
         stateProvider = mockBranch.asSessionStateProvider()
     }
 
     @Test
     fun testIsInitializedWhenBranchHasActiveSessionAndCanPerformOperations() {
         // Mock branch with active session and can perform operations
-        mockBranch.setHasActiveSession(true)
-        mockBranch.setCanPerformOperations(true)
+        `when`(mockBranch.hasActiveSession()).thenReturn(true)
+        `when`(mockBranch.canPerformOperations()).thenReturn(true)
         
         assertTrue(stateProvider.isInitialized())
         assertFalse(stateProvider.isInitializing())
@@ -35,8 +38,8 @@ class BranchSessionStateProviderTest {
     @Test
     fun testIsInitializingWhenBranchHasActiveSessionButCannotPerformOperations() {
         // Mock branch with active session but cannot perform operations
-        mockBranch.setHasActiveSession(true)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(true)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         
         assertFalse(stateProvider.isInitialized())
         assertTrue(stateProvider.isInitializing())
@@ -46,8 +49,8 @@ class BranchSessionStateProviderTest {
     @Test
     fun testIsUninitializedWhenBranchHasNoActiveSession() {
         // Mock branch with no active session
-        mockBranch.setHasActiveSession(false)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(false)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         
         assertFalse(stateProvider.isInitialized())
         assertFalse(stateProvider.isInitializing())
@@ -57,8 +60,8 @@ class BranchSessionStateProviderTest {
     @Test
     fun testIsUninitializedWhenBranchHasNoActiveSessionButCanPerformOperations() {
         // Edge case: no active session but can perform operations
-        mockBranch.setHasActiveSession(false)
-        mockBranch.setCanPerformOperations(true)
+        `when`(mockBranch.hasActiveSession()).thenReturn(false)
+        `when`(mockBranch.canPerformOperations()).thenReturn(true)
         
         assertFalse(stateProvider.isInitialized())
         assertFalse(stateProvider.isInitializing())
@@ -70,23 +73,23 @@ class BranchSessionStateProviderTest {
         // Test that state provider always reflects current branch state
         
         // Initially uninitialized
-        mockBranch.setHasActiveSession(false)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(false)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         assertTrue(stateProvider.isUninitialized())
         
         // Transition to initializing
-        mockBranch.setHasActiveSession(true)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(true)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         assertTrue(stateProvider.isInitializing())
         
         // Transition to initialized
-        mockBranch.setHasActiveSession(true)
-        mockBranch.setCanPerformOperations(true)
+        `when`(mockBranch.hasActiveSession()).thenReturn(true)
+        `when`(mockBranch.canPerformOperations()).thenReturn(true)
         assertTrue(stateProvider.isInitialized())
         
         // Back to uninitialized
-        mockBranch.setHasActiveSession(false)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(false)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         assertTrue(stateProvider.isUninitialized())
     }
 
@@ -102,8 +105,8 @@ class BranchSessionStateProviderTest {
         )
         
         for ((hasActiveSession, canPerformOperations) in testCases) {
-            mockBranch.setHasActiveSession(hasActiveSession)
-            mockBranch.setCanPerformOperations(canPerformOperations)
+            `when`(mockBranch.hasActiveSession()).thenReturn(hasActiveSession)
+            `when`(mockBranch.canPerformOperations()).thenReturn(canPerformOperations)
             
             val states = listOf(
                 stateProvider.isInitialized(),
@@ -124,14 +127,14 @@ class BranchSessionStateProviderTest {
         val provider2 = mockBranch.asSessionStateProvider()
         
         // Both should reflect the same state
-        mockBranch.setHasActiveSession(true)
-        mockBranch.setCanPerformOperations(true)
+        `when`(mockBranch.hasActiveSession()).thenReturn(true)
+        `when`(mockBranch.canPerformOperations()).thenReturn(true)
         
         assertTrue(provider1.isInitialized())
         assertTrue(provider2.isInitialized())
         
-        mockBranch.setHasActiveSession(false)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(false)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         
         assertTrue(provider1.isUninitialized())
         assertTrue(provider2.isUninitialized())
@@ -153,25 +156,25 @@ class BranchSessionStateProviderTest {
         // Test the specific logic of each state method
         
         // Initialized: hasActiveSession() && canPerformOperations()
-        mockBranch.setHasActiveSession(true)
-        mockBranch.setCanPerformOperations(true)
+        `when`(mockBranch.hasActiveSession()).thenReturn(true)
+        `when`(mockBranch.canPerformOperations()).thenReturn(true)
         assertTrue("Should be initialized when has active session and can perform operations", 
                   stateProvider.isInitialized())
         
         // Initializing: hasActiveSession() && !canPerformOperations()
-        mockBranch.setHasActiveSession(true)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(true)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         assertTrue("Should be initializing when has active session but cannot perform operations", 
                   stateProvider.isInitializing())
         
         // Uninitialized: !hasActiveSession()
-        mockBranch.setHasActiveSession(false)
-        mockBranch.setCanPerformOperations(true) // This doesn't matter for uninitialized
+        `when`(mockBranch.hasActiveSession()).thenReturn(false)
+        `when`(mockBranch.canPerformOperations()).thenReturn(true) // This doesn't matter for uninitialized
         assertTrue("Should be uninitialized when no active session", 
                   stateProvider.isUninitialized())
         
-        mockBranch.setHasActiveSession(false)
-        mockBranch.setCanPerformOperations(false)
+        `when`(mockBranch.hasActiveSession()).thenReturn(false)
+        `when`(mockBranch.canPerformOperations()).thenReturn(false)
         assertTrue("Should be uninitialized when no active session", 
                   stateProvider.isUninitialized())
     }
@@ -186,8 +189,8 @@ class BranchSessionStateProviderTest {
         )
         
         for ((hasActiveSession, canPerformOperations, expectedState) in combinations) {
-            mockBranch.setHasActiveSession(hasActiveSession)
-            mockBranch.setCanPerformOperations(canPerformOperations)
+            `when`(mockBranch.hasActiveSession()).thenReturn(hasActiveSession)
+            `when`(mockBranch.canPerformOperations()).thenReturn(canPerformOperations)
             
             when (expectedState) {
                 "Uninitialized" -> {
@@ -209,30 +212,6 @@ class BranchSessionStateProviderTest {
                     assertFalse(stateProvider.isInitializing())
                 }
             }
-        }
-    }
-
-    /**
-     * Mock Branch class for testing the extension function
-     */
-    private class MockBranch : Branch() {
-        private var hasActiveSession = false
-        private var canPerformOperations = false
-        
-        fun setHasActiveSession(value: Boolean) {
-            hasActiveSession = value
-        }
-        
-        fun setCanPerformOperations(value: Boolean) {
-            canPerformOperations = value
-        }
-        
-        override fun hasActiveSession(): Boolean {
-            return hasActiveSession
-        }
-        
-        override fun canPerformOperations(): Boolean {
-            return canPerformOperations
         }
     }
 } 

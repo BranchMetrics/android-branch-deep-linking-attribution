@@ -7,6 +7,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.mockito.Mockito.*
+import org.mockito.MockitoAnnotations
 
 /**
  * Unit tests for BranchSessionManager facade class.
@@ -15,12 +17,13 @@ import org.junit.runners.JUnit4
 class BranchSessionManagerTest {
 
     private lateinit var sessionManager: BranchSessionManager
-    private lateinit var mockBranch: MockBranch
+    private lateinit var mockBranch: Branch
 
     @Before
     fun setUp() {
+        MockitoAnnotations.openMocks(this)
+        mockBranch = mock(Branch::class.java)
         sessionManager = BranchSessionManager()
-        mockBranch = MockBranch()
     }
 
     @Test
@@ -83,11 +86,9 @@ class BranchSessionManagerTest {
     @Test
     fun testUpdateFromBranchStateInitialized() {
         // Set up mock branch in initialized state
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISED)
-        
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
         // Update session manager from branch state
         sessionManager.updateFromBranchState(mockBranch)
-        
         // Should transition to initialized
         assertEquals(BranchSessionState.Initialized, sessionManager.getSessionState())
     }
@@ -95,11 +96,9 @@ class BranchSessionManagerTest {
     @Test
     fun testUpdateFromBranchStateInitializing() {
         // Set up mock branch in initializing state
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISING)
-        
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
         // Update session manager from branch state
         sessionManager.updateFromBranchState(mockBranch)
-        
         // Should transition to initializing
         assertEquals(BranchSessionState.Initializing, sessionManager.getSessionState())
     }
@@ -107,14 +106,12 @@ class BranchSessionManagerTest {
     @Test
     fun testUpdateFromBranchStateUninitialized() {
         // First set to initialized
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
         assertEquals(BranchSessionState.Initialized, sessionManager.getSessionState())
-        
         // Then set to uninitialized
-        mockBranch.setState(Branch.SESSION_STATE.UNINITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.UNINITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
-        
         // Should transition to uninitialized
         assertEquals(BranchSessionState.Uninitialized, sessionManager.getSessionState())
     }
@@ -122,10 +119,9 @@ class BranchSessionManagerTest {
     @Test
     fun testUpdateFromBranchStateNoChange() {
         // Set both to same state
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
         assertEquals(BranchSessionState.Initialized, sessionManager.getSessionState())
-        
         // Update again with same state - should not cause unnecessary transitions
         sessionManager.updateFromBranchState(mockBranch)
         assertEquals(BranchSessionState.Initialized, sessionManager.getSessionState())
@@ -144,7 +140,7 @@ class BranchSessionManagerTest {
 
     @Test
     fun testGetDebugInfoAfterStateChanges() {
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
         
         val debugInfo = sessionManager.getDebugInfo()
@@ -172,13 +168,13 @@ class BranchSessionManagerTest {
         stateHistory.clear() // Clear initial state notification
         
         // Transition through different states
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISING)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
         sessionManager.updateFromBranchState(mockBranch)
         
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
         
-        mockBranch.setState(Branch.SESSION_STATE.UNINITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.UNINITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
         
         // Give time for all notifications
@@ -243,17 +239,17 @@ class BranchSessionManagerTest {
         stateHistory.clear() // Clear initial notification
         
         // Simulate complete initialization flow
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISING)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
         sessionManager.updateFromBranchState(mockBranch)
         
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
         
         // Simulate re-initialization
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISING)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
         sessionManager.updateFromBranchState(mockBranch)
         
-        mockBranch.setState(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
         sessionManager.updateFromBranchState(mockBranch)
         
         Thread.sleep(100)
@@ -264,20 +260,5 @@ class BranchSessionManagerTest {
         // Check that we have proper previous state tracking
         val transitionsWithPrevious = stateHistory.filter { it.first != null }
         assertTrue("Should have transitions with previous state", transitionsWithPrevious.isNotEmpty())
-    }
-
-    /**
-     * Mock Branch class for testing
-     */
-    private class MockBranch : Branch() {
-        private var currentState = SESSION_STATE.UNINITIALISED
-        
-        fun setState(state: SESSION_STATE) {
-            currentState = state
-        }
-        
-        override fun getInitState(): SESSION_STATE {
-            return currentState
-        }
     }
 } 
