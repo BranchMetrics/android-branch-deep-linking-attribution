@@ -24,7 +24,7 @@ import io.branch.referral.BranchLogger;
  *
  * @see BranchUniversalObject#getShortUrl(Context, LinkProperties)
  * @see BranchUniversalObject#generateShortUrl(Context, LinkProperties, Branch.BranchLinkCreateListener)
- * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
+
  * </p>
  */
 public class LinkProperties implements Parcelable {

@@ -5,7 +5,7 @@ public class IntegrationValidatorConstants {
     public static final String xmark = "❌";
     public static final String appLinksMoreInfoDocsLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=%3C!%2D%2D%20Branch%20App%20Links%20%2D%20Live,%3C/intent%2Dfilter%3E\">More info</a>";
     public static final String alternateDomainsMoreInfoDocsLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=The%20%2Dalternate.app.link%20domain%20associated%20with%20your%20app\">More info</a>";
-    public static final String branchInstanceCreationMoreInfoDocsLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=Branch.getAutoInstance(this)\">More info</a>";
+    public static final String branchInstanceCreationMoreInfoDocsLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=Branch.getInstance()\">More info</a>";
     public static final String branchKeysMoreInfoDocsLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#:~:text=%3C!%2D%2D%20REPLACE%20%60BranchKey%60%20with,%22key_test_XXX%22%20/%3E\">More info</a>";
     public static final String customDomainMoreInfoDocsLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#section-configure-app\">More info</a>";
     public static final String defaultDomainsMoreInfoDocsLink = "<a href=\"https://help.branch.io/developers-hub/docs/android-basic-integration#4-configure-app:~:text=%3C!%2D%2D%20Branch%20App%20Links%20%2D%20Live,%3C/intent%2Dfilter%3E\">More info</a>";

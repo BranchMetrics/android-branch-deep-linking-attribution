@@ -61,8 +61,7 @@ public class TestData {
                             .setTitle(buoData.contentTitle)
                             .setContentDescription(buoData.contentDesc)
                             .setContentImageUrl(buoData.imageUrl)
-                            .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                            .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                            
                             .setContentMetadata(contentMetadata);
                 }
             }

@@ -274,7 +274,7 @@ public abstract class ServerRequest {
             DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
 
-        params_.put(Defines.Jsonkey.Debug.getKey(), Branch.isDeviceIDFetchDisabled());
+
     }
     
     /**
@@ -650,7 +650,7 @@ public abstract class ServerRequest {
     }
 
     private boolean prioritizeLinkAttribution(JSONObject params) {
-        if (Branch.isReferringLinkAttributionForPreinstalledAppsEnabled()
+        if (false
                 && params.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
             return true;
         }

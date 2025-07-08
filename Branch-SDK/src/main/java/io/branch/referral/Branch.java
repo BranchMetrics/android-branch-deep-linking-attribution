@@ -50,11 +50,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Defines.PreinstallKey;
-import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -207,11 +207,11 @@ public class Branch {
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
 
-    private static boolean disableDeviceIDFetch_;
 
-    static boolean bypassWaitingForIntent_ = false;
 
-    private static boolean bypassCurrentActivityIntentState_ = false;
+
+
+
 
     static boolean disableAutoSessionInitialization;
 
@@ -231,7 +231,7 @@ public class Branch {
 
     private final BranchQRCodeCache branchQRCodeCache_;
 
-    public final ServerRequestQueue requestQueue_;
+    public final BranchRequestQueueAdapter requestQueue_;
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
 
@@ -239,22 +239,18 @@ public class Branch {
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
     private CustomTabsIntent customTabsIntentOverride;
 
-    /* Enumeration for defining session initialisation state. */
-    enum SESSION_STATE {
-        INITIALISED, INITIALISING, UNINITIALISED
-    }
-    
-    
-    enum INTENT_STATE {
-        PENDING,
-        READY
-    }
+    // Replace SESSION_STATE enum with SessionState
+    // Legacy session state lock - kept for backward compatibility
+    private final Object sessionStateLock = new Object();
 
     /* Holds the current intent state. Default is set to PENDING. */
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
+    
+    // New StateFlow-based session state manager
+    private final BranchSessionStateManager sessionStateManager = new BranchSessionStateManager();
 
     /* */
     static boolean deferInitForPluginRuntime = false;
@@ -263,7 +259,7 @@ public class Branch {
     public boolean closeRequestNeeded = false;
 
     /* Instance  of share link manager to share links automatically with third party applications. */
-    private ShareLinkManager shareLinkManager_;
+
     
     /* The current activity instance for the application.*/
     WeakReference<Activity> currentActivityReference_;
@@ -283,7 +279,7 @@ public class Branch {
     /* Request code  used to launch and activity on auto deep linking unless DEF_AUTO_DEEP_LINK_REQ_CODE is not specified for teh activity in manifest.*/
     private static final int DEF_AUTO_DEEP_LINK_REQ_CODE = 1501;
 
-    private static final int LATCH_WAIT_UNTIL = 2500; //used for getLatestReferringParamsSync and getFirstReferringParamsSync, fail after this many milliseconds
+
     
     /* List of keys whose values are collected from the Intent Extra.*/
     private static final String[] EXTERNAL_INTENT_EXTRA_KEY_WHITE_LIST = new String[]{
@@ -293,10 +289,9 @@ public class Branch {
 
     public static String installDeveloperId = null;
 
-    CountDownLatch getFirstReferringParamsLatch = null;
-    CountDownLatch getLatestReferringParamsLatch = null;
 
-    private boolean isInstantDeepLinkPossible = false;
+
+
     private BranchActivityLifecycleObserver activityLifeCycleObserver;
     /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
     private static boolean enableInstantDeepLinking = false;
@@ -310,10 +305,30 @@ public class Branch {
     private Uri deferredUri;
     private InitSessionBuilder deferredSessionBuilder;
 
+    private int networkCount_ = 0;
+    private ServerResponse serverResponse_;
+
+    /**
+     * Enum to track the state of the intent processing
+     */
+    public enum INTENT_STATE {
+        PENDING,
+        READY
+    }
+
+    /**
+     * Enum to track the state of the session
+     */
+    public enum SESSION_STATE {
+        UNINITIALISED,
+        INITIALISING,
+        INITIALISED
+    }
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
-     * <p>Use {@link #getAutoInstance(Context)} method when instantiating.</p>
+     * <p>Use {@link #getInstance()} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
      */
@@ -325,19 +340,27 @@ public class Branch {
         deviceInfo_ = new DeviceInfo(context);
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
-        requestQueue_ = ServerRequestQueue.getInstance(context);
+        requestQueue_ = BranchRequestQueueAdapter.getInstance(context);
     }
 
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
-     * Make sure your app is instantiating {@link BranchApp} before calling this method
+     * Make sure your app is instantiating Branch before calling this method
      * or you have created an instance of Branch already by calling getInstance(Context ctx).</p>
      *
      * @return An initialised singleton {@link Branch} object
      */
     synchronized public static Branch getInstance() {
         if (branchReferral_ == null) {
-            BranchLogger.v("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
+            BranchLogger.v("Branch instance is not created yet. Make sure you call getInstance(Context).");
+        }
+        return branchReferral_;
+    }
+
+    synchronized public static Branch getInstance(@NonNull Context context) {
+        if (branchReferral_ == null) {
+            String branchKey = BranchUtil.readBranchKey(context);
+            return initBranchSDK(context, branchKey);
         }
         return branchReferral_;
     }
@@ -361,73 +384,6 @@ public class Branch {
             branchReferral_.setActivityLifeCycleObserver((Application) context);
         }
 
-        return branchReferral_;
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    synchronized public static Branch getAutoInstance(@NonNull Context context) {
-        if (branchReferral_ == null) {
-            if(BranchUtil.getEnableLoggingConfig(context)){
-                enableLogging();
-            }
-
-            // Should only be set in json config
-            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
-
-            BranchUtil.setAPIBaseUrlFromConfig(context);
-
-            BranchUtil.setFbAppIdFromConfig(context);
-
-            BranchUtil.setCPPLevelFromConfig(context);
-
-            BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
-            branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
-            getPreinstallSystemData(branchReferral_, context);
-        }
-        return branchReferral_;
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context   A {@link Context} from which this call was made.
-     * @param branchKey A {@link String} value used to initialize Branch.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    public static Branch getAutoInstance(@NonNull Context context, @NonNull String branchKey) {
-        if (branchReferral_ == null) {
-            if(BranchUtil.getEnableLoggingConfig(context)){
-                enableLogging();
-            }
-
-            // Should only be set in json config
-            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
-
-            BranchUtil.setAPIBaseUrlFromConfig(context);
-            BranchUtil.setFbAppIdFromConfig(context);
-            BranchUtil.setCPPLevelFromConfig(context);
-            BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
-            // If a Branch key is passed already use it. Else read the key
-            if (!isValidBranchKey(branchKey)) {
-                BranchLogger.w("Warning, Invalid branch key passed! Branch key will be read from manifest instead!");
-                branchKey = BranchUtil.readBranchKey(context);
-            }
-            branchReferral_ = initBranchSDK(context, branchKey);
-            getPreinstallSystemData(branchReferral_, context);
-        }
         return branchReferral_;
     }
 
@@ -492,26 +448,7 @@ public class Branch {
         PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
     }
 
-    /**
-     * Temporarily disables auto session initialization until user initializes themselves.
-     *
-     * Context: Branch expects session initialization to be started in LauncherActivity.onStart(),
-     * if session initialization has not been started/completed by the time ANY Activity resumes,
-     * Branch will auto-initialize. This allows Branch to keep an accurate count of all app sessions,
-     * including instances when app is launched from a recent apps list and the first visible Activity
-     * is not LauncherActivity.
-     *
-     * However, in certain scenarios users may need to delay session initialization (e.g. to asynchronously
-     * retrieve some data that needs to be passed to Branch prior to session initialization). In those
-     * cases, use expectDelayedSessionInitialization() to temporarily disable auto self initialization.
-     * Once the user initializes the session themselves, the flag will be reset and auto session initialization
-     * will be re-enabled.
-     *
-     * @param expectDelayedInit A {@link Boolean} to set the expectation flag.
-     */
-    public static void expectDelayedSessionInitialization(boolean expectDelayedInit) {
-        disableAutoSessionInitialization = expectDelayedInit;
-    }
+
 
     /**
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
@@ -581,27 +518,19 @@ public class Branch {
         return trackingController.isTrackingDisabled();
     }
 
-    /**
-     * <p>
-     * Disables or enables the instant deep link functionality.
-     * </p>
-     *
-     * @param disableIDL Value {@code true} disables the  instant deep linking. Value {@code false} enables the  instant deep linking.
-     */
-    public static void disableInstantDeepLinking(boolean disableIDL) {
-        enableInstantDeepLinking = !disableIDL;
-    }
+
 
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
-        ServerRequestQueue.shutDown();
+        BranchRequestQueueAdapter.shutDown();
+        BranchRequestQueue.shutDown();
         PrefHelper.shutDown();
         BranchUtil.shutDown();
 
         // DeepLinkRoutingValidator.shutDown();
         // GooglePlayStoreAttribution.shutDown();
-        // InstantAppUtil.shutDown();
+
         // IntegrationValidator.shutDown();
         // ShareLinkManager.shutDown();
         // UniversalResourceAnalyser.shutDown();
@@ -610,20 +539,82 @@ public class Branch {
 
         // Reset all of the statics.
         branchReferral_ = null;
-        bypassCurrentActivityIntentState_ = false;
+
         enableInstantDeepLinking = false;
         isActivityLifeCycleCallbackRegistered_ = false;
 
-        bypassWaitingForIntent_ = false;
+
     }
 
 
+
+
+    // ===== NEW STATEFLOW-BASED SESSION STATE API =====
+    
     /**
-     * <p>Manually sets the {@link Boolean} value, that indicates that the Branch API connection has
-     * been initialised, to false - forcing re-initialisation.</p>
+     * Add a listener to observe session state changes using the new StateFlow-based system.
+     * This provides deterministic state observation for SDK clients.
+     * 
+     * @param listener The listener to add
      */
-    public void resetUserSession() {
-        setInitState(SESSION_STATE.UNINITIALISED);
+    public void addSessionStateObserver(@NonNull BranchSessionStateListener listener) {
+        sessionStateManager.addListener(listener, true);
+    }
+    
+    /**
+     * Add a simple listener to observe session state changes.
+     * 
+     * @param listener The simple listener to add
+     */
+    public void addSessionStateObserver(@NonNull SimpleBranchSessionStateListener listener) {
+        sessionStateManager.addListener(listener, true);
+    }
+    
+    /**
+     * Remove a session state observer.
+     * 
+     * @param listener The listener to remove
+     */
+    public void removeSessionStateObserver(@NonNull BranchSessionStateListener listener) {
+        sessionStateManager.removeListener(listener);
+    }
+    
+    /**
+     * Get the current session state using the new StateFlow-based system.
+     * 
+     * @return The current session state
+     */
+    @NonNull
+    public BranchSessionState getCurrentSessionState() {
+        return sessionStateManager.getCurrentState();
+    }
+    
+    /**
+     * Check if the SDK can currently perform operations.
+     * 
+     * @return true if operations can be performed, false otherwise
+     */
+    public boolean canPerformOperations() {
+        return sessionStateManager.canPerformOperations();
+    }
+    
+    /**
+     * Check if there's an active session.
+     * 
+     * @return true if there's an active session, false otherwise
+     */
+    public boolean hasActiveSession() {
+        return sessionStateManager.hasActiveSession();
+    }
+    
+    /**
+     * Get the StateFlow for observing session state changes in Kotlin code.
+     * 
+     * @return StateFlow of BranchSessionState
+     */
+    @NonNull
+    public kotlinx.coroutines.flow.StateFlow<BranchSessionState> getSessionStateFlow() {
+        return sessionStateManager.getSessionState();
     }
     
     /**
@@ -696,58 +687,6 @@ public class Branch {
     }
 
     /**
-     * Sets the window for the referrer GCLID field. The GCLID will be persisted locally from the
-     * time it is set + window in milliseconds. Thereafter, it will be deleted.
-     *
-     * By default, the window is set to 30 days, or 2592000000L in millseconds
-     * Minimum of 0 milliseconds
-     * Maximum of 3 years
-     * @param window A {@link Long} value specifying the number of milliseconds to wait before
-     *               deleting the locally persisted GCLID value.
-     */
-    public void setReferrerGclidValidForWindow(long window){
-        if(prefHelper_ != null){
-            prefHelper_.setReferrerGclidValidForWindow(window);
-        }
-    }
-    
-    /**
-     * Method to control reading Android ID from device. Set this to true to disable reading the device id.
-     * This method should be called from your {@link Application#onCreate()} method before creating Branch auto instance by calling {@link Branch#getAutoInstance(Context)}
-     *
-     * @param deviceIdFetch {@link Boolean with value true to disable reading the Android id from device}
-     */
-    public static void disableDeviceIDFetch(Boolean deviceIdFetch) {
-        disableDeviceIDFetch_ = deviceIdFetch;
-    }
-    
-    /**
-     * Returns true if reading device id is disabled
-     *
-     * @return {@link Boolean} with value true to disable reading Android ID
-     */
-    public static boolean isDeviceIDFetchDisabled() {
-        return disableDeviceIDFetch_;
-    }
-    
-    /**
-     * Sets the key-value pairs for debugging the deep link. The key-value set in debug mode is given back with other deep link data on branch init session.
-     * This method should be called from onCreate() of activity which listens to Branch Init Session callbacks
-     *
-     * @param debugParams A {@link JSONObject} containing key-value pairs for debugging branch deep linking
-     */
-    public void setDeepLinkDebugMode(JSONObject debugParams) {
-        deeplinkDebugParams_ = debugParams;
-    }
-    
-    /**
-     * @deprecated Branch is not listing external apps any more from v2.11.0
-     */
-    public void disableAppList() {
-        // Do nothing
-    }
-
-    /**
      * Enables or disables app tracking with Branch or any other third parties that Branch use internally
      *
      * @param isLimitFacebookTracking {@code true} to limit app tracking
@@ -780,7 +719,7 @@ public class Branch {
      * <p>
      * This API allows to tag the install with custom attribute. Add any key-values that qualify or distinguish an install here.
      * Please make sure this method is called before the Branch init, which is on the onStartMethod of first activity.
-     * A better place to call this  method is right after Branch#getAutoInstance()
+     * A better place to call this  method is right after Branch#getInstance()
      * </p>
      */
     public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
@@ -808,28 +747,6 @@ public class Branch {
         return this;
     }
 
-    /**
-     * Enables referring url attribution for preinstalled apps.
-     *
-     * By default, Branch prioritizes preinstall attribution on preinstalled apps.
-     * Some clients prefer the referring link, when present, to be prioritized over preinstall attribution.
-     */
-    public static void setReferringLinkAttributionForPreinstalledAppsEnabled() {
-        referringLinkAttributionForPreinstalledAppsEnabled = true;
-    }
-
-    public static boolean isReferringLinkAttributionForPreinstalledAppsEnabled() {
-        return referringLinkAttributionForPreinstalledAppsEnabled;
-    }
-
-    public static void setIsUserAgentSync(boolean sync){
-        userAgentSync = sync;
-    }
-
-    public static boolean getIsUserAgentSync(){
-        return userAgentSync;
-    }
-
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
      * </p>
@@ -854,9 +771,8 @@ public class Branch {
      * closed application event to the Branch API.</p>
      */
     private void executeClose() {
-        if (initState_ != SESSION_STATE.UNINITIALISED) {
-            setInitState(SESSION_STATE.UNINITIALISED);
-        }
+        // Reset session state via StateFlow system
+        sessionStateManager.reset();
     }
 
     public static void registerPlugin(String name, String version) {
@@ -873,7 +789,7 @@ public class Branch {
     }
 
     private void readAndStripParam(Uri data, Activity activity) {
-        BranchLogger.v("Read params uri: " + data + " bypassCurrentActivityIntentState: " + bypassCurrentActivityIntentState_ + " intent state: " + intentState_);
+        BranchLogger.v("Read params uri: " + data + " intent state: " + intentState_);
         if (enableInstantDeepLinking) {
 
             // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
@@ -892,7 +808,7 @@ public class Branch {
             }
         }
 
-        if (bypassCurrentActivityIntentState_) {
+        if (false) {
             intentState_ = INTENT_STATE.READY;
         }
 
@@ -949,7 +865,7 @@ public class Branch {
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlWhiteListPattern A regular expression with a URI white listing pattern
      * @return {@link Branch} instance for successive method calls
@@ -966,7 +882,7 @@ public class Branch {
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlWhiteListPatternList {@link List} of regular expressions with URI white listing pattern
      * @return {@link Branch} instance for successive method calls
@@ -982,7 +898,7 @@ public class Branch {
      * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
      * This method allows applications specify SDK to skip any additional URL patterns to be skipped
      * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlSkipPattern {@link String} A URL pattern that Branch SDK should skip from collecting data
      * @return {@link Branch} instance for successive method calls
@@ -1030,36 +946,7 @@ public class Branch {
                 }
     }
 
-    /**
-     * Gets the available last attributed touch data. The attribution window is set to the value last
-     * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
-     * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
-     *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
-     *                 to callback with last attributed touch data
-     *
-     */
-    public void getLastAttributedTouchData(@NonNull BranchLastAttributedTouchDataListener callback) {
-        if (context_ != null) {
-            requestQueue_.handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback));
-        }
-    }
 
-    /**
-     * Gets the available last attributed touch data with a custom set attribution window.
-     *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
-     *                to callback with last attributed touch data
-     * @param attributionWindow An {@link int} to bound the the window of time in days during which
-     *                          the attribution data is considered valid. Note that, server side, the
-     *                          maximum value is 90.
-     *
-     */
-    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
-        if (context_ != null) {
-            requestQueue_.handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback, attributionWindow));
-        }
-    }
 
     /**
      * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
@@ -1078,25 +965,11 @@ public class Branch {
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      */
     public void logout() {
-        logout(null);
-    }
-
-    /**
-     * <p>This method should be called if you know that a different person is about to use the app. For example,
-     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
-     * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
-     *
-     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
-     */
-    public void logout(LogoutStatusListener callback) {
         prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
         prefHelper_.clearUserValues();
         //On Logout clear the link cache and all pending requests
         linkCache_.clear();
         requestQueue_.clear();
-        if (callback != null) {
-            callback.onLogoutFinished(true, null);
-        }
     }
 
     /**
@@ -1116,11 +989,7 @@ public class Branch {
         return firstReferringParams;
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void removeSessionInitializationDelay() {
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-        requestQueue_.processNextQueueItem("removeSessionInitializationDelay");
-    }
+
     
     /**
      * <p>This function must be called from a non-UI thread! If Branch has no install link data,
@@ -1134,20 +1003,7 @@ public class Branch {
      * @return A {@link JSONObject} containing the install-time parameters as configured
      * locally.
      */
-    public JSONObject getFirstReferringParamsSync() {
-        getFirstReferringParamsLatch = new CountDownLatch(1);
-        if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
-            try {
-                getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-            }
-        }
-        String storedParam = prefHelper_.getInstallParams();
-        JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
-        appendDebugParams(firstReferringParams);
-        getFirstReferringParamsLatch = null;
-        return firstReferringParams;
-    }
+
     
     /**
      * <p>Returns the parameters associated with the link that referred the session. If a user
@@ -1166,32 +1022,7 @@ public class Branch {
         return latestParams;
     }
     
-    /**
-     * <p>This function must be called from a non-UI thread! If Branch has not been initialized
-     * and this func is called, it will return data upon initialization, or until LATCH_WAIT_UNTIL.
-     * Returns the parameters associated with the link that referred the session. If a user
-     * clicks a link, and then opens the app, initSession will return the parameters of the link
-     * and then set them in as the latest parameters to be retrieved by this method. By default,
-     * sessions persist for the duration of time that the app is in focus. For example, if you
-     * minimize the app, these parameters will be cleared when closeSession is called.</p>
-     *
-     * @return A {@link JSONObject} containing the latest referring parameters as
-     * configured locally.
-     */
-    public JSONObject getLatestReferringParamsSync() {
-        getLatestReferringParamsLatch = new CountDownLatch(1);
-        try {
-            if (initState_ != SESSION_STATE.INITIALISED) {
-                getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
-            }
-        } catch (InterruptedException e) {
-        }
-        String storedParam = prefHelper_.getSessionParams();
-        JSONObject latestParams = convertParamsStringToDictionary(storedParam);
-        latestParams = appendDebugParams(latestParams);
-        getLatestReferringParamsLatch = null;
-        return latestParams;
-    }
+
 
     /**
      * Add a Partner Parameter for Facebook.
@@ -1234,7 +1065,7 @@ public class Branch {
         try {
             if (originalParams != null && deeplinkDebugParams_ != null) {
                 if (deeplinkDebugParams_.length() > 0) {
-                    BranchLogger.v("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
+        
                 }
                 Iterator<String> keys = deeplinkDebugParams_.keys();
                 while (keys.hasNext()) {
@@ -1248,12 +1079,7 @@ public class Branch {
         return originalParams;
     }
     
-    public JSONObject getDeeplinkDebugParams() {
-        if (deeplinkDebugParams_ != null && deeplinkDebugParams_.length() > 0) {
-            BranchLogger.v("You're currently in deep link debug mode. Please comment out 'setDeepLinkDebugMode' to receive the deep link parameters from a real Branch link");
-        }
-        return deeplinkDebugParams_;
-    }
+
     
     
     //-----------------Generate Short URL      -------------------------------------------//
@@ -1289,13 +1115,13 @@ public class Branch {
      * @param activity          The {@link Activity} to show native share sheet chooser dialog.
      * @param buo               A {@link BranchUniversalObject} value containing the deep link params.
      * @param linkProperties    An object of {@link LinkProperties} specifying the properties of this link
-     * @param callback          A {@link Branch.BranchNativeLinkShareListener } instance for getting sharing status.
+
      * @param title             A {@link String } for setting title in native chooser dialog.
      * @param subject           A {@link String } for setting subject in native chooser dialog.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
-    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchNativeLinkShareListener callback, String title, String subject){
-            NativeShareLinkManager.getInstance().shareLink(activity, buo, linkProperties, callback, title, subject);
+    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, String title, String subject){
+            NativeShareLinkManager.getInstance().shareLink(activity, buo, linkProperties, title, subject);
     }
 
     /**
@@ -1304,28 +1130,9 @@ public class Branch {
      *
      * @param builder A {@link BranchShareSheetBuilder} instance to build share link.
      */
-    void shareLink(BranchShareSheetBuilder builder) {
-        //Cancel any existing sharing in progress.
-        if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog(true);
-        }
-        shareLinkManager_ = new ShareLinkManager();
-        shareLinkManager_.shareLink(builder);
-    }
+
     
-    /**
-     * <p>Cancel current share link operation and Application selector dialog. If your app is not using auto session management, make sure you are
-     * calling this method before your activity finishes inorder to prevent any window leak. </p>
-     *
-     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
-     *                     A value of true will close the dialog with an animation. Setting this value
-     *                     to false will close the Dialog immediately.
-     */
-    public void cancelShareLinkDialog(boolean animateClose) {
-        if (shareLinkManager_ != null) {
-            shareLinkManager_.cancelShareLinkDialog(animateClose);
-        }
-    }
+
     
     // PRIVATE FUNCTIONS
     
@@ -1380,9 +1187,7 @@ public class Branch {
         return deviceInfo_;
     }
 
-    public BranchPluginSupport getBranchPluginSupport() {
-        return branchPluginSupport_;
-    }
+
 
     public BranchQRCodeCache getBranchQRCodeCache() {
         return branchQRCodeCache_;
@@ -1392,37 +1197,46 @@ public class Branch {
         return prefHelper_;
     }
 
-    ShareLinkManager getShareLinkManager() {
-        return shareLinkManager_;
-    }
+
 
     void setIntentState(INTENT_STATE intentState) {
         this.intentState_ = intentState;
     }
 
     void setInitState(SESSION_STATE initState) {
-        this.initState_ = initState;
+        synchronized (sessionStateLock) {
+            initState_ = initState;
+        }
+        
+        // Update the StateFlow-based session state manager
+        switch (initState) {
+            case UNINITIALISED:
+                sessionStateManager.reset();
+                break;
+            case INITIALISING:
+                sessionStateManager.initialize();
+                break;
+            case INITIALISED:
+                sessionStateManager.initializeComplete();
+                break;
+        }
     }
 
     SESSION_STATE getInitState() {
         return initState_;
     }
 
-    public void setInstantDeepLinkPossible(boolean instantDeepLinkPossible) {
-        isInstantDeepLinkPossible = instantDeepLinkPossible;
-    }
 
-    public boolean isInstantDeepLinkPossible() {
-        return isInstantDeepLinkPossible;
-    }
 
     private void initializeSession(ServerRequestInitSession initRequest, int delay) {
         BranchLogger.v("initializeSession " + initRequest + " delay " + delay);
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
-            setInitState(SESSION_STATE.UNINITIALISED);
+            // Report key error using new StateFlow system
+            BranchError keyError = new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID);
+            sessionStateManager.initializeFailed(keyError);
             //Report Key error on callback
             if (initRequest.callback_ != null) {
-                initRequest.callback_.onInitFinished(null, new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID));
+                initRequest.callback_.onInitFinished(null, keyError);
             }
             BranchLogger.w("Warning: Please enter your branch_key in your project's manifest");
             return;
@@ -1434,7 +1248,7 @@ public class Branch {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
             new Handler().postDelayed(new Runnable() {
                 @Override public void run() {
-                    removeSessionInitializationDelay();
+            
                 }
             }, delay);
         }
@@ -1450,9 +1264,9 @@ public class Branch {
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
 
-        SESSION_STATE sessionState = getInitState();
+        BranchSessionState sessionState = getCurrentSessionState();
         BranchLogger.v("Intent: " + intent + " forceBranchSession: " + forceBranchSession + " initState: " + sessionState);
-        if (sessionState == SESSION_STATE.UNINITIALISED || forceBranchSession) {
+        if (sessionState instanceof BranchSessionState.Uninitialized || forceBranchSession) {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
             }
@@ -1471,7 +1285,7 @@ public class Branch {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
          setInitState(SESSION_STATE.INITIALISING);
 
-         ServerRequestInitSession r = requestQueue_.getSelfInitRequest();
+         ServerRequestInitSession r = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
          BranchLogger.v("Ordering init calls");
          BranchLogger.v("Self init request: " + r);
          requestQueue_.printQueue();
@@ -1498,8 +1312,8 @@ public class Branch {
     private void initTasks(ServerRequest request) {
         BranchLogger.v("initTasks " + request);
         // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
-        // In this case need to wait till onResume to get the latest intent. Bypass this if bypassWaitingForIntent_ is true.
-        if (intentState_ != INTENT_STATE.READY && isWaitingForIntent()) {
+        // In this case need to wait till onResume to get the latest intent.
+        if (intentState_ != INTENT_STATE.READY && false) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
@@ -1559,9 +1373,7 @@ public class Branch {
     /**
      * Notify Branch when network is available in order to process the next request in the queue.
      */
-    public void notifyNetworkAvailable() {
-        requestQueue_.processNextQueueItem("notifyNetworkAvailable");
-    }
+
 
     private void setActivityLifeCycleObserver(Application application) {
         BranchLogger.v("setActivityLifeCycleObserver activityLifeCycleObserver: " + activityLifeCycleObserver
@@ -1639,16 +1451,14 @@ public class Branch {
     
     /**
      * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchReferralStateChangedListener}, defining a single method that takes a value of
+
      * {@link Boolean} format, and an error message of {@link BranchError} format that will be
      * returned on failure of the request response.</p>
      *
      * @see Boolean
      * @see BranchError
      */
-    public interface BranchReferralStateChangedListener {
-        void onStateChanged(boolean changed, @Nullable BranchError error);
-    }
+
     
     /**
      * <p>An Interface class that is implemented by all classes that make use of
@@ -1662,130 +1472,46 @@ public class Branch {
     public interface BranchLinkCreateListener {
         void onLinkCreate(String url, BranchError error);
     }
-    
-    /**
+
+        /**
      * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchLinkShareListener}, defining methods to listen for link sharing status.</p>
+
      */
-    public interface BranchLinkShareListener {
-        /**
-         * <p> Callback method to update when share link dialog is launched.</p>
-         */
-        void onShareLinkDialogLaunched();
-        
-        /**
-         * <p> Callback method to update when sharing dialog is dismissed.</p>
-         */
-        void onShareLinkDialogDismissed();
-        
-        /**
-         * <p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
-         *
-         * @param sharedLink    The link shared to the channel.
-         * @param sharedChannel Channel selected for sharing.
-         * @param error         A {@link BranchError} to update errors, if there is any.
-         */
-        void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
-        
-        /**
-         * <p>Called when user select a channel for sharing a deep link.
-         * Branch will create a deep link for the selected channel and share with it after calling this
-         * method. On sharing complete, status is updated by onLinkShareResponse() callback. Consider
-         * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
-         * and sharing complete.</p>
-         *
-         * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
-         */
-        void onChannelSelected(String channelName);
-    }
+
     
     /**
-     * <p>An extended version of {@link BranchLinkShareListener} with callback that supports updating link data or properties after user select a channel to share
-     * This will provide the extended callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} only when sharing a link using Branch Universal Object.</p>
+
      */
-    public interface ExtendedBranchLinkShareListener extends BranchLinkShareListener {
-        /**
-         * <p>
-         * Called when user select a channel for sharing a deep link.
-         * This method allows modifying the link data and properties by providing the params  {@link BranchUniversalObject} and {@link LinkProperties}
-         * </p>
-         *
-         * @param channelName    The name of the channel user selected for sharing a link
-         * @param buo            {@link BranchUniversalObject} BUO used for sharing link for updating any params
-         * @param linkProperties {@link LinkProperties} associated with the sharing link for updating the properties
-         * @return Return {@code true} to create link with any updates added to the data ({@link BranchUniversalObject}) or to the properties ({@link LinkProperties}).
-         * Return {@code false} otherwise.
-         */
-        boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties);
-    }
+
 
     /**
      * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchNativeLinkShareListener}, defining methods to listen for link sharing status.</p>
+
      */
-    public interface BranchNativeLinkShareListener {
 
-        /**
-         * <p> Callback method to report error/response.</p>
-         *
-         * @param sharedLink    The link shared to the channel.
-         * @param error         A {@link BranchError} to update errors, if there is any.
-         */
-        void onLinkShareResponse(String sharedLink, BranchError error);
-
-        /**
-         * <p>Called when user select a channel for sharing a deep link.
-         *
-         * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
-         */
-        void onChannelSelected(String channelName);
-    }
 
     /**
      * <p>An interface class for customizing sharing properties with selected channel.</p>
      */
-    public interface IChannelProperties {
-        /**
-         * @param channel The name of the channel selected for sharing.
-         * @return {@link String} with value for the message title for sharing the link with the selected channel
-         */
-        String getSharingTitleForChannel(String channel);
-        
-        /**
-         * @param channel The name of the channel selected for sharing.
-         * @return {@link String} with value for the message body for sharing the link with the selected channel
-         */
-        String getSharingMessageForChannel(String channel);
-    }
+
     
     /**
      * <p>An Interface class that is implemented by all classes that make use of
-     * {@link BranchListResponseListener}, defining a single method that takes a list of
+
      * {@link JSONArray} format, and an error message of {@link BranchError} format that will be
      * returned on failure of the request response.</p>
      *
      * @see JSONArray
      * @see BranchError
      */
-    public interface BranchListResponseListener {
-        void onReceivingResponse(JSONArray list, BranchError error);
-    }
+
     
     /**
      * <p>
      * Callback interface for listening logout status
      * </p>
      */
-    public interface LogoutStatusListener {
-        /**
-         * Called on finishing the the logout process
-         *
-         * @param loggedOut A {@link Boolean} which is set to true if logout succeeded
-         * @param error     An instance of {@link BranchError} to notify any error occurred during logout.
-         *                  A null value is set if logout succeeded.
-         */
-        void onLogoutFinished(boolean loggedOut, BranchError error);
-    }
+
 
     /**
      * Async Task to create  a short link for synchronous methods
@@ -1813,9 +1539,7 @@ public class Branch {
      * @param activity Instance of activity to check if launched on auto deep link.
      * @return A {Boolean} value whose value is true if this activity is launched by Branch auto deeplink feature.
      */
-    public static boolean isAutoDeepLinkLaunch(Activity activity) {
-        return (activity.getIntent().getStringExtra(Defines.IntentKeys.AutoDeepLinked.getKey()) != null);
-    }
+
     
     void checkForAutoDeepLinkConfiguration() {
         JSONObject latestParams = getLatestReferringParams();
@@ -1981,148 +1705,11 @@ public class Branch {
         BranchLogger.setLoggerCallback(null);
     }
 
-    /**
-     * @deprecated use Branch.bypassWaitingForIntent(true)
-     */
-    @Deprecated
-    public static void enableForcedSession() { bypassWaitingForIntent(true); }
+
+    
 
 
-    /**
-     * <p> Use this method cautiously, it is meant to enable the ability to start a session before
-     * the user opens the app.
-     *
-     * The use case explained:
-     * Users are expected to initialize session from Activity.onStart. However, by default, Branch actually
-     * waits until Activity.onResume to start session initialization, so as to ensure that the latest intent
-     * data is available (e.g. when activity is launched from stack via onNewIntent). Setting this flag to true
-     * will bypass waiting for intent, so session could technically be initialized from a background service
-     * or otherwise before the application is even opened.
-     *
-     * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
-     * in certain cases.</p>
-     *
-     * @param bypassIntent a {@link Boolean} indicating if SDK should wait for onResume in order to fire the
-     *                     session initialization request.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static void bypassWaitingForIntent(boolean bypassIntent) { bypassWaitingForIntent_ = bypassIntent; }
 
-    /**
-     * @deprecated use Branch.bypassWaitingForIntent(false)
-     */
-    @Deprecated
-    public static void disableForcedSession() { bypassWaitingForIntent(false); }
-
-    /**
-     * Returns true if session initialization should bypass waiting for intent (retrieved after onResume).
-     *
-     * @return {@link Boolean} with value true to enable forced session
-     *
-     * @deprecated use Branch.isWaitingForIntent()
-     */
-    @Deprecated
-    public static boolean isForceSessionEnabled() { return isWaitingForIntent(); }
-    @SuppressWarnings("WeakerAccess")
-    public static boolean isWaitingForIntent() { return !bypassWaitingForIntent_; }
-    
-    public static void enableBypassCurrentActivityIntentState() {
-        bypassCurrentActivityIntentState_ = true;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public static boolean bypassCurrentActivityIntentState() {
-        return bypassCurrentActivityIntentState_;
-    }
-    
-    //------------------------ Content Indexing methods----------------------//
-    
-    public void registerView(BranchUniversalObject branchUniversalObject,
-                             BranchUniversalObject.RegisterViewStatusListener callback) {
-        if (context_ != null) {
-            new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM)
-                    .addContentItems(branchUniversalObject)
-                    .logEvent(context_);
-        }
-    }
-
-    ///----------------- Instant App  support--------------------------//
-    
-    /**
-     * Checks if this is an Instant app instance
-     *
-     * @param context Current {@link Context}
-     * @return {@code true}  if current application is an instance of instant app
-     */
-    public static boolean isInstantApp(@NonNull Context context) {
-        return InstantAppUtil.isInstantApp(context);
-    }
-    
-    /**
-     * Method shows play store install prompt for the full app. Thi passes the referrer to the installed application. The same deep link params as the instant app are provided to the
-     * full app up on Branch#initSession()
-     *
-     * @param activity    Current activity
-     * @param requestCode Request code for the activity to receive the result
-     * @return {@code true} if install prompt is shown to user
-     */
-    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode) {
-        String installReferrerString = "";
-        if (Branch.getInstance() != null) {
-            JSONObject latestReferringParams = Branch.getInstance().getLatestReferringParams();
-            String referringLinkKey = "~" + Defines.Jsonkey.ReferringLink.getKey();
-            if (latestReferringParams != null && latestReferringParams.has(referringLinkKey)) {
-                String referringLink = "";
-                try {
-                    referringLink = latestReferringParams.getString(referringLinkKey);
-                    // Considering the case that url may contain query params with `=` and `&` with it and may cause issue when parsing play store referrer
-                    referringLink = URLEncoder.encode(referringLink, "UTF-8");
-                } catch (JSONException | UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-                if (!TextUtils.isEmpty(referringLink)) {
-                    installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + Defines.Jsonkey.ReferringLink.getKey() + "=" + referringLink;
-                }
-            }
-        }
-        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
-    }
-    
-    /**
-     * Method shows play store install prompt for the full app. Use this method only if you have custom parameters to pass to the full app using referrer else use
-     * {@link #showInstallPrompt(Activity, int)}
-     *
-     * @param activity    Current activity
-     * @param requestCode Request code for the activity to receive the result
-     * @param referrer    Any custom referrer string to pass to full app (must be of format "referrer_key1=referrer_value1%26referrer_key2=referrer_value2")
-     * @return {@code true} if install prompt is shown to user
-     */
-    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @Nullable String referrer) {
-        String installReferrerString = Defines.Jsonkey.IsFullAppConv.getKey() + "=true&" + referrer;
-        return InstantAppUtil.doShowInstallPrompt(activity, requestCode, installReferrerString);
-    }
-    
-    /**
-     * Method shows play store install prompt for the full app. Use this method only if you want the full app to receive a custom {@link BranchUniversalObject} to do deferred deep link.
-     * Please see {@link #showInstallPrompt(Activity, int)}
-     * NOTE :
-     * This method will do a synchronous generation of Branch short link for the BUO. So please consider calling this method on non UI thread
-     * Please make sure your instant app and full ap are using same Branch key in order for the deferred deep link working
-     *
-     * @param activity    Current activity
-     * @param requestCode Request code for the activity to receive the result
-     * @param buo         {@link BranchUniversalObject} to pass to the full app up on install
-     * @return {@code true} if install prompt is shown to user
-     */
-    public static boolean showInstallPrompt(@NonNull Activity activity, int requestCode, @NonNull BranchUniversalObject buo) {
-        String shortUrl = buo.getShortUrl(activity, new LinkProperties());
-        String installReferrerString = Defines.Jsonkey.ReferringLink.getKey() + "=" + shortUrl;
-        if (!TextUtils.isEmpty(installReferrerString)) {
-            return showInstallPrompt(activity, requestCode, installReferrerString);
-        } else {
-            return showInstallPrompt(activity, requestCode, "");
-        }
-    }
 
     private void extractSessionParamsForIDL(Uri data, Activity activity) {
         if (activity == null || activity.getIntent() == null) return;
@@ -2137,7 +1724,6 @@ public class Branch {
                     JSONObject nonLinkClickJson = new JSONObject();
                     nonLinkClickJson.put(Defines.Jsonkey.IsFirstSession.getKey(), false);
                     prefHelper_.setSessionParams(nonLinkClickJson.toString());
-                    isInstantDeepLinkPossible = true;
                 }
             } else if (!TextUtils.isEmpty(intent.getStringExtra(Defines.IntentKeys.BranchData.getKey()))) {
                 // If not cold start, check the intent data to see if there are deep link params
@@ -2147,7 +1733,6 @@ public class Branch {
                     JSONObject branchDataJson = new JSONObject(rawBranchData);
                     branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
                     prefHelper_.setSessionParams(branchDataJson.toString());
-                    isInstantDeepLinkPossible = true;
                 }
 
                 // Remove Branch data from the intent once used
@@ -2161,7 +1746,6 @@ public class Branch {
                 }
                 branchDataJson.put(Defines.Jsonkey.Clicked_Branch_Link.getKey(), true);
                 prefHelper_.setSessionParams(branchDataJson.toString());
-                isInstantDeepLinkPossible = true;
             }
         } catch (JSONException e) {
             BranchLogger.d(e.getMessage());
@@ -2385,34 +1969,9 @@ public class Branch {
             return this;
         }
 
-        /** @deprecated */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder isReferrable(boolean isReferrable) {
-            return this;
-        }
 
-        /**
-         * <p> Use this method cautiously, it is meant to enable the ability to start a session before
-         * the user even opens the app.
-         *
-         * The use case explained:
-         * Users are expected to initialize session from Activity.onStart. However, by default, Branch actually
-         * waits until Activity.onResume to start session initialization, so as to ensure that the latest intent
-         * data is available (e.g. when activity is launched from stack via onNewIntent). Setting this flag to true
-         * will bypass waiting for intent, so session could technically be initialized from a background service
-         * or otherwise before the application is even opened.
-         *
-         * Note however that if the flag is not reset during normal app boot up, the SDK behavior is undefined
-         * in certain cases. See also Branch.bypassWaitingForIntent(boolean). </p>
-         *
-         * @param ignore       a {@link Boolean} indicating if SDK should wait for onResume to retrieve
-         *                     the most up recent intent data before firing the session initialization request.
-         */
-        @SuppressWarnings("WeakerAccess")
-        public InitSessionBuilder ignoreIntent(boolean ignore) {
-            ignoreIntent = ignore;
-            return this;
-        }
+
+
 
         /**
          * <p>Initialises a session with the Branch API, registers the passed in Activity, callback
@@ -2434,12 +1993,12 @@ public class Branch {
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                BranchLogger.logAlways("Branch is not setup properly, make sure to call getAutoInstance" +
-                        " in your application class or declare BranchApp in your manifest.");
+                BranchLogger.logAlways("Branch is not setup properly, make sure to call getInstance" +
+                        " in your application class.");
                 return;
             }
             if (ignoreIntent != null) {
-                Branch.bypassWaitingForIntent(ignoreIntent);
+        
             }
 
             Activity activity = branch.getCurrentActivity();
@@ -2472,26 +2031,17 @@ public class Branch {
                 return;
             }
 
-            BranchLogger.v("isInstantDeepLinkPossible " + branch.isInstantDeepLinkPossible);
-            // readAndStripParams (above) may set isInstantDeepLinkPossible to true
-            if (branch.isInstantDeepLinkPossible) {
-                // reset state
-                branch.isInstantDeepLinkPossible = false;
-                // invoke callback returning LatestReferringParams, which were parsed out inside readAndStripParam
-                // from either intent extra "branch_data", or as parameters attached to the referring app link
-                if (callback != null) callback.onInitFinished(branch.getLatestReferringParams(), null);
-                // mark this session as IDL session
-                Branch.getInstance().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
-                // potentially routes the user to the Activity configured to consume this particular link
-                branch.checkForAutoDeepLinkConfiguration();
-                // we already invoked the callback for let's set it to null, we will still make the
-                // init session request but for analytics purposes only
-                callback = null;
-            }
+            // from either intent extra "branch_data", or as parameters attached to the referring app link
+            if (callback != null) callback.onInitFinished(branch.getLatestReferringParams(), null);
+            // mark this session as IDL session
+            Branch.getInstance().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+            // potentially routes the user to the Activity configured to consume this particular link
+            branch.checkForAutoDeepLinkConfiguration();
+            // we already invoked the callback for let's set it to null, we will still make the
+            // init session request but for analytics purposes only
+            callback = null;
 
-            if (delay > 0) {
-                expectDelayedSessionInitialization(true);
-            }
+
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
             BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
@@ -2573,9 +2123,6 @@ public class Branch {
         BranchLogger.v("deferInitForPluginRuntime " + isDeferred);
 
         deferInitForPluginRuntime = isDeferred;
-        if(isDeferred){
-            expectDelayedSessionInitialization(isDeferred);
-        }
     }
 
     /**
