@@ -643,14 +643,6 @@ public class ServerRequestQueue {
                     Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
 
                     Branch.getInstance().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
-                    // Count down the latch holding getLatestReferringParamsSync
-                    if (Branch.getInstance().getLatestReferringParamsLatch != null) {
-                        Branch.getInstance().getLatestReferringParamsLatch.countDown();
-                    }
-                    // Count down the latch holding getFirstReferringParamsSync
-                    if (Branch.getInstance().getFirstReferringParamsLatch != null) {
-                        Branch.getInstance().getFirstReferringParamsLatch.countDown();
-                    }
                 }
             }
 

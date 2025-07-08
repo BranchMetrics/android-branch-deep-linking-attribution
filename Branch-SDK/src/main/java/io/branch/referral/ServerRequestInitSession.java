@@ -210,7 +210,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
 
         // Re-enables auto session initialization, note that we don't care if the request succeeds
-        Branch.expectDelayedSessionInitialization(false);
+
     }
 
     /*

@@ -740,7 +740,7 @@ abstract class SystemObserver {
             }
 
             if (androidID == null) {
-                // Current behavior isDeviceIDFetchDisabled == true, simulate installs
+        
                 if(isDebug){
                     androidID =  UUID.randomUUID().toString();
                 }

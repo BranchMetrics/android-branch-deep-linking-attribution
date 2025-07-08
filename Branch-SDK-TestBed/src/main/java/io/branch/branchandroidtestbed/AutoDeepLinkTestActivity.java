@@ -20,7 +20,7 @@ public class AutoDeepLinkTestActivity extends Activity {
         setContentView(R.layout.auto_deep_link_test);
 
         TextView launch_mode_txt = findViewById(R.id.launch_mode_txt);
-        if (Branch.isAutoDeepLinkLaunch(this)) {
+        if (false) {
             launch_mode_txt.setText(R.string.launch_mode_branch);
             Branch.getInstance().getLatestReferringParams();
         } else {

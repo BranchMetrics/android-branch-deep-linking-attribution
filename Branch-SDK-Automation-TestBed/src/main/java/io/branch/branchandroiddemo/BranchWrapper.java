@@ -76,18 +76,7 @@ public class BranchWrapper {
 
             if (buo != null && lp != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                    Branch.getInstance().share(activity, buo, lp, new Branch.BranchNativeLinkShareListener() {
-                                @Override
-                                public void onLinkShareResponse(String sharedLink, BranchError error) {
-                                    Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
-                                }
-
-                                @Override
-                                public void onChannelSelected(String channelName) {
-                                    Log.d("Native Share Sheet:", "Channel Selected: " + channelName);
-                                }
-                            },
-                            "Sharing Branch Short URL", "Using Native Chooser Dialog");
+                    Branch.getInstance().share(activity, buo, lp, "Sharing Branch Short URL", "Using Native Chooser Dialog");
                 } else {
                     showLogWindow("Unsupported Version", false, ctx, Constants.UNKNOWN);
                 }
@@ -143,7 +132,7 @@ public class BranchWrapper {
             TestData testDataObj = new TestData();
             Boolean delayInit = testDataObj.getBoolParamValue(testDataStr, "DelayInitialization");
             if (    delayInit) {
-                Branch.expectDelayedSessionInitialization(true);
+                // Branch.expectDelayedSessionInitialization(true);
             }
         }
     }

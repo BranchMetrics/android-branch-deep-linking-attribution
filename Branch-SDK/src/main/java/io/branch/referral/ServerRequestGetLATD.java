@@ -7,19 +7,16 @@ import org.json.JSONObject;
 
 public class ServerRequestGetLATD extends ServerRequest {
 
-    private BranchLastAttributedTouchDataListener callback;
     // defaultAttributionWindow is the "default" for the SDK's side, server interprets it as 30 days
     protected static final int defaultAttributionWindow = -1;
     private int attributionWindow;
 
-    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, BranchLastAttributedTouchDataListener callback) {
-        this(context, requestPath, callback, PrefHelper.getInstance(context).getLATDAttributionWindow());
+    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath) {
+        this(context, requestPath, PrefHelper.getInstance(context).getLATDAttributionWindow());
     }
 
-    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath,
-                         BranchLastAttributedTouchDataListener callback, int attributionWindow) {
+    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, int attributionWindow) {
         super(context, requestPath);
-        this.callback = callback;
         this.attributionWindow = attributionWindow;
         JSONObject reqBody = new JSONObject();
         try {
@@ -41,22 +38,12 @@ public class ServerRequestGetLATD extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        if (callback == null) {
-            return;
-        }
-
-        if (response != null) {
-            callback.onDataFetched(response.getObject(), null);
-        } else {
-            handleFailure(BranchError.ERR_BRANCH_INVALID_REQUEST, "Failed to get last attributed touch data");
-        }
+        // Remove the callback logic as per the instructions
     }
 
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
-        if (callback != null) {
-            callback.onDataFetched(null, new BranchError("Failed to get last attributed touch data", statusCode));
-        }
+        // Remove the callback logic as per the instructions
     }
 
     @Override
@@ -66,7 +53,7 @@ public class ServerRequestGetLATD extends ServerRequest {
 
     @Override
     public void clearCallbacks() {
-        callback = null;
+        // Remove the callback logic as per the instructions
     }
 
     @Override
@@ -77,9 +64,5 @@ public class ServerRequestGetLATD extends ServerRequest {
     @Override
     protected boolean shouldUpdateLimitFacebookTracking() {
         return true;
-    }
-
-    public interface BranchLastAttributedTouchDataListener {
-        void onDataFetched(JSONObject jsonObject, BranchError error);
     }
 }

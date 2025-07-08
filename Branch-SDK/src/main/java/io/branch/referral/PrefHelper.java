@@ -809,16 +809,7 @@ public class PrefHelper {
         removePrefValue(KEY_GCLID_JSON_OBJECT);
     }
 
-    /**
-     * Sets the GCLID expiration window in milliseconds
-     * @param window
-     */
-    public void setReferrerGclidValidForWindow(long window){
-        if (MAX_VALID_WINDOW_FOR_REFERRER_GCLID > window
-                && window >= MIN_VALID_WINDOW_FOR_REFERRER_GCLID) {
-            setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
-        }
-    }
+
 
     /**
      * Gets the GCLID expiration window in milliseconds

@@ -113,17 +113,7 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         }
         BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier(canonicalIdentifier);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            Branch.getInstance().share(getActivity(context), buo, lp, new Branch.BranchNativeLinkShareListener() {
-                        @Override
-                        public void onLinkShareResponse(String sharedLink, BranchError error) {
-                        }
-
-                        @Override
-                        public void onChannelSelected(String channelName) {
-                        }
-                    },
-                    titleText.getText().toString(),
-                    infoText);
+            Branch.getInstance().share(getActivity(context), buo, lp, titleText.getText().toString(), infoText);
         }
     }
 

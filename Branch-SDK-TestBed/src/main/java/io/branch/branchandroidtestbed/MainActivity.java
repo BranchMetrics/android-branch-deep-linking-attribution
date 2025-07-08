@@ -80,8 +80,7 @@ public class MainActivity extends Activity {
         branchUniversalObject = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/12345")
                 .setCanonicalUrl("https://branch.io/deepviews")
-                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+
                 .setTitle("My Content Title")
                 .setContentDescription("my_product_description1")
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
@@ -150,18 +149,8 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
-                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
-                    @Override
-                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
-                        if (error != null) {
-                            Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
-                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                        } else {
-                            Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
-                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
+                Branch.getInstance().logout();
+                Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_LONG).show();
 
             }
         });
@@ -237,7 +226,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branchUniversalObject.registerView();
+    
                 // List on google search
             }
         });
@@ -333,54 +322,7 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
                         .setAsFullWidthStyle(true)
                         .setSharingTitle("Share With");
-                // Define custom style for the share sheet list view
-                //.setStyleResourceID(R.style.Share_Sheet_Style);
 
-                branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
-
-                            @Override
-                            public void onShareLinkDialogLaunched() {
-                            }
-
-                            @Override
-                            public void onShareLinkDialogDismissed() {
-                            }
-
-                            @Override
-                            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-                            }
-
-                            @Override
-                            public void onChannelSelected(String channelName) {
-                            }
-
-                            /*
-                             * Use {@link io.branch.referral.Branch.ExtendedBranchLinkShareListener} if the params need to be modified according to the channel selected by the user.
-                             * This allows modification of content or link properties through callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} }
-                             */
-//                            @Override
-//                            public boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties) {
-//                                linkProperties.setAlias("http://bnc.lt/alias_link");
-//                                buo.setTitle("Custom Title for selected channel : " + channelName);
-//                                return true;
-//                            }
-
-                        },
-                        new Branch.IChannelProperties() {
-                            @Override
-                            public String getSharingTitleForChannel(String channel) {
-                                return channel.contains("Messaging") ? "title for SMS" :
-                                        channel.contains("Slack") ? "title for slack" :
-                                                channel.contains("Gmail") ? "title for gmail" : null;
-                            }
-
-                            @Override
-                            public String getSharingMessageForChannel(String channel) {
-                                return channel.contains("Messaging") ? "message for SMS" :
-                                        channel.contains("Slack") ? "message for slack" :
-                                                channel.contains("Gmail") ? "message for gmail" : null;
-                            }
-                        });
 
             }
         });
@@ -400,19 +342,7 @@ public class MainActivity extends Activity {
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
-                Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
-                            @Override
-                            public void onLinkShareResponse(String sharedLink, BranchError error) {
-                                Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
-                            }
-
-                            @Override
-                            public void onChannelSelected(String channelName) {
-                                Log.d("Native Share Sheet:", "Channel Selected: " + channelName);
-                            }
-
-                        },
-                        "Sharing Branch Short URL", "Using Native Chooser Dialog");
+                Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, "Sharing Branch Short URL", "Using Native Chooser Dialog");
             }
         });
 
@@ -643,13 +573,8 @@ public class MainActivity extends Activity {
         findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
-                    @Override
-                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
-                        Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
-                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_LONG).show();
-                    }
-                });
+                Branch.getInstance().logout();
+                Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_LONG).show();
 
             }
         });
@@ -743,8 +668,7 @@ public class MainActivity extends Activity {
     // TODO Add to automation.
     //  Check that all events up to Event N-1 complete with user agent string.
     private void userAgentTests(boolean userAgentSync, int n) {
-        Branch.setIsUserAgentSync(userAgentSync);
-        Log.i("BranchSDK_Tester", "Beginning stress tests with IsUserAgentSync" + Branch.getIsUserAgentSync());
+        Log.i("BranchSDK_Tester", "Beginning stress tests");
 
         for (int i = 0; i < n; i++) {
             BranchEvent event = new BranchEvent("Event " + i);

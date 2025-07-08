@@ -33,8 +33,7 @@ import java.util.List;
 class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
     AnimatedDialog shareDlg_;
-    Branch.BranchLinkShareListener callback_;
-    Branch.IChannelProperties channelPropertiesCallback_;
+
     
     /* List of apps available for sharing. */
     private List<ResolveInfo> displayedAppList_;
@@ -92,24 +91,7 @@ class ShareLinkManager {
         return shareDlg_;
     }
     
-    /**
-     * Dismiss the share dialog if showing. Should be called on activity stopping.
-     *
-     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
-     *                     A value of true will close the dialog with an animation. Setting this value
-     *                     to false will close the Dialog immediately.
-     */
-    void cancelShareLinkDialog(boolean animateClose) {
-        if (shareDlg_ != null && shareDlg_.isShowing()) {
-            if (animateClose) {
-                // Cancel the dialog with animation
-                shareDlg_.cancel();
-            } else {
-                // Dismiss the dialog immediately
-                shareDlg_.dismiss();
-            }
-        }
-    }
+
 
     /**
      * Create a custom chooser dialog with available share options.
@@ -349,7 +331,7 @@ class ShareLinkManager {
                                 || error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
                             shareWithClient(selectedResolveInfo, url, channelName);
                         } else {
-                            cancelShareLinkDialog(false);
+                    
                             isShareInProgress_ = false;
                         }
                     }

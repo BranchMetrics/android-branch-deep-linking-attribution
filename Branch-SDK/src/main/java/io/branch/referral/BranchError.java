@@ -110,7 +110,7 @@ public class BranchError {
             errMsg = " Unable to create a URL with that alias. If you want to reuse the alias, make sure to submit the same properties for all arguments and that the user is the same owner.";
         } else if (statusCode == ERR_API_LVL_14_NEEDED) {
             errorCode_ = ERR_API_LVL_14_NEEDED;
-            errMsg = "BranchApp class can be used only" +
+            errMsg = "Branch class can be used only" +
                     " with API level 14 or above. Please make sure your minimum API level supported is 14." +
                     " If you wish to use API level below 14 consider calling getInstance(Context) instead.";
         } else if (statusCode == ERR_BRANCH_NOT_INSTANTIATED) {
