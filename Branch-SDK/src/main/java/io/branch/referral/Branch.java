@@ -55,7 +55,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Defines.PreinstallKey;
-import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
@@ -358,6 +357,14 @@ public class Branch {
         return branchReferral_;
     }
 
+    synchronized public static Branch getInstance(@NonNull Context context) {
+        if (branchReferral_ == null) {
+            String branchKey = BranchUtil.readBranchKey(context);
+            return initBranchSDK(context, branchKey);
+        }
+        return branchReferral_;
+    }
+
     synchronized private static Branch initBranchSDK(@NonNull Context context, String branchKey) {
         if (branchReferral_ != null) {
             BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
@@ -379,10 +386,6 @@ public class Branch {
 
         return branchReferral_;
     }
-
-
-
-
 
     public Context getApplicationContext() {
         return context_;
@@ -683,12 +686,6 @@ public class Branch {
         }
     }
 
-
-    
-
-    
-
-
     /**
      * Enables or disables app tracking with Branch or any other third parties that Branch use internally
      *
@@ -749,8 +746,6 @@ public class Branch {
         addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
         return this;
     }
-
-
 
     /*
      * <p>Closes the current session. Should be called by on getting the last actvity onStop() event.
@@ -951,36 +946,7 @@ public class Branch {
                 }
     }
 
-    /**
-     * Gets the available last attributed touch data. The attribution window is set to the value last
-     * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
-     * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
-     *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
-     *                 to callback with last attributed touch data
-     *
-     */
-    public void getLastAttributedTouchData(@NonNull BranchLastAttributedTouchDataListener callback) {
-        if (context_ != null) {
-            requestQueue_.handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback));
-        }
-    }
 
-    /**
-     * Gets the available last attributed touch data with a custom set attribution window.
-     *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
-     *                to callback with last attributed touch data
-     * @param attributionWindow An {@link int} to bound the the window of time in days during which
-     *                          the attribution data is considered valid. Note that, server side, the
-     *                          maximum value is 90.
-     *
-     */
-    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
-        if (context_ != null) {
-            requestQueue_.handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback, attributionWindow));
-        }
-    }
 
     /**
      * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
@@ -1506,8 +1472,8 @@ public class Branch {
     public interface BranchLinkCreateListener {
         void onLinkCreate(String url, BranchError error);
     }
-    
-    /**
+
+        /**
      * <p>An Interface class that is implemented by all classes that make use of
 
      */
