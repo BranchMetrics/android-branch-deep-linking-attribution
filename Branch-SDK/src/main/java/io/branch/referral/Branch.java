@@ -329,7 +329,7 @@ public class Branch {
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
-     * <p>Use {@link #getAutoInstance(Context)} method when instantiating.</p>
+     * <p>Use {@link #getInstance()} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
      */
@@ -353,7 +353,7 @@ public class Branch {
      */
     synchronized public static Branch getInstance() {
         if (branchReferral_ == null) {
-            BranchLogger.v("Branch instance is not created yet. Make sure you call getAutoInstance(Context).");
+            BranchLogger.v("Branch instance is not created yet. Make sure you call getInstance(Context).");
         }
         return branchReferral_;
     }
@@ -380,49 +380,8 @@ public class Branch {
         return branchReferral_;
     }
 
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    synchronized public static Branch getAutoInstance(@NonNull Context context) {
-        if (branchReferral_ == null) {
-            if(BranchUtil.getEnableLoggingConfig(context)){
-                enableLogging();
-            }
 
-            // Should only be set in json config
-            deferInitForPluginRuntime(BranchUtil.getDeferInitForPluginRuntimeConfig(context));
 
-            BranchUtil.setAPIBaseUrlFromConfig(context);
-
-            BranchUtil.setFbAppIdFromConfig(context);
-
-            BranchUtil.setCPPLevelFromConfig(context);
-
-            BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
-            branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
-            getPreinstallSystemData(branchReferral_, context);
-        }
-        return branchReferral_;
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context   A {@link Context} from which this call was made.
-     * @param branchKey A {@link String} value used to initialize Branch.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
 
 
     public Context getApplicationContext() {
@@ -763,7 +722,7 @@ public class Branch {
      * <p>
      * This API allows to tag the install with custom attribute. Add any key-values that qualify or distinguish an install here.
      * Please make sure this method is called before the Branch init, which is on the onStartMethod of first activity.
-     * A better place to call this  method is right after Branch#getAutoInstance()
+     * A better place to call this  method is right after Branch#getInstance()
      * </p>
      */
     public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
@@ -911,7 +870,7 @@ public class Branch {
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlWhiteListPattern A regular expression with a URI white listing pattern
      * @return {@link Branch} instance for successive method calls
@@ -928,7 +887,7 @@ public class Branch {
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlWhiteListPatternList {@link List} of regular expressions with URI white listing pattern
      * @return {@link Branch} instance for successive method calls
@@ -944,7 +903,7 @@ public class Branch {
      * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
      * This method allows applications specify SDK to skip any additional URL patterns to be skipped
      * <p>
-     * This method should be called immediately after calling {@link Branch#getAutoInstance(Context)}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlSkipPattern {@link String} A URL pattern that Branch SDK should skip from collecting data
      * @return {@link Branch} instance for successive method calls
@@ -1040,25 +999,11 @@ public class Branch {
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      */
     public void logout() {
-        logout(null);
-    }
-
-    /**
-     * <p>This method should be called if you know that a different person is about to use the app. For example,
-     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
-     * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
-     *
-     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
-     */
-    public void logout(LogoutStatusListener callback) {
         prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
         prefHelper_.clearUserValues();
         //On Logout clear the link cache and all pending requests
         linkCache_.clear();
         requestQueue_.clear();
-        if (callback != null) {
-            callback.onLogoutFinished(true, null);
-        }
     }
 
     /**
@@ -2082,7 +2027,7 @@ public class Branch {
 
             final Branch branch = Branch.getInstance();
             if (branch == null) {
-                BranchLogger.logAlways("Branch is not setup properly, make sure to call getAutoInstance" +
+                BranchLogger.logAlways("Branch is not setup properly, make sure to call getInstance" +
                         " in your application class.");
                 return;
             }
