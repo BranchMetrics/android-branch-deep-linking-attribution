@@ -26,11 +26,11 @@ public final class CustomBranchApp extends Application {
 //            saveLogToFile(message);
 //        };
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
-        Branch.getInstance();
+        Branch branch = Branch.getInstance(this);
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
-        Branch.getInstance().setCustomTabsIntent(customTabsIntent);
+        branch.setCustomTabsIntent(customTabsIntent);
     }
 
     private void saveLogToFile(String logMessage) {
