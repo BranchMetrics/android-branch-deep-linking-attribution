@@ -94,16 +94,7 @@ class BranchApiPreservationManager private constructor(
                 removalVersion = "7.0.0" // Extended support due to critical usage
             )
             
-            registerApi(
-                methodName = "getAutoInstance",
-                signature = "Branch.getAutoInstance(Context)",
-                usageImpact = UsageImpact.CRITICAL,
-                complexity = MigrationComplexity.SIMPLE,
-                removalTimeline = "Q2 2025",
-                modernReplacement = "ModernBranchCore.initialize(Context)",
-                deprecationVersion = "5.0.0", // Standard deprecation
-                removalVersion = "7.0.0" // Extended support due to critical usage
-            )
+
             
             // Session Management APIs - Critical but complex migration
             registerApi(
@@ -117,16 +108,7 @@ class BranchApiPreservationManager private constructor(
                 removalVersion = "6.5.0" // Extended due to complexity
             )
             
-            registerApi(
-                methodName = "resetUserSession",
-                signature = "Branch.resetUserSession()",
-                usageImpact = UsageImpact.HIGH,
-                complexity = MigrationComplexity.SIMPLE,
-                removalTimeline = "Q3 2025",
-                modernReplacement = "sessionManager.resetSession()",
-                deprecationVersion = "5.0.0", // Standard deprecation
-                removalVersion = "6.0.0" // Standard removal
-            )
+
             
             // User Identity APIs - High impact, standard timeline
             registerApi(
@@ -199,18 +181,7 @@ class BranchApiPreservationManager private constructor(
                 removalVersion = "6.0.0" // Standard removal
             )
             
-            // Synchronous APIs - High priority for removal due to blocking nature
-            registerApi(
-                methodName = "getFirstReferringParamsSync",
-                signature = "Branch.getFirstReferringParamsSync()",
-                usageImpact = UsageImpact.MEDIUM,
-                complexity = MigrationComplexity.COMPLEX,
-                removalTimeline = "Q1 2025", // Earlier removal due to blocking nature
-                modernReplacement = "dataManager.getFirstReferringParamsAsync()",
-                breakingChanges = listOf("Converted from synchronous to asynchronous operation"),
-                deprecationVersion = "4.0.0", // Very early deprecation
-                removalVersion = "5.0.0" // Early removal due to performance impact
-            )
+
         }
     }
     
@@ -312,17 +283,7 @@ class BranchApiPreservationManager private constructor(
                 BranchLogger.d("Delegating getInstance() to modern implementation")
                 modernBranchCore // Return the modern core instance
             }
-            "getAutoInstance" -> {
-                val context = parameters[0] as Context
-                BranchLogger.d("Delegating getAutoInstance() to modern implementation")
-                // Handle asynchronous initialization
-                runBlocking {
-                    modernBranchCore?.let { core ->
-                        // core.initialize(context) // Will be implemented when ModernBranchCore is available
-                    }
-                }
-                modernBranchCore
-            }
+
             "setIdentity" -> {
                 val userId = parameters[0] as String
                 BranchLogger.d("Delegating setIdentity() to modern implementation")
@@ -334,16 +295,7 @@ class BranchApiPreservationManager private constructor(
                 }
                 null
             }
-            "resetUserSession" -> {
-                BranchLogger.d("Delegating resetUserSession() to modern implementation")
-                // Handle asynchronous operation
-                coroutineScope.launch {
-                    modernBranchCore?.let { core ->
-                        // core.sessionManager.resetSession() // Will be implemented when available
-                    }
-                }
-                null
-            }
+
             "enableTestMode" -> {
                 BranchLogger.d("Delegating enableTestMode() to modern implementation")
                 modernBranchCore?.let { core ->

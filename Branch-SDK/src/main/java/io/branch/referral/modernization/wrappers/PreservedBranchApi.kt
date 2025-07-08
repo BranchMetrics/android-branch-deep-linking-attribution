@@ -75,25 +75,7 @@ object PreservedBranchApi {
         return Branch.getInstance()
     }
     
-    /**
-     * Legacy Branch.getAutoInstance(Context) wrapper.
-     */
-    @JvmStatic
-    @Deprecated(
-        message = "Use ModernBranchCore.initialize(Context) instead",
-        replaceWith = ReplaceWith("ModernBranchCore.initialize(context)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun getAutoInstance(context: Context): Branch {
-        initializePreservationManager(context)
-        
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "getAutoInstance",
-            parameters = arrayOf(context)
-        )
-        
-        return Branch.getInstance(context)
-    }
+
     
     /**
      * Legacy Branch.enableTestMode() wrapper.
@@ -143,61 +125,11 @@ object PreservedBranchApi {
         )
     }
     
-    /**
-     * Legacy Branch.getLatestReferringParamsSync() wrapper.
-     * Note: This method is marked for early removal due to its blocking nature.
-     */
-    @JvmStatic
-    @Deprecated(
-        message = "Synchronous methods are deprecated. Use dataManager.getLatestReferringParamsAsync() instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().dataManager.getLatestReferringParamsAsync()"),
-        level = DeprecationLevel.ERROR
-    )
-    fun getLatestReferringParamsSync(): JSONObject? {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "getLatestReferringParamsSync",
-            parameters = emptyArray()
-        )
-        
-        return result as? JSONObject
-    }
+
     
-    /**
-     * Legacy Branch.getFirstReferringParamsSync() wrapper.
-     * Note: This method is marked for early removal due to its blocking nature.
-     */
-    @JvmStatic
-    @Deprecated(
-        message = "Synchronous methods are deprecated. Use dataManager.getFirstReferringParamsAsync() instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().dataManager.getFirstReferringParamsAsync()"),
-        level = DeprecationLevel.ERROR
-    )
-    fun getFirstReferringParamsSync(): JSONObject? {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "getFirstReferringParamsSync",
-            parameters = emptyArray()
-        )
-        
-        return result as? JSONObject
-    }
+
     
-    /**
-     * Legacy Branch.isAutoDeepLinkLaunch(Activity) wrapper.
-     */
-    @JvmStatic
-    @Deprecated(
-        message = "Use sessionManager to check session state instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().sessionManager.isSessionActive()"),
-        level = DeprecationLevel.WARNING
-    )
-    fun isAutoDeepLinkLaunch(activity: Activity): Boolean {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "isAutoDeepLinkLaunch",
-            parameters = arrayOf(activity)
-        )
-        
-        return result as? Boolean ?: false
-    }
+
     
     /**
      * Legacy Branch.setBranchKey(String) wrapper.

@@ -164,39 +164,9 @@ class LegacyBranchWrapper private constructor() {
         )
     }
     
-    /**
-     * Legacy logout wrapper with callback.
-     */
-    @Deprecated(
-        message = "Use identityManager.logout() instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().identityManager.logout()"),
-        level = DeprecationLevel.WARNING
-    )
-    fun logout(callback: Branch.BranchReferralStateChangedListener?) {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "logout",
-            parameters = arrayOf(callback)
-        )
-        
-        if (callback != null) {
-            callbackRegistry.adaptLogoutCallback(callback, result, null)
-        }
-    }
+
     
-    /**
-     * Legacy resetUserSession wrapper.
-     */
-    @Deprecated(
-        message = "Use sessionManager.resetSession() instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().sessionManager.resetSession()"),
-        level = DeprecationLevel.WARNING
-    )
-    fun resetUserSession() {
-        preservationManager.handleLegacyApiCall(
-            methodName = "resetUserSession",
-            parameters = emptyArray()
-        )
-    }
+
     
     /**
      * Legacy getFirstReferringParams wrapper.
@@ -280,47 +250,9 @@ class LegacyBranchWrapper private constructor() {
         )
     }
     
-    /**
-     * Legacy sendCommerceEvent wrapper.
-     */
-    @Deprecated(
-        message = "Use eventManager.logEvent() with commerce data instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().eventManager.logEvent(eventData)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun sendCommerceEvent(
-        revenue: Double,
-        currency: String,
-        metadata: JSONObject?,
-        callback: Branch.BranchReferralStateChangedListener?
-    ) {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "sendCommerceEvent",
-            parameters = arrayOf(revenue, currency, metadata, callback)
-        )
-        
-        if (callback != null) {
-            callbackRegistry.adaptCommerceCallback(callback, result, null)
-        }
-    }
+
     
-    /**
-     * Legacy loadRewards wrapper.
-     */
-    @Deprecated(
-        message = "Use rewardsManager.loadRewards() instead (if rewards system is still needed)",
-        level = DeprecationLevel.WARNING
-    )
-    fun loadRewards(callback: Branch.BranchReferralStateChangedListener?) {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "loadRewards",
-            parameters = arrayOf(callback)
-        )
-        
-        if (callback != null) {
-            callbackRegistry.adaptRewardsCallback(callback, result, null)
-        }
-    }
+
     
     /**
      * Legacy getCredits wrapper.
@@ -337,44 +269,9 @@ class LegacyBranchWrapper private constructor() {
         return result as? Int ?: 0
     }
     
-    /**
-     * Legacy redeemRewards wrapper.
-     */
-    @Deprecated(
-        message = "Use rewardsManager.redeemRewards() instead (if rewards system is still needed)",
-        level = DeprecationLevel.WARNING
-    )
-    fun redeemRewards(
-        count: Int,
-        callback: Branch.BranchReferralStateChangedListener?
-    ) {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "redeemRewards",
-            parameters = arrayOf(count, callback)
-        )
-        
-        if (callback != null) {
-            callbackRegistry.adaptRewardsCallback(callback, result, null)
-        }
-    }
+
     
-    /**
-     * Legacy getCreditHistory wrapper.
-     */
-    @Deprecated(
-        message = "Use rewardsManager.getCreditHistory() instead (if rewards system is still needed)",
-        level = DeprecationLevel.WARNING
-    )
-    fun getCreditHistory(callback: Branch.BranchListResponseListener?) {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "getCreditHistory",
-            parameters = arrayOf(callback)
-        )
-        
-        if (callback != null) {
-            callbackRegistry.adaptHistoryCallback(callback, result, null)
-        }
-    }
+
     
     /**
      * Legacy enableTestMode wrapper.

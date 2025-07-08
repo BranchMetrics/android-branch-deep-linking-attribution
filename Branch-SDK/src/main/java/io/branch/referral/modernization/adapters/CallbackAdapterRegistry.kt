@@ -95,27 +95,7 @@ class CallbackAdapterRegistry private constructor() {
         }
     }
     
-    /**
-     * Adapt logout callbacks.
-     */
-    fun adaptLogoutCallback(
-        callback: Branch.BranchReferralStateChangedListener,
-        result: Any?,
-        error: Throwable?
-    ) {
-        scope.launch {
-            try {
-                if (error != null) {
-                    callback.onStateChanged(false, convertToBranchError(error))
-                } else {
-                    callback.onStateChanged(true, null)
-                }
-            } catch (e: Exception) {
-                BranchLogger.e("Error in logout callback adaptation: ${e.message}")
-                                 callback.onStateChanged(false, BranchError("Logout callback error", -1003))
-            }
-        }
-    }
+
     
     /**
      * Adapt link creation callbacks.
@@ -140,119 +120,15 @@ class CallbackAdapterRegistry private constructor() {
         }
     }
     
-    /**
-     * Adapt share callbacks.
-     */
-    fun adaptShareCallback(
-        callback: Branch.BranchLinkShareListener,
-        result: Any?,
-        error: Throwable?
-    ) {
-        scope.launch {
-            try {
-                if (error != null) {
-                    callback.onShareLinkDialogDismissed()
-                } else {
-                    callback.onShareLinkDialogLaunched()
-                    // Simulate successful sharing after a delay
-                    delay(100)
-                    callback.onShareLinkDialogDismissed()
-                }
-            } catch (e: Exception) {
-                BranchLogger.e("Error in share callback adaptation: ${e.message}")
-                callback.onShareLinkDialogDismissed()
-            }
-        }
-    }
+
     
-    /**
-     * Adapt rewards-related callbacks.
-     */
-    fun adaptRewardsCallback(
-        callback: Branch.BranchReferralStateChangedListener,
-        result: Any?,
-        error: Throwable?
-    ) {
-        scope.launch {
-            try {
-                if (error != null) {
-                    callback.onStateChanged(false, convertToBranchError(error))
-                } else {
-                    callback.onStateChanged(true, null)
-                }
-            } catch (e: Exception) {
-                BranchLogger.e("Error in rewards callback adaptation: ${e.message}")
-                                 callback.onStateChanged(false, BranchError("Rewards callback error", -1005))
-            }
-        }
-    }
+
     
-    /**
-     * Adapt commerce event callbacks.
-     */
-    fun adaptCommerceCallback(
-        callback: Branch.BranchReferralStateChangedListener,
-        result: Any?,
-        error: Throwable?
-    ) {
-        scope.launch {
-            try {
-                if (error != null) {
-                    callback.onStateChanged(false, convertToBranchError(error))
-                } else {
-                    callback.onStateChanged(true, null)
-                }
-            } catch (e: Exception) {
-                BranchLogger.e("Error in commerce callback adaptation: ${e.message}")
-                                 callback.onStateChanged(false, BranchError("Commerce callback error", -1006))
-            }
-        }
-    }
+
     
-    /**
-     * Adapt credit history callbacks.
-     */
-    fun adaptHistoryCallback(
-        callback: Branch.BranchListResponseListener,
-        result: Any?,
-        error: Throwable?
-    ) {
-        scope.launch {
-            try {
-                if (error != null) {
-                    callback.onReceivingResponse(null, convertToBranchError(error))
-                } else {
-                    val historyArray = result as? JSONArray ?: JSONArray()
-                    callback.onReceivingResponse(historyArray, null)
-                }
-            } catch (e: Exception) {
-                BranchLogger.e("Error in history callback adaptation: ${e.message}")
-                                 callback.onReceivingResponse(null, BranchError("History callback error", -1007))
-            }
-        }
-    }
+
     
-    /**
-     * Adapt generic state change callbacks.
-     */
-    fun adaptStateChangedCallback(
-        callback: Branch.BranchReferralStateChangedListener,
-        result: Any?,
-        error: Throwable?
-    ) {
-        scope.launch {
-            try {
-                if (error != null) {
-                    callback.onStateChanged(false, convertToBranchError(error))
-                } else {
-                    callback.onStateChanged(true, null)
-                }
-            } catch (e: Exception) {
-                BranchLogger.e("Error in state change callback adaptation: ${e.message}")
-                callback.onStateChanged(false, BranchError("State change error", -1000))
-            }
-        }
-    }
+
     
     /**
      * Convert modern exceptions to legacy BranchError format.
