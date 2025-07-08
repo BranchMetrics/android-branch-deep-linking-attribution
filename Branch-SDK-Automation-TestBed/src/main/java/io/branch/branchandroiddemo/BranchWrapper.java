@@ -131,9 +131,6 @@ public class BranchWrapper {
         if (testDataStr != null) {
             TestData testDataObj = new TestData();
             Boolean delayInit = testDataObj.getBoolParamValue(testDataStr, "DelayInitialization");
-            if (delayInit) {
-                // Removed deprecated methods
-            }
         }
     }
 
