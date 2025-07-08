@@ -38,21 +38,9 @@ class PreservedBranchApiTest {
         assertSame("Should return same instance", instance1, instance2)
     }
     
-    @Test
-    fun `test getAutoInstance`() {
-        val instance = PreservedBranchApi.getAutoInstance(mockContext)
-        
-        assertNotNull("Should return valid instance", instance)
-        assertTrue("Should be LegacyBranchWrapper", instance is LegacyBranchWrapper)
-    }
+
     
-    @Test
-    fun `test getAutoInstance with null context`() {
-        val instance = PreservedBranchApi.getAutoInstance(null)
-        
-        assertNotNull("Should handle null context gracefully", instance)
-        assertTrue("Should be LegacyBranchWrapper", instance is LegacyBranchWrapper)
-    }
+
     
     @Test
     fun `test enableTestMode`() {
@@ -276,28 +264,7 @@ class PreservedBranchApiTest {
         assertSame("Should return same instance", instance1, instance2)
     }
     
-    @Test
-    fun `test concurrent access to getAutoInstance`() {
-        val latch = java.util.concurrent.CountDownLatch(2)
-        var instance1: LegacyBranchWrapper? = null
-        var instance2: LegacyBranchWrapper? = null
-        
-        Thread {
-            instance1 = PreservedBranchApi.getAutoInstance(mockContext)
-            latch.countDown()
-        }.start()
-        
-        Thread {
-            instance2 = PreservedBranchApi.getAutoInstance(mockContext)
-            latch.countDown()
-        }.start()
-        
-        latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
-        
-        assertNotNull("First instance should not be null", instance1)
-        assertNotNull("Second instance should not be null", instance2)
-        assertSame("Should return same instance", instance1, instance2)
-    }
+
     
     @Test
     fun `test configuration methods are idempotent`() {
@@ -376,76 +343,19 @@ class PreservedBranchApiTest {
         assertTrue("Should handle configuration before instance creation", true)
     }
     
-    @Test
-    fun `test getAutoInstance with different contexts`() {
-        val context1 = mock(Context::class.java)
-        val context2 = mock(Context::class.java)
-        
-        val instance1 = PreservedBranchApi.getAutoInstance(context1)
-        val instance2 = PreservedBranchApi.getAutoInstance(context2)
-        
-        assertNotNull("Should return valid instance for context1", instance1)
-        assertNotNull("Should return valid instance for context2", instance2)
-        assertSame("Should return same instance regardless of context", instance1, instance2)
-    }
+
     
-    @Test
-    fun `test getAutoInstance with application context`() {
-        val applicationContext = mock(Context::class.java)
-        `when`(mockContext.applicationContext).thenReturn(applicationContext)
-        
-        val instance = PreservedBranchApi.getAutoInstance(mockContext)
-        
-        assertNotNull("Should return valid instance with application context", instance)
-        assertTrue("Should be LegacyBranchWrapper", instance is LegacyBranchWrapper)
-    }
+
     
-    @Test
-    fun `test getAutoInstance with null application context`() {
-        `when`(mockContext.applicationContext).thenReturn(null)
-        
-        val instance = PreservedBranchApi.getAutoInstance(mockContext)
-        
-        assertNotNull("Should handle null application context gracefully", instance)
-        assertTrue("Should be LegacyBranchWrapper", instance is LegacyBranchWrapper)
-    }
+
     
-    @Test
-    fun `test getAutoInstance with same context multiple times`() {
-        val instance1 = PreservedBranchApi.getAutoInstance(mockContext)
-        val instance2 = PreservedBranchApi.getAutoInstance(mockContext)
-        val instance3 = PreservedBranchApi.getAutoInstance(mockContext)
-        
-        assertSame("Should return same instance for same context", instance1, instance2)
-        assertSame("Should return same instance for same context", instance2, instance3)
-        assertSame("Should return same instance for same context", instance1, instance3)
-    }
+
     
-    @Test
-    fun `test getAutoInstance with context that throws exception`() {
-        `when`(mockContext.applicationContext).thenThrow(RuntimeException("Test exception"))
-        
-        val instance = PreservedBranchApi.getAutoInstance(mockContext)
-        
-        assertNotNull("Should handle context exception gracefully", instance)
-        assertTrue("Should be LegacyBranchWrapper", instance is LegacyBranchWrapper)
-    }
+
     
-    @Test
-    fun `test getInstance after getAutoInstance`() {
-        val autoInstance = PreservedBranchApi.getAutoInstance(mockContext)
-        val regularInstance = PreservedBranchApi.getInstance()
-        
-        assertSame("Should return same instance", autoInstance, regularInstance)
-    }
+
     
-    @Test
-    fun `test getAutoInstance after getInstance`() {
-        val regularInstance = PreservedBranchApi.getInstance()
-        val autoInstance = PreservedBranchApi.getAutoInstance(mockContext)
-        
-        assertSame("Should return same instance", regularInstance, autoInstance)
-    }
+
     
     @Test
     fun `test configuration persistence across instances`() {
@@ -456,7 +366,7 @@ class PreservedBranchApiTest {
         
         // Get instances
         val instance1 = PreservedBranchApi.getInstance()
-        val instance2 = PreservedBranchApi.getAutoInstance(mockContext)
+        val instance2 = PreservedBranchApi.getInstance()
         
         assertSame("Should return same instance", instance1, instance2)
         assertTrue("Configuration should persist across instances", true)

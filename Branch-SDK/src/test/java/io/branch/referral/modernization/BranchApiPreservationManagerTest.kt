@@ -171,14 +171,7 @@ class BranchApiPreservationManagerTest {
         assertNotNull("Should return result for getInstance", result)
     }
     
-    @Test
-    fun `test handleLegacyApiCall with getAutoInstance method`() {
-        val manager = BranchApiPreservationManager.getInstance(mockContext)
-        
-        val result = manager.handleLegacyApiCall("getAutoInstance", arrayOf(mockContext))
-        
-        assertNotNull("Should return result for getAutoInstance", result)
-    }
+
     
     @Test
     fun `test handleLegacyApiCall with setIdentity method`() {
@@ -189,14 +182,7 @@ class BranchApiPreservationManagerTest {
         assertNotNull("Should return result for setIdentity", result)
     }
     
-    @Test
-    fun `test handleLegacyApiCall with resetUserSession method`() {
-        val manager = BranchApiPreservationManager.getInstance(mockContext)
-        
-        val result = manager.handleLegacyApiCall("resetUserSession", emptyArray())
-        
-        assertNotNull("Should return result for resetUserSession", result)
-    }
+
     
     @Test
     fun `test handleLegacyApiCall with enableTestMode method`() {
@@ -255,7 +241,7 @@ class BranchApiPreservationManagerTest {
         // Call multiple methods
         manager.handleLegacyApiCall("getInstance", emptyArray())
         manager.handleLegacyApiCall("setIdentity", arrayOf("user1"))
-        manager.handleLegacyApiCall("resetUserSession", emptyArray())
+        manager.handleLegacyApiCall("enableTestMode", emptyArray())
         
         // Verify analytics are being tracked
         val analytics = manager.getUsageAnalytics()

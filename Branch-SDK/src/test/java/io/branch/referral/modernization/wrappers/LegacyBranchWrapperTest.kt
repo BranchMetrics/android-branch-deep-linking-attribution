@@ -103,13 +103,7 @@ class LegacyBranchWrapperTest {
         assertTrue("Should execute without exception", true)
     }
     
-    @Test
-    fun `test resetUserSession`() {
-        wrapper.resetUserSession()
-        
-        // Should not throw exception
-        assertTrue("Should execute without exception", true)
-    }
+
     
     @Test
     fun `test getFirstReferringParams`() {

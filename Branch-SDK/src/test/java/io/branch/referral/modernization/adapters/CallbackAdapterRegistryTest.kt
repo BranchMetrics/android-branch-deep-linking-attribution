@@ -187,95 +187,19 @@ class CallbackAdapterRegistryTest {
         assertTrue("Should handle null callback gracefully", true)
     }
     
-    @Test
-    fun `test adaptLogoutCallback with success result`() {
-        var callbackExecuted = false
-        var stateChanged = false
-        var receivedError: BranchError? = null
-        
-        val callback = object : Branch.BranchReferralStateChangedListener {
-            override fun onStateChanged(changed: Boolean, error: BranchError?) {
-                callbackExecuted = true
-                stateChanged = changed
-                receivedError = error
-            }
-        }
-        
-        registry.adaptLogoutCallback(callback, true, null)
-        
-        // Wait a bit for async callback
-        Thread.sleep(100)
-        
-        assertTrue("Callback should have been executed", callbackExecuted)
-        assertTrue("Should indicate state changed", stateChanged)
-        assertNull("Should have no error", receivedError)
-    }
+
     
-    @Test
-    fun `test adaptLogoutCallback with error`() {
-        var callbackExecuted = false
-        var stateChanged = false
-        var receivedError: BranchError? = null
-        
-        val callback = object : Branch.BranchReferralStateChangedListener {
-            override fun onStateChanged(changed: Boolean, error: BranchError?) {
-                callbackExecuted = true
-                stateChanged = changed
-                receivedError = error
-            }
-        }
-        
-        val testError = mock(BranchError::class.java)
-        
-        registry.adaptLogoutCallback(callback, false, testError)
-        
-        // Wait a bit for async callback
-        Thread.sleep(100)
-        
-        assertTrue("Callback should have been executed", callbackExecuted)
-        assertFalse("Should indicate state not changed", stateChanged)
-        assertNotNull("Should receive error", receivedError)
-        assertSame("Should have correct error", testError, receivedError)
-    }
+
     
-    @Test
-    fun `test adaptLogoutCallback with null callback`() {
-        // Should not throw exception with null callback
-        registry.adaptLogoutCallback(null, true, null)
-        
-        assertTrue("Should handle null callback gracefully", true)
-    }
+
     
-    @Test
-    fun `test adaptLogoutCallback with null result`() {
-        var callbackExecuted = false
-        var stateChanged = false
-        var receivedError: BranchError? = null
-        
-        val callback = object : Branch.BranchReferralStateChangedListener {
-            override fun onStateChanged(changed: Boolean, error: BranchError?) {
-                callbackExecuted = true
-                stateChanged = changed
-                receivedError = error
-            }
-        }
-        
-        registry.adaptLogoutCallback(callback, null, null)
-        
-        // Wait a bit for async callback
-        Thread.sleep(100)
-        
-        assertTrue("Callback should have been executed", callbackExecuted)
-        assertFalse("Should indicate state not changed when result is null", stateChanged)
-        assertNull("Should have no error", receivedError)
-    }
+
     
     @Test
     fun `test concurrent callback execution`() {
-        val latch = CountDownLatch(3)
+        val latch = CountDownLatch(2)
         var callback1Executed = false
         var callback2Executed = false
-        var callback3Executed = false
         
         val callback1 = object : Branch.BranchReferralInitListener {
             override fun onInitFinished(referringParams: JSONObject?, error: BranchError?) {
@@ -291,23 +215,14 @@ class CallbackAdapterRegistryTest {
             }
         }
         
-        val callback3 = object : Branch.BranchReferralStateChangedListener {
-            override fun onStateChanged(changed: Boolean, error: BranchError?) {
-                callback3Executed = true
-                latch.countDown()
-            }
-        }
-        
         // Execute callbacks concurrently
         registry.adaptInitSessionCallback(callback1, JSONObject(), null)
         registry.adaptIdentityCallback(callback2, JSONObject(), null)
-        registry.adaptLogoutCallback(callback3, true, null)
         
         latch.await(5, TimeUnit.SECONDS)
         
         assertTrue("Callback 1 should have been executed", callback1Executed)
         assertTrue("Callback 2 should have been executed", callback2Executed)
-        assertTrue("Callback 3 should have been executed", callback3Executed)
     }
     
     @Test
@@ -326,24 +241,15 @@ class CallbackAdapterRegistryTest {
             }
         }
         
-        val callback3 = object : Branch.BranchReferralStateChangedListener {
-            override fun onStateChanged(changed: Boolean, error: BranchError?) {
-                executionOrder.add("callback3")
-            }
-        }
-        
         // Execute callbacks in sequence
         registry.adaptInitSessionCallback(callback1, JSONObject(), null)
         Thread.sleep(50)
         registry.adaptIdentityCallback(callback2, JSONObject(), null)
         Thread.sleep(50)
-        registry.adaptLogoutCallback(callback3, true, null)
-        Thread.sleep(50)
         
-        assertTrue("Should have executed all callbacks", executionOrder.size >= 3)
+        assertTrue("Should have executed all callbacks", executionOrder.size >= 2)
         assertTrue("Should contain callback1", executionOrder.contains("callback1"))
         assertTrue("Should contain callback2", executionOrder.contains("callback2"))
-        assertTrue("Should contain callback3", executionOrder.contains("callback3"))
     }
     
     @Test
@@ -489,7 +395,6 @@ class CallbackAdapterRegistryTest {
     fun `test callback with different result types`() {
         var initCallbackExecuted = false
         var identityCallbackExecuted = false
-        var logoutCallbackExecuted = false
         
         val initCallback = object : Branch.BranchReferralInitListener {
             override fun onInitFinished(referringParams: JSONObject?, error: BranchError?) {
@@ -503,22 +408,14 @@ class CallbackAdapterRegistryTest {
             }
         }
         
-        val logoutCallback = object : Branch.BranchReferralStateChangedListener {
-            override fun onStateChanged(changed: Boolean, error: BranchError?) {
-                logoutCallbackExecuted = true
-            }
-        }
-        
         // Test with different result types
         registry.adaptInitSessionCallback(initCallback, JSONObject(), null)
         registry.adaptIdentityCallback(identityCallback, "string_result", null)
-        registry.adaptLogoutCallback(logoutCallback, 123, null)
         
         Thread.sleep(100)
         
         assertTrue("Init callback should have been executed", initCallbackExecuted)
         assertTrue("Identity callback should have been executed", identityCallbackExecuted)
-        assertTrue("Logout callback should have been executed", logoutCallbackExecuted)
     }
     
     @Test

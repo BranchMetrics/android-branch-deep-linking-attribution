@@ -111,17 +111,15 @@ class ModernStrategyDemoTest {
             println("⚠️ Static enableTestMode not available: ${e.message}")
         }
         
-        // Test auto instance
-        val autoInstance = PreservedBranchApi.getAutoInstance(mockContext)
-        assertNotNull("Auto instance should return wrapper", autoInstance)
-        println("✅ Static Branch.getAutoInstance() preserved")
+        // Test regular instance
+        val instance = PreservedBranchApi.getInstance()
+        assertNotNull("Instance should return wrapper", instance)
+        println("✅ Static Branch.getInstance() preserved")
         
         // Verify analytics captured the calls
         val usageData = analytics.getUsageData()
         assertTrue("Analytics should track getInstance calls", 
                    usageData.containsKey("getInstance"))
-        assertTrue("Analytics should track getAutoInstance calls", 
-                   usageData.containsKey("getAutoInstance"))
         
         println("📈 Static API calls tracked in analytics")
     }
