@@ -46,7 +46,6 @@ This comprehensive guide helps developers migrate from legacy Branch SDK APIs to
 // ❌ Legacy (Deprecated)
 val branch = Branch.getInstance()
 val branch = Branch.getInstance(context)
-val branch = Branch.getAutoInstance(context)
 ```
 
 #### Modern Replacement
@@ -320,7 +319,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         // Legacy initialization
-        val branch = Branch.getAutoInstance(this)
+        val branch = Branch.getInstance(this)
     }
     
     override fun onStart() {

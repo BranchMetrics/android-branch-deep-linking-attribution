@@ -157,7 +157,7 @@ interface ModernBranchCore {
 ```kotlin
 // ALL legacy APIs work exactly as before
 Branch.getInstance().initSession(activity) // ✅ Works
-Branch.getAutoInstance(context).setIdentity("user123") // ✅ Works
+Branch.getInstance().setIdentity("user123") // ✅ Works
 ```
 
 - ✅ 100% API compatibility maintained

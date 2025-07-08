@@ -172,7 +172,7 @@ This documentation covers the comprehensive modernization effort of the Branch S
 ```kotlin
 // Your existing code continues to work unchanged
 Branch.getInstance().initSession(activity) // ✅ Still works
-Branch.getAutoInstance(context).setIdentity("user123") // ✅ Still works
+Branch.getInstance().setIdentity("user123") // ✅ Still works
 ```
 
 ### For New Modern API Users

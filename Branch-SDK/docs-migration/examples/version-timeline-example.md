@@ -166,9 +166,8 @@ Version 4.5.0:
     - enableTestMode (MEDIUM)
 
 Version 5.0.0:
-  📢 APIs Deprecated (4):
+  📢 APIs Deprecated (3):
     - getInstance (CRITICAL)
-    - getAutoInstance (CRITICAL)
     - initSession (CRITICAL)
     - setIdentity (HIGH)
   🚨 APIs Removed (1):
@@ -194,9 +193,8 @@ Version 6.5.0:
   ⚡ BREAKING CHANGES IN THIS VERSION
 
 Version 7.0.0:
-  🚨 APIs Removed (3):
+  🚨 APIs Removed (2):
     - getInstance → ModernBranchCore.getInstance()
-    - getAutoInstance → ModernBranchCore.initialize(Context)
     - generateShortUrl → linkManager.createShortLink()
   ⚡ BREAKING CHANGES IN THIS VERSION
 ```

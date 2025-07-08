@@ -134,7 +134,7 @@ gantt
     
     section Critical APIs
     getInstance()           :active, critical1, 0, 4
-    getAutoInstance()       :active, critical2, 0, 4
+    initSession()           :active, critical2, 0, 4
     generateShortUrl()      :active, critical3, 0, 4
     
     section Standard APIs  
