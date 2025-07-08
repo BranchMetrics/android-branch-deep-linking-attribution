@@ -70,8 +70,6 @@ public class BranchShareSheetBuilder {
             BranchLogger.d(e.getMessage());
         }
         shareMsg_ = "";
-        callback_ = null;
-        channelPropertiesCallback_ = null;
         preferredOptions_ = new ArrayList<>();
         defaultURL_ = null;
 
@@ -481,7 +479,7 @@ public class BranchShareSheetBuilder {
      * The link is created with the parameters provided to the builder. </p>
      */
     public void shareLink() {
-        Branch.getInstance().shareLink(this);
+        new ShareLinkManager().shareLink(this);
     }
 
     public Activity getActivity() {

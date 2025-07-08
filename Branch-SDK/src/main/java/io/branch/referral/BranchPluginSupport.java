@@ -17,9 +17,7 @@ public class BranchPluginSupport {
      * @return {@link BranchPluginSupport} instance if already initialised or null
      */
     public static BranchPluginSupport getInstance() {
-        Branch b = Branch.getInstance();
-        if (b == null) return null;
-
+        return null;
     }
 
     BranchPluginSupport(Context context) {
