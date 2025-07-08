@@ -41,10 +41,7 @@ class CallbackAdapterRegistry private constructor() {
     fun handleCallback(callback: Any?, result: Any?, error: Throwable?) {
         when (callback) {
             is Branch.BranchReferralInitListener -> adaptInitSessionCallback(callback, result, error)
-            is Branch.BranchReferralStateChangedListener -> adaptStateChangedCallback(callback, result, error)
             is Branch.BranchLinkCreateListener -> adaptLinkCreateCallback(callback, result, error)
-            is Branch.BranchLinkShareListener -> adaptShareCallback(callback, result, error)
-            is Branch.BranchListResponseListener -> adaptHistoryCallback(callback, result, error)
             else -> {
                 BranchLogger.w("Unknown callback type: ${callback?.javaClass?.simpleName}")
             }

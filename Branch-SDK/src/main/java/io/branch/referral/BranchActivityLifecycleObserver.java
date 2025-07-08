@@ -106,7 +106,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     
             branch.closeSessionInternal();
 
-            /* It is possible some integrations do not call Branch.getAutoInstance() before the first
+            /* It is possible some integrations do not call Branch.getInstance() before the first
             activity's lifecycle methods execute.
             In such cases, activityCnt_ could be set to -1, which could cause the above line to clear
             session parameters. Just reset to 0 if we're here.

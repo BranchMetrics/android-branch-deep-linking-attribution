@@ -92,7 +92,7 @@ object PreservedBranchApi {
             parameters = arrayOf(context)
         )
         
-        return Branch.getAutoInstance(context)
+        return Branch.getInstance(context)
     }
     
     /**
