@@ -575,7 +575,6 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 Branch.getInstance().logout();
                 Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_LONG).show();
-
             }
         });
 

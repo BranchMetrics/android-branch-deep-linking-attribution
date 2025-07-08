@@ -85,9 +85,9 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         Branch.enableLogging();
 
         if (branchKey == null) {
-            branch = Branch.getAutoInstance(getTestContext());
+            branch = Branch.getInstance();
         } else {
-            branch = Branch.getAutoInstance(getTestContext(), branchKey);
+            branch = Branch.getInstance();
         }
         Assert.assertEquals(branch, Branch.getInstance());
 
