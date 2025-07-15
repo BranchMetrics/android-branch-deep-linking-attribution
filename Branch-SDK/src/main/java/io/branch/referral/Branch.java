@@ -836,7 +836,8 @@ public class Branch {
         if (requestQueue_ == null) return;
         requestQueue_.postInitClear();
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
-        requestQueue_.processNextQueueItem("unlockSDKInitWaitLock");
+        // processNextQueueItem call removed - critical SDK initialization unlock handled automatically
+        // Modern queue processes immediately when SDK_INIT_WAIT_LOCK is released via unlockProcessWait
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -1306,7 +1307,8 @@ public class Branch {
          requestQueue_.printQueue();
          initTasks(request);
 
-         requestQueue_.processNextQueueItem("registerAppInit");
+         // processNextQueueItem call removed - app initialization processing handled automatically
+         // Modern queue processes init session request immediately after initTasks completes
      }
 
     private void initTasks(ServerRequest request) {
@@ -1327,7 +1329,7 @@ public class Branch {
                 public void onInstallReferrersFinished() {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                     BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
-                    requestQueue_.processNextQueueItem("onInstallReferrersFinished");
+                    // processNextQueueItem call removed - modern queue processes automatically via unlockProcessWait
                 }
             });
         }
@@ -1339,7 +1341,7 @@ public class Branch {
             @Override
             public void onAdsParamsFetchFinished() {
                 requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-                requestQueue_.processNextQueueItem("onAdsParamsFetchFinished");
+                // processNextQueueItem call removed - modern queue processes automatically via unlockProcessWait
             }
         });
     }
@@ -1367,7 +1369,7 @@ public class Branch {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
-        requestQueue_.processNextQueueItem("onIntentReady");
+        // processNextQueueItem call removed - modern queue processes automatically without manual trigger
     }
 
     /**

@@ -68,13 +68,6 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     
     /**
-     * Process next queue item - trigger processing
-     */
-    fun processNextQueueItem(callingMethodName: String) {
-        BranchLogger.v("processNextQueueItem $callingMethodName - processing is automatic in new queue")
-    }
-    
-    /**
      * Queue operations - delegating to new queue implementation
      */
     fun getSize(): Int = newQueue.getSize()

@@ -316,51 +316,6 @@ public class ServerRequestQueue {
         }
     }
 
-    void processNextQueueItem(String callingMethodName) {
-        BranchLogger.v("processNextQueueItem " + callingMethodName);
-        this.printQueue();
-        try {
-            serverSema_.acquire();
-            if (networkCount_ == 0 && this.getSize() > 0) {
-                networkCount_ = 1;
-                ServerRequest req = this.peek();
-
-                serverSema_.release();
-                if (req != null) {
-                    BranchLogger.d("processNextQueueItem, req " + req);
-                    if (!req.isWaitingOnProcessToFinish()) {
-                        // All request except Install request need a valid RandomizedBundleToken
-                        if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
-                            BranchLogger.d("Branch Error: User session has not been initialized!");
-                            networkCount_ = 0;
-                            BranchLogger.v("Invoking " + req + " handleFailure. Has no session. hasUser: " + hasUser());
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "Request " + req + " has no session.");
-                        }
-                        // Determine if a session is needed to execute (SDK-271)
-                        else if (requestNeedsSession(req) && !isSessionAvailableForRequest()) {
-                            networkCount_ = 0;
-                            BranchLogger.v("Invoking " + req + " handleFailure. Has no session.");
-                            req.handleFailure(BranchError.ERR_NO_SESSION, "Request " + req + " has no session.");
-                        } else {
-                            executeTimedBranchPostTask(req, Branch.getInstance().prefHelper_.getTaskTimeout());
-                        }
-                    }
-                    else {
-                        networkCount_ = 0;
-                    }
-                }
-                else {
-                    this.remove(null); //In case there is any request nullified remove it.
-                }
-            }
-            else {
-                serverSema_.release();
-            }
-        } catch (Exception e) {
-            BranchLogger.e("Caught Exception " + callingMethodName + " processNextQueueItem: " + e.getMessage() + " stacktrace: " + BranchLogger.stackTraceToString(e));
-        }
-    }
-
     void insertRequestAtFront(ServerRequest req) {
         BranchLogger.v("Queue operation insertRequestAtFront " + req + " networkCount_: " + networkCount_);
         if (networkCount_ == 0) {
@@ -487,7 +442,7 @@ public class ServerRequestQueue {
         this.enqueue(req);
         req.onRequestQueued();
 
-        this.processNextQueueItem("handleNewRequest");
+        // Modern queue processes automatically after enqueue - no manual trigger needed
     }
 
     // If there is 1 (currently being removed) or 0 init requests in the queue, clear the init data
@@ -577,16 +532,9 @@ public class ServerRequestQueue {
             }
             ServerRequestQueue.this.networkCount_ = 0;
 
-            // In rare cases where this method is called directly (eg. when network calls time out),
-            // starting the next queue item can lead to stack over flow. Ensuring that this is
-            // queued back to the main thread mitigates this.
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    ServerRequestQueue.this.processNextQueueItem("onPostExecuteInner");
-                }
-            });
+            // Modern queue processes automatically after request completion - no manual trigger needed
+            // Note: Original logic handled stack overflow by posting to main thread, but modern
+            // coroutines-based queue eliminates this issue through async processing
         }
 
         private void onRequestSuccess(ServerResponse serverResponse) {
