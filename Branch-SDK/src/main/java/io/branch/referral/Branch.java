@@ -20,7 +20,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -240,7 +239,6 @@ public class Branch {
     private CustomTabsIntent customTabsIntentOverride;
 
     // Replace SESSION_STATE enum with SessionState
-    // Legacy session state lock - kept for backward compatibility
     private final Object sessionStateLock = new Object();
 
     /* Holds the current intent state. Default is set to PENDING. */
@@ -836,8 +834,6 @@ public class Branch {
         if (requestQueue_ == null) return;
         requestQueue_.postInitClear();
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
-        // processNextQueueItem call removed - critical SDK initialization unlock handled automatically
-        // Modern queue processes immediately when SDK_INIT_WAIT_LOCK is released via unlockProcessWait
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -1141,9 +1137,12 @@ public class Branch {
         ServerResponse response = null;
         try {
             int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-            response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            BranchLogger.d(e.getMessage());
+            // Direct network call instead of AsyncTask for thread safety
+            response = branchRemoteInterface_.make_restful_post(req.getPost(),
+                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
+                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
+        } catch (Exception e) {
+            BranchLogger.d("Error generating short link: " + e.getMessage());
         }
         String url = null;
         if (req.isDefaultToLongUrl()) {
@@ -1307,8 +1306,7 @@ public class Branch {
          requestQueue_.printQueue();
          initTasks(request);
 
-         // processNextQueueItem call removed - app initialization processing handled automatically
-         // Modern queue processes init session request immediately after initTasks completes
+
      }
 
     private void initTasks(ServerRequest request) {
@@ -1340,8 +1338,7 @@ public class Branch {
         deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
             @Override
             public void onAdsParamsFetchFinished() {
-                requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-                // processNextQueueItem call removed - modern queue processes automatically via unlockProcessWait
+                        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
             }
         });
     }
@@ -1369,7 +1366,6 @@ public class Branch {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
-        // processNextQueueItem call removed - modern queue processes automatically without manual trigger
     }
 
     /**
@@ -1515,16 +1511,7 @@ public class Branch {
      */
 
 
-    /**
-     * Async Task to create  a short link for synchronous methods
-     */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
+    // GetShortLinkTask AsyncTask removed for thread safety - replaced with direct network calls
 
     //-------------------Auto deep link feature-------------------------------------------//
     
