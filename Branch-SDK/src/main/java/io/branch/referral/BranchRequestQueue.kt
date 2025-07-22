@@ -131,9 +131,8 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     private suspend fun processRequest(request: ServerRequest) {
         if (!canProcessRequest(request)) {
-            // Re-queue the request if it can't be processed yet
-            delay(100) // Small delay before retry
-            requestChannel.send(request)
+            // Request cannot be processed - handle failure instead of retrying
+            request.handleFailure(BranchError.ERR_OTHER, "Request cannot be processed at this time")
             return
         }
         
@@ -144,9 +143,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             when {
                 request.isWaitingOnProcessToFinish() -> {
                     BranchLogger.v("Request $request is waiting on processes to finish")
-                    // Re-queue after delay
-                    delay(50)
-                    requestChannel.send(request)
+                    request.handleFailure(BranchError.ERR_OTHER, "Request is waiting on processes to finish")
                 }
                 !hasValidSession(request) -> {
                     BranchLogger.v("Request $request has no valid session")
