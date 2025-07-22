@@ -15,8 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Modern Kotlin-based request queue using Coroutines and Channels
@@ -64,9 +62,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
     // State management
     private val _queueState = MutableStateFlow(QueueState.IDLE)
     val queueState: StateFlow<QueueState> = _queueState.asStateFlow()
-    
-    private val networkCount = AtomicInteger(0)
-    private val isProcessing = AtomicBoolean(false)
     
     // Track active requests and instrumentation data
     private val activeRequests = ConcurrentHashMap<String, ServerRequest>()
@@ -146,9 +141,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
         activeRequests[requestId] = request
         
         try {
-            // Increment network count
-            networkCount.incrementAndGet()
-            
             when {
                 request.isWaitingOnProcessToFinish() -> {
                     BranchLogger.v("Request $request is waiting on processes to finish")
@@ -169,7 +161,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
             request.handleFailure(BranchError.ERR_OTHER, "Request processing failed: ${e.message}")
         } finally {
             activeRequests.remove(requestId)
-            networkCount.decrementAndGet()
         }
     }
     
@@ -380,8 +371,8 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Insert request at front (matches original API)
      */
     fun insertRequestAtFront(request: ServerRequest) {
-        BranchLogger.v("Queue operation insertRequestAtFront $request networkCount_: ${networkCount.get()}")
-        if (networkCount.get() == 0) {
+        BranchLogger.v("Queue operation insertRequestAtFront $request activeRequests: ${activeRequests.size}")
+        if (activeRequests.isEmpty()) {
             insert(request, 0)
         } else {
             insert(request, 1)
@@ -561,7 +552,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         if (BranchLogger.loggingLevel.level >= BranchLogger.BranchLogLevel.VERBOSE.level) {
             val activeCount = activeRequests.size
             val channelSize = if (requestChannel.isEmpty) 0 else "unknown" // Channel doesn't expose size
-            BranchLogger.v("Queue state: ${_queueState.value}, Active requests: $activeCount, Network count: ${networkCount.get()}")
+            BranchLogger.v("Queue state: ${_queueState.value}, Active requests: $activeCount")
         }
     }
 } 
