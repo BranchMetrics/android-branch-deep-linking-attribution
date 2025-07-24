@@ -85,11 +85,11 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         Branch.enableLogging();
 
         if (branchKey == null) {
-            branch = Branch.getInstance();
+            branch = Branch.init();
         } else {
-            branch = Branch.getInstance();
+            branch = Branch.init();
         }
-        Assert.assertEquals(branch, Branch.getInstance());
+        Assert.assertEquals(branch, Branch.init());
 
         activityScenario = ActivityScenario.launch(MockActivity.class);
 

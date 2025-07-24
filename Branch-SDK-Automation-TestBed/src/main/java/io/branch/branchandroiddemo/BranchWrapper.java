@@ -76,7 +76,7 @@ public class BranchWrapper {
 
             if (buo != null && lp != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                    Branch.getInstance().share(activity, buo, lp, "Sharing Branch Short URL", "Using Native Chooser Dialog");
+                    Branch.init().share(activity, buo, lp, "Sharing Branch Short URL", "Using Native Chooser Dialog");
                 } else {
                     showLogWindow("Unsupported Version", false, ctx, Constants.UNKNOWN);
                 }
@@ -116,7 +116,7 @@ public class BranchWrapper {
             TestData testDataObj = new TestData();
             String userName = testDataObj.getUserName(testDataStr);
             if ( userName != null && (userName.isEmpty() == false)) {
-                Branch.getInstance().setIdentity(userName);
+                Branch.init().setIdentity(userName);
             } else {
                 showLogWindow("Invalid username.",true, ctx,Constants.TRACK_USER);
             }
@@ -176,7 +176,7 @@ public class BranchWrapper {
             boolean adPersonalizationConsent = testDataObj.getBoolParamValue(testDataStr,"dma_ad_personalization");
             boolean adUserDataUsageConsent = testDataObj.getBoolParamValue(testDataStr,"dma_ad_user_data");
 
-            Branch.getInstance().setDMAParamsForEEA(eeaRegion, adPersonalizationConsent, adUserDataUsageConsent);
+            Branch.init().setDMAParamsForEEA(eeaRegion, adPersonalizationConsent, adUserDataUsageConsent);
 
         } else {
             showLogWindow( "Test Data : Null" , true, ctx,Constants.SET_DMA_Params);

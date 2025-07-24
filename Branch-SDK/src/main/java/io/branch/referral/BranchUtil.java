@@ -162,7 +162,7 @@ public class BranchUtil {
         // If there is no entry, do not change the setting or any default behavior.
         if(!TextUtils.isEmpty(jsonString)) {
             Defines.BranchAttributionLevel cppLevel = Defines.BranchAttributionLevel.valueOf(jsonString);
-            Branch.getInstance().setConsumerProtectionAttributionLevel(cppLevel);
+            Branch.init().setConsumerProtectionAttributionLevel(cppLevel);
         }
     }
 

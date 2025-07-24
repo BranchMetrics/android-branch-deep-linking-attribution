@@ -422,9 +422,9 @@ public class PrefHelper {
             setString(KEY_BRANCH_KEY, key);
 
             // PrefHelper can be retrieved before Branch singleton is initialized
-            if (Branch.getInstance() != null) {
-                Branch.getInstance().linkCache_.clear();
-                Branch.getInstance().requestQueue_.clear();
+            if (Branch.init() != null) {
+                Branch.init().linkCache_.clear();
+                Branch.init().requestQueue_.clear();
             }
 
             return true;

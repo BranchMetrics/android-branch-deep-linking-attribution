@@ -5,16 +5,10 @@ import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 import android.content.Context;
 import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.coroutines.DeviceSignalsKt;
 import io.branch.referral.validators.DeepLinkRoutingValidator;
-import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
-import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -88,7 +82,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        Branch.getInstance().unlockSDKInitWaitLock();
+        Branch.init().unlockSDKInitWaitLock();
     }
 
     void onInitSessionCompleted(ServerResponse response, Branch branch) {

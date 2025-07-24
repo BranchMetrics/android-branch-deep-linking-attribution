@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * <p> Class for building a share link dialog.This creates a chooser for selecting application for
@@ -80,7 +79,7 @@ public class BranchShareSheetBuilder {
         copyURlText_ = "Copy link";
         urlCopiedMessage_ = "Copied link to clipboard!";
 
-        if (Branch.getInstance().getDeviceInfo().isTV()) {
+        if (Branch.init().getDeviceInfo().isTV()) {
             // Google TV includes a default, stub email app, so the system will appear to have an
             // email app installed, even when there is none. (https://stackoverflow.com/a/10341104)
             excludeFromShareSheet("com.google.android.tv.frameworkpackagestubs");
@@ -499,7 +498,7 @@ public class BranchShareSheetBuilder {
     }
 
     @Deprecated public Branch getBranch() {
-        return Branch.getInstance();
+        return Branch.init();
     }
 
     public String getShareMsg() {

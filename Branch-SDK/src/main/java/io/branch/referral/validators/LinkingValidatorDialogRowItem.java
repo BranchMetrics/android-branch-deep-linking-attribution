@@ -17,7 +17,6 @@ import java.util.HashMap;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
 import io.branch.referral.R;
 import io.branch.referral.util.LinkProperties;
 
@@ -113,7 +112,7 @@ public class LinkingValidatorDialogRowItem extends LinearLayout {
         }
         BranchUniversalObject buo = new BranchUniversalObject().setCanonicalIdentifier(canonicalIdentifier);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            Branch.getInstance().share(getActivity(context), buo, lp, titleText.getText().toString(), infoText);
+            Branch.init().share(getActivity(context), buo, lp, titleText.getText().toString(), infoText);
         }
     }
 

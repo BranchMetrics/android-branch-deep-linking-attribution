@@ -1,6 +1,5 @@
 package io.branch.indexing;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -19,18 +18,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
 import io.branch.referral.TrackingController;
-import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
-import io.branch.referral.util.ShareSheetStyle;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -458,7 +454,7 @@ public class BranchUniversalObject implements Parcelable {
      */
     public static BranchUniversalObject getReferredBranchUniversalObject() {
         BranchUniversalObject branchUniversalObject = null;
-        Branch branchInstance = Branch.getInstance();
+        Branch branchInstance = Branch.init();
         try {
             if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
                 // Check if link clicked. Unless deep link debug enabled return null if there is no link click

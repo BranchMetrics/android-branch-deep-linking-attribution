@@ -10,7 +10,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -123,7 +122,7 @@ class BranchPreinstall {
     }
 
     public static void setBranchPreInstallGoogleReferrer(Context context, HashMap<String, String> referrerMap){
-        Branch branchInstance = Branch.getInstance();
+        Branch branchInstance = Branch.init();
         PrefHelper prefHelper = PrefHelper.getInstance(context);
 
         // Set PreInstallData from GoogleReferrer api

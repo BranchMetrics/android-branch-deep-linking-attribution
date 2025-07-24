@@ -190,7 +190,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             request.doFinalUpdateOnBackgroundThread()
             
             // Check if tracking is disabled
-            val branch = Branch.getInstance()
+            val branch = Branch.init()
             if (branch.trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
                 val response = ServerResponse(request.requestPath, BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "Tracking is disabled")
                 handleResponse(request, response)
@@ -240,7 +240,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         when (response.statusCode) {
             200 -> {
                 try {
-                    request.onRequestSucceeded(response, Branch.getInstance())
+                    request.onRequestSucceeded(response, Branch.init())
                 } catch (e: Exception) {
                     BranchLogger.e("Error in onRequestSucceeded: ${e.message}")
                     request.handleFailure(BranchError.ERR_OTHER, "Success handler failed")
@@ -280,7 +280,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     private fun hasValidSession(request: ServerRequest): Boolean {
         if (!requestNeedsSession(request)) return true
         
-        val branch = Branch.getInstance()
+        val branch = Branch.init()
         val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
         val hasDeviceToken = !branch.prefHelper_.randomizedDeviceToken.equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.randomizedBundleToken.equals(PrefHelper.NO_STRING_VALUE)
@@ -429,7 +429,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     req?.let { request ->
                         val reqJson = request.post
                         if (reqJson != null) {
-                            val branch = Branch.getInstance()
+                            val branch = Branch.init()
                             if (reqJson.has(Defines.Jsonkey.SessionID.key)) {
                                 reqJson.put(Defines.Jsonkey.SessionID.key, branch.prefHelper_.sessionID)
                             }
@@ -467,7 +467,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Post init clear (matches original API)
      */
     fun postInitClear() {
-        val prefHelper = Branch.getInstance().prefHelper_
+        val prefHelper = Branch.init().prefHelper_
         val canClear = canClearInitData()
         BranchLogger.v("postInitClear $prefHelper can clear init data $canClear")
         
@@ -495,7 +495,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Check if queue has user
      */
     fun hasUser(): Boolean {
-        return !Branch.getInstance().prefHelper_.randomizedBundleToken.equals(PrefHelper.NO_STRING_VALUE)
+        return !Branch.init().prefHelper_.randomizedBundleToken.equals(PrefHelper.NO_STRING_VALUE)
     }
     
     /**

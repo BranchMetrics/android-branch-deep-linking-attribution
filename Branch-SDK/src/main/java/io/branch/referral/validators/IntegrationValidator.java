@@ -53,12 +53,12 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
     }
 
     private void validateSDKIntegration(Context context) {
-        Branch.getInstance().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, IntegrationValidator.this));
+        Branch.init().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, IntegrationValidator.this));
     }
 
     private void doValidateWithAppConfig(JSONObject branchAppConfig) {
         //retrieve the Branch dashboard configurations from the server
-        Branch.getInstance().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, this));
+        Branch.init().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, this));
 
         logValidationProgress("\n\n------------------- Initiating Branch integration verification ---------------------------");
 

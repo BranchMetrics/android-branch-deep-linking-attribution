@@ -26,7 +26,7 @@ public class BranchQRCodeCache {
      * @return {@link BranchQRCodeCache} instance if already initialised or null
      */
     public static BranchQRCodeCache getInstance() {
-        Branch b = Branch.getInstance();
+        Branch b = Branch.init();
         if (b == null) return null;
         return b.getBranchQRCodeCache();
     }

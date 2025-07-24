@@ -3,7 +3,6 @@ package io.branch.branchandroidtestbed;
 import android.app.Activity;
 
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -120,7 +119,7 @@ public class SettingsActivity extends Activity {
         disableAdNetworkCalloutsSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.getInstance().disableAdNetworkCallouts(disableAdNetworkCalloutsSwitch.isChecked());
+                Branch.init().disableAdNetworkCallouts(disableAdNetworkCalloutsSwitch.isChecked());
             }
         });
 

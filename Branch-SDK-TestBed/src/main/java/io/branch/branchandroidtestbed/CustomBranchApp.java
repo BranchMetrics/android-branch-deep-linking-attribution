@@ -11,10 +11,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 
-import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
-import io.branch.referral.Defines;
 
 public final class CustomBranchApp extends Application {
     @Override
@@ -26,7 +24,7 @@ public final class CustomBranchApp extends Application {
 //            saveLogToFile(message);
 //        };
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
-        Branch branch = Branch.getInstance(this);
+        Branch branch = Branch.init(this);
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();

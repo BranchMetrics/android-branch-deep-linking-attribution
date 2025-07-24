@@ -2,10 +2,7 @@ package io.branch.branchandroiddemo.activities;
 
 import  io.branch.branchandroiddemo.BranchWrapper;
 
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -13,16 +10,11 @@ import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import io.branch.branchandroiddemo.BranchWrapper;
-import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
 import io.branch.referral.BranchLogger;
-import io.branch.referral.util.LinkProperties;
 import io.branch.branchandroiddemo.Common;
 import io.branch.branchandroiddemo.Constants;
 import io.branch.branchandroiddemo.R;
-import io.branch.branchandroiddemo.TestData;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button  btCreateDeepLink, btNativeShare, btTrackUser,
@@ -66,8 +58,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
 
-        trackingCntrlBtn.setChecked(Branch.getInstance().isTrackingDisabled());
-        trackingCntrlBtn.setOnCheckedChangeListener((buttonView, isChecked) -> Branch.getInstance().disableTracking(isChecked));
+        trackingCntrlBtn.setChecked(Branch.init().isTrackingDisabled());
+        trackingCntrlBtn.setOnCheckedChangeListener((buttonView, isChecked) -> Branch.init().disableTracking(isChecked));
     }
 
     @Override

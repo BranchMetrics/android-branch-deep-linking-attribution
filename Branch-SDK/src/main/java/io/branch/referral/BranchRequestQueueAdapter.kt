@@ -41,7 +41,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      */
     fun handleNewRequest(request: ServerRequest) {
         // Check if tracking is disabled first (same as original logic)
-        if (Branch.getInstance().trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
+        if (Branch.init().trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
             val errMsg = "Requested operation cannot be completed since tracking is disabled [${request.requestPath_.getPath()}]"
             BranchLogger.d(errMsg)
             request.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, errMsg)
@@ -49,7 +49,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         }
         
         // Handle session requirements using new StateFlow system
-        if (!Branch.getInstance().canPerformOperations() && 
+        if (!Branch.init().canPerformOperations() &&
             request !is ServerRequestInitSession && 
             requestNeedsSession(request)) {
             BranchLogger.d("handleNewRequest $request needs a session")

@@ -1,6 +1,5 @@
 package io.branch.referral.util;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,7 +10,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -252,7 +250,7 @@ public class LinkProperties implements Parcelable {
      */
     public static LinkProperties getReferredLinkProperties() {
         LinkProperties linkProperties = null;
-        Branch branchInstance = Branch.getInstance();
+        Branch branchInstance = Branch.init();
         if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
             JSONObject latestParam = branchInstance.getLatestReferringParams();
 
