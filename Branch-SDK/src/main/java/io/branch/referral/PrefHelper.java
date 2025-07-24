@@ -820,6 +820,19 @@ public class PrefHelper {
     }
 
     /**
+     * Sets the GCLID expiration window in milliseconds
+     * @param window The expiration window in milliseconds
+     */
+    public void setReferrerGclidValidForWindow(long window) {
+        if (window >= MIN_VALID_WINDOW_FOR_REFERRER_GCLID && window <= MAX_VALID_WINDOW_FOR_REFERRER_GCLID) {
+            setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
+        } else {
+            BranchLogger.w("Invalid GCLID expiration window: " + window + ". Must be between " + 
+                          MIN_VALID_WINDOW_FOR_REFERRER_GCLID + " and " + MAX_VALID_WINDOW_FOR_REFERRER_GCLID);
+        }
+    }
+
+    /**
      * <p> Set the KEY_APP_LINK {@link String} values that has been started the application. </p>
      *
      * @param appLinkUrl The App link which started this application

@@ -1465,6 +1465,56 @@ public class Branch {
         void onLinkCreate(String url, BranchError error);
     }
 
+    /**
+     * Interface for handling last attributed touch data callbacks.
+     * 
+     * @see JSONObject
+     * @see BranchError
+     */
+    public interface BranchLastAttributedTouchDataListener {
+        /**
+         * Called when last attributed touch data is successfully retrieved.
+         * 
+         * @param jsonObject The last attributed touch data as a JSONObject
+         * @param error null if successful, otherwise contains error information
+         */
+        void onDataFetched(JSONObject jsonObject, BranchError error);
+    }
+
+    /**
+     * Interface for handling native link share callbacks.
+     * 
+     * @see String
+     * @see BranchError
+     */
+    public interface BranchNativeLinkShareListener {
+        /**
+         * Called when a link is shared successfully.
+         * 
+         * @param sharedLink The shared link URL
+         * @param sharedBy The channel through which the link was shared
+         * @param error null if successful, otherwise contains error information
+         */
+        void onLinkShareResponse(String sharedLink, String sharedBy, BranchError error);
+        
+        /**
+         * Called when a channel is selected for sharing.
+         * 
+         * @param selectedChannel The name of the selected channel
+         */
+        void onChannelSelected(String selectedChannel);
+        
+        /**
+         * Called when the share link dialog is launched.
+         */
+        void onShareLinkDialogLaunched();
+        
+        /**
+         * Called when the share link dialog is dismissed.
+         */
+        void onShareLinkDialogDismissed();
+    }
+
         /**
      * <p>An Interface class that is implemented by all classes that make use of
 
@@ -2306,5 +2356,98 @@ public class Branch {
         catch (Exception ex){
             BranchLogger.e("launchExternalBrowser caught exception: " + ex);
         }
+    }
+
+    /**
+     * Sets the referrer GCLID valid for window.
+     * 
+     * Minimum of 0 milliseconds
+     * Maximum of 3 years
+     * @param window A {@link Long} value specifying the number of milliseconds to wait before
+     *               deleting the locally persisted GCLID value.
+     */
+    public void setReferrerGclidValidForWindow(long window){
+        if(prefHelper_ != null){
+            prefHelper_.setReferrerGclidValidForWindow(window);
+        }
+    }
+
+    /**
+     * Enables referring url attribution for preinstalled apps.
+     *
+     * By default, Branch prioritizes preinstall attribution on preinstalled apps.
+     * Some clients prefer the referring link, when present, to be prioritized over preinstall attribution.
+     */
+    public static void setReferringLinkAttributionForPreinstalledAppsEnabled() {
+        referringLinkAttributionForPreinstalledAppsEnabled = true;
+    }
+
+    /**
+     * Returns whether referring link attribution for preinstalled apps is enabled.
+     *
+     * @return {@link Boolean} true if referring link attribution for preinstalled apps is enabled, false otherwise.
+     */
+    public static boolean isReferringLinkAttributionForPreinstalledAppsEnabled() {
+        return referringLinkAttributionForPreinstalledAppsEnabled;
+    }
+
+    /**
+     * Sets whether user agent synchronization is enabled.
+     *
+     * @param sync {@link Boolean} true to enable user agent synchronization, false to disable.
+     */
+    public static void setIsUserAgentSync(boolean sync){
+        userAgentSync = sync;
+    }
+
+    /**
+     * Returns whether user agent synchronization is enabled.
+     *
+     * @return {@link Boolean} true if user agent synchronization is enabled, false otherwise.
+     */
+    public static boolean getIsUserAgentSync(){
+        return userAgentSync;
+    }
+
+    /**
+     * Gets the available last attributed touch data. The attribution window is set to the value last
+     * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
+     * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
+     *
+     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     *                 to callback with last attributed touch data
+     *
+     */
+    public void getLastAttributedTouchData(@NonNull BranchLastAttributedTouchDataListener callback) {
+        if (context_ != null) {
+            requestQueue_.handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback));
+        }
+    }
+
+    /**
+     * Gets the available last attributed touch data with a custom set attribution window.
+     *
+     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     *                to callback with last attributed touch data
+     * @param attributionWindow An {@link int} to bound the the window of time in days during which
+     *                          the attribution data is considered valid. Note that, server side, the
+     *                          maximum value is 90.
+     *
+     */
+    public void getLastAttributedTouchData(BranchLastAttributedTouchDataListener callback, int attributionWindow) {
+        if (context_ != null) {
+            requestQueue_.handleNewRequest(new ServerRequestGetLATD(context_, Defines.RequestPath.GetLATD, callback, attributionWindow));
+        }
+    }
+
+    /**
+     * Gets the link share listener callback.
+     *
+     * @return {@link Branch.BranchNativeLinkShareListener} the current link share listener callback, or null if not set.
+     */
+    public Branch.BranchNativeLinkShareListener getLinkShareListenerCallback() {
+        // This method was removed during modernization but is kept for backward compatibility
+        // The actual link sharing functionality has been moved to NativeShareLinkManager
+        return null;
     }
 }

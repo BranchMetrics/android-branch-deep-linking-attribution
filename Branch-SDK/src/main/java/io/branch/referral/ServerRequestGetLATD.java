@@ -10,6 +10,7 @@ public class ServerRequestGetLATD extends ServerRequest {
     // defaultAttributionWindow is the "default" for the SDK's side, server interprets it as 30 days
     protected static final int defaultAttributionWindow = -1;
     private int attributionWindow;
+    private Branch.BranchLastAttributedTouchDataListener callback;
 
     ServerRequestGetLATD(Context context, Defines.RequestPath requestPath) {
         this(context, requestPath, PrefHelper.getInstance(context).getLATDAttributionWindow());
@@ -27,6 +28,16 @@ public class ServerRequestGetLATD extends ServerRequest {
         updateEnvironment(context, reqBody);
     }
 
+    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, Branch.BranchLastAttributedTouchDataListener callback) {
+        this(context, requestPath);
+        this.callback = callback;
+    }
+
+    ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, Branch.BranchLastAttributedTouchDataListener callback, int attributionWindow) {
+        this(context, requestPath, attributionWindow);
+        this.callback = callback;
+    }
+
     protected int getAttributionWindow() {
         return attributionWindow;
     }
@@ -38,12 +49,16 @@ public class ServerRequestGetLATD extends ServerRequest {
 
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        // Remove the callback logic as per the instructions
+        if (callback != null) {
+            callback.onDataFetched(response.getObject(), null);
+        }
     }
 
     @Override
     public void handleFailure(int statusCode, String causeMsg) {
-        // Remove the callback logic as per the instructions
+        if (callback != null) {
+            callback.onDataFetched(null, new BranchError(causeMsg, statusCode));
+        }
     }
 
     @Override
@@ -53,7 +68,7 @@ public class ServerRequestGetLATD extends ServerRequest {
 
     @Override
     public void clearCallbacks() {
-        // Remove the callback logic as per the instructions
+        callback = null;
     }
 
     @Override
