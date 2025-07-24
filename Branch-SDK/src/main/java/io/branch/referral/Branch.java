@@ -51,6 +51,7 @@ import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.BranchConfigurationManager;
 
 /**
  * <p>
@@ -368,6 +369,8 @@ public class Branch {
         } else {
             branchReferral_.prefHelper_.setBranchKey(branchKey);
         }
+
+        BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
         /* If {@link Application} is instantiated register for activity life cycle events. */
         if (context instanceof Application) {
@@ -1120,9 +1123,6 @@ public class Branch {
      * @param builder A {@link BranchShareSheetBuilder} instance to build share link.
      */
 
-    
-
-    
     // PRIVATE FUNCTIONS
     
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
@@ -1479,32 +1479,36 @@ public class Branch {
      * @see String
      * @see BranchError
      */
-    public interface BranchNativeLinkShareListener {
+    public interface BranchLinkShareListener {
         /**
-         * Called when a link is shared successfully.
-         * 
-         * @param sharedLink The shared link URL
-         * @param sharedBy The channel through which the link was shared
-         * @param error null if successful, otherwise contains error information
-         */
-        void onLinkShareResponse(String sharedLink, String sharedBy, BranchError error);
-        
-        /**
-         * Called when a channel is selected for sharing.
-         * 
-         * @param selectedChannel The name of the selected channel
-         */
-        void onChannelSelected(String selectedChannel);
-        
-        /**
-         * Called when the share link dialog is launched.
+         * <p> Callback method to update when share link dialog is launched.</p>
          */
         void onShareLinkDialogLaunched();
-        
+
         /**
-         * Called when the share link dialog is dismissed.
+         * <p> Callback method to update when sharing dialog is dismissed.</p>
          */
         void onShareLinkDialogDismissed();
+
+        /**
+         * <p> Callback method to update the sharing status. Called on sharing completed or on error.</p>
+         *
+         * @param sharedLink    The link shared to the channel.
+         * @param sharedChannel Channel selected for sharing.
+         * @param error         A {@link BranchError} to update errors, if there is any.
+         */
+        void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error);
+
+        /**
+         * <p>Called when user select a channel for sharing a deep link.
+         * Branch will create a deep link for the selected channel and share with it after calling this
+         * method. On sharing complete, status is updated by onLinkShareResponse() callback. Consider
+         * having a sharing in progress UI if you wish to prevent user activity in the window between selecting a channel
+         * and sharing complete.</p>
+         *
+         * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
+         */
+        void onChannelSelected(String channelName);
     }
 
         /**
@@ -1545,6 +1549,16 @@ public class Branch {
      * Callback interface for listening logout status
      * </p>
      */
+    public interface LogoutStatusListener {
+        /**
+         * Called on finishing the the logout process
+         *
+         * @param loggedOut A {@link Boolean} which is set to true if logout succeeded
+         * @param error     An instance of {@link BranchError} to notify any error occurred during logout.
+         *                  A null value is set if logout succeeded.
+         */
+        void onLogoutFinished(boolean loggedOut, BranchError error);
+    }
 
 
     /**
@@ -2433,13 +2447,24 @@ public class Branch {
     }
 
     /**
-     * Gets the link share listener callback.
-     *
-     * @return {@link Branch.BranchNativeLinkShareListener} the current link share listener callback, or null if not set.
+     * <p>An Interface class that is implemented by all classes that make use of
+     * {@link BranchNativeLinkShareListener}, defining methods to listen for link sharing status.</p>
      */
-    public Branch.BranchNativeLinkShareListener getLinkShareListenerCallback() {
-        // This method was removed during modernization but is kept for backward compatibility
-        // The actual link sharing functionality has been moved to NativeShareLinkManager
-        return null;
+    public interface BranchNativeLinkShareListener {
+
+        /**
+         * <p> Callback method to report error/response.</p>
+         *
+         * @param sharedLink    The link shared to the channel.
+         * @param error         A {@link BranchError} to update errors, if there is any.
+         */
+        void onLinkShareResponse(String sharedLink, BranchError error);
+
+        /**
+         * <p>Called when user select a channel for sharing a deep link.
+         *
+         * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
+         */
+        void onChannelSelected(String channelName);
     }
 }

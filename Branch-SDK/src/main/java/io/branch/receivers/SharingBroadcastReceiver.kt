@@ -15,5 +15,11 @@ class SharingBroadcastReceiver: BroadcastReceiver() {
 
         BranchLogger.v("Intent: $intent")
         BranchLogger.v("Clicked component: $clickedComponent")
+
+        NativeShareLinkManager.getInstance().linkShareListenerCallback?.onChannelSelected(
+            clickedComponent.toString()
+        )
+
+        NativeShareLinkManager.getInstance().linkShareListenerCallback?.onLinkShareResponse(SharingUtil.sharedURL, null);
     }
 }

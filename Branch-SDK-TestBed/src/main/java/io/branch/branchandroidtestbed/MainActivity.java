@@ -148,8 +148,19 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
-                Branch.init().logout();
-                Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_LONG).show();
+                Branch.init().logout(new Branch.LogoutStatusListener() {
+                    @Override
+                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                        if (error != null) {
+                            Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
+                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
+                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
             }
         });
 
