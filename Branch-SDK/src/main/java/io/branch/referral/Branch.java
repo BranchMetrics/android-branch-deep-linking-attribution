@@ -950,13 +950,18 @@ public class Branch {
      * <p>This method should be called if you know that a different person is about to use the app. For example,
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
+     *
+     * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
-    public void logout() {
+    public void logout(LogoutStatusListener callback) {
         prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
         prefHelper_.clearUserValues();
         //On Logout clear the link cache and all pending requests
         linkCache_.clear();
         requestQueue_.clear();
+        if (callback != null) {
+            callback.onLogoutFinished(true, null);
+        }
     }
 
     /**
@@ -1102,13 +1107,13 @@ public class Branch {
      * @param activity          The {@link Activity} to show native share sheet chooser dialog.
      * @param buo               A {@link BranchUniversalObject} value containing the deep link params.
      * @param linkProperties    An object of {@link LinkProperties} specifying the properties of this link
-
+     * @param callback          A {@link Branch.BranchNativeLinkShareListener } instance for getting sharing status.
      * @param title             A {@link String } for setting title in native chooser dialog.
      * @param subject           A {@link String } for setting subject in native chooser dialog.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
-    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, String title, String subject){
-            NativeShareLinkManager.getInstance().shareLink(activity, buo, linkProperties, title, subject);
+    public void share(@NonNull Activity activity, @NonNull BranchUniversalObject buo, @NonNull LinkProperties linkProperties, @Nullable BranchNativeLinkShareListener callback, String title, String subject){
+        NativeShareLinkManager.getInstance().shareLink(activity, buo, linkProperties, callback, title, subject);
     }
 
     /**

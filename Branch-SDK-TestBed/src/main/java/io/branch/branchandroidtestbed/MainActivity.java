@@ -353,7 +353,19 @@ public class MainActivity extends Activity {
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
-                Branch.init().share(MainActivity.this, branchUniversalObject, linkProperties, "Sharing Branch Short URL", "Using Native Chooser Dialog");
+                Branch.init().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
+                            @Override
+                            public void onLinkShareResponse(String sharedLink, BranchError error) {
+                                Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
+                            }
+
+                            @Override
+                            public void onChannelSelected(String channelName) {
+                                Log.d("Native Share Sheet:", "Channel Selected: " + channelName);
+                            }
+
+                        },
+                        "Sharing Branch Short URL", "Using Native Chooser Dialog");
             }
         });
 
@@ -584,8 +596,14 @@ public class MainActivity extends Activity {
         findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.init().logout();
-                Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_LONG).show();
+                Branch.init().logout(new Branch.LogoutStatusListener() {
+                    @Override
+                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                        Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_LONG).show();
+                    }
+                });
+
             }
         });
 
