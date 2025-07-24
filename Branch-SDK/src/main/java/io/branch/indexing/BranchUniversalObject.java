@@ -461,10 +461,6 @@ public class BranchUniversalObject implements Parcelable {
                 if (branchInstance.getLatestReferringParams().has("+clicked_branch_link") && branchInstance.getLatestReferringParams().getBoolean("+clicked_branch_link")) {
                     branchUniversalObject = createInstance(branchInstance.getLatestReferringParams());
                 }
-                // If debug params are set then send BUO object even if link click is false
-                else if (false) {
-                    branchUniversalObject = createInstance(branchInstance.getLatestReferringParams());
-                }
             }
         } catch (Exception e) {
             BranchLogger.d(e.getMessage());
