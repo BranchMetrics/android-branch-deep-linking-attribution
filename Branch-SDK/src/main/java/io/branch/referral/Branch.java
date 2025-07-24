@@ -51,7 +51,6 @@ import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
 import io.branch.referral.util.LinkProperties;
-import io.branch.referral.BranchConfigurationManager;
 
 /**
  * <p>
@@ -799,10 +798,6 @@ public class Branch {
             if (activityHasValidIntent && noUnusedBranchLinkInIntent) {
                 extractSessionParamsForIDL(data, activity);
             }
-        }
-
-        if (false) {
-            intentState_ = INTENT_STATE.READY;
         }
 
         if (intentState_ == INTENT_STATE.READY) {
