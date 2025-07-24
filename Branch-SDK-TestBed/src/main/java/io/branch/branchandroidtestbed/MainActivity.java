@@ -150,7 +150,6 @@ public class MainActivity extends Activity {
                 String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
                 Branch.init().logout();
                 Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_LONG).show();
-
             }
         });
 
@@ -225,8 +224,10 @@ public class MainActivity extends Activity {
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-    
-                // List on google search
+                BranchEvent viewItemEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM);
+                viewItemEvent.logEvent(MainActivity.this);
+                
+                Toast.makeText(MainActivity.this, "VIEW_ITEM event logged", Toast.LENGTH_SHORT).show();
             }
         });
 
