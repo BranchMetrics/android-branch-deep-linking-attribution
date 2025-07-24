@@ -47,8 +47,6 @@ public class BranchUniversalObject implements Parcelable {
     private String imageUrl_;
     /* Meta data provided for the content. {@link ContentMetadata} object holds the metadata for this content */
     private ContentMetadata metadata_;
-    /* Content index mode */
-    private CONTENT_INDEX_MODE indexMode_;
     /* Any keyword associated with the content. Used for indexing */
     private final ArrayList<String> keywords_;
     /* Expiry date for the content and any associated links. Represented as epoch milli second */
@@ -80,7 +78,6 @@ public class BranchUniversalObject implements Parcelable {
         canonicalUrl_ = "";
         title_ = "";
         description_ = "";
-        indexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default content indexing mode is public
         localIndexMode_ = CONTENT_INDEX_MODE.PUBLIC; // Default local indexing mode is public
         expirationInMilliSec_ = 0L;
         creationTimeStamp_ = System.currentTimeMillis();
@@ -499,12 +496,6 @@ public class BranchUniversalObject implements Parcelable {
                 }
             }
             Object indexableVal = jsonReader.readOut(Defines.Jsonkey.PublicallyIndexable.getKey());
-            if (indexableVal instanceof Boolean) {
-                branchUniversalObject.indexMode_ = (Boolean) indexableVal ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-            } else if (indexableVal instanceof Integer) {
-                // iOS compatibility issue. iOS send 0/1 instead of true or false
-                branchUniversalObject.indexMode_ = (Integer) indexableVal == 1 ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
-            }
             branchUniversalObject.localIndexMode_ = jsonReader.readOutBoolean(Defines.Jsonkey.LocallyIndexable.getKey()) ? CONTENT_INDEX_MODE.PUBLIC : CONTENT_INDEX_MODE.PRIVATE;
             branchUniversalObject.creationTimeStamp_ = jsonReader.readOutLong(Defines.Jsonkey.CreationTimestamp.getKey());
             
@@ -601,7 +592,6 @@ public class BranchUniversalObject implements Parcelable {
         dest.writeString(description_);
         dest.writeString(imageUrl_);
         dest.writeLong(expirationInMilliSec_);
-        dest.writeInt(indexMode_.ordinal());
         dest.writeSerializable(keywords_);
         dest.writeParcelable(metadata_, flags);
         dest.writeInt(localIndexMode_.ordinal());
@@ -616,7 +606,6 @@ public class BranchUniversalObject implements Parcelable {
         description_ = in.readString();
         imageUrl_ = in.readString();
         expirationInMilliSec_ = in.readLong();
-        indexMode_ = CONTENT_INDEX_MODE.values()[in.readInt()];
         @SuppressWarnings("unchecked")
         ArrayList<String> keywordsTemp = (ArrayList<String>) in.readSerializable();
         if (keywordsTemp != null) {
