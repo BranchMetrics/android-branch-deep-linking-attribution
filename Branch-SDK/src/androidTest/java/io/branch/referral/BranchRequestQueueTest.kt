@@ -65,7 +65,6 @@ class BranchRequestQueueTest : BranchTest() {
         
         // Test that compatibility methods don't crash
         adapter.printQueue()
-        // processNextQueueItem method removed - no longer needed for compatibility
         adapter.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK)
         adapter.postInitClear()
         

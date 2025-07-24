@@ -826,8 +826,6 @@ public class Branch {
         if (requestQueue_ == null) return;
         requestQueue_.postInitClear();
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
-        // processNextQueueItem call removed - critical SDK initialization unlock handled automatically
-        // Modern queue processes immediately when SDK_INIT_WAIT_LOCK is released via unlockProcessWait
     }
     
     private boolean isIntentParamsAlreadyConsumed(Activity activity) {
@@ -1296,9 +1294,6 @@ public class Branch {
          BranchLogger.v("Finished ordering init calls");
          requestQueue_.printQueue();
          initTasks(request);
-
-         // processNextQueueItem call removed - app initialization processing handled automatically
-         // Modern queue processes init session request immediately after initTasks completes
      }
 
     private void initTasks(ServerRequest request) {
@@ -1319,7 +1314,6 @@ public class Branch {
                 public void onInstallReferrersFinished() {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                     BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
-                    // processNextQueueItem call removed - modern queue processes automatically via unlockProcessWait
                 }
             });
         }
@@ -1331,7 +1325,6 @@ public class Branch {
             @Override
             public void onAdsParamsFetchFinished() {
                 requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-                // processNextQueueItem call removed - modern queue processes automatically via unlockProcessWait
             }
         });
     }
@@ -1359,7 +1352,6 @@ public class Branch {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
-        // processNextQueueItem call removed - modern queue processes automatically without manual trigger
     }
 
     /**
