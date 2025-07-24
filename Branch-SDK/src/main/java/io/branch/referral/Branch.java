@@ -1295,7 +1295,7 @@ public class Branch {
         BranchLogger.v("initTasks " + request);
         // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
         // In this case need to wait till onResume to get the latest intent.
-        if (intentState_ != INTENT_STATE.READY && false) {
+        if (false) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
