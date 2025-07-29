@@ -381,6 +381,9 @@ public class ServerRequestQueue {
         else if (request instanceof QueueOperationLogout){
             return false;
         }
+        else if (request instanceof QueueOperationSetIdentity){
+            return false;
+        }
 
         // All other Request Types need a session.
         return true;
@@ -481,7 +484,9 @@ public class ServerRequestQueue {
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
         if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED &&
-                !(req instanceof ServerRequestInitSession || req instanceof QueueOperationLogout)) {
+                !(req instanceof ServerRequestInitSession
+                        || req instanceof QueueOperationLogout
+                        || req instanceof QueueOperationSetIdentity)) {
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
@@ -535,7 +540,7 @@ public class ServerRequestQueue {
             // update queue wait time
             thisReq_.doFinalUpdateOnBackgroundThread();
 
-            if(thisReq_ instanceof QueueOperationLogout){
+            if(thisReq_ instanceof QueueOperationLogout || thisReq_ instanceof QueueOperationSetIdentity){
                 return new ServerResponse("", 200, "", "");
             }
 

@@ -1058,14 +1058,7 @@ public class Branch {
      *                 the data associated with the user id being assigned, if available.
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
-        //
-        if (userId != null && !userId.equals(prefHelper_.getIdentity())) {
-            installDeveloperId = userId;
-            prefHelper_.setIdentity(userId);
-        }
-        if (callback != null) {
-            callback.onInitFinished(getFirstReferringParams(), null);
-        }
+        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, null, userId, callback));
     }
 
     /**
