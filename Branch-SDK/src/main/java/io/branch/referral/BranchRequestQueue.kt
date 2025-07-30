@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import org.json.JSONObject
 
 /**
  * Request retry tracking information
@@ -68,14 +68,21 @@ class BranchRequestQueue private constructor(private val context: Context) {
         private const val RETRY_DELAY_MS = 100L
         
         @Volatile
-        private var INSTANCE: BranchRequestQueue? = null
+        private var INSTANCE: WeakReference<BranchRequestQueue>? = null
         
         @JvmStatic
         fun getInstance(context: Context): BranchRequestQueue {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: BranchRequestQueue(context.applicationContext).also { 
-                    INSTANCE = it
+            // Check if we have a valid instance
+            INSTANCE?.get()?.let { return it }
+            
+            // Create new instance with proper synchronization
+            return synchronized(this) {
+                // Double-check after acquiring lock
+                INSTANCE?.get() ?: run {
+                    val newInstance = BranchRequestQueue(context.applicationContext)
+                    INSTANCE = WeakReference(newInstance)
                     BranchLogger.d("DEBUG: BranchRequestQueue instance created")
+                    newInstance
                 }
             }
         }
@@ -83,8 +90,8 @@ class BranchRequestQueue private constructor(private val context: Context) {
         @JvmStatic
         fun shutDown() {
             BranchLogger.d("DEBUG: BranchRequestQueue.shutDown called")
-            INSTANCE?.let {
-                it.shutdown()
+            INSTANCE?.get()?.let { instance ->
+                instance.shutdown()
                 INSTANCE = null
             }
             BranchLogger.d("DEBUG: BranchRequestQueue.shutDown completed")
@@ -240,7 +247,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         val requestId = generateRequestId(request)
         
         if (!canProcessRequest(request)) {
-            if (request.isWaitingOnProcessToFinish()) {
+            if (request.isWaitingOnProcessToFinish) {
                 val waitLocks = request.printWaitLocks()
                 BranchLogger.d("DEBUG: Request cannot be processed - waiting on locks: $waitLocks")
             }
@@ -263,7 +270,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             BranchLogger.d("DEBUG: Processing request: ${request::class.simpleName}, network count: ${networkCount.get()}")
             
             when {
-                request.isWaitingOnProcessToFinish() -> {
+                request.isWaitingOnProcessToFinish -> {
                     val waitLocks = request.printWaitLocks()
                     BranchLogger.v("Request $request is waiting on processes to finish")
                     BranchLogger.d("DEBUG: Request is waiting on processes to finish, active locks: $waitLocks, re-queuing")
@@ -345,12 +352,12 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
         
         // Mark first wait lock time for timeout tracking
-        if (request.isWaitingOnProcessToFinish()) {
+        if (request.isWaitingOnProcessToFinish) {
             retryInfo.markFirstWaitLock()
         }
         
         // Check for stuck locks and try to resolve them
-        if (request.isWaitingOnProcessToFinish()) {
+        if (request.isWaitingOnProcessToFinish) {
             val waitLocks = request.printWaitLocks()
             
             // Check for timeout-based stuck locks (10 seconds)
@@ -514,10 +521,13 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     
                     // Additional logging after successful completion
                     if (request is ServerRequestInitSession) {
-                        val currentState = Branch.init().getCurrentSessionState()
-                        val legacyState = Branch.init().getInitState()
-                        val hasUser = Branch.init().prefHelper_.getRandomizedBundleToken() != PrefHelper.NO_STRING_VALUE
-                        BranchLogger.d("DEBUG: After $request completion - SessionState: $currentState, LegacyState: $legacyState, hasUser: $hasUser")
+                        try {
+                            val legacyState = Branch.init().initState
+                            val hasUser = Branch.init().prefHelper_.getRandomizedBundleToken() != PrefHelper.NO_STRING_VALUE
+                            BranchLogger.d("DEBUG: After $request completion - LegacyState: $legacyState, hasUser: $hasUser")
+                        } catch (e: Exception) {
+                            BranchLogger.d("DEBUG: Could not access session state after request completion: ${e.message}")
+                        }
                     }
                 } catch (e: Exception) {
                     BranchLogger.e("Error in onRequestSucceeded: ${e.message}")
@@ -536,10 +546,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     private fun isSessionValidForRequest(request: ServerRequest): Boolean {
         val branch = Branch.init()
-        val hasSession = !branch.prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+        val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
         val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
-        val sessionInitialized = branch.getInitState() == Branch.SESSION_STATE.INITIALISED
+        val sessionInitialized = branch.initState == Branch.SESSION_STATE.INITIALISED
         val canPerformOperations = branch.canPerformOperations()
         
         return (sessionInitialized || canPerformOperations) && hasSession && hasDeviceToken && 
@@ -579,8 +589,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     private fun tryResolveStuckUserAgentLock(request: ServerRequest) {
         try {
-            val branch = Branch.init()
-            
             // Check if user agent is now available
             if (!android.text.TextUtils.isEmpty(Branch._userAgentString)) {
                 BranchLogger.d("DEBUG: User agent is now available: ${Branch._userAgentString}, removing stuck lock")
@@ -618,10 +626,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
             val branch = Branch.init()
             
             // Check if session is actually valid now
-            val hasSession = !branch.prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+            val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
             val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
             val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
-            val sessionInitialized = branch.getInitState() == Branch.SESSION_STATE.INITIALISED
+            val sessionInitialized = branch.initState == Branch.SESSION_STATE.INITIALISED
             val canPerformOperations = branch.canPerformOperations()
             
             BranchLogger.d("DEBUG: SDK_INIT_WAIT_LOCK resolution check - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, sessionInitialized: $sessionInitialized, canPerformOperations: $canPerformOperations")
@@ -676,31 +684,31 @@ class BranchRequestQueue private constructor(private val context: Context) {
             var updateRequestsInQueue = false
             
             // Process SessionID
-            if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                val sessionId = respJson.getString(Defines.Jsonkey.SessionID.getKey())
-                branch.prefHelper_.setSessionID(sessionId)
+            if (respJson.has(Defines.Jsonkey.SessionID.key)) {
+                val sessionId = respJson.getString(Defines.Jsonkey.SessionID.key)
+                branch.prefHelper_.sessionID = sessionId
                 updateRequestsInQueue = true
                 BranchLogger.d("DEBUG: Set SessionID: $sessionId")
             }
             
             // Process RandomizedBundleToken - this is what makes hasUser() return true
-            if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
-                val newRandomizedBundleToken = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.getKey())
+            if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.key)) {
+                val newRandomizedBundleToken = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.key)
                 val currentToken = branch.prefHelper_.getRandomizedBundleToken()
                 
                 if (currentToken != newRandomizedBundleToken) {
                     // On setting a new Randomized Bundle Token clear the link cache
                     branch.linkCache_.clear()
-                    branch.prefHelper_.setRandomizedBundleToken(newRandomizedBundleToken)
+                    branch.prefHelper_.randomizedBundleToken = newRandomizedBundleToken
                     updateRequestsInQueue = true
                     BranchLogger.d("DEBUG: Set RandomizedBundleToken: $newRandomizedBundleToken (was: $currentToken)")
                 }
             }
             
             // Process RandomizedDeviceToken
-            if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
-                val deviceToken = respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey())
-                branch.prefHelper_.setRandomizedDeviceToken(deviceToken)
+            if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.key)) {
+                val deviceToken = respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.key)
+                branch.prefHelper_.randomizedDeviceToken = deviceToken
                 updateRequestsInQueue = true
                 BranchLogger.d("DEBUG: Set RandomizedDeviceToken: $deviceToken")
             }
@@ -721,7 +729,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for processing eligibility
      */
     private fun canProcessRequest(request: ServerRequest): Boolean {
-        val isWaiting = request.isWaitingOnProcessToFinish()
+        val isWaiting = request.isWaitingOnProcessToFinish
         val needsSession = requestNeedsSession(request)
         val hasValidSession = hasValidSession(request)
         
@@ -782,7 +790,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
         
         val branch = Branch.init()
-        val hasSession = !branch.prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+        val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
         val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
         
@@ -937,7 +945,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         BranchLogger.d("DEBUG: BranchRequestQueue.updateAllRequestsInQueue called")
         synchronized(queueList) {
             for (req in queueList) {
-                req.updateEnvironment(context, req.getPost())
+                req.updateEnvironment(context, req.post)
             }
         }
         BranchLogger.d("DEBUG: BranchRequestQueue.updateAllRequestsInQueue completed")
@@ -1045,11 +1053,9 @@ class BranchRequestQueue private constructor(private val context: Context) {
     /**
      * Print queue state for debugging
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun printQueue() {
         if (BranchLogger.loggingLevel.level >= BranchLogger.BranchLogLevel.VERBOSE.level) {
             val activeCount = activeRequests.size
-            val channelSize = if (processingTrigger.isEmpty) 0 else "unknown" // Channel doesn't expose size
             BranchLogger.v("Queue state: ${_queueState.value}, Active requests: $activeCount, Network count: ${networkCount.get()}")
         }
         BranchLogger.d("DEBUG: Queue state: ${_queueState.value}, Queue size: ${getSize()}, Active requests: ${activeRequests.size}, Network count: ${networkCount.get()}")

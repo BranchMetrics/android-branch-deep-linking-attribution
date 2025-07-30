@@ -2,6 +2,7 @@ package io.branch.referral
 
 import android.content.Context
 import kotlinx.coroutines.*
+import java.lang.ref.WeakReference
 
 /**
  * Adapter class to integrate the new BranchRequestQueue with existing ServerRequestQueue API
@@ -22,15 +23,23 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     
     companion object {
+        // Use WeakReference to prevent memory leaks
         @Volatile
-        private var INSTANCE: BranchRequestQueueAdapter? = null
+        private var INSTANCE: WeakReference<BranchRequestQueueAdapter>? = null
         
         @JvmStatic
         fun getInstance(context: Context): BranchRequestQueueAdapter {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: BranchRequestQueueAdapter(context).also { 
-                    INSTANCE = it
+            // Check if we have a valid instance
+            INSTANCE?.get()?.let { return it }
+            
+            // Create new instance with proper synchronization
+            return synchronized(this) {
+                // Double-check after acquiring lock
+                INSTANCE?.get() ?: run {
+                    val newInstance = BranchRequestQueueAdapter(context)
+                    INSTANCE = WeakReference(newInstance)
                     BranchLogger.d("DEBUG: BranchRequestQueueAdapter instance created")
+                    newInstance
                 }
             }
         }
@@ -38,8 +47,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         @JvmStatic
         fun shutDown() {
             BranchLogger.d("DEBUG: BranchRequestQueueAdapter.shutDown called")
-            INSTANCE?.let {
-                it.shutdown()
+            INSTANCE?.get()?.let { instance ->
+                instance.shutdown()
                 INSTANCE = null
             }
             BranchLogger.d("DEBUG: BranchRequestQueueAdapter.shutDown completed")
@@ -73,11 +82,15 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         val needsSession = requestNeedsSession(request)
         val canPerformOperations = Branch.init().canPerformOperations()
         val legacyInitialized = Branch.init().initState == Branch.SESSION_STATE.INITIALISED
-        val currentSessionState = Branch.init().getCurrentSessionState()
-        val hasValidSession = Branch.init().hasActiveSession() && 
-                             !Branch.init().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+        val hasValidSession = try {
+            Branch.init().hasActiveSession() && 
+            !Branch.init().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+        } catch (e: Exception) {
+            // Fallback if session state is not accessible
+            !Branch.init().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+        }
         
-        BranchLogger.d("DEBUG: Request needs session: $needsSession, can perform operations: $canPerformOperations, legacy initialized: $legacyInitialized, hasValidSession: $hasValidSession, currentSessionState: $currentSessionState")
+        BranchLogger.d("DEBUG: Request needs session: $needsSession, can perform operations: $canPerformOperations, legacy initialized: $legacyInitialized, hasValidSession: $hasValidSession")
         
         if (!canPerformOperations && !legacyInitialized && 
             request !is ServerRequestInitSession && needsSession) {
@@ -93,9 +106,9 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
                 BranchLogger.d("DEBUG: Session data is actually valid, not adding SDK_INIT_WAIT_LOCK")
                 // Don't add wait lock since session is actually ready
             }
-            // If session state is stuck in Initializing without a valid session, try to trigger a reset
-            else if (currentSessionState is BranchSessionState.Initializing && !hasValidSession) {
-                BranchLogger.d("DEBUG: Session appears stuck in Initializing state without valid session, attempting to reset")
+            // If session appears stuck without a valid session, try to allow it to proceed
+            else if (!hasValidSession && !legacyInitialized) {
+                BranchLogger.d("DEBUG: Session appears stuck without valid session, attempting to reset")
                 // Don't add wait lock, let the request proceed and it will trigger proper initialization
             } else {
                 BranchLogger.d("DEBUG: Adding SDK_INIT_WAIT_LOCK for request waiting on session")
