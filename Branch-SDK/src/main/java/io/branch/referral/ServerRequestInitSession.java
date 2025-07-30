@@ -86,9 +86,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
+        // Set the session state to INITIALISED after successful initialization
+        branch.setInitState(Branch.SESSION_STATE.INITIALISED);
+        
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
         BranchLogger.v("onInitSessionCompleted on thread " + Thread.currentThread().getName());
+        BranchLogger.d("DEBUG: Session initialization completed successfully, state set to INITIALISED");
     }
 
     /**

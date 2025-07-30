@@ -37,6 +37,8 @@ class BranchSessionStateManager {
     fun updateState(newState: BranchSessionState): Boolean {
         val currentState = _sessionState.value
         
+        BranchLogger.v("Session state transition attempt: $currentState -> $newState")
+        
         // Validate state transition
         if (!isValidTransition(currentState, newState)) {
             BranchLogger.w("Invalid state transition from $currentState to $newState")

@@ -331,6 +331,9 @@ public class Branch {
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
         requestQueue_ = BranchRequestQueueAdapter.getInstance(context);
+        BranchLogger.d("DEBUG: Branch constructor - initializing request queue");
+        requestQueue_.initialize();
+        BranchLogger.d("DEBUG: Branch constructor - request queue initialized");
     }
 
     /**
@@ -578,7 +581,21 @@ public class Branch {
      */
     @NonNull
     public BranchSessionState getCurrentSessionState() {
-        return sessionStateManager.getCurrentState();
+        try {
+            return sessionStateManager.getCurrentState();
+        } catch (Exception e) {
+            BranchLogger.e("Error getting current session state: " + e.getMessage());
+            // Fallback to legacy state mapping
+            switch (getInitState()) {
+                case INITIALISED:
+                    return BranchSessionState.Initialized.INSTANCE;
+                case INITIALISING:
+                    return BranchSessionState.Initializing.INSTANCE;
+                case UNINITIALISED:
+                default:
+                    return BranchSessionState.Uninitialized.INSTANCE;
+            }
+        }
     }
     
     /**
@@ -587,7 +604,13 @@ public class Branch {
      * @return true if operations can be performed, false otherwise
      */
     public boolean canPerformOperations() {
-        return sessionStateManager.canPerformOperations();
+        try {
+            return sessionStateManager.canPerformOperations();
+        } catch (Exception e) {
+            BranchLogger.e("Error checking canPerformOperations: " + e.getMessage());
+            // Fallback to legacy state check
+            return getInitState() == SESSION_STATE.INITIALISED;
+        }
     }
     
     /**
@@ -596,7 +619,13 @@ public class Branch {
      * @return true if there's an active session, false otherwise
      */
     public boolean hasActiveSession() {
-        return sessionStateManager.hasActiveSession();
+        try {
+            return sessionStateManager.hasActiveSession();
+        } catch (Exception e) {
+            BranchLogger.e("Error checking hasActiveSession: " + e.getMessage());
+            // Fallback to legacy state check
+            return getInitState() == SESSION_STATE.INITIALISED;
+        }
     }
     
     /**
@@ -763,8 +792,15 @@ public class Branch {
      * closed application event to the Branch API.</p>
      */
     private void executeClose() {
+        BranchLogger.d("DEBUG: executeClose called - resetting session state");
+        
+        // Reset legacy session state first to ensure consistency
+        setInitState(SESSION_STATE.UNINITIALISED);
+        
         // Reset session state via StateFlow system
         sessionStateManager.reset();
+        
+        BranchLogger.d("DEBUG: executeClose completed - session state reset to Uninitialized");
     }
 
     public static void registerPlugin(String name, String version) {
@@ -821,7 +857,12 @@ public class Branch {
     }
 
     void unlockSDKInitWaitLock() {
-        if (requestQueue_ == null) return;
+        BranchLogger.d("DEBUG: unlockSDKInitWaitLock called");
+        if (requestQueue_ == null) {
+            BranchLogger.d("DEBUG: requestQueue_ is null, cannot unlock");
+            return;
+        }
+        BranchLogger.d("DEBUG: Clearing init data and unlocking SDK_INIT_WAIT_LOCK");
         requestQueue_.postInitClear();
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
     }
@@ -1197,17 +1238,22 @@ public class Branch {
             initState_ = initState;
         }
         
-        // Update the StateFlow-based session state manager
-        switch (initState) {
-            case UNINITIALISED:
-                sessionStateManager.reset();
-                break;
-            case INITIALISING:
-                sessionStateManager.initialize();
-                break;
-            case INITIALISED:
-                sessionStateManager.initializeComplete();
-                break;
+        // Update the StateFlow-based session state manager with proper error handling
+        try {
+            switch (initState) {
+                case UNINITIALISED:
+                    sessionStateManager.reset();
+                    break;
+                case INITIALISING:
+                    sessionStateManager.initialize();
+                    break;
+                case INITIALISED:
+                    sessionStateManager.initializeComplete();
+                    break;
+            }
+        } catch (Exception e) {
+            BranchLogger.e("Error updating session state manager: " + e.getMessage());
+            // Fallback to legacy state management
         }
     }
 
@@ -1219,11 +1265,12 @@ public class Branch {
 
     private void initializeSession(ServerRequestInitSession initRequest, int delay) {
         BranchLogger.v("initializeSession " + initRequest + " delay " + delay);
+        BranchLogger.d("DEBUG: Starting session initialization with delay: " + delay);
+        
+        // Validate Branch key first
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
-            // Report key error using new StateFlow system
             BranchError keyError = new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID);
             sessionStateManager.initializeFailed(keyError);
-            //Report Key error on callback
             if (initRequest.callback_ != null) {
                 initRequest.callback_.onInitFinished(null, keyError);
             }
@@ -1233,36 +1280,71 @@ public class Branch {
             BranchLogger.w("Warning: You are using your test app's Branch Key. Remember to change it to live Branch Key during deployment.");
         }
 
+        // Set initializing state immediately
+        setInitState(SESSION_STATE.INITIALISING);
+        BranchLogger.d("DEBUG: Session state set to INITIALISING");
+        
         if (delay > 0) {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
+            BranchLogger.d("DEBUG: Adding USER_SET_WAIT_LOCK with delay: " + delay);
             new Handler().postDelayed(new Runnable() {
                 @Override public void run() {
-            
+                    BranchLogger.d("DEBUG: Delay completed, processing session initialization");
+                    processSessionInitialization(initRequest);
                 }
             }, delay);
+        } else {
+            BranchLogger.d("DEBUG: No delay, processing session initialization immediately");
+            processSessionInitialization(initRequest);
         }
-
-        // Re 'forceBranchSession':
-        // Check if new session is being forced. There are two use cases for setting the ForceNewBranchSession to true:
-        // 1. Launch an activity via a push notification while app is in foreground but does not have
-        // the particular activity in the backstack, in such cases, users can't utilize reInitSession() because
-        // it's called from onNewIntent() which is never invoked
-        // todo: this is tricky for users, get rid of ForceNewBranchSession if possible. (if flag is not set, the content from Branch link is lost)
-        // 2. Some users navigate their apps via Branch links so they would have to set ForceNewBranchSession to true
-        // which will blow up the session count in analytics but does the job.
+    }
+    
+    private void processSessionInitialization(ServerRequestInitSession initRequest) {
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
 
         BranchSessionState sessionState = getCurrentSessionState();
         BranchLogger.v("Intent: " + intent + " forceBranchSession: " + forceBranchSession + " initState: " + sessionState);
-        if (sessionState instanceof BranchSessionState.Uninitialized || forceBranchSession) {
+        BranchLogger.d("DEBUG: Processing session initialization - forceBranchSession: " + forceBranchSession + " sessionState: " + sessionState);
+        
+        // Enhanced session state validation with fallback to legacy system
+        // Check if we have a valid active session
+        boolean hasValidActiveSession = hasActiveSession() && 
+                                       !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
+        
+        boolean shouldInitialize = sessionState instanceof BranchSessionState.Uninitialized || 
+                                  forceBranchSession ||
+                                  getInitState() == SESSION_STATE.UNINITIALISED ||
+                                  // Allow re-initialization if session is in Initializing state but no valid session exists
+                                  (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession);
+        
+        BranchLogger.d("DEBUG: Should initialize session: " + shouldInitialize + 
+                      " (hasValidActiveSession: " + hasValidActiveSession + 
+                      ", sessionState: " + sessionState + 
+                      ", legacyState: " + getInitState() + ")");
+        
+        if (shouldInitialize) {
             if (forceBranchSession && intent != null) {
-                intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey()); // SDK-881, avoid double initialization
+                intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey());
+                BranchLogger.d("DEBUG: Removed ForceNewBranchSession extra from intent");
             }
+            
+            // If we're in an incomplete Initializing state, reset to allow proper initialization
+            if (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession) {
+                BranchLogger.d("DEBUG: Resetting incomplete Initializing state to allow re-initialization");
+                setInitState(SESSION_STATE.UNINITIALISED);
+            }
+            
+            BranchLogger.d("DEBUG: Calling registerAppInit for request: " + initRequest);
             registerAppInit(initRequest, forceBranchSession);
         } else if (initRequest.callback_ != null) {
-            // Else, let the user know session initialization failed because it's already initialized.
-            initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
+            BranchLogger.d("DEBUG: Session already initialized, calling callback with latest params");
+            // If session is truly initialized, return the latest referring params instead of error
+            if (hasValidActiveSession) {
+                initRequest.callback_.onInitFinished(getLatestReferringParams(), null);
+            } else {
+                initRequest.callback_.onInitFinished(null, new BranchError("Warning.", BranchError.ERR_BRANCH_ALREADY_INITIALIZED));
+            }
         }
     }
     
@@ -1272,17 +1354,21 @@ public class Branch {
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean forceBranchSession) {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
+         BranchLogger.d("DEBUG: Registering app init - forceBranchSession: " + forceBranchSession);
          setInitState(SESSION_STATE.INITIALISING);
 
-         ServerRequestInitSession r = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
+         ServerRequest req = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
+         ServerRequestInitSession r = (req instanceof ServerRequestInitSession) ? (ServerRequestInitSession) req : null;
          BranchLogger.v("Ordering init calls");
          BranchLogger.v("Self init request: " + r);
+         BranchLogger.d("DEBUG: Self init request in queue: " + r);
          requestQueue_.printQueue();
 
          // if forceBranchSession aka reInit is true, we want to preserve the callback order in case
          // there is one still in flight
          if (r == null || forceBranchSession) {
              BranchLogger.v("Moving " + request + " " + "to front of the queue or behind network-in-progress request");
+             BranchLogger.d("DEBUG: Inserting request at front of queue");
              requestQueue_.insertRequestAtFront(request);
          }
          else {
@@ -1290,14 +1376,18 @@ public class Branch {
              BranchLogger.v("Retrieved " + r + " with callback " + r.callback_ + " in queue currently");
              r.callback_ = request.callback_;
              BranchLogger.v(r + " now has callback " + request.callback_);
+             BranchLogger.d("DEBUG: Updated existing request callback");
          }
          BranchLogger.v("Finished ordering init calls");
          requestQueue_.printQueue();
+         BranchLogger.d("DEBUG: Calling initTasks for request: " + request);
          initTasks(request);
      }
 
     private void initTasks(ServerRequest request) {
         BranchLogger.v("initTasks " + request);
+        BranchLogger.d("DEBUG: Starting initTasks for request: " + request.getClass().getSimpleName());
+        
         // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
         // In this case need to wait till onResume to get the latest intent.
         if (false) {
@@ -1308,35 +1398,54 @@ public class Branch {
         if (request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
+            BranchLogger.d("DEBUG: Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
 
             deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
                 @Override
                 public void onInstallReferrersFinished() {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                     BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
+                    BranchLogger.d("DEBUG: Install referrer fetch completed, lock removed");
                 }
             });
         }
 
         request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         BranchLogger.v("Added GAID_FETCH_WAIT_LOCK");
+        BranchLogger.d("DEBUG: Added GAID_FETCH_WAIT_LOCK for request");
 
         deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
             @Override
             public void onAdsParamsFetchFinished() {
                 requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+                BranchLogger.d("DEBUG: GAID fetch completed, unlocking wait lock");
             }
         });
+        
+        BranchLogger.d("DEBUG: Calling handleNewRequest for request: " + request);
+        requestQueue_.handleNewRequest(request);
     }
 
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
+        boolean hasUser = requestQueue_.hasUser();
+        String bundleToken = prefHelper_.getRandomizedBundleToken();
+        String sessionId = prefHelper_.getSessionID();
+        String deviceToken = prefHelper_.getRandomizedDeviceToken();
+        
+        BranchLogger.d("DEBUG: getInstallOrOpenRequest - hasUser: " + hasUser + 
+                      ", bundleToken: " + (bundleToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
+                      ", sessionId: " + (sessionId.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
+                      ", deviceToken: " + (deviceToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS"));
+        
         ServerRequestInitSession request;
-        if (requestQueue_.hasUser()) {
+        if (hasUser) {
             // If there is user this is open
             request = new ServerRequestRegisterOpen(context_, callback, isAutoInitialization);
+            BranchLogger.d("DEBUG: Created ServerRequestRegisterOpen - hasUser: true, isAutoInitialization: " + isAutoInitialization);
         } else {
             // If no user this is an Install
             request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
+            BranchLogger.d("DEBUG: Created ServerRequestRegisterInstall - hasUser: false, isAutoInitialization: " + isAutoInitialization);
         }
         return request;
     }
@@ -2045,16 +2154,13 @@ public class Branch {
                         " in your application class.");
                 return;
             }
-            if (ignoreIntent != null) {
-        
-            }
 
             Activity activity = branch.getCurrentActivity();
             Intent intent = activity != null ? activity.getIntent() : null;
             Uri initialReferrer = null;
 
             if(activity != null) {
-             initialReferrer = ActivityCompat.getReferrer(activity);
+                initialReferrer = ActivityCompat.getReferrer(activity);
             }
 
             BranchLogger.v("Activity: " + activity);
@@ -2079,17 +2185,15 @@ public class Branch {
                 return;
             }
 
-            // from either intent extra "branch_data", or as parameters attached to the referring app link
-            if (callback != null) callback.onInitFinished(branch.getLatestReferringParams(), null);
-            // mark this session as IDL session
-            Branch.init().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
-            // potentially routes the user to the Activity configured to consume this particular link
-            branch.checkForAutoDeepLinkConfiguration();
-            // we already invoked the callback for let's set it to null, we will still make the
-            // init session request but for analytics purposes only
-            callback = null;
-
-
+            // Check if we have referring params from either intent extra "branch_data", or as parameters attached to the referring app link
+            JSONObject referringParams = branch.getLatestReferringParams();
+            if (referringParams != null && callback != null) {
+                callback.onInitFinished(referringParams, null);
+                // mark this session as IDL session
+                Branch.init().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+                // potentially routes the user to the Activity configured to consume this particular link
+                branch.checkForAutoDeepLinkConfiguration();
+            }
 
             ServerRequestInitSession initRequest = branch.getInstallOrOpenRequest(callback, isAutoInitialization);
             BranchLogger.d("Creating " + initRequest + " from init on thread " + Thread.currentThread().getName());
