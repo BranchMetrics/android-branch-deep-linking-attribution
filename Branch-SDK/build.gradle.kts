@@ -45,7 +45,6 @@ dependencies {
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
 
-
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")
@@ -61,11 +60,24 @@ dependencies {
     androidTestImplementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
     androidTestImplementation("com.miui.referrer:homereferrer:1.0.0.7")
 
-    testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20230227")
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
     testImplementation("org.mockito:mockito-core:4.11.0")
     testImplementation("org.mockito:mockito-inline:4.11.0")
+
+    // For JUnit tests
+    testImplementation ("junit:junit:4.13.2")
+    // Mockito core library
+    testImplementation("org.mockito:mockito-core:5.4.0")
+    // Mockito Kotlin extensions
+    testImplementation ("org.mockito.kotlin:mockito-kotlin:4.1.0")
+    // For Android instrumented tests (if needed)
+    androidTestImplementation ("org.mockito:mockito-android:4.11.0")
+
+    // Mockito needs these classes in the test class path
+    testImplementation("androidx.browser:browser:1.8.0")
+    testImplementation("com.android.billingclient:billing:6.0.1")
+
 }
 
 val VERSION_NAME: String by project

@@ -4,6 +4,7 @@ import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
 import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
+import static io.branch.referral.PrefHelper.isValidBranchKey;
 import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 
@@ -220,6 +221,7 @@ public class Branch {
     private final Context context_;
 
     private final BranchQRCodeCache branchQRCodeCache_;
+    private final BranchConfigurationController branchConfigurationController_;
 
     public final BranchRequestQueueAdapter requestQueue_;
 
@@ -238,7 +240,7 @@ public class Branch {
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
     SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
-    
+
     // New StateFlow-based session state manager
     private final BranchSessionStateManager sessionStateManager = new BranchSessionStateManager();
 
@@ -330,6 +332,7 @@ public class Branch {
         deviceInfo_ = new DeviceInfo(context);
         branchPluginSupport_ = new BranchPluginSupport(context);
         branchQRCodeCache_ = new BranchQRCodeCache(context);
+        branchConfigurationController_ = new BranchConfigurationController();
         requestQueue_ = BranchRequestQueueAdapter.getInstance(context);
         BranchLogger.d("DEBUG: Branch constructor - initializing request queue");
         requestQueue_.initialize();
@@ -370,6 +373,10 @@ public class Branch {
             branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
         } else {
             branchReferral_.prefHelper_.setBranchKey(branchKey);
+            // Set the source to "init_function" since this method is called via getAutoInstance with explicit key
+            if (!branchKey.equals(BranchUtil.readBranchKey(context))) {
+                branchReferral_.prefHelper_.setBranchKeySource("init_function");
+            }
         }
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
@@ -418,7 +425,11 @@ public class Branch {
      * </p>
      */
     public static void enableTestMode() {
-        BranchUtil.setTestMode(true);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(true);
+        } else {
+            BranchUtil.setTestMode(true);
+        }
         BranchLogger.logAlways("enableTestMode has been changed. It now uses the test key but will not" +
                 " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
                 " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
@@ -431,7 +442,11 @@ public class Branch {
      * </p>
      */
     public static void disableTestMode() {
-        BranchUtil.setTestMode(false);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(false);
+        } else {
+            BranchUtil.setTestMode(false);
+        }
     }
 
     /**
@@ -545,38 +560,38 @@ public class Branch {
 
 
     // ===== NEW STATEFLOW-BASED SESSION STATE API =====
-    
+
     /**
      * Add a listener to observe session state changes using the new StateFlow-based system.
      * This provides deterministic state observation for SDK clients.
-     * 
+     *
      * @param listener The listener to add
      */
     public void addSessionStateObserver(@NonNull BranchSessionStateListener listener) {
         sessionStateManager.addListener(listener, true);
     }
-    
+
     /**
      * Add a simple listener to observe session state changes.
-     * 
+     *
      * @param listener The simple listener to add
      */
     public void addSessionStateObserver(@NonNull SimpleBranchSessionStateListener listener) {
         sessionStateManager.addListener(listener, true);
     }
-    
+
     /**
      * Remove a session state observer.
-     * 
+     *
      * @param listener The listener to remove
      */
     public void removeSessionStateObserver(@NonNull BranchSessionStateListener listener) {
         sessionStateManager.removeListener(listener);
     }
-    
+
     /**
      * Get the current session state using the new StateFlow-based system.
-     * 
+     *
      * @return The current session state
      */
     @NonNull
@@ -597,10 +612,10 @@ public class Branch {
             }
         }
     }
-    
+
     /**
      * Check if the SDK can currently perform operations.
-     * 
+     *
      * @return true if operations can be performed, false otherwise
      */
     public boolean canPerformOperations() {
@@ -612,10 +627,10 @@ public class Branch {
             return getInitState() == SESSION_STATE.INITIALISED;
         }
     }
-    
+
     /**
      * Check if there's an active session.
-     * 
+     *
      * @return true if there's an active session, false otherwise
      */
     public boolean hasActiveSession() {
@@ -627,10 +642,10 @@ public class Branch {
             return getInitState() == SESSION_STATE.INITIALISED;
         }
     }
-    
+
     /**
      * Get the StateFlow for observing session state changes in Kotlin code.
-     * 
+     *
      * @return StateFlow of BranchSessionState
      */
     @NonNull
@@ -793,13 +808,13 @@ public class Branch {
      */
     private void executeClose() {
         BranchLogger.d("DEBUG: executeClose called - resetting session state");
-        
+
         // Reset legacy session state first to ensure consistency
         setInitState(SESSION_STATE.UNINITIALISED);
-        
+
         // Reset session state via StateFlow system
         sessionStateManager.reset();
-        
+
         BranchLogger.d("DEBUG: executeClose completed - session state reset to Uninitialized");
     }
 
@@ -818,10 +833,11 @@ public class Branch {
 
     private void readAndStripParam(Uri data, Activity activity) {
         BranchLogger.v("Read params uri: " + data + " intent state: " + intentState_);
-        if (enableInstantDeepLinking) {
+        if (branchConfigurationController_.isInstantDeepLinkingEnabled()) {
 
             // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
             // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.
+
             // In the latter case, IDL works only partially because the callback is delayed until onResume.
             boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
                     !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
@@ -1098,7 +1114,7 @@ public class Branch {
         try {
             if (originalParams != null && deeplinkDebugParams_ != null) {
                 if (deeplinkDebugParams_.length() > 0) {
-        
+
                 }
                 Iterator<String> keys = deeplinkDebugParams_.keys();
                 while (keys.hasNext()) {
@@ -1223,6 +1239,10 @@ public class Branch {
         return branchQRCodeCache_;
     }
 
+    public BranchConfigurationController getConfigurationController() {
+        return branchConfigurationController_;
+    }
+
     PrefHelper getPrefHelper() {
         return prefHelper_;
     }
@@ -1237,7 +1257,7 @@ public class Branch {
         synchronized (sessionStateLock) {
             initState_ = initState;
         }
-        
+
         // Update the StateFlow-based session state manager with proper error handling
         try {
             switch (initState) {
@@ -1266,7 +1286,7 @@ public class Branch {
     private void initializeSession(ServerRequestInitSession initRequest, int delay) {
         BranchLogger.v("initializeSession " + initRequest + " delay " + delay);
         BranchLogger.d("DEBUG: Starting session initialization with delay: " + delay);
-        
+
         // Validate Branch key first
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
             BranchError keyError = new BranchError("Trouble initializing Branch.", BranchError.ERR_BRANCH_KEY_INVALID);
@@ -1283,7 +1303,7 @@ public class Branch {
         // Set initializing state immediately
         setInitState(SESSION_STATE.INITIALISING);
         BranchLogger.d("DEBUG: Session state set to INITIALISING");
-        
+
         if (delay > 0) {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
             BranchLogger.d("DEBUG: Adding USER_SET_WAIT_LOCK with delay: " + delay);
@@ -1298,7 +1318,7 @@ public class Branch {
             processSessionInitialization(initRequest);
         }
     }
-    
+
     private void processSessionInitialization(ServerRequestInitSession initRequest) {
         Intent intent = getCurrentActivity() != null ? getCurrentActivity().getIntent() : null;
         boolean forceBranchSession = isRestartSessionRequested(intent);
@@ -1306,35 +1326,35 @@ public class Branch {
         BranchSessionState sessionState = getCurrentSessionState();
         BranchLogger.v("Intent: " + intent + " forceBranchSession: " + forceBranchSession + " initState: " + sessionState);
         BranchLogger.d("DEBUG: Processing session initialization - forceBranchSession: " + forceBranchSession + " sessionState: " + sessionState);
-        
+
         // Enhanced session state validation with fallback to legacy system
         // Check if we have a valid active session
-        boolean hasValidActiveSession = hasActiveSession() && 
+        boolean hasValidActiveSession = hasActiveSession() &&
                                        !prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
-        
-        boolean shouldInitialize = sessionState instanceof BranchSessionState.Uninitialized || 
+
+        boolean shouldInitialize = sessionState instanceof BranchSessionState.Uninitialized ||
                                   forceBranchSession ||
                                   getInitState() == SESSION_STATE.UNINITIALISED ||
                                   // Allow re-initialization if session is in Initializing state but no valid session exists
                                   (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession);
-        
-        BranchLogger.d("DEBUG: Should initialize session: " + shouldInitialize + 
-                      " (hasValidActiveSession: " + hasValidActiveSession + 
-                      ", sessionState: " + sessionState + 
+
+        BranchLogger.d("DEBUG: Should initialize session: " + shouldInitialize +
+                      " (hasValidActiveSession: " + hasValidActiveSession +
+                      ", sessionState: " + sessionState +
                       ", legacyState: " + getInitState() + ")");
-        
+
         if (shouldInitialize) {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey());
                 BranchLogger.d("DEBUG: Removed ForceNewBranchSession extra from intent");
             }
-            
+
             // If we're in an incomplete Initializing state, reset to allow proper initialization
             if (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession) {
                 BranchLogger.d("DEBUG: Resetting incomplete Initializing state to allow re-initialization");
                 setInitState(SESSION_STATE.UNINITIALISED);
             }
-            
+
             BranchLogger.d("DEBUG: Calling registerAppInit for request: " + initRequest);
             registerAppInit(initRequest, forceBranchSession);
         } else if (initRequest.callback_ != null) {
@@ -1387,7 +1407,7 @@ public class Branch {
     private void initTasks(ServerRequest request) {
         BranchLogger.v("initTasks " + request);
         BranchLogger.d("DEBUG: Starting initTasks for request: " + request.getClass().getSimpleName());
-        
+
         // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
         // In this case need to wait till onResume to get the latest intent.
         if (false) {
@@ -1421,7 +1441,7 @@ public class Branch {
                 BranchLogger.d("DEBUG: GAID fetch completed, unlocking wait lock");
             }
         });
-        
+
         BranchLogger.d("DEBUG: Calling handleNewRequest for request: " + request);
         requestQueue_.handleNewRequest(request);
     }
@@ -1431,12 +1451,12 @@ public class Branch {
         String bundleToken = prefHelper_.getRandomizedBundleToken();
         String sessionId = prefHelper_.getSessionID();
         String deviceToken = prefHelper_.getRandomizedDeviceToken();
-        
-        BranchLogger.d("DEBUG: getInstallOrOpenRequest - hasUser: " + hasUser + 
+
+        BranchLogger.d("DEBUG: getInstallOrOpenRequest - hasUser: " + hasUser +
                       ", bundleToken: " + (bundleToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
                       ", sessionId: " + (sessionId.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
                       ", deviceToken: " + (deviceToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS"));
-        
+
         ServerRequestInitSession request;
         if (hasUser) {
             // If there is user this is open
@@ -1461,6 +1481,17 @@ public class Branch {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
+    }
+
+    /**
+     * A method to manually remove the pending intent wait lock. In rare cases, it is possible
+     * that the activity lifecycle callbacks may not execute.
+     */
+    public void unlockPendingIntent() {
+        BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
+        setIntentState(Branch.INTENT_STATE.READY);
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        requestQueue_.processNextQueueItem("unlockPendingIntent");
     }
 
     /**
@@ -1568,14 +1599,14 @@ public class Branch {
 
     /**
      * Interface for handling last attributed touch data callbacks.
-     * 
+     *
      * @see JSONObject
      * @see BranchError
      */
     public interface BranchLastAttributedTouchDataListener {
         /**
          * Called when last attributed touch data is successfully retrieved.
-         * 
+         *
          * @param jsonObject The last attributed touch data as a JSONObject
          * @param error null if successful, otherwise contains error information
          */
@@ -1584,7 +1615,7 @@ public class Branch {
 
     /**
      * Interface for handling native link share callbacks.
-     * 
+     *
      * @see String
      * @see BranchError
      */
@@ -1625,7 +1656,7 @@ public class Branch {
 
      */
 
-    
+
     /**
 
      */
@@ -1863,7 +1894,7 @@ public class Branch {
     }
 
 
-    
+
 
 
 
@@ -2470,7 +2501,7 @@ public class Branch {
 
     /**
      * Sets the referrer GCLID valid for window.
-     * 
+     *
      * Minimum of 0 milliseconds
      * Maximum of 3 years
      * @param window A {@link Long} value specifying the number of milliseconds to wait before

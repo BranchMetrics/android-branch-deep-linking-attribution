@@ -1,6 +1,5 @@
 include(":Branch-SDK")
 include(":Branch-SDK-TestBed")
-include(":Branch-SDK-Automation-TestBed")
 
 pluginManagement {
     repositories {
@@ -10,5 +9,3 @@ pluginManagement {
         mavenCentral()
     }
 }
-include(":app")
-include(":branchsdk-link-clicktest")
