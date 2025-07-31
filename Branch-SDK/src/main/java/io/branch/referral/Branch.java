@@ -425,8 +425,8 @@ public class Branch {
      * </p>
      */
     public static void enableTestMode() {
-        if (Branch.getInstance() != null) {
-            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(true);
+        if (Branch.init() != null) {
+            Branch.init().branchConfigurationController_.setTestModeEnabled(true);
         } else {
             BranchUtil.setTestMode(true);
         }
@@ -442,8 +442,8 @@ public class Branch {
      * </p>
      */
     public static void disableTestMode() {
-        if (Branch.getInstance() != null) {
-            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(false);
+        if (Branch.init() != null) {
+            Branch.init().branchConfigurationController_.setTestModeEnabled(false);
         } else {
             BranchUtil.setTestMode(false);
         }
@@ -755,7 +755,7 @@ public class Branch {
      * <p>
      * This API allows to tag the install with custom attribute. Add any key-values that qualify or distinguish an install here.
      * Please make sure this method is called before the Branch init, which is on the onStartMethod of first activity.
-     * A better place to call this  method is right after Branch#getInstance()
+     * A better place to call this  method is right after Branch#init()
      * </p>
      */
     public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
@@ -1491,7 +1491,6 @@ public class Branch {
         BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        requestQueue_.processNextQueueItem("unlockPendingIntent");
     }
 
     /**
@@ -2462,7 +2461,7 @@ public class Branch {
      *     .setColorScheme(COLOR_SCHEME_DARK)
      *     .setShowTitle(true)
      *     .build();
-     * Branch.getInstance().setCustomTabsIntent(customTabsIntent);
+     * Branch.init().setCustomTabsIntent(customTabsIntent);
      * </pre>
      * </p>
      * 

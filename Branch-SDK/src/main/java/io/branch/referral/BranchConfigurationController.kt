@@ -24,7 +24,7 @@ class BranchConfigurationController {
      * @see Branch.expectDelayedSessionInitialization
      */
     fun setDelayedSessionInitUsed(used: Boolean) {
-        Branch.getInstance()?.let { branch ->
+        Branch.init()?.let { branch ->
             branch.prefHelper_.delayedSessionInitUsed = used
         }
     }
@@ -36,7 +36,7 @@ class BranchConfigurationController {
      * @see Branch.expectDelayedSessionInitialization
      */
     private fun getDelayedSessionInitUsed(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.delayedSessionInitUsed ?: false
+        return Branch.init()?.prefHelper_?.delayedSessionInitUsed ?: false
     }
 
     /**
@@ -63,7 +63,7 @@ class BranchConfigurationController {
      * @param enabled Boolean indicating if instant deep linking should be enabled
      */
     fun setInstantDeepLinkingEnabled(enabled: Boolean) {
-        Branch.getInstance()?.prefHelper_?.setBool(KEY_INSTANT_DEEP_LINKING_ENABLED, enabled)
+        Branch.init()?.prefHelper_?.setBool(KEY_INSTANT_DEEP_LINKING_ENABLED, enabled)
     }
 
     /**
@@ -71,7 +71,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if instant deep linking is enabled
      */
     fun isInstantDeepLinkingEnabled(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool(KEY_INSTANT_DEEP_LINKING_ENABLED) ?: false
+        return Branch.init()?.prefHelper_?.getBool(KEY_INSTANT_DEEP_LINKING_ENABLED) ?: false
     }
 
     /**
@@ -81,7 +81,7 @@ class BranchConfigurationController {
      * @param deferred Boolean indicating if plugin runtime initialization should be deferred
      */
     fun setDeferInitForPluginRuntime(deferred: Boolean) {
-        Branch.getInstance()?.prefHelper_?.setBool(KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME, deferred)
+        Branch.init()?.prefHelper_?.setBool(KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME, deferred)
     }
 
     /**
@@ -89,7 +89,7 @@ class BranchConfigurationController {
      * @return Boolean indicating if plugin runtime initialization is deferred
      */
     private fun isDeferInitForPluginRuntime(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.getBool(KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME) ?: false
+        return Branch.init()?.prefHelper_?.getBool(KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME) ?: false
     }
 
     /**
@@ -99,7 +99,7 @@ class BranchConfigurationController {
      * @return String indicating the source of the Branch key, or "unknown" if not set
      */
     fun getBranchKeySource(): String {
-        return Branch.getInstance()?.prefHelper_?.branchKeySource ?: "unknown"
+        return Branch.init()?.prefHelper_?.branchKeySource ?: "unknown"
     }
 
     /**

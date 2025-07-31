@@ -62,11 +62,7 @@ dependencies {
 
     testImplementation("org.json:json:20230227")
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
-    testImplementation("org.mockito:mockito-core:4.11.0")
-    testImplementation("org.mockito:mockito-inline:4.11.0")
 
-    // For JUnit tests
-    testImplementation ("junit:junit:4.13.2")
     // Mockito core library
     testImplementation("org.mockito:mockito-core:5.4.0")
     // Mockito Kotlin extensions
