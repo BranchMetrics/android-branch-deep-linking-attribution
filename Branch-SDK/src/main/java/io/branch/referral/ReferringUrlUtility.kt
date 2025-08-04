@@ -20,7 +20,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
     }
 
     fun parseReferringURL(urlString: String) {
-        if (!Branch.getInstance().isTrackingDisabled) {
+        if (!Branch.init().isTrackingDisabled) {
             val uri = Uri.parse(urlString)
             if (uri.isHierarchical) {
                 for (originalParamName in uri.queryParameterNames) {

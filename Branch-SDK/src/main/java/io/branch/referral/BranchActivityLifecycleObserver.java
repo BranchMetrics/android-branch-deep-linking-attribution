@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -25,7 +24,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
-        Branch branch = Branch.getInstance();
+        Branch branch = Branch.init();
         BranchLogger.v("onActivityCreated, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) return;
 
@@ -34,7 +33,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
-        Branch branch = Branch.getInstance();
+        Branch branch = Branch.init();
         BranchLogger.v("onActivityStarted, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) {
             return;
@@ -50,13 +49,13 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
-        Branch branch = Branch.getInstance();
+        Branch branch = Branch.init();
         BranchLogger.v("onActivityResumed, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
         // if the intent state is bypassed from the last activity as it was closed before onResume, we need to skip this with the current
         // activity also to make sure we do not override the intent data
-        boolean bypassIntentState = Branch.bypassCurrentActivityIntentState();
+        boolean bypassIntentState = false;
         BranchLogger.v("bypassIntentState: " + bypassIntentState);
         if (!bypassIntentState) {
             branch.onIntentReady(activity);
@@ -82,13 +81,13 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityPaused(@NonNull Activity activity) {
-        Branch branch = Branch.getInstance();
+        Branch branch = Branch.init();
         BranchLogger.v("onActivityPaused, activity = " + activity  + " branch: " + branch);
         if (branch == null) return;
 
         /* Close any opened sharing dialog.*/
-        if (branch.getShareLinkManager() != null) {
-            branch.getShareLinkManager().cancelShareLinkDialog(true);
+        if (false) {
+    
         }
         BranchLogger.v("activityCnt_: " + activityCnt_);
         BranchLogger.v("activitiesOnStack_: " + activitiesOnStack_);
@@ -96,17 +95,17 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
-        Branch branch = Branch.getInstance();
+        Branch branch = Branch.init();
         BranchLogger.v("onActivityStopped, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
         activityCnt_--; // Check if this is the last activity. If so, stop the session.
         BranchLogger.v("activityCnt_: " + activityCnt_);
         if (activityCnt_ < 1) {
-            branch.setInstantDeepLinkPossible(false);
+    
             branch.closeSessionInternal();
 
-            /* It is possible some integrations do not call Branch.getAutoInstance() before the first
+            /* It is possible some integrations do not call Branch.getInstance() before the first
             activity's lifecycle methods execute.
             In such cases, activityCnt_ could be set to -1, which could cause the above line to clear
             session parameters. Just reset to 0 if we're here.
@@ -124,7 +123,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
-        Branch branch = Branch.getInstance();
+        Branch branch = Branch.init();
         BranchLogger.v("onActivityDestroyed, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
@@ -137,7 +136,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     }
 
     boolean isCurrentActivityLaunchedFromStack() {
-        Branch branch = Branch.getInstance();
+        Branch branch = Branch.init();
         if (branch == null || branch.getCurrentActivity() == null) {
             // don't think this is possible
             return false;

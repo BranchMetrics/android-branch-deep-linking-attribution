@@ -2,7 +2,6 @@ package io.branch.referral;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -193,7 +192,7 @@ class ServerRequestCreateUrl extends ServerRequest {
     private String generateLongUrlWithParams(String baseUrl) {
         String longUrl = baseUrl;
         try {
-            if (Branch.getInstance().isTrackingDisabled() && !longUrl.contains(DEF_BASE_URL)) {
+            if (Branch.init().isTrackingDisabled() && !longUrl.contains(DEF_BASE_URL)) {
                 // By def the base url contains randomized bundle token as query param. This should be removed when tracking is disabled.
                 longUrl = longUrl.replace(new URL(longUrl).getQuery(), "");
             }

@@ -9,7 +9,7 @@ import io.branch.referral.Branch;
 public class BranchInstanceCreationValidatorCheck extends IntegrationValidatorCheck {
 
     String name = "Branch instance";
-    String errorMessage = "Branch is not initialised from your Application class. Please add `Branch.getAutoInstance(this);` to your Application#onCreate() method.";
+    String errorMessage = "Branch is not initialised from your Application class. Please add `Branch.getInstance();` to your Application#onCreate() method.";
     String moreInfoLink = branchInstanceCreationMoreInfoDocsLink;
 
     public BranchInstanceCreationValidatorCheck() {
@@ -20,7 +20,7 @@ public class BranchInstanceCreationValidatorCheck extends IntegrationValidatorCh
 
     @Override
     public boolean RunTests(Context context) {
-        return Branch.getInstance() != null;
+        return Branch.init() != null;
     }
 
     @Override

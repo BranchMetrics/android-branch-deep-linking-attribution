@@ -1,7 +1,6 @@
 package io.branch.referral.network;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -10,7 +9,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Locale;
-import java.util.Objects;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -107,9 +105,9 @@ public abstract class BranchRemoteInterface {
             return new ServerResponse(tag, branchError.branchErrorCode, "", branchError.branchErrorMessage);
         } finally {
             // Add total round trip time
-            if (Branch.getInstance() != null) {
+            if (Branch.init() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+                Branch.init().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }
@@ -139,9 +137,9 @@ public abstract class BranchRemoteInterface {
         } catch (BranchRemoteException branchError) {
             return new ServerResponse(tag, branchError.branchErrorCode, "",  "Failed network request. " + branchError.branchErrorMessage);
         } finally {
-            if (Branch.getInstance() != null) {
+            if (Branch.init() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+                Branch.init().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }

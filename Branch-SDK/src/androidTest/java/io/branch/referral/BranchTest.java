@@ -83,14 +83,13 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         }
 
         Branch.enableLogging();
-        Branch.expectDelayedSessionInitialization(true);
 
         if (branchKey == null) {
-            branch = Branch.getAutoInstance(getTestContext());
+            branch = Branch.init();
         } else {
-            branch = Branch.getAutoInstance(getTestContext(), branchKey);
+            branch = Branch.init();
         }
-        Assert.assertEquals(branch, Branch.getInstance());
+        Assert.assertEquals(branch, Branch.init());
 
         activityScenario = ActivityScenario.launch(MockActivity.class);
 

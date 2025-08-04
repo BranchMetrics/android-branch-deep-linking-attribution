@@ -7,7 +7,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * <p>
@@ -53,7 +52,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
      * @param context A {@link Context} from which this call was made.
      */
     protected BranchUrlBuilder(Context context) {
-        branchReferral_ = Branch.getInstance();
+        branchReferral_ = Branch.init();
         context_ = context.getApplicationContext();
     }
 

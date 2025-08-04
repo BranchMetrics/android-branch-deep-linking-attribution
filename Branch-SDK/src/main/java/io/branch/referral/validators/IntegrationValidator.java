@@ -53,12 +53,12 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
     }
 
     private void validateSDKIntegration(Context context) {
-        Branch.getInstance().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, IntegrationValidator.this));
+        Branch.init().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, IntegrationValidator.this));
     }
 
     private void doValidateWithAppConfig(JSONObject branchAppConfig) {
         //retrieve the Branch dashboard configurations from the server
-        Branch.getInstance().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, this));
+        Branch.init().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, this));
 
         logValidationProgress("\n\n------------------- Initiating Branch integration verification ---------------------------");
 
@@ -66,7 +66,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         BranchInstanceCreationValidatorCheck branchInstanceCreationValidatorCheck = new BranchInstanceCreationValidatorCheck();
         boolean result = branchInstanceCreationValidatorCheck.RunTests(context);
         integrationValidatorDialog.SetTestResultForRowItem(1, branchInstanceCreationValidatorCheck.GetTestName(), result, branchInstanceCreationValidatorCheck.GetOutput(context, result), branchInstanceCreationValidatorCheck.GetMoreInfoLink());
-        logOutputForTest(result, "1. Verifying Branch instance creation", "Branch is not initialised from your Application class. Please add `Branch.getAutoInstance(this);` to your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
+        logOutputForTest(result, "1. Verifying Branch instance creation", "Branch is not initialised from your Application class. Please add `Branch.getInstance();` to your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
 
         // 2. Verify Branch Keys
         BranchKeysValidatorCheck branchKeysValidatorCheck = new BranchKeysValidatorCheck();

@@ -1,4 +1,12 @@
 # Branch Android SDK change log
+- v5.19.0
+* _*Master Release*_ - Jun 23, 2025
+  - Add method for manually removing intent lock for rare cases where onResume is not called or lock is placed after lifecycle callback.
+
+- v5.18.2
+* _*Master Release*_ - Jun 16, 2025
+  - Add some operational metrics.
+
 - v5.18.1
 * _*Master Release*_ - May 27, 2025
   - Fixes a bug affecting Xiaomi devices.

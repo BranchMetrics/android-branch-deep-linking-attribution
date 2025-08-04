@@ -61,6 +61,12 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if(installReferrerServerTS > 0){
                 getPost().put(Defines.Jsonkey.InstallBeginServerTimeStamp.getKey(), installReferrerServerTS);
             }
+
+            if (Branch.init() != null) {
+                JSONObject configurations = Branch.init().getConfigurationController().serializeConfiguration();
+                getPost().put(Defines.Jsonkey.OperationalMetrics.getKey(), configurations);
+            }
+
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }

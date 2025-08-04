@@ -35,7 +35,7 @@ class DeviceInfo {
      * @return {@link DeviceInfo} instance if already initialised or null
      */
     static DeviceInfo getInstance() {
-        Branch b = Branch.getInstance();
+        Branch b = Branch.init();
         if (b == null) return null;
         return b.getDeviceInfo();
     }
@@ -249,8 +249,8 @@ class DeviceInfo {
 
                 userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
 
-                Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                Branch.getInstance().requestQueue_.processNextQueueItem("setPostUserAgent");
+                Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                // Modern queue processes automatically after unlock - no manual trigger needed
             }
             else if (Branch.userAgentSync) {
                 // If user agent sync is false, then the async coroutine is executed instead but may not have finished yet.
@@ -276,8 +276,8 @@ class DeviceInfo {
                             }
                         }
 
-                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                        Branch.getInstance().requestQueue_.processNextQueueItem("onUserAgentStringFetchFinished");
+                        Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        // Modern queue processes automatically after unlock - no manual trigger needed
                     }
                 });
             }
@@ -304,16 +304,16 @@ class DeviceInfo {
                             }
                         }
 
-                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                        Branch.getInstance().requestQueue_.processNextQueueItem("getUserAgentAsync resumeWith");
+                        Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        // Modern queue processes automatically after unlock - no manual trigger needed
                     }
                 });
             }
         }
         catch (Exception exception){
             BranchLogger.w("Caught exception trying to set userAgent " + exception.getMessage());
-            Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-            Branch.getInstance().requestQueue_.processNextQueueItem("getUserAgentAsync");
+            Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+            // Modern queue processes automatically after unlock - no manual trigger needed
         }
     }
 
@@ -362,7 +362,7 @@ class DeviceInfo {
      * Note that if either Debug is enabled or Fetch has been disabled, then return a "fake" ID.
      */
     public SystemObserver.UniqueId getHardwareID() {
-        return getSystemObserver().getUniqueID(context_, Branch.isDeviceIDFetchDisabled());
+        return getSystemObserver().getUniqueID(context_, false);
     }
 
     public String getOsName() {

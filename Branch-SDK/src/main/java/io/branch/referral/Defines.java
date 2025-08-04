@@ -226,6 +226,7 @@ public class Defines {
         DMA_Ad_Personalization("dma_ad_personalization"),
         DMA_Ad_User_Data("dma_ad_user_data"),
         Is_Meta_Click_Through("is_meta_ct"),
+        OperationalMetrics("operational_metrics"),
 
         Consumer_Protection_Attribution_Level("cpp_level"),
         Branch_Sdk_Request_Creation_Time_Stamp("branch_sdk_request_timestamp"),

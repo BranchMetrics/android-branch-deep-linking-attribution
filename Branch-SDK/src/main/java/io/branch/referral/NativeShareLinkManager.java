@@ -104,7 +104,7 @@ public class NativeShareLinkManager {
                 shareEvent.addCustomDataProperty(Defines.Jsonkey.ShareError.getKey(), error.getMessage());
             }
 
-            shareEvent.logEvent(Branch.getInstance().getApplicationContext());
+            shareEvent.logEvent(Branch.init().getApplicationContext());
 
             if (branchNativeLinkShareListener_ != null) {
                 branchNativeLinkShareListener_.onLinkShareResponse(sharedLink, error);
