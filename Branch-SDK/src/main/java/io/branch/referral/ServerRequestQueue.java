@@ -10,7 +10,6 @@ import android.os.Looper;
 
 import androidx.annotation.Nullable;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -477,7 +476,7 @@ public class ServerRequestQueue {
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
+        if (Branch.getInstance().initState_ != Branch.SessionState.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
@@ -640,7 +639,7 @@ public class ServerRequestQueue {
                 }
 
                 if (thisReq_ instanceof ServerRequestInitSession) {
-                    Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
+                    Branch.getInstance().setInitState(Branch.SessionState.INITIALISED);
 
                     Branch.getInstance().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
                     // Count down the latch holding getLatestReferringParamsSync
@@ -669,7 +668,7 @@ public class ServerRequestQueue {
             BranchLogger.v("onRequestFailed " + serverResponse.getMessage());
             // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
             if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
-                Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
+                Branch.getInstance().setInitState(Branch.SessionState.UNINITIALISED);
             }
 
             // On a bad request or in case of a conflict notify with call back and remove the request.
