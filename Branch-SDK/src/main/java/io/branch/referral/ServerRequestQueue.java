@@ -640,7 +640,7 @@ public class ServerRequestQueue {
                 }
 
                 if (thisReq_ instanceof ServerRequestInitSession) {
-                    Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
+                    Branch.getInstance().setInitState(Branch.SessionState.INITIALISED);
 
                     Branch.getInstance().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
                     // Count down the latch holding getLatestReferringParamsSync
