@@ -239,7 +239,7 @@ public class Branch {
     private CustomTabsIntent customTabsIntentOverride;
 
     /* Enumeration for defining session initialisation state. */
-    enum SESSION_STATE {
+    public enum SESSION_STATE {
         INITIALISED, INITIALISING, UNINITIALISED
     }
     
@@ -1446,7 +1446,13 @@ public class Branch {
         this.initState_ = initState;
     }
 
-    SESSION_STATE getInitState() {
+    /**
+     * Returns the initialization state of the session.
+     * SESSION_STATE.INITIALISED is the state that indicates the sdk has consumed the latest intent
+     * and is ready to send events.
+     * @return
+     */
+    public SESSION_STATE getInitState() {
         return initState_;
     }
 
@@ -1589,7 +1595,11 @@ public class Branch {
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
-        boolean grabIntentParams = activity.getIntent() != null && getInitState() != Branch.SESSION_STATE.INITIALISED;
+        Intent intent = activity.getIntent();
+        Branch.SESSION_STATE sessionState = getInitState();
+        boolean grabIntentParams = intent != null && sessionState != Branch.SESSION_STATE.INITIALISED;
+
+        BranchLogger.v("onIntentReady intent: " + intent + " sessionState: " + sessionState + " grabIntentParams: " + grabIntentParams);
 
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
@@ -2356,6 +2366,7 @@ public class Branch {
         private Uri uri;
         private Boolean ignoreIntent;
         private boolean isReInitializing;
+        private boolean isInitialized;
 
         private InitSessionBuilder(Activity activity) {
             Branch branch = Branch.getInstance();
