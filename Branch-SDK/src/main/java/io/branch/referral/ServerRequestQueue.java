@@ -230,7 +230,7 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 BranchLogger.v("Queue operation remove. Request: " + request);
-                isRemoved = queue.remove(request) || !queue.contains(request);
+                isRemoved = queue.remove(request);
                 BranchLogger.v("Queue operation remove. Removed: " + isRemoved);
             } catch (UnsupportedOperationException e) {
                 BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
@@ -378,12 +378,6 @@ public class ServerRequestQueue {
         else if (request instanceof ServerRequestCreateUrl) {
             return false;
         }
-        else if (request instanceof QueueOperationLogout){
-            return false;
-        }
-        else if (request instanceof QueueOperationSetIdentity){
-            return false;
-        }
 
         // All other Request Types need a session.
         return true;
@@ -483,10 +477,7 @@ public class ServerRequestQueue {
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED &&
-                !(req instanceof ServerRequestInitSession
-                        || req instanceof QueueOperationLogout
-                        || req instanceof QueueOperationSetIdentity)) {
+        if (Branch.getInstance().initState_ != Branch.SessionState.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
@@ -539,11 +530,6 @@ public class ServerRequestQueue {
         protected ServerResponse doInBackground(Void... voids) {
             // update queue wait time
             thisReq_.doFinalUpdateOnBackgroundThread();
-
-            if(thisReq_ instanceof QueueOperationLogout || thisReq_ instanceof QueueOperationSetIdentity){
-                return new ServerResponse("", 200, "", "");
-            }
-
             if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
                 return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "Tracking is disabled");
             }
@@ -609,12 +595,6 @@ public class ServerRequestQueue {
             @Nullable final JSONObject respJson = serverResponse.getObject();
             if (respJson == null) {
                 thisReq_.handleFailure(500, "Null response json.");
-            }
-
-            if(thisReq_ instanceof QueueOperationLogout){
-                //On Logout clear the link cache and all pending requests
-                Branch.getInstance().linkCache_.clear();
-                Branch.getInstance().requestQueue_.clear();
             }
 
             if (thisReq_ instanceof ServerRequestCreateUrl && respJson != null) {
@@ -689,7 +669,7 @@ public class ServerRequestQueue {
             BranchLogger.v("onRequestFailed " + serverResponse.getMessage());
             // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
             if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
-                Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
+                Branch.getInstance().setInitState(Branch.SessionState.UNINITIALISED);
             }
 
             // On a bad request or in case of a conflict notify with call back and remove the request.
