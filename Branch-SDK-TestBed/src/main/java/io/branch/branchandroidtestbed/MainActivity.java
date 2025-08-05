@@ -757,7 +757,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
 
-        initSessionsWithTests();
+        //initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -798,31 +798,31 @@ public class MainActivity extends Activity {
             event.logEvent(this);
         }
 
-//        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
-//            @Override
-//            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
-//                if (error != null) {
-//                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
-//                } else {
-//                    Log.d("BranchSDK_Tester", "branch init complete!");
-//                    if (branchUniversalObject != null) {
-//                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-//                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-//                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-//                    }
-//
-//                    if (linkProperties != null) {
-//                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-//                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
-//                    }
-//                }
-//
-//
-//                // QA purpose only
-//                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-//                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
-//            }
-//        }).withData(this.getIntent().getData()).init();
+        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+            @Override
+            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                if (error != null) {
+                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                } else {
+                    Log.d("BranchSDK_Tester", "branch init complete!");
+                    if (branchUniversalObject != null) {
+                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                    }
+
+                    if (linkProperties != null) {
+                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                    }
+                }
+
+
+                // QA purpose only
+                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+            }
+        }).withData(this.getIntent().getData()).init();
     }
 
     @Override
