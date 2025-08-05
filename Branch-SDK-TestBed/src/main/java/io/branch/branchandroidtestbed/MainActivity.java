@@ -752,7 +752,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
 
-        //initSessionsWithTests();
+        initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -776,7 +776,7 @@ public class MainActivity extends Activity {
         Log.i("BranchSDK_Tester", "Beginning stress tests with IsUserAgentSync" + Branch.getIsUserAgentSync());
 
         for (int i = 0; i < n; i++) {
-            BranchEvent event = new BranchEvent("Event " + i);
+            BranchEvent event = new BranchEvent("Event_" + i);
             Log.i("BranchSDK_Tester", "Queue Tests, Current Identity: " + PrefHelper.getInstance(MainActivity.this).getIdentity());
 
 
@@ -786,10 +786,12 @@ public class MainActivity extends Activity {
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.i("BranchSDK_Tester", "Queue Tests, Current Identity: " + PrefHelper.getInstance(MainActivity.this).getIdentity());
                         Log.d("BranchSDK_Tester", "Queue Tests, onLogoutFinished");
+                        new BranchEvent("Event_" + 8).logEvent(MainActivity.this);
                     }
                 });
             }
 
+            Branch.getInstance().setIdentity("Identity_" + i);
             event.logEvent(this);
         }
 
