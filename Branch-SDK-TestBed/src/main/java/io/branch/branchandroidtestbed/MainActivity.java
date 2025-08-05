@@ -756,8 +756,10 @@ public class MainActivity extends Activity {
             public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
                 if (error != null) {
                     Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                    Log.d("BranchSDK_Tester", "Session state should be not be INITIALISED, actual: " + Branch.getInstance().getInitState());
                 } else {
                     Log.d("BranchSDK_Tester", "branch init complete!");
+                    Log.d("BranchSDK_Tester", "Session state should be INITIALISED, actual: " + Branch.getInstance().getInitState());
                     if (branchUniversalObject != null) {
                         Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
                         Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
