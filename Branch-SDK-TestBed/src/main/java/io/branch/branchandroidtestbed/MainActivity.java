@@ -675,6 +675,36 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
+        findViewById(R.id.initSessionButton).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Branch.sessionBuilder(MainActivity.this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+                        @Override
+                        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                            if (error != null) {
+                                Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                            } else {
+                                Log.d("BranchSDK_Tester", "branch init complete!");
+                                if (branchUniversalObject != null) {
+                                    Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                                    Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                                    Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                                }
+
+                                if (linkProperties != null) {
+                                    Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                                    Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                                }
+                            }
+                        }
+                    }).withData(MainActivity.this.getIntent().getData()).init();
+                } catch (Exception e) {
+                    Log.e("BranchSDK_Tester", e.getMessage());
+                }
+            }
+        });
     }
 
     private void createNotificationChannel() {
@@ -717,11 +747,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        Branch.getInstance().setIdentity("testDevID");
+        Branch.getInstance().setIdentity("Initial_Identity");
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        Log.d("BranchSDK_Tester", "initSession");
 
         //initSessionsWithTests();
 
@@ -736,7 +765,7 @@ public class MainActivity extends Activity {
 
     private void initSessionsWithTests() {
         boolean testUserAgent = true;
-        userAgentTests(testUserAgent, 1);
+        userAgentTests(testUserAgent, 10);
     }
 
     // Enqueue several v2 events prior to init to simulate worst timing conditions for user agent fetch
@@ -747,7 +776,22 @@ public class MainActivity extends Activity {
         Log.i("BranchSDK_Tester", "Beginning stress tests with IsUserAgentSync" + Branch.getIsUserAgentSync());
 
         for (int i = 0; i < n; i++) {
-            BranchEvent event = new BranchEvent("Event " + i);
+            BranchEvent event = new BranchEvent("Event_" + i);
+            Log.i("BranchSDK_Tester", "Queue Tests, Current Identity: " + PrefHelper.getInstance(MainActivity.this).getIdentity());
+
+
+            if(i == 7){
+                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
+                    @Override
+                    public void onLogoutFinished(boolean loggedOut, BranchError error) {
+                        Log.i("BranchSDK_Tester", "Queue Tests, Current Identity: " + PrefHelper.getInstance(MainActivity.this).getIdentity());
+                        Log.d("BranchSDK_Tester", "Queue Tests, onLogoutFinished");
+                        new BranchEvent("Event_" + 8).logEvent(MainActivity.this);
+                    }
+                });
+            }
+
+            Branch.getInstance().setIdentity("Identity_" + i);
             event.logEvent(this);
         }
 

@@ -1057,15 +1057,8 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
-            callback) {
-                if (userId != null && !userId.equals(prefHelper_.getIdentity())) {
-                    installDeveloperId = userId;
-                    prefHelper_.setIdentity(userId);
-                }
-                if (callback != null) {
-                    callback.onInitFinished(getFirstReferringParams(), null);
-                }
+    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
+        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, null, userId, callback));
     }
 
     /**
@@ -1127,14 +1120,8 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.clearUserValues();
-        //On Logout clear the link cache and all pending requests
-        linkCache_.clear();
-        requestQueue_.clear();
-        if (callback != null) {
-            callback.onLogoutFinished(true, null);
-        }
+        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, null, callback);
+        requestQueue_.handleNewRequest(queueOperationLogout);
     }
 
     /**
