@@ -723,7 +723,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.d("BranchSDK_Tester", "initSession");
 
-        initSessionsWithTests();
+        //initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
