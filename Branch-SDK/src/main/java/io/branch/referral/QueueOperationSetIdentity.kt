@@ -33,7 +33,7 @@ class QueueOperationSetIdentity(
             if (userId_ != null && userId_ != prefHelper_.identity) {
                 Branch.installDeveloperId = userId_
                 prefHelper_.identity = userId_
-                v("Identity set to:" + prefHelper_.identity)
+                v("Identity set to: " + prefHelper_.identity)
             }
         } catch (e: Exception) {
             e("Caught Exception: doFinalUpdateOnMainThread " + this + " " + e.message)
