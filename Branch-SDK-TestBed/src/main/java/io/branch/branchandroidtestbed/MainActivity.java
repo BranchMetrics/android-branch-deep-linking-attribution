@@ -698,11 +698,6 @@ public class MainActivity extends Activity {
                                     Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
                                 }
                             }
-
-
-                            // QA purpose only
-                            // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-                            // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
                         }
                     }).withData(MainActivity.this.getIntent().getData()).init();
                 } catch (Exception e) {
