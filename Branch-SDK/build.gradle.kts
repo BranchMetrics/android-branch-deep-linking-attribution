@@ -148,12 +148,12 @@ fun getRepositoryPassword(): String {
 
 fun getReleaseRepositoryUrl(): String {
     return project.findProperty("RELEASE_REPOSITORY_URL") as? String
-        ?: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        ?: "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
 }
 
 fun getSnapshotRepositoryUrl(): String {
     return project.findProperty("SNAPSHOT_REPOSITORY_URL") as? String
-        ?: "https://oss.sonatype.org/content/repositories/snapshots/"
+        ?: "https://central.sonatype.com/repository/maven-snapshots/"
 }
 
 fun getRepositoryUrl(): String {
