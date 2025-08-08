@@ -28,7 +28,6 @@ class ModernLinkGenerator(
     /**
      * Java-compatible constructor with default parameters
      */
-    @JvmOverloads
     constructor(
         context: Context,
         branchRemoteInterface: BranchRemoteInterface,
@@ -96,7 +95,7 @@ class ModernLinkGenerator(
     internal fun generateShortLinkSync(request: ServerRequestCreateUrl): String? {
         return try {
             runBlocking {
-                val linkData = request.getLinkPost() ?: return@runBlocking null
+                val linkData = request.linkPost ?: return@runBlocking null
                 val timeout = (prefHelper.timeout + 2000).toLong() // Match original timeout logic
                 
                 val result = generateShortLink(linkData, timeout)
