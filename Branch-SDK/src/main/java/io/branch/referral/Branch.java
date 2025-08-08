@@ -53,6 +53,7 @@ import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
 import io.branch.referral.util.LinkProperties;
 
+
 /**
  * <p>
  * The core object required when using Branch SDK. You should declare an object of this type at
@@ -226,6 +227,9 @@ public class Branch {
     public final BranchRequestQueueAdapter requestQueue_;
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
+    
+    /* Modern link generator to replace deprecated AsyncTask pattern */
+    private ModernLinkGenerator modernLinkGenerator_;
 
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
@@ -337,6 +341,14 @@ public class Branch {
         BranchLogger.d("DEBUG: Branch constructor - initializing request queue");
         requestQueue_.initialize();
         BranchLogger.d("DEBUG: Branch constructor - request queue initialized");
+        
+        // Initialize modern link generator with default parameters
+        modernLinkGenerator_ = new ModernLinkGenerator(
+            context, 
+            branchRemoteInterface_, 
+            prefHelper_
+        );
+        BranchLogger.d("DEBUG: Branch constructor - modern link generator initialized");
     }
 
     /**
@@ -533,6 +545,11 @@ public class Branch {
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
+        // Shutdown modern link generator before other components
+        if (branchReferral_ != null && branchReferral_.modernLinkGenerator_ != null) {
+            branchReferral_.modernLinkGenerator_.shutdown();
+        }
+        
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();
         PrefHelper.shutDown();
@@ -1148,7 +1165,13 @@ public class Branch {
                 return url;
             }
             if (req.isAsync()) {
-                requestQueue_.handleNewRequest(req);
+                // Use modern link generator for async requests when available
+                if (modernLinkGenerator_ != null) {
+                    modernLinkGenerator_.generateShortLinkAsyncFromJava(req.getLinkPost(), req.getCallback());
+                } else {
+                    // Fallback to request queue for backward compatibility
+                    requestQueue_.handleNewRequest(req);
+                }
             } else {
                 return generateShortLinkSync(req);
             }
@@ -1183,28 +1206,39 @@ public class Branch {
     // PRIVATE FUNCTIONS
     
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
-        ServerResponse response = null;
-        try {
-            int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-            response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            BranchLogger.d(e.getMessage());
-        }
-        String url = null;
-        if (req.isDefaultToLongUrl()) {
-            url = req.getLongUrl();
-        }
-        if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+        // Use modern link generator instead of deprecated AsyncTask
+        if (modernLinkGenerator_ != null) {
+            return modernLinkGenerator_.generateShortLinkSyncFromJava(
+                req.getLinkPost(), 
+                req.isDefaultToLongUrl(), 
+                req.getLongUrl(), 
+                prefHelper_.getTimeout()
+            );
+        } else {
+            // Fallback to original implementation for backward compatibility
+            ServerResponse response = null;
             try {
-                url = response.getObject().getString("url");
-                if (req.getLinkPost() != null) {
-                    linkCache_.put(req.getLinkPost(), url);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
+                int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
+                response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                BranchLogger.d(e.getMessage());
             }
+            String url = null;
+            if (req.isDefaultToLongUrl()) {
+                url = req.getLongUrl();
+            }
+            if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                try {
+                    url = response.getObject().getString("url");
+                    if (req.getLinkPost() != null) {
+                        linkCache_.put(req.getLinkPost(), url);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            return url;
         }
-        return url;
     }
     
     private JSONObject convertParamsStringToDictionary(String paramString) {

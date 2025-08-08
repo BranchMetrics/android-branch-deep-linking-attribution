@@ -102,6 +102,10 @@ class ServerRequestCreateUrl extends ServerRequest {
     public BranchLinkData getLinkPost() {
         return linkPost_;
     }
+    
+    public Branch.BranchLinkCreateListener getCallback() {
+        return callback_;
+    }
 
     boolean isDefaultToLongUrl() {
         return defaultToLongUrl_;
