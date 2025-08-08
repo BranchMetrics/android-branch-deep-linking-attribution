@@ -1,14 +1,11 @@
 package io.branch.referral
 
 import android.content.Context
-import io.branch.referral.*
 import io.branch.referral.network.BranchRemoteInterface
 import kotlinx.coroutines.*
 import org.json.JSONException
-import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 /**
  * Modern coroutine-based link generator replacing the deprecated AsyncTask pattern.
