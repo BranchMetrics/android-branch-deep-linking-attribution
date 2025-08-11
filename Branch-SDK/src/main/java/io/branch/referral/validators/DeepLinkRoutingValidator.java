@@ -32,7 +32,7 @@ public class DeepLinkRoutingValidator {
         current_activity_reference = activity;
         String latestReferringLink = getLatestReferringLink();
         if (!TextUtils.isEmpty(latestReferringLink) && activity != null) {
-            final JSONObject response_data = Branch.init().getLatestReferringParams();
+            final JSONObject response_data = Branch.getInstance().getLatestReferringParams();
             if (response_data.optInt(BRANCH_VALIDATE_TEST_KEY) == BRANCH_VALIDATE_TEST_VALUE) {
                 if (response_data.optBoolean(Defines.Jsonkey.Clicked_Branch_Link.getKey())) {
                     validateDeeplinkRouting(response_data);
@@ -156,8 +156,8 @@ public class DeepLinkRoutingValidator {
 
     private static String getLatestReferringLink() {
         String latestReferringLink = "";
-        if (Branch.init() != null && Branch.init().getLatestReferringParams() != null) {
-            latestReferringLink = Branch.init().getLatestReferringParams().optString("~" + Defines.Jsonkey.ReferringLink.getKey());
+        if (Branch.getInstance() != null && Branch.getInstance().getLatestReferringParams() != null) {
+            latestReferringLink = Branch.getInstance().getLatestReferringParams().optString("~" + Defines.Jsonkey.ReferringLink.getKey());
         }
         return latestReferringLink;
     }

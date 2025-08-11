@@ -105,9 +105,9 @@ public abstract class BranchRemoteInterface {
             return new ServerResponse(tag, branchError.branchErrorCode, "", branchError.branchErrorMessage);
         } finally {
             // Add total round trip time
-            if (Branch.init() != null) {
+            if (Branch.getInstance() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.init().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }
@@ -137,9 +137,9 @@ public abstract class BranchRemoteInterface {
         } catch (BranchRemoteException branchError) {
             return new ServerResponse(tag, branchError.branchErrorCode, "",  "Failed network request. " + branchError.branchErrorMessage);
         } finally {
-            if (Branch.init() != null) {
+            if (Branch.getInstance() != null) {
                 int brttVal = (int) (System.currentTimeMillis() - reqStartTime);
-                Branch.init().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
+                Branch.getInstance().requestQueue_.addExtraInstrumentationData(tag + "-" + Defines.Jsonkey.Branch_Round_Trip_Time.getKey(), String.valueOf(brttVal));
             }
         }
     }

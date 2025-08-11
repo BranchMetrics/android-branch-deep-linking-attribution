@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 import android.webkit.URLUtil;
 
 import androidx.annotation.NonNull;
@@ -445,9 +444,9 @@ public class PrefHelper {
             setString(KEY_BRANCH_KEY, key);
 
             // PrefHelper can be retrieved before Branch singleton is initialized
-            if (Branch.init() != null) {
-                Branch.init().linkCache_.clear();
-                Branch.init().requestQueue_.clear();
+            if (Branch.getInstance() != null) {
+                Branch.getInstance().linkCache_.clear();
+                Branch.getInstance().requestQueue_.clear();
             }
 
             return true;

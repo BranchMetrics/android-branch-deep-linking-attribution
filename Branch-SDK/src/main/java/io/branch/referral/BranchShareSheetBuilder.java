@@ -79,7 +79,7 @@ public class BranchShareSheetBuilder {
         copyURlText_ = "Copy link";
         urlCopiedMessage_ = "Copied link to clipboard!";
 
-        if (Branch.init().getDeviceInfo().isTV()) {
+        if (Branch.getInstance().getDeviceInfo().isTV()) {
             // Google TV includes a default, stub email app, so the system will appear to have an
             // email app installed, even when there is none. (https://stackoverflow.com/a/10341104)
             excludeFromShareSheet("com.google.android.tv.frameworkpackagestubs");
@@ -498,7 +498,7 @@ public class BranchShareSheetBuilder {
     }
 
     @Deprecated public Branch getBranch() {
-        return Branch.init();
+        return Branch.getInstance();
     }
 
     public String getShareMsg() {

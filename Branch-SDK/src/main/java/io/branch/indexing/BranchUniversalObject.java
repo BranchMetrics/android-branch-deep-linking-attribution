@@ -451,7 +451,7 @@ public class BranchUniversalObject implements Parcelable {
      */
     public static BranchUniversalObject getReferredBranchUniversalObject() {
         BranchUniversalObject branchUniversalObject = null;
-        Branch branchInstance = Branch.init();
+        Branch branchInstance = Branch.getInstance();
         try {
             if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
                 // Check if link clicked. Unless deep link debug enabled return null if there is no link click

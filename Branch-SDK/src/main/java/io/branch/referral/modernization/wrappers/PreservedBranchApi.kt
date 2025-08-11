@@ -44,7 +44,7 @@ object PreservedBranchApi {
     )
     fun getInstance(): Branch {
         // Initialize with a default context - in real usage this would be passed from the application
-        initializePreservationManager(Branch.init().applicationContext)
+        initializePreservationManager(Branch.getInstance().applicationContext)
         
         val result = preservationManager.handleLegacyApiCall(
             methodName = "getInstance",
@@ -52,7 +52,7 @@ object PreservedBranchApi {
         )
         
         // Return actual Branch instance
-        return Branch.init()
+        return Branch.getInstance()
     }
     
     /**
@@ -72,7 +72,7 @@ object PreservedBranchApi {
             parameters = arrayOf(context)
         )
         
-        return Branch.init()
+        return Branch.getInstance()
     }
     
 

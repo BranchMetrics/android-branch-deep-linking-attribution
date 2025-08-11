@@ -250,7 +250,7 @@ public class LinkProperties implements Parcelable {
      */
     public static LinkProperties getReferredLinkProperties() {
         LinkProperties linkProperties = null;
-        Branch branchInstance = Branch.init();
+        Branch branchInstance = Branch.getInstance();
         if (branchInstance != null && branchInstance.getLatestReferringParams() != null) {
             JSONObject latestParam = branchInstance.getLatestReferringParams();
 

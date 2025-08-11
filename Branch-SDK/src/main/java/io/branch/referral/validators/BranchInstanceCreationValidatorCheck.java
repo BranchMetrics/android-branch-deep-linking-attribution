@@ -20,7 +20,7 @@ public class BranchInstanceCreationValidatorCheck extends IntegrationValidatorCh
 
     @Override
     public boolean RunTests(Context context) {
-        return Branch.init() != null;
+        return Branch.getInstance() != null;
     }
 
     @Override

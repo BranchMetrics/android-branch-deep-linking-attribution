@@ -120,7 +120,7 @@ public class SettingsActivity extends Activity {
         disableAdNetworkCalloutsSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.init().disableAdNetworkCallouts(disableAdNetworkCalloutsSwitch.isChecked());
+                Branch.getInstance().disableAdNetworkCallouts(disableAdNetworkCalloutsSwitch.isChecked());
             }
         });
 

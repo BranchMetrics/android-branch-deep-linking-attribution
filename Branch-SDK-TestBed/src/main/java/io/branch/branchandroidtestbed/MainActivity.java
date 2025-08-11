@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
 
-        ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.init().isTrackingDisabled());
+        ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
 
         getActionBar().setTitle("Branch Testbed");
 
@@ -120,7 +120,7 @@ public class MainActivity extends Activity {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 String userID = txtUrl.getText().toString();
 
-                                Branch.init().setIdentity(userID, new BranchReferralInitListener() {
+                                Branch.getInstance().setIdentity(userID, new BranchReferralInitListener() {
                                     @Override
                                     public void onInitFinished(JSONObject referringParams, BranchError error) {
                                         Log.d("BranchSDK_Tester", "Identity set to " + userID + "\nInstall params = " + referringParams.toString());
@@ -148,7 +148,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
-                Branch.init().logout(new Branch.LogoutStatusListener() {
+                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         if (error != null) {
@@ -167,7 +167,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdPrintInstallParam).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                JSONObject obj = Branch.init().getFirstReferringParams();
+                JSONObject obj = Branch.getInstance().getFirstReferringParams();
                 Log.d("BranchSDK_Tester", "install params = " + obj.toString());
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -186,7 +186,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdPrintLatestParam).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                JSONObject obj = Branch.init().getLatestReferringParams();
+                JSONObject obj = Branch.getInstance().getLatestReferringParams();
                 Log.d("BranchSDK_Tester", "Latest params = " + obj.toString());
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -253,7 +253,7 @@ public class MainActivity extends Activity {
                                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
                                     Log.d("BillingClient", "Purchase was successful. Logging event");
                                     for (Object purchase : list) {
-                                        Branch.init().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
+                                        Branch.getInstance().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
                                     }
                                 }
                             }
@@ -353,7 +353,7 @@ public class MainActivity extends Activity {
                         .addControlParameter("$android_deeplink_path", "custom/path/*")
                         .addControlParameter("$ios_url", "http://example.com/ios")
                         .setDuration(100);
-                Branch.init().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
+                Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
                             @Override
                             public void onLinkShareResponse(String sharedLink, BranchError error) {
                                 Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
@@ -413,7 +413,7 @@ public class MainActivity extends Activity {
         });
 
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Branch.init().disableTracking(isChecked, (trackingDisabled, referringParams, error) -> {
+            Branch.getInstance().disableTracking(isChecked, (trackingDisabled, referringParams, error) -> {
                 if (trackingDisabled) {
                     Toast.makeText(getApplicationContext(), "Disabled Tracking", Toast.LENGTH_LONG).show();
                 } else {
@@ -443,7 +443,7 @@ public class MainActivity extends Activity {
                                 preference = Defines.BranchAttributionLevel.FULL;
                                 break;
                         }
-                        Branch.init().setConsumerProtectionAttributionLevel(preference);
+                        Branch.getInstance().setConsumerProtectionAttributionLevel(preference);
                         Toast.makeText(MainActivity.this, "Consumer Protection Preference set to " + options[which], Toast.LENGTH_LONG).show();
                     });
             builder.create().show();
@@ -596,7 +596,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.init().logout(new Branch.LogoutStatusListener() {
+                Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
@@ -622,7 +622,7 @@ public class MainActivity extends Activity {
                     invokeFeatures.put("enhanced_web_link_ux", "IN_APP_WEBVIEW");
                     invokeFeatures.put("web_link_redirect_url", "https://branch.io");
 
-                    Branch.init().openBrowserExperience(invokeFeatures);
+                    Branch.getInstance().openBrowserExperience(invokeFeatures);
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
@@ -670,10 +670,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        Branch.init().setIdentity("testDevID");
+        Branch.getInstance().setIdentity("testDevID");
 
-        Branch.init().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
-        Branch.init().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
+        Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.d("BranchSDK_Tester", "initSession");
 
         initSessionsWithTests();

@@ -292,7 +292,7 @@ public class ServerRequestQueue {
     // Then when init request count in the queue is either the last or none, clear.
     public void postInitClear() {
         // Check for any Third party SDK for data handling
-        PrefHelper prefHelper_ = Branch.init().getPrefHelper();
+        PrefHelper prefHelper_ = Branch.getInstance().getPrefHelper();
         boolean canClear = this.canClearInitData();
         BranchLogger.v("postInitClear " + prefHelper_ + " can clear init data " + canClear);
 
@@ -342,15 +342,15 @@ public class ServerRequestQueue {
     }
 
     private boolean hasSession() {
-        return !Branch.init().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
+        return !Branch.getInstance().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE);
     }
 
     private boolean hasRandomizedDeviceToken() {
-        return !Branch.init().prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE);
+        return !Branch.getInstance().prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE);
     }
 
     boolean hasUser() {
-        return !Branch.init().prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE);
+        return !Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE);
     }
 
     void updateAllRequestsInQueue() {
@@ -362,13 +362,13 @@ public class ServerRequestQueue {
                     JSONObject reqJson = req.getPost();
                     if (reqJson != null) {
                         if (reqJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.SessionID.getKey(), Branch.init().prefHelper_.getSessionID());
+                            req.getPost().put(Defines.Jsonkey.SessionID.getKey(), Branch.getInstance().prefHelper_.getSessionID());
                         }
                         if (reqJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.RandomizedBundleToken.getKey(), Branch.init().prefHelper_.getRandomizedBundleToken());
+                            req.getPost().put(Defines.Jsonkey.RandomizedBundleToken.getKey(), Branch.getInstance().prefHelper_.getRandomizedBundleToken());
                         }
                         if (reqJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
-                            req.getPost().put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), Branch.init().prefHelper_.getRandomizedDeviceToken());
+                            req.getPost().put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), Branch.getInstance().prefHelper_.getRandomizedDeviceToken());
                         }
                     }
                 }
@@ -423,14 +423,14 @@ public class ServerRequestQueue {
     public void handleNewRequest(ServerRequest req) {
         BranchLogger.d("handleNewRequest " + req);
         // If Tracking is disabled fail all messages with ERR_BRANCH_TRACKING_DISABLED
-        if (Branch.init().getTrackingController().isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
+        if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !req.prepareExecuteWithoutTracking()) {
             String errMsg = "Requested operation cannot be completed since tracking is disabled [" + req.requestPath_.getPath() + "]";
             BranchLogger.d(errMsg);
             req.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, errMsg);
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (Branch.init().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
+        if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
@@ -483,18 +483,18 @@ public class ServerRequestQueue {
         protected ServerResponse doInBackground(Void... voids) {
             // update queue wait time
             thisReq_.doFinalUpdateOnBackgroundThread();
-            if (Branch.init().getTrackingController().isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
+            if (Branch.getInstance().getTrackingController().isTrackingDisabled() && !thisReq_.prepareExecuteWithoutTracking()) {
                 return new ServerResponse(thisReq_.getRequestPath(), BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "Tracking is disabled");
             }
-            String branchKey = Branch.init().prefHelper_.getBranchKey();
+            String branchKey = Branch.getInstance().prefHelper_.getBranchKey();
             ServerResponse result = null;
 
             try {
                 if (thisReq_.isGetRequest()) {
-                    result = Branch.init().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
+                    result = Branch.getInstance().getBranchRemoteInterface().make_restful_get(thisReq_.getRequestUrl(), thisReq_.getGetParams(), thisReq_.getRequestPath(), branchKey);
                 } else {
                     BranchLogger.v("BranchPostTask doInBackground beginning rest post for " + thisReq_);
-                    result = Branch.init().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
+                    result = Branch.getInstance().getBranchRemoteInterface().make_restful_post(thisReq_.getPostWithInstrumentationValues(instrumentationExtraData_), thisReq_.getRequestUrl(), thisReq_.getRequestPath(), branchKey);
                 }
                 if (latch_ != null) {
                     latch_.countDown();
@@ -548,7 +548,7 @@ public class ServerRequestQueue {
                     // cache the link
                     BranchLinkData postBody = ((ServerRequestCreateUrl) thisReq_).getLinkPost();
                     final String url = respJson.getString("url");
-                    Branch.init().linkCache_.put(postBody, url);
+                    Branch.getInstance().linkCache_.put(postBody, url);
                 } catch (JSONException ex) {
                     BranchLogger.w("Caught JSONException " + ex.getMessage());
                 }
@@ -557,24 +557,24 @@ public class ServerRequestQueue {
             if (thisReq_ instanceof ServerRequestInitSession) {
                 // If this request changes a session update the session-id to queued requests.
                 boolean updateRequestsInQueue = false;
-                if (!Branch.init().isTrackingDisabled() && respJson != null) {
+                if (!Branch.getInstance().isTrackingDisabled() && respJson != null) {
                     // Update PII data only if tracking is disabled
                     try {
                         if (respJson.has(Defines.Jsonkey.SessionID.getKey())) {
-                            Branch.init().prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
+                            Branch.getInstance().prefHelper_.setSessionID(respJson.getString(Defines.Jsonkey.SessionID.getKey()));
                             updateRequestsInQueue = true;
                         }
                         if (respJson.has(Defines.Jsonkey.RandomizedBundleToken.getKey())) {
                             String new_Randomized_Bundle_Token = respJson.getString(Defines.Jsonkey.RandomizedBundleToken.getKey());
-                            if (!Branch.init().prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
+                            if (!Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
                                 //On setting a new Randomized Bundle Token clear the link cache
-                                Branch.init().linkCache_.clear();
-                                Branch.init().prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
+                                Branch.getInstance().linkCache_.clear();
+                                Branch.getInstance().prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
                                 updateRequestsInQueue = true;
                             }
                         }
                         if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
-                            Branch.init().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
+                            Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
                             updateRequestsInQueue = true;
                         }
                         if (updateRequestsInQueue) {
@@ -586,14 +586,14 @@ public class ServerRequestQueue {
                 }
 
                 if (thisReq_ instanceof ServerRequestInitSession) {
-                    Branch.init().setInitState(Branch.SESSION_STATE.INITIALISED);
+                    Branch.getInstance().setInitState(Branch.SESSION_STATE.INITIALISED);
 
-                    Branch.init().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
+                    Branch.getInstance().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
                 }
             }
 
             if (respJson != null) {
-                thisReq_.onRequestSucceeded(serverResponse, Branch.init());
+                thisReq_.onRequestSucceeded(serverResponse, Branch.getInstance());
                 ServerRequestQueue.this.remove(thisReq_);
             } else if (thisReq_.shouldRetryOnFail()) {
                 // already called handleFailure above
@@ -606,8 +606,8 @@ public class ServerRequestQueue {
         void onRequestFailed(ServerResponse serverResponse, int status) {
             BranchLogger.v("onRequestFailed " + serverResponse.getMessage());
             // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
-            if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.init().prefHelper_.getSessionParams())) {
-                Branch.init().setInitState(Branch.SESSION_STATE.UNINITIALISED);
+            if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
+                Branch.getInstance().setInitState(Branch.SESSION_STATE.UNINITIALISED);
             }
 
             // On a bad request or in case of a conflict notify with call back and remove the request.
@@ -623,8 +623,8 @@ public class ServerRequestQueue {
             boolean unretryableErrorCode = (400 <= status && status <= 451) || status == BranchError.ERR_BRANCH_TRACKING_DISABLED;
             // If it has an un-retryable error code, or it should not retry on fail, or the current retry count exceeds the max
             // remove it from the queue
-            if (unretryableErrorCode || !thisReq_.shouldRetryOnFail() || (thisReq_.currentRetryCount >= Branch.init().prefHelper_.getNoConnectionRetryMax())) {
-                Branch.init().requestQueue_.remove(thisReq_);
+            if (unretryableErrorCode || !thisReq_.shouldRetryOnFail() || (thisReq_.currentRetryCount >= Branch.getInstance().prefHelper_.getNoConnectionRetryMax())) {
+                Branch.getInstance().requestQueue_.remove(thisReq_);
             } else {
                 // failure has already been handled
                 // todo does it make sense to retry the request without a callback? (e.g. CPID, LATD)

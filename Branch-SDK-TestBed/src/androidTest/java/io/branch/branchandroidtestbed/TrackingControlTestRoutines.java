@@ -94,18 +94,18 @@ public class TrackingControlTestRoutines {
             }
             if (loadTestCounter < MAX_LOAD_CNT) {
                 if (loadTestCounter % 5 == 0) {
-                    if (!Branch.init().isTrackingDisabled()) {
+                    if (!Branch.getInstance().isTrackingDisabled()) {
                         Log.d(TAG, "-- Disabling tracking ");
                         disableTracking();
                     }
                 } else {
-                    if (Branch.init().isTrackingDisabled()) {
+                    if (Branch.getInstance().isTrackingDisabled()) {
                         Log.d(TAG, "-- Enabling  tracking ");
                         enableTrackingAndProceed(6);
                     }
                 }
                 
-                if (Branch.init().isTrackingDisabled()) {
+                if (Branch.getInstance().isTrackingDisabled()) {
                     Log.d(TAG, "-- test " + loadTestCounter + " <Tracking disabled>");
                     loadTestCounter++;
                     testBranchEvent(6);
@@ -141,12 +141,12 @@ public class TrackingControlTestRoutines {
     }
     
     private void testBranchEvent(final int stateCnt) {
-        Branch.init().setIdentity(UUID.randomUUID().toString(), new Branch.BranchReferralInitListener() {
+        Branch.getInstance().setIdentity(UUID.randomUUID().toString(), new Branch.BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 boolean passed;
                 
-                if (Branch.init().isTrackingDisabled()) {
+                if (Branch.getInstance().isTrackingDisabled()) {
                     passed = error != null && error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED;
                 } else {
                     passed = (error == null || error.getErrorCode() != BranchError.ERR_BRANCH_TRACKING_DISABLED);
@@ -167,11 +167,11 @@ public class TrackingControlTestRoutines {
     
     
     private void disableTracking() {
-        Branch.init().disableTracking(true);
+        Branch.getInstance().disableTracking(true);
     }
     
     private void enableTrackingAndProceed(final int stateCnt) {
-        Branch.init().disableTracking(false);
+        Branch.getInstance().disableTracking(false);
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
