@@ -24,7 +24,7 @@ public final class CustomBranchApp extends Application {
 //            saveLogToFile(message);
 //        };
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
-        Branch branch = Branch.init(this);
+        Branch branch = Branch.getAutoInstance(this);
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();

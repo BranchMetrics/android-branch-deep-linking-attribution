@@ -39,7 +39,7 @@ public class PrefHelperTest extends BranchTest {
     public void setUp() {
         super.setUp();
         initBranchInstance();
-        Branch.init().disableTracking(false);
+        Branch.getInstance().disableTracking(false);
     }
 
     @Test
@@ -150,7 +150,7 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testFBPartnerParameters(){
-        Branch.init().addFacebookPartnerParameterWithName("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
 
         JSONObject body = new JSONObject();
         try {
@@ -163,8 +163,8 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testFBPartnerParametersTrackingDisabled(){
-        Branch.init().disableTracking(true);
-        Branch.init().addFacebookPartnerParameterWithName("em", "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF");
+        Branch.getInstance().disableTracking(true);
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF");
 
         JSONObject body = new JSONObject();
         try {
@@ -177,7 +177,7 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testFBPartnerParametersTrackingDisabledClearsExistingParams(){
-        Branch.init().addFacebookPartnerParameterWithName("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
 
         JSONObject body = new JSONObject();
         try {
@@ -188,7 +188,7 @@ public class PrefHelperTest extends BranchTest {
         }
 
         body = new JSONObject();
-        Branch.init().disableTracking(true);
+        Branch.getInstance().disableTracking(true);
         try {
             prefHelper.loadPartnerParams(body);
             JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
@@ -198,7 +198,7 @@ public class PrefHelperTest extends BranchTest {
     }
     @Test
     public void testSnapPartnerParameters(){
-        Branch.init().addSnapPartnerParameterWithName("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+        Branch.getInstance().addSnapPartnerParameterWithName("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
 
         JSONObject body = new JSONObject();
         try {
@@ -211,8 +211,8 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testSnapPartnerParametersTrackingDisabled(){
-        Branch.init().disableTracking(true);
-        Branch.init().addSnapPartnerParameterWithName("hashed_email_address", "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF");
+        Branch.getInstance().disableTracking(true);
+        Branch.getInstance().addSnapPartnerParameterWithName("hashed_email_address", "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF");
 
         JSONObject body = new JSONObject();
         try {
@@ -225,7 +225,7 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testSnapPartnerParametersTrackingDisabledClearsExistingParams(){
-        Branch.init().addSnapPartnerParameterWithName("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
+        Branch.getInstance().addSnapPartnerParameterWithName("hashed_email_address", "11234e56af071e9c79927651156bd7a10bca8ac34672aba121056e2698ee7088");
 
         JSONObject body = new JSONObject();
         try {
@@ -236,7 +236,7 @@ public class PrefHelperTest extends BranchTest {
         }
 
         body = new JSONObject();
-        Branch.init().disableTracking(true);
+        Branch.getInstance().disableTracking(true);
         try {
             prefHelper.loadPartnerParams(body);
             JSONAssert.assertEquals("{}", body.getJSONObject(PartnerData.getKey()).toString(), JSONCompareMode.LENIENT);
@@ -250,7 +250,7 @@ public class PrefHelperTest extends BranchTest {
 
         Assert.assertEquals(prefHelper.isDMAParamsInitialized(),false);
 
-        Branch.init().setDMAParamsForEEA(true, false,true);
+        Branch.getInstance().setDMAParamsForEEA(true, false,true);
 
         Assert.assertEquals(prefHelper.isDMAParamsInitialized(),true);
         Assert.assertEquals(prefHelper.getEEARegion(),true);
@@ -258,7 +258,7 @@ public class PrefHelperTest extends BranchTest {
         Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),true);
 
         // check by flipping values - if they are overwritten
-        Branch.init().setDMAParamsForEEA(false, true,false);
+        Branch.getInstance().setDMAParamsForEEA(false, true,false);
 
         Assert.assertEquals(prefHelper.getEEARegion(),false);
         Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),true);
@@ -267,16 +267,16 @@ public class PrefHelperTest extends BranchTest {
 
     @Test
     public void testConsumerProtectionAttributionLevel() {
-        Branch.init().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.REDUCED);
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.REDUCED);
         Assert.assertEquals(Defines.BranchAttributionLevel.REDUCED, prefHelper.getConsumerProtectionAttributionLevel());
 
-        Branch.init().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.MINIMAL);
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.MINIMAL);
         Assert.assertEquals(Defines.BranchAttributionLevel.MINIMAL, prefHelper.getConsumerProtectionAttributionLevel());
 
-        Branch.init().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.NONE);
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.NONE);
         Assert.assertEquals(Defines.BranchAttributionLevel.NONE, prefHelper.getConsumerProtectionAttributionLevel());
 
-        Branch.init().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.FULL);
+        Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.FULL);
         Assert.assertEquals(Defines.BranchAttributionLevel.FULL, prefHelper.getConsumerProtectionAttributionLevel());
     }
 

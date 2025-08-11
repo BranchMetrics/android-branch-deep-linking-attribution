@@ -30,7 +30,7 @@ public class TrackingController {
         if (trackingDisabled == disableTracking) {
             if (callback != null) {
                 BranchLogger.v("Tracking state is already set to " + disableTracking + ". Returning the same to the callback");
-                callback.onTrackingStateChanged(trackingDisabled, Branch.init().getFirstReferringParams(), null);
+                callback.onTrackingStateChanged(trackingDisabled, Branch.getInstance().getFirstReferringParams(), null);
             }
             return;
         }
@@ -68,7 +68,7 @@ public class TrackingController {
     
     private void onTrackingDisabled(Context context) {
         // Clear all pending requests
-        Branch.init().clearPendingRequests();
+        Branch.getInstance().clearPendingRequests();
         
         // Clear  any tracking specific preference items
         PrefHelper prefHelper = PrefHelper.getInstance(context);
@@ -86,12 +86,12 @@ public class TrackingController {
         prefHelper.setSessionParams(PrefHelper.NO_STRING_VALUE);
         prefHelper.setAnonID(PrefHelper.NO_STRING_VALUE);
         prefHelper.setReferringUrlQueryParameters(new JSONObject());
-        Branch.init().clearPartnerParameters();
+        Branch.getInstance().clearPartnerParameters();
     }
     
     private void onTrackingEnabled(Branch.BranchReferralInitListener callback) {
         BranchLogger.v("onTrackingEnabled callback: " + callback);
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         if (branch != null) {
             branch.registerAppInit(branch.getInstallOrOpenRequest(callback, true), false);
         }

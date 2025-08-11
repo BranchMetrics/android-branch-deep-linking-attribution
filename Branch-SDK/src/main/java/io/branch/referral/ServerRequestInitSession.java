@@ -82,7 +82,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
     @Override
     public void onRequestSucceeded(ServerResponse response, Branch branch) {
-        Branch.init().unlockSDKInitWaitLock();
+        Branch.getInstance().unlockSDKInitWaitLock();
     }
 
     void onInitSessionCompleted(ServerResponse response, Branch branch) {

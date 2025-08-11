@@ -521,7 +521,7 @@ public abstract class ServerRequest {
             if (SystemObserver.isFireOSDevice()) {
                 key = Defines.Jsonkey.FireAdId.getKey();
             } else if (SystemObserver.isHuaweiMobileServicesAvailable(
-                    Branch.init().getApplicationContext())) {
+                    Branch.getInstance().getApplicationContext())) {
                 key = Defines.Jsonkey.OpenAdvertisingID.getKey();
             } else {
                 key = Defines.Jsonkey.AAID.getKey();

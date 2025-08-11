@@ -122,7 +122,7 @@ class BranchPreinstall {
     }
 
     public static void setBranchPreInstallGoogleReferrer(Context context, HashMap<String, String> referrerMap){
-        Branch branchInstance = Branch.init();
+        Branch branchInstance = Branch.getInstance();
         PrefHelper prefHelper = PrefHelper.getInstance(context);
 
         // Set PreInstallData from GoogleReferrer api

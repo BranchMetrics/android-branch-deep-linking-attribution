@@ -266,7 +266,7 @@ public class BranchEvent {
         boolean isReqQueued = false;
         Defines.RequestPath reqPath = isStandardEvent ? Defines.RequestPath.TrackStandardEvent : Defines.RequestPath.TrackCustomEvent;
 
-        if (Branch.init() != null) {
+        if (Branch.getInstance() != null) {
             ServerRequest req = new ServerRequestLogEvent(context, reqPath, eventName, topLevelProperties, standardProperties, customProperties, buoList) {
                 @Override
                 public void onRequestSucceeded(ServerResponse response, Branch branch) {
@@ -291,7 +291,7 @@ public class BranchEvent {
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
             }
 
-            Branch.init().requestQueue_.handleNewRequest(req);
+            Branch.getInstance().requestQueue_.handleNewRequest(req);
             isReqQueued = true;
         }
         else if (callback != null) {

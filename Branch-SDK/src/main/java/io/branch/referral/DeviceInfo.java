@@ -35,7 +35,7 @@ class DeviceInfo {
      * @return {@link DeviceInfo} instance if already initialised or null
      */
     static DeviceInfo getInstance() {
-        Branch b = Branch.init();
+        Branch b = Branch.getInstance();
         if (b == null) return null;
         return b.getDeviceInfo();
     }
@@ -249,7 +249,7 @@ class DeviceInfo {
 
                 userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
 
-                Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
                 // Modern queue processes automatically after unlock - no manual trigger needed
             }
             else if (Branch.userAgentSync) {
@@ -276,7 +276,7 @@ class DeviceInfo {
                             }
                         }
 
-                        Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
                         // Modern queue processes automatically after unlock - no manual trigger needed
                     }
                 });
@@ -304,7 +304,7 @@ class DeviceInfo {
                             }
                         }
 
-                        Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+                        Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
                         // Modern queue processes automatically after unlock - no manual trigger needed
                     }
                 });
@@ -312,7 +312,7 @@ class DeviceInfo {
         }
         catch (Exception exception){
             BranchLogger.w("Caught exception trying to set userAgent " + exception.getMessage());
-            Branch.init().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
+            Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
             // Modern queue processes automatically after unlock - no manual trigger needed
         }
     }

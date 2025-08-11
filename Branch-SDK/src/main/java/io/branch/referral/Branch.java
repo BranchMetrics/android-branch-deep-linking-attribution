@@ -4,7 +4,6 @@ import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
 import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
-import static io.branch.referral.PrefHelper.isValidBranchKey;
 import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 
@@ -320,7 +319,7 @@ public class Branch {
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
-     * <p>Use {@link #init()} method when instantiating.</p>
+     * <p>Use {@link #getInstance()} method when instantiating.</p>
      *
      * @param context A {@link Context} from which this call was made.
      */
@@ -346,22 +345,43 @@ public class Branch {
      *
      * @return An initialised singleton {@link Branch} object
      */
-    synchronized public static Branch init() {
+    synchronized public static Branch getInstance() {
         if (branchReferral_ == null) {
             BranchLogger.v("Branch instance is not created yet. Make sure you call getInstance(Context).");
         }
         return branchReferral_;
     }
 
-    synchronized public static Branch init(@NonNull Context context) {
+    /**
+     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
+     * object of the type {@link Branch}.</p>
+     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+     *
+     * @param context A {@link Context} from which this call was made.
+     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
+     * instance within the singleton class, or a newly instantiated object where
+     * one was not already requested during the current app lifecycle.
+     */
+    synchronized public static Branch getAutoInstance(@NonNull Context context) {
         if (branchReferral_ == null) {
             String branchKey = BranchUtil.readBranchKey(context);
-            return initBranchSDK(context, branchKey);
+            return getAutoInstance(context, branchKey);
         }
         return branchReferral_;
     }
 
-    synchronized private static Branch initBranchSDK(@NonNull Context context, String branchKey) {
+    /**
+     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
+     * object of the type {@link Branch}.</p>
+     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
+     *
+     * @param context   A {@link Context} from which this call was made.
+     * @param branchKey A {@link String} value used to initialize Branch.
+     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
+     * instance within the singleton class, or a newly instantiated object where
+     * one was not already requested during the current app lifecycle.
+     */
+    synchronized private static Branch getAutoInstance(@NonNull Context context, String branchKey) {
         if (branchReferral_ != null) {
             BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
             return branchReferral_;
@@ -425,8 +445,8 @@ public class Branch {
      * </p>
      */
     public static void enableTestMode() {
-        if (Branch.init() != null) {
-            Branch.init().branchConfigurationController_.setTestModeEnabled(true);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(true);
         } else {
             BranchUtil.setTestMode(true);
         }
@@ -442,8 +462,8 @@ public class Branch {
      * </p>
      */
     public static void disableTestMode() {
-        if (Branch.init() != null) {
-            Branch.init().branchConfigurationController_.setTestModeEnabled(false);
+        if (Branch.getInstance() != null) {
+            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(false);
         } else {
             BranchUtil.setTestMode(false);
         }
@@ -909,7 +929,7 @@ public class Branch {
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * This method should be called immediately after calling {@link Branch#init()}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlWhiteListPattern A regular expression with a URI white listing pattern
      * @return {@link Branch} instance for successive method calls
@@ -926,7 +946,7 @@ public class Branch {
      * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
      * If whitelist is not empty SDK will collect only the URLs that matches the white list.
      * <p>
-     * This method should be called immediately after calling {@link Branch#init()}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlWhiteListPatternList {@link List} of regular expressions with URI white listing pattern
      * @return {@link Branch} instance for successive method calls
@@ -942,7 +962,7 @@ public class Branch {
      * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
      * This method allows applications specify SDK to skip any additional URL patterns to be skipped
      * <p>
-     * This method should be called immediately after calling {@link Branch#init()}
+     * This method should be called immediately after calling {@link Branch#getInstance()}
      *
      * @param urlSkipPattern {@link String} A URL pattern that Branch SDK should skip from collecting data
      * @return {@link Branch} instance for successive method calls
@@ -2076,7 +2096,7 @@ public class Branch {
         private boolean isReInitializing;
 
         private InitSessionBuilder(Activity activity) {
-            Branch branch = Branch.init();
+            Branch branch = Branch.getInstance();
             if (activity != null && (branch.getCurrentActivity() == null ||
                     !branch.getCurrentActivity().getLocalClassName().equals(activity.getLocalClassName()))) {
                 // currentActivityReference_ is set in onActivityCreated (before initSession), which should happen if
@@ -2178,7 +2198,7 @@ public class Branch {
                 return;
             }
 
-            final Branch branch = Branch.init();
+            final Branch branch = Branch.getInstance();
             if (branch == null) {
                 BranchLogger.logAlways("Branch is not setup properly, make sure to call getInstance" +
                         " in your application class.");
@@ -2220,7 +2240,7 @@ public class Branch {
             if (referringParams != null && callback != null) {
                 callback.onInitFinished(referringParams, null);
                 // mark this session as IDL session
-                Branch.init().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
+                Branch.getInstance().requestQueue_.addExtraInstrumentationData(Defines.Jsonkey.InstantDeepLinkSession.getKey(), "true");
                 // potentially routes the user to the Activity configured to consume this particular link
                 branch.checkForAutoDeepLinkConfiguration();
             }
@@ -2231,15 +2251,15 @@ public class Branch {
         }
 
         private void cacheSessionBuilder(InitSessionBuilder initSessionBuilder) {
-            Branch.init().deferredSessionBuilder = this;
+            Branch.getInstance().deferredSessionBuilder = this;
             BranchLogger.v("Session initialization deferred until plugin invokes notifyNativeToInit()" +
-                    "\nCaching Session Builder " + Branch.init().deferredSessionBuilder +
-                    "\nuri: " + Branch.init().deferredSessionBuilder.uri +
-                    "\ncallback: " + Branch.init().deferredSessionBuilder.callback +
-                    "\nisReInitializing: " + Branch.init().deferredSessionBuilder.isReInitializing +
-                    "\ndelay: " + Branch.init().deferredSessionBuilder.delay +
-                    "\nisAutoInitialization: " + Branch.init().deferredSessionBuilder.isAutoInitialization +
-                    "\nignoreIntent: " + Branch.init().deferredSessionBuilder.ignoreIntent
+                    "\nCaching Session Builder " + Branch.getInstance().deferredSessionBuilder +
+                    "\nuri: " + Branch.getInstance().deferredSessionBuilder.uri +
+                    "\ncallback: " + Branch.getInstance().deferredSessionBuilder.callback +
+                    "\nisReInitializing: " + Branch.getInstance().deferredSessionBuilder.isReInitializing +
+                    "\ndelay: " + Branch.getInstance().deferredSessionBuilder.delay +
+                    "\nisAutoInitialization: " + Branch.getInstance().deferredSessionBuilder.isAutoInitialization +
+                    "\nignoreIntent: " + Branch.getInstance().deferredSessionBuilder.ignoreIntent
             );
         }
 
@@ -2263,7 +2283,7 @@ public class Branch {
     }
 
     boolean isIDLSession() {
-        return Boolean.parseBoolean(Branch.init().requestQueue_.instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
+        return Boolean.parseBoolean(Branch.getInstance().requestQueue_.instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
     }
     /**
      * <p> Create Branch session builder. Add configuration variables with the available methods
@@ -2312,13 +2332,13 @@ public class Branch {
      * Only invokes the last session built
      */
     public static void notifyNativeToInit(){
-        BranchLogger.v("notifyNativeToInit deferredSessionBuilder " + Branch.init().deferredSessionBuilder);
+        BranchLogger.v("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
-        SESSION_STATE sessionState = Branch.init().getInitState();
+        SESSION_STATE sessionState = Branch.getInstance().getInitState();
         if(sessionState == SESSION_STATE.UNINITIALISED) {
             deferInitForPluginRuntime = false;
-            if (Branch.init().deferredSessionBuilder != null) {
-                Branch.init().deferredSessionBuilder.init();
+            if (Branch.getInstance().deferredSessionBuilder != null) {
+                Branch.getInstance().deferredSessionBuilder.init();
             }
         }
         else {

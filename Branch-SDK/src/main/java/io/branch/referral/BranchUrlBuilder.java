@@ -52,7 +52,7 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
      * @param context A {@link Context} from which this call was made.
      */
     protected BranchUrlBuilder(Context context) {
-        branchReferral_ = Branch.init();
+        branchReferral_ = Branch.getInstance();
         context_ = context.getApplicationContext();
     }
 

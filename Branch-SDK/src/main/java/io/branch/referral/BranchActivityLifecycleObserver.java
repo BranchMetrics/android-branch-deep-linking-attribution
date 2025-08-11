@@ -24,7 +24,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         BranchLogger.v("onActivityCreated, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) return;
 
@@ -33,7 +33,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         BranchLogger.v("onActivityStarted, activity = " + activity + " branch: " + branch + " Activities on stack: " + activitiesOnStack_);
         if (branch == null) {
             return;
@@ -49,7 +49,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         BranchLogger.v("onActivityResumed, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
@@ -81,7 +81,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityPaused(@NonNull Activity activity) {
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         BranchLogger.v("onActivityPaused, activity = " + activity  + " branch: " + branch);
         if (branch == null) return;
 
@@ -95,7 +95,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         BranchLogger.v("onActivityStopped, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
@@ -123,7 +123,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         BranchLogger.v("onActivityDestroyed, activity = " + activity + " branch: " + branch);
         if (branch == null) return;
 
@@ -136,7 +136,7 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
     }
 
     boolean isCurrentActivityLaunchedFromStack() {
-        Branch branch = Branch.init();
+        Branch branch = Branch.getInstance();
         if (branch == null || branch.getCurrentActivity() == null) {
             // don't think this is possible
             return false;

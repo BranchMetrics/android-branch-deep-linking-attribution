@@ -3,7 +3,6 @@ package io.branch.referral
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
@@ -442,7 +441,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             request.doFinalUpdateOnBackgroundThread()
             
             // Check if tracking is disabled
-            val branch = Branch.init()
+            val branch = Branch.getInstance()
             if (branch.trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
                 val response = ServerResponse(request.requestPath, BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "Tracking is disabled")
                 BranchLogger.d("DEBUG: Tracking is disabled, handling response")
@@ -517,13 +516,13 @@ class BranchRequestQueue private constructor(private val context: Context) {
                         processInitSessionResponse(request, response)
                     }
                     
-                    request.onRequestSucceeded(response, Branch.init())
+                    request.onRequestSucceeded(response, Branch.getInstance())
                     
                     // Additional logging after successful completion
                     if (request is ServerRequestInitSession) {
                         try {
-                            val legacyState = Branch.init().initState
-                            val hasUser = Branch.init().prefHelper_.getRandomizedBundleToken() != PrefHelper.NO_STRING_VALUE
+                            val legacyState = Branch.getInstance().initState
+                            val hasUser = Branch.getInstance().prefHelper_.getRandomizedBundleToken() != PrefHelper.NO_STRING_VALUE
                             BranchLogger.d("DEBUG: After $request completion - LegacyState: $legacyState, hasUser: $hasUser")
                         } catch (e: Exception) {
                             BranchLogger.d("DEBUG: Could not access session state after request completion: ${e.message}")
@@ -545,7 +544,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Check if session is valid for the given request
      */
     private fun isSessionValidForRequest(request: ServerRequest): Boolean {
-        val branch = Branch.init()
+        val branch = Branch.getInstance()
         val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
         val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
@@ -623,7 +622,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     private fun tryResolveStuckSdkInitLock(request: ServerRequest) {
         try {
-            val branch = Branch.init()
+            val branch = Branch.getInstance()
             
             // Check if session is actually valid now
             val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
@@ -669,7 +668,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         BranchLogger.d("DEBUG: Processing init session response for: ${request::class.simpleName}")
         
         try {
-            val branch = Branch.init()
+            val branch = Branch.getInstance()
             if (branch.trackingController.isTrackingDisabled) {
                 BranchLogger.d("DEBUG: Tracking is disabled, skipping token processing")
                 return
@@ -789,7 +788,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             return true
         }
         
-        val branch = Branch.init()
+        val branch = Branch.getInstance()
         val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
         val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
@@ -977,7 +976,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Check if queue has user
      */
     fun hasUser(): Boolean {
-        val hasUser = !Branch.init().prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
+        val hasUser = !Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
         BranchLogger.d("DEBUG: BranchRequestQueue.hasUser called - result: $hasUser")
         return hasUser
     }

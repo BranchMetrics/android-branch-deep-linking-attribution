@@ -54,7 +54,7 @@ public class ServerRequestTests extends BranchTest {
                 setTimeouts(10,10);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
-                Branch.init().getLastAttributedTouchData(new Branch.BranchLastAttributedTouchDataListener() {
+                Branch.getInstance().getLastAttributedTouchData(new Branch.BranchLastAttributedTouchDataListener() {
                     @Override
                     public void onDataFetched(JSONObject jsonObject, BranchError error) {
                         Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());

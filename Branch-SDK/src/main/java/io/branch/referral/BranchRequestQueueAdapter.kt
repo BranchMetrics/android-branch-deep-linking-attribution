@@ -71,7 +71,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.d("DEBUG: BranchRequestQueueAdapter.handleNewRequest called for: ${request::class.simpleName}")
         
         // Check if tracking is disabled first (same as original logic)
-        if (Branch.init().trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
+        if (Branch.getInstance().trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
             val errMsg = "Requested operation cannot be completed since tracking is disabled [${request.requestPath_.getPath()}]"
             BranchLogger.d(errMsg)
             request.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, errMsg)
@@ -80,14 +80,14 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         
         // Enhanced session validation with fallback to legacy system
         val needsSession = requestNeedsSession(request)
-        val canPerformOperations = Branch.init().canPerformOperations()
-        val legacyInitialized = Branch.init().initState == Branch.SESSION_STATE.INITIALISED
+        val canPerformOperations = Branch.getInstance().canPerformOperations()
+        val legacyInitialized = Branch.getInstance().initState == Branch.SESSION_STATE.INITIALISED
         val hasValidSession = try {
-            Branch.init().hasActiveSession() && 
-            !Branch.init().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+            Branch.getInstance().hasActiveSession() &&
+            !Branch.getInstance().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
         } catch (e: Exception) {
             // Fallback if session state is not accessible
-            !Branch.init().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
+            !Branch.getInstance().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
         }
         
         BranchLogger.d("DEBUG: Request needs session: $needsSession, can perform operations: $canPerformOperations, legacy initialized: $legacyInitialized, hasValidSession: $hasValidSession")
@@ -97,8 +97,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
             BranchLogger.d("handleNewRequest $request needs a session")
             
             // Additional check to avoid adding SDK_INIT_WAIT_LOCK if session is actually valid
-            val sessionId = Branch.init().prefHelper_.getSessionID()
-            val deviceToken = Branch.init().prefHelper_.getRandomizedDeviceToken()
+            val sessionId = Branch.getInstance().prefHelper_.getSessionID()
+            val deviceToken = Branch.getInstance().prefHelper_.getRandomizedDeviceToken()
             val actuallyHasSession = !sessionId.equals(PrefHelper.NO_STRING_VALUE) && 
                                    !deviceToken.equals(PrefHelper.NO_STRING_VALUE)
             
