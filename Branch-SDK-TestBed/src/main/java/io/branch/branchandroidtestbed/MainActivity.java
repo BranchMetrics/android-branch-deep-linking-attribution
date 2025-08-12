@@ -30,7 +30,6 @@ import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.QueryProductDetailsParams;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -80,8 +79,7 @@ public class MainActivity extends Activity {
         branchUniversalObject = new BranchUniversalObject()
                 .setCanonicalIdentifier("item/12345")
                 .setCanonicalUrl("https://branch.io/deepviews")
-                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+
                 .setTitle("My Content Title")
                 .setContentDescription("my_product_description1")
                 .setContentImageUrl("https://example.com/mycontent-12345.png")
@@ -155,10 +153,10 @@ public class MainActivity extends Activity {
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         if (error != null) {
                             Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
-                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         } else {
                             Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
-                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -237,8 +235,10 @@ public class MainActivity extends Activity {
         findViewById(R.id.report_view_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                branchUniversalObject.registerView();
-                // List on google search
+                BranchEvent viewItemEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM);
+                viewItemEvent.logEvent(MainActivity.this);
+                
+                Toast.makeText(MainActivity.this, "VIEW_ITEM event logged", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -333,54 +333,7 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
                         .setAsFullWidthStyle(true)
                         .setSharingTitle("Share With");
-                // Define custom style for the share sheet list view
-                //.setStyleResourceID(R.style.Share_Sheet_Style);
 
-                branchUniversalObject.showShareSheet(MainActivity.this, linkProperties, shareSheetStyle, new Branch.BranchLinkShareListener() {
-
-                            @Override
-                            public void onShareLinkDialogLaunched() {
-                            }
-
-                            @Override
-                            public void onShareLinkDialogDismissed() {
-                            }
-
-                            @Override
-                            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
-                            }
-
-                            @Override
-                            public void onChannelSelected(String channelName) {
-                            }
-
-                            /*
-                             * Use {@link io.branch.referral.Branch.ExtendedBranchLinkShareListener} if the params need to be modified according to the channel selected by the user.
-                             * This allows modification of content or link properties through callback {@link #onChannelSelected(String, BranchUniversalObject, LinkProperties)} }
-                             */
-//                            @Override
-//                            public boolean onChannelSelected(String channelName, BranchUniversalObject buo, LinkProperties linkProperties) {
-//                                linkProperties.setAlias("http://bnc.lt/alias_link");
-//                                buo.setTitle("Custom Title for selected channel : " + channelName);
-//                                return true;
-//                            }
-
-                        },
-                        new Branch.IChannelProperties() {
-                            @Override
-                            public String getSharingTitleForChannel(String channel) {
-                                return channel.contains("Messaging") ? "title for SMS" :
-                                        channel.contains("Slack") ? "title for slack" :
-                                                channel.contains("Gmail") ? "title for gmail" : null;
-                            }
-
-                            @Override
-                            public String getSharingMessageForChannel(String channel) {
-                                return channel.contains("Messaging") ? "message for SMS" :
-                                        channel.contains("Slack") ? "message for slack" :
-                                                channel.contains("Gmail") ? "message for gmail" : null;
-                            }
-                        });
 
             }
         });
@@ -723,7 +676,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.d("BranchSDK_Tester", "initSession");
 
-        //initSessionsWithTests();
+        initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -743,39 +696,109 @@ public class MainActivity extends Activity {
     // TODO Add to automation.
     //  Check that all events up to Event N-1 complete with user agent string.
     private void userAgentTests(boolean userAgentSync, int n) {
-        Branch.setIsUserAgentSync(userAgentSync);
-        Log.i("BranchSDK_Tester", "Beginning stress tests with IsUserAgentSync" + Branch.getIsUserAgentSync());
+        Log.i("BranchSDK_Tester", "Beginning stress tests");
 
-        for (int i = 0; i < n; i++) {
-            BranchEvent event = new BranchEvent("Event " + i);
-            event.logEvent(this);
+        // Initialize session first, then create events in callback
+        initializeSessionWithEventTests(n);
+    }
+
+    /**
+     * Initializes Branch session and creates test events after successful initialization.
+     * Follows SRP - single responsibility for session initialization with event creation.
+     * 
+     * @param eventCount Number of test events to create after session initialization
+     */
+    private void initializeSessionWithEventTests(int eventCount) {
+        Branch.sessionBuilder(this).withCallback(new BranchSessionInitializationHandler(eventCount))
+                .withData(this.getIntent().getData())
+                .init();
+    }
+    
+    /**
+     * Handler for Branch session initialization with event creation capability.
+     * Follows SRP and DIP principles - separated concerns and depends on abstractions.
+     */
+    private class BranchSessionInitializationHandler implements Branch.BranchUniversalReferralInitListener {
+        private final int eventCount;
+        
+        public BranchSessionInitializationHandler(int eventCount) {
+            this.eventCount = eventCount;
         }
-
-        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
-            @Override
-            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
-                if (error != null) {
-                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
-                } else {
-                    Log.d("BranchSDK_Tester", "branch init complete!");
-                    if (branchUniversalObject != null) {
-                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-                    }
-
-                    if (linkProperties != null) {
-                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
-                    }
-                }
-
-
-                // QA purpose only
-                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+        
+        @Override
+        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+            if (error != null) {
+                handleSessionInitializationError(error);
+                return;
             }
-        }).withData(this.getIntent().getData()).init();
+            
+            handleSessionInitializationSuccess(branchUniversalObject, linkProperties);
+            createTestEvents();
+        }
+        
+        /**
+         * Handles successful session initialization.
+         * Follows SRP - single responsibility for handling success scenario.
+         */
+        private void handleSessionInitializationSuccess(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties) {
+            Log.d("BranchSDK_Tester", "branch init complete!");
+            
+            if (branchUniversalObject != null) {
+                logBranchUniversalObjectDetails(branchUniversalObject);
+            }
+            
+            if (linkProperties != null) {
+                logLinkPropertiesDetails(linkProperties);
+            }
+        }
+        
+        /**
+         * Handles session initialization errors.
+         * Follows SRP - single responsibility for error handling.
+         */
+        private void handleSessionInitializationError(BranchError error) {
+            Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+        }
+        
+        /**
+         * Creates and logs test events after session is successfully initialized.
+         * Follows SRP - single responsibility for event creation.
+         */
+        private void createTestEvents() {
+            Log.i("BranchSDK_Tester", "Creating " + eventCount + " test events after session initialization");
+            
+            for (int i = 0; i < eventCount; i++) {
+                createAndLogTestEvent(i);
+            }
+        }
+        
+        /**
+         * Creates and logs a single test event.
+         * Follows SRP - single responsibility for individual event creation.
+         */
+        private void createAndLogTestEvent(int eventIndex) {
+            BranchEvent event = new BranchEvent("Event " + eventIndex);
+            event.logEvent(MainActivity.this);
+        }
+        
+        /**
+         * Logs BranchUniversalObject details.
+         * Follows SRP - single responsibility for logging object details.
+         */
+        private void logBranchUniversalObjectDetails(BranchUniversalObject branchUniversalObject) {
+            Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+            Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+            Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+        }
+        
+        /**
+         * Logs LinkProperties details.
+         * Follows SRP - single responsibility for logging link properties.
+         */
+        private void logLinkPropertiesDetails(LinkProperties linkProperties) {
+            Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+            Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+        }
     }
 
     @Override

@@ -123,6 +123,8 @@ public class PrefHelper {
     static final String KEY_INSTALL_BEGIN_SERVER_TS = "bnc_install_begin_server_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
+    static final String KEY_DELAYED_SESSION_INIT_USED = "bnc_delayed_session_init_used";
+    static final String KEY_BRANCH_KEY_SOURCE = "bnc_branch_key_source";
 
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
 
@@ -241,6 +243,26 @@ public class PrefHelper {
      */
     public String getAPIBaseUrl() {
         if (URLUtil.isHttpsUrl(customServerURL_)) {
+            return customServerURL_;
+        }
+
+        if (useEUEndpoint_) {
+            return BRANCH_EU_BASE_URL_V3;
+        }
+
+        if (Build.VERSION.SDK_INT >= 20) {
+            return BRANCH_BASE_URL_V2;
+        } else {
+            return BRANCH_BASE_URL_V1;
+        }
+    }
+
+    /**
+    * Overloaded version of the getAPIBaseUrl() function that allows specifying if the custom URL should be used
+     * Important for endpoints that do not have a protected version, such as the App Settings endpoint used by the Integration Validator
+    */
+    public String getAPIBaseUrl(boolean useCustom) {
+        if (useCustom && URLUtil.isHttpsUrl(customServerURL_)) {
             return customServerURL_;
         }
 
@@ -809,16 +831,7 @@ public class PrefHelper {
         removePrefValue(KEY_GCLID_JSON_OBJECT);
     }
 
-    /**
-     * Sets the GCLID expiration window in milliseconds
-     * @param window
-     */
-    public void setReferrerGclidValidForWindow(long window){
-        if (MAX_VALID_WINDOW_FOR_REFERRER_GCLID > window
-                && window >= MIN_VALID_WINDOW_FOR_REFERRER_GCLID) {
-            setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
-        }
-    }
+
 
     /**
      * Gets the GCLID expiration window in milliseconds
@@ -826,6 +839,19 @@ public class PrefHelper {
      */
     public long getReferrerGclidValidForWindow() {
         return getLong(KEY_GCLID_VALID_FOR_WINDOW, DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID);
+    }
+
+    /**
+     * Sets the GCLID expiration window in milliseconds
+     * @param window The expiration window in milliseconds
+     */
+    public void setReferrerGclidValidForWindow(long window) {
+        if (window >= MIN_VALID_WINDOW_FOR_REFERRER_GCLID && window <= MAX_VALID_WINDOW_FOR_REFERRER_GCLID) {
+            setLong(KEY_GCLID_VALID_FOR_WINDOW, window);
+        } else {
+            BranchLogger.w("Invalid GCLID expiration window: " + window + ". Must be between " + 
+                          MIN_VALID_WINDOW_FOR_REFERRER_GCLID + " and " + MAX_VALID_WINDOW_FOR_REFERRER_GCLID);
+        }
     }
 
     /**
@@ -1484,5 +1510,49 @@ public class PrefHelper {
 
     public long getWebLinkLoadTime(){
         return getLong(KEY_URL_LOAD_MS);
+    }
+
+    /**
+     * Sets whether delayed session initialization was used.
+     * This flag is used to track if the app has used delayed session initialization,
+     * which is important for analytics and debugging purposes.
+     * The value is stored in SharedPreferences and can be retrieved using {@link #getDelayedSessionInitUsed()}.
+     *
+     * @param used Boolean indicating if delayed session initialization was used
+     * @see Branch#expectDelayedSessionInitialization(boolean)
+     */
+    public void setDelayedSessionInitUsed(boolean used) {
+        setBool(KEY_DELAYED_SESSION_INIT_USED, used);
+    }
+
+    /**
+     * Gets whether delayed session initialization was used.
+     * This can be used to check if the app has previously used delayed session initialization.
+     * The value is retrieved from SharedPreferences and is set using {@link #setDelayedSessionInitUsed(boolean)}.
+     *
+     * @return Boolean indicating if delayed session initialization was used
+     * @see Branch#expectDelayedSessionInitialization(boolean)
+     */
+    public boolean getDelayedSessionInitUsed() {
+        return getBool(KEY_DELAYED_SESSION_INIT_USED);
+    }
+
+    /**
+     * Sets the source of the Branch key configuration.
+     * This is used to track where the Branch key was configured from (e.g., branch.json, manifest, strings.xml, constructor, public function).
+     *
+     * @param source String indicating the source of the Branch key (e.g., "branch_json", "manifest", "strings", "constructor", "public_function")
+     */
+    public void setBranchKeySource(String source) {
+        setString(KEY_BRANCH_KEY_SOURCE, source);
+    }
+
+    /**
+     * Gets the source of the Branch key configuration.
+     *
+     * @return String indicating the source of the Branch key
+     */
+    public String getBranchKeySource() {
+        return getString(KEY_BRANCH_KEY_SOURCE);
     }
 }

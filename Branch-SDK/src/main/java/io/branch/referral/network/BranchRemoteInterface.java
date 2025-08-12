@@ -1,7 +1,6 @@
 package io.branch.referral.network;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -10,7 +9,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Locale;
-import java.util.Objects;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;

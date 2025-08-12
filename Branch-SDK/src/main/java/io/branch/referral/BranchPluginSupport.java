@@ -17,9 +17,7 @@ public class BranchPluginSupport {
      * @return {@link BranchPluginSupport} instance if already initialised or null
      */
     public static BranchPluginSupport getInstance() {
-        Branch b = Branch.getInstance();
-        if (b == null) return null;
-        return b.getBranchPluginSupport();
+        return null;
     }
 
     BranchPluginSupport(Context context) {
@@ -85,7 +83,7 @@ public class BranchPluginSupport {
      * Note that if either Debug is enabled or Fetch has been disabled, then return a "fake" ID.
      */
     public SystemObserver.UniqueId getHardwareID() {
-        return getSystemObserver().getUniqueID(context_, Branch.isDeviceIDFetchDisabled());
+        return getSystemObserver().getUniqueID(context_, false);
     }
 
     /**

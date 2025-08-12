@@ -17,7 +17,6 @@ import java.lang.ref.WeakReference;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
-import io.branch.referral.PrefHelper;
 
 public class DeepLinkRoutingValidator {
     private static final String VALIDATE_SDK_LINK_PARAM_KEY = "bnc_validate";

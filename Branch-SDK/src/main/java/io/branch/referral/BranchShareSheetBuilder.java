@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * <p> Class for building a share link dialog.This creates a chooser for selecting application for
@@ -27,8 +26,7 @@ public class BranchShareSheetBuilder {
 
     private String shareMsg_;
     private String shareSub_;
-    private Branch.BranchLinkShareListener callback_;
-    private Branch.IChannelProperties channelPropertiesCallback_;
+
 
     private ArrayList<SharingHelper.SHARE_WITH> preferredOptions_;
     private String defaultURL_;
@@ -71,8 +69,6 @@ public class BranchShareSheetBuilder {
             BranchLogger.d(e.getMessage());
         }
         shareMsg_ = "";
-        callback_ = null;
-        channelPropertiesCallback_ = null;
         preferredOptions_ = new ArrayList<>();
         defaultURL_ = null;
 
@@ -177,22 +173,7 @@ public class BranchShareSheetBuilder {
     /**
      * <p>Adds a callback to get the sharing status.</p>
      *
-     * @param callback A {@link Branch.BranchLinkShareListener} instance for getting sharing status.
-     * @return A {@link BranchShareSheetBuilder} instance.
-     */
-    public BranchShareSheetBuilder setCallback(Branch.BranchLinkShareListener callback) {
-        this.callback_ = callback;
-        return this;
-    }
 
-    /**
-     * @param channelPropertiesCallback A {@link io.branch.referral.Branch.IChannelProperties} instance for customizing sharing properties for channels.
-     * @return A {@link BranchShareSheetBuilder} instance.
-     */
-    public BranchShareSheetBuilder setChannelProperties(Branch.IChannelProperties channelPropertiesCallback) {
-        this.channelPropertiesCallback_ = channelPropertiesCallback;
-        return this;
-    }
 
     /**
      * <p>Adds application to the preferred list of applications which are shown on share dialog.
@@ -497,7 +478,7 @@ public class BranchShareSheetBuilder {
      * The link is created with the parameters provided to the builder. </p>
      */
     public void shareLink() {
-        Branch.getInstance().shareLink(this);
+        new ShareLinkManager().shareLink(this);
     }
 
     public Activity getActivity() {
@@ -528,13 +509,7 @@ public class BranchShareSheetBuilder {
         return shareSub_;
     }
 
-    public Branch.BranchLinkShareListener getCallback() {
-        return callback_;
-    }
 
-    public Branch.IChannelProperties getChannelPropertiesCallback() {
-        return channelPropertiesCallback_;
-    }
 
     public String getDefaultURL() {
         return defaultURL_;

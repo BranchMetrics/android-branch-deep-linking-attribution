@@ -5,16 +5,10 @@ import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 import android.content.Context;
 import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.branch.coroutines.DeviceSignalsKt;
 import io.branch.referral.validators.DeepLinkRoutingValidator;
-import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
-import kotlin.coroutines.EmptyCoroutineContext;
 
 /**
  * <p>
@@ -92,9 +86,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     void onInitSessionCompleted(ServerResponse response, Branch branch) {
+        // Set the session state to INITIALISED after successful initialization
+        branch.setInitState(Branch.SESSION_STATE.INITIALISED);
+        
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
         BranchLogger.v("onInitSessionCompleted on thread " + Thread.currentThread().getName());
+        BranchLogger.d("DEBUG: Session initialization completed successfully, state set to INITIALISED");
     }
 
     /**
@@ -210,7 +208,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
 
         // Re-enables auto session initialization, note that we don't care if the request succeeds
-        Branch.expectDelayedSessionInitialization(false);
+
     }
 
     /*

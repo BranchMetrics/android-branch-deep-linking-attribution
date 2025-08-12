@@ -49,8 +49,7 @@ public class BUOTestRoutines {
                     .setContentDescription("est_content_description")
                     .setContentExpiration(new Date(122323432444L))
                     .setContentImageUrl("https://test_content_img_url")
-                    .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
-                    .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PRIVATE)
+                    
                     .setTitle("test_title")
                     .setContentMetadata(
                             new ContentMetadata()

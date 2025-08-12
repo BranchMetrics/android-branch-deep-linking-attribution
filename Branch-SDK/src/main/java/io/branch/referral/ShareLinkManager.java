@@ -33,8 +33,7 @@ import java.util.List;
 class ShareLinkManager {
     /* The custom chooser dialog for selecting an application to share the link. */
     AnimatedDialog shareDlg_;
-    Branch.BranchLinkShareListener callback_;
-    Branch.IChannelProperties channelPropertiesCallback_;
+
     
     /* List of apps available for sharing. */
     private List<ResolveInfo> displayedAppList_;
@@ -71,8 +70,6 @@ class ShareLinkManager {
     Dialog shareLink(BranchShareSheetBuilder builder) {
         builder_ = builder;
         context_ = builder.getActivity();
-        callback_ = builder.getCallback();
-        channelPropertiesCallback_ = builder.getChannelPropertiesCallback();
         shareLinkIntent_ = new Intent(Intent.ACTION_SEND);
         shareLinkIntent_.setType("text/plain");
         shareDialogThemeID_ = builder.getStyleResourceID();
@@ -83,33 +80,12 @@ class ShareLinkManager {
             createShareDialog(builder.getPreferredOptions());
         } catch (Exception e) {
             BranchLogger.e("Caught Exception" + e.getMessage());
-            if (callback_ != null) {
-                callback_.onLinkShareResponse(null, null, new BranchError("Trouble sharing link", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
-            } else {
-                BranchLogger.w("Unable create share options. Couldn't find applications on device to share the link.");
-            }
+            BranchLogger.w("Unable create share options. Couldn't find applications on device to share the link.");
         }
         return shareDlg_;
     }
     
-    /**
-     * Dismiss the share dialog if showing. Should be called on activity stopping.
-     *
-     * @param animateClose A {@link Boolean} to specify whether to close the dialog with an animation.
-     *                     A value of true will close the dialog with an animation. Setting this value
-     *                     to false will close the Dialog immediately.
-     */
-    void cancelShareLinkDialog(boolean animateClose) {
-        if (shareDlg_ != null && shareDlg_.isShowing()) {
-            if (animateClose) {
-                // Cancel the dialog with animation
-                shareDlg_.cancel();
-            } else {
-                // Dismiss the dialog immediately
-                shareDlg_.dismiss();
-            }
-        }
-    }
+
 
     /**
      * Create a custom chooser dialog with available share options.
@@ -187,15 +163,12 @@ class ShareLinkManager {
                     adapter.notifyDataSetChanged();
                 } else if (view.getTag() instanceof ResolveInfo) {
                     ResolveInfo resolveInfo = (ResolveInfo) view.getTag();
-                    if (callback_ != null) {
-                        String selectedChannelName = "";
-                        final PackageManager packageManager = context_.getPackageManager();
-                        if (context_ != null && resolveInfo.loadLabel(packageManager) != null) {
-                            selectedChannelName = resolveInfo.loadLabel(packageManager).toString();
-                        }
-                        builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(packageManager).toString());
-                        callback_.onChannelSelected(selectedChannelName);
+                    String selectedChannelName = "";
+                    final PackageManager packageManager = context_.getPackageManager();
+                    if (context_ != null && resolveInfo.loadLabel(packageManager) != null) {
+                        selectedChannelName = resolveInfo.loadLabel(packageManager).toString();
                     }
+                    builder_.getShortLinkBuilder().setChannel(resolveInfo.loadLabel(packageManager).toString());
                     adapter.selectedPos = pos - shareOptionListView.getHeaderViewsCount();
                     adapter.notifyDataSetChanged();
                     invokeSharingClient(resolveInfo);
@@ -212,16 +185,9 @@ class ShareLinkManager {
         }
         shareDlg_.setContentView(shareOptionListView);
         shareDlg_.show();
-        if (callback_ != null) {
-            callback_.onShareLinkDialogLaunched();
-        }
         shareDlg_.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
-                if (callback_ != null) {
-                    callback_.onShareLinkDialogDismissed();
-                    callback_ = null;
-                }
                 // Release  context to prevent leaks
                 if (!isShareInProgress_) {
                     context_ = null;
@@ -340,16 +306,12 @@ class ShareLinkManager {
                     if (defaultUrl != null && defaultUrl.trim().length() > 0) {
                         shareWithClient(selectedResolveInfo, defaultUrl, channelName);
                     } else {
-                        if (callback_ != null) {
-                            callback_.onLinkShareResponse(url, channelName, error);
-                        } else {
-                            BranchLogger.v("Unable to share link " + error.getMessage());
-                        }
+                        BranchLogger.v("Unable to share link " + error.getMessage());
                         if (error.getErrorCode() == BranchError.ERR_BRANCH_NO_CONNECTIVITY
                                 || error.getErrorCode() == BranchError.ERR_BRANCH_TRACKING_DISABLED) {
                             shareWithClient(selectedResolveInfo, url, channelName);
                         } else {
-                            cancelShareLinkDialog(false);
+                    
                             isShareInProgress_ = false;
                         }
                     }
@@ -359,28 +321,13 @@ class ShareLinkManager {
     }
     
     private void shareWithClient(ResolveInfo selectedResolveInfo, String url, String channelName) {
-        if (callback_ != null) {
-            callback_.onLinkShareResponse(url, channelName, null);
-        } else {
-            BranchLogger.v("Shared link with " + channelName);
-        }
+        BranchLogger.v("Shared link with " + channelName);
         if (selectedResolveInfo instanceof CopyLinkItem) {
             addLinkToClipBoard(url, builder_.getShareMsg());
         } else {
             shareLinkIntent_.setPackage(selectedResolveInfo.activityInfo.packageName);
             String shareSub = builder_.getShareSub();
             String shareMsg = builder_.getShareMsg();
-            
-            if (channelPropertiesCallback_ != null) {
-                String customShareSub = channelPropertiesCallback_.getSharingTitleForChannel(channelName);
-                String customShareMsg = channelPropertiesCallback_.getSharingMessageForChannel(channelName);
-                if (!TextUtils.isEmpty(customShareSub)) {
-                    shareSub = customShareSub;
-                }
-                if (!TextUtils.isEmpty(customShareMsg)) {
-                    shareMsg = customShareMsg;
-                }
-            }
             if (shareSub != null && shareSub.trim().length() > 0) {
                 shareLinkIntent_.putExtra(Intent.EXTRA_SUBJECT, shareSub);
             }

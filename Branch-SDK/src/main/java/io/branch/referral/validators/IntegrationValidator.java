@@ -66,7 +66,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         BranchInstanceCreationValidatorCheck branchInstanceCreationValidatorCheck = new BranchInstanceCreationValidatorCheck();
         boolean result = branchInstanceCreationValidatorCheck.RunTests(context);
         integrationValidatorDialog.SetTestResultForRowItem(1, branchInstanceCreationValidatorCheck.GetTestName(), result, branchInstanceCreationValidatorCheck.GetOutput(context, result), branchInstanceCreationValidatorCheck.GetMoreInfoLink());
-        logOutputForTest(result, "1. Verifying Branch instance creation", "Branch is not initialised from your Application class. Please add `Branch.getAutoInstance(this);` to your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
+        logOutputForTest(result, "1. Verifying Branch instance creation", "Branch is not initialised from your Application class. Please add `Branch.getInstance();` to your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
 
         // 2. Verify Branch Keys
         BranchKeysValidatorCheck branchKeysValidatorCheck = new BranchKeysValidatorCheck();

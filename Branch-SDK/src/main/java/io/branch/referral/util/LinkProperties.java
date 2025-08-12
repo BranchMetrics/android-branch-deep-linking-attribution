@@ -1,6 +1,5 @@
 package io.branch.referral.util;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,7 +10,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -24,7 +22,7 @@ import io.branch.referral.BranchLogger;
  *
  * @see BranchUniversalObject#getShortUrl(Context, LinkProperties)
  * @see BranchUniversalObject#generateShortUrl(Context, LinkProperties, Branch.BranchLinkCreateListener)
- * @see BranchUniversalObject#showShareSheet(Activity, LinkProperties, ShareSheetStyle, Branch.BranchLinkShareListener)
+
  * </p>
  */
 public class LinkProperties implements Parcelable {

@@ -32,6 +32,16 @@ public class BranchUtil {
 
     private static Boolean testModeEnabledViaCompileTimeConfiguration = null;
 
+    // Constants for branch key configuration
+    private static final String BRANCH_KEY_LIVE = "io.branch.sdk.BranchKey";
+    private static final String BRANCH_KEY_TEST = "io.branch.sdk.BranchKey.test";
+    
+    // Source type constants
+    private static final String SOURCE_BRANCH_JSON = "branch_json";
+    private static final String SOURCE_MANIFEST = "manifest";
+    private static final String SOURCE_MANIFEST_TEST_FALLBACK = "manifest_test_fallback";
+    private static final String SOURCE_STRINGS = "strings";
+
     // Package Private
     static void shutDown() {
         isTestModeEnabled_ = false;
@@ -84,34 +94,125 @@ public class BranchUtil {
     }
 
     public static String readBranchKey(Context context) {
-        String branchKey = null;
-
-        // branch.json overrides manifest or string resources configurations
-        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
-        if (jsonConfig.isValid()) branchKey = jsonConfig.getBranchKey();
-        if (branchKey != null) return branchKey;
-
-        String metaDataKey = isTestModeEnabled() ? "io.branch.sdk.BranchKey.test" : "io.branch.sdk.BranchKey";
-        // manifest overrides string resources
-        try {
-            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                branchKey = ai.metaData.getString(metaDataKey);
-                if (branchKey == null && isTestModeEnabled()) {
-                    // If test mode is enabled, but the test key cannot be found, fall back to the live key.
-                    branchKey = ai.metaData.getString("io.branch.sdk.BranchKey");
-                }
-            }
-        } catch (final PackageManager.NameNotFoundException e) {
-            BranchLogger.d(e.getMessage());
+        BranchLogger.v("Reading branch key from available sources...");
+        // 1. Try branch.json first (highest priority)
+        BranchLogger.v("Attempting to read branch key from branch.json configuration...");
+        String branchKey = readBranchKeyFromJson(context);
+        if (branchKey != null) {
+            BranchLogger.v("Successfully read branch key from branch.json configuration");
+            setBranchKeyAndSource(context, branchKey, SOURCE_BRANCH_JSON);
+            return branchKey;
         }
-        if (branchKey != null) return branchKey;
+        BranchLogger.v("Branch key not found in branch.json, falling back to manifest...");
 
-        // check string resources as the last resort
-        Resources resources = context.getResources();
-        branchKey = resources.getString(resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
+        // 2. Try manifest (medium priority)
+        BranchLogger.v("Attempting to read branch key from manifest meta-data...");
+        branchKey = readBranchKeyFromManifest(context);
+        if (branchKey != null) {
+            BranchLogger.v("Successfully read branch key from manifest meta-data");
+            return branchKey;
+        }
+        BranchLogger.v("Branch key not found in manifest, falling back to string resources...");
 
+        // 3. Try string resources (lowest priority)
+        BranchLogger.v("Attempting to read branch key from string resources...");
+        branchKey = readBranchKeyFromStringResources(context);
+        if (branchKey != null) {
+            BranchLogger.v("Successfully read branch key from string resources");
+        } else {
+            BranchLogger.w("Branch key not found in any source (branch.json, manifest, or string resources)");
+        }
         return branchKey;
+    }
+
+    private static String readBranchKeyFromJson(Context context) {
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        String branchKey = jsonConfig.isValid() ? jsonConfig.getBranchKey() : null;
+        if (branchKey != null) {
+            BranchLogger.v("Found branch key in branch.json: " + (branchKey.length() > 10 ? branchKey.substring(0, 10) + "..." : branchKey));
+        } else {
+            BranchLogger.v("branch.json configuration not valid or branch key not present");
+        }
+        return branchKey;
+    }
+
+    private static String readBranchKeyFromManifest(Context context) {
+        try {
+            ApplicationInfo ai = context.getPackageManager()
+                    .getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            
+            if (ai.metaData == null) {
+                BranchLogger.v("No meta-data found in manifest");
+                return null;
+            }
+
+            return readBranchKeyFromMetaData(context, ai);
+        } catch (PackageManager.NameNotFoundException e) {
+            BranchLogger.d("Error reading manifest: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private static String readBranchKeyFromMetaData(Context context, ApplicationInfo ai) {
+        String metaDataKey = isTestModeEnabled() ? BRANCH_KEY_TEST : BRANCH_KEY_LIVE;
+        BranchLogger.v("Looking for branch key in manifest with key: " + metaDataKey + " (test mode: " + isTestModeEnabled() + ")");
+        
+        String branchKey = ai.metaData.getString(metaDataKey);
+
+        if (branchKey != null) {
+            BranchLogger.v("Found branch key in manifest meta-data: " + (branchKey.length() > 10 ? branchKey.substring(0, 10) + "..." : branchKey));
+            setBranchKeyAndSource(context, branchKey, SOURCE_MANIFEST);
+            return branchKey;
+        }
+
+        // Handle test mode fallback
+        return handleTestModeFallback(context, ai);
+    }
+
+    private static String handleTestModeFallback(Context context, ApplicationInfo ai) {
+        if (!isTestModeEnabled()) {
+            BranchLogger.v("Branch key not found for live mode in manifest");
+            return null;
+        }
+
+        // If test mode is enabled but test key is not found, fall back to live key
+        BranchLogger.v("Test mode enabled but test key not found, attempting fallback to live key...");
+        String liveKey = ai.metaData.getString(BRANCH_KEY_LIVE);
+        if (liveKey != null) {
+            BranchLogger.v("Found live branch key for test mode fallback: " + (liveKey.length() > 10 ? liveKey.substring(0, 10) + "..." : liveKey));
+            setBranchKeyAndSource(context, liveKey, SOURCE_MANIFEST_TEST_FALLBACK);
+        } else {
+            BranchLogger.v("No live key found for test mode fallback");
+        }
+        return liveKey;
+    }
+
+    private static String readBranchKeyFromStringResources(Context context) {
+        String metaDataKey = isTestModeEnabled() ? BRANCH_KEY_TEST : BRANCH_KEY_LIVE;
+        BranchLogger.v("Looking for branch key in string resources with key: " + metaDataKey + " (test mode: " + isTestModeEnabled() + ")");
+        
+        try {
+            Resources resources = context.getResources();
+            String branchKey = resources.getString(
+                    resources.getIdentifier(metaDataKey, "string", context.getPackageName()));
+            
+            if (!TextUtils.isEmpty(branchKey)) {
+                BranchLogger.v("Found branch key in string resources: " + (branchKey.length() > 10 ? branchKey.substring(0, 10) + "..." : branchKey));
+                setBranchKeyAndSource(context, branchKey, SOURCE_STRINGS);
+            } else {
+                BranchLogger.v("Branch key string resource is empty");
+            }
+            return branchKey;
+        } catch (Resources.NotFoundException e) {
+            BranchLogger.v("Branch key string resource not found: " + metaDataKey);
+            return null;
+        }
+    }
+
+    private static void setBranchKeyAndSource(Context context, String branchKey, String source) {
+        PrefHelper prefHelper = PrefHelper.getInstance(context);
+        prefHelper.setBranchKey(branchKey);
+        prefHelper.setBranchKeySource(source);
     }
 
     public static boolean getEnableLoggingConfig(Context context) {

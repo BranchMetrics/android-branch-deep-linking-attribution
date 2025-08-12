@@ -1,13 +1,7 @@
 package io.branch.referral;
 
-import static io.branch.referral.Defines.Jsonkey.Branch_Sdk_Request_Uuid;
-
-import android.util.Log;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -60,7 +54,7 @@ public class ServerRequestTests extends BranchTest {
                 setTimeouts(10,10);
 
                 final CountDownLatch lock1 = new CountDownLatch(1);
-                Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
+                Branch.getInstance().getLastAttributedTouchData(new Branch.BranchLastAttributedTouchDataListener() {
                     @Override
                     public void onDataFetched(JSONObject jsonObject, BranchError error) {
                         Assert.assertEquals(BranchError.ERR_BRANCH_TASK_TIMEOUT, error.getErrorCode());
@@ -90,8 +84,7 @@ public class ServerRequestTests extends BranchTest {
                         .setTitle("My Content Title")
                         .setContentDescription("My Content Description")
                         .setContentImageUrl("https://lorempixel.com/400/400")
-                        .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
-                        .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+                        
                         .setContentMetadata(new ContentMetadata().addCustomMetadata("key1", "value1"));
                 LinkProperties linkProperties = new LinkProperties()
                         .setChannel("facebook")

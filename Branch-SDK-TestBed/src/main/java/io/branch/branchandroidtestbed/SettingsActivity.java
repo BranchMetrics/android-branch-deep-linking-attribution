@@ -3,7 +3,6 @@ package io.branch.branchandroidtestbed;
 import android.app.Activity;
 
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -54,9 +53,10 @@ public class SettingsActivity extends Activity {
     void setupApiUrlText() {
         final EditText apiUrlText = findViewById(R.id.api_url_text);
         final PrefHelper prefHelper = PrefHelper.getInstance(this);
-        String currentApiUrl = prefHelper.getAPIBaseUrl();
-
-        apiUrlText.setText(currentApiUrl);
+        String currentApiUrl = prefHelper.getAPIBaseUrl(true);
+        if (currentApiUrl != null) {
+            apiUrlText.setText(currentApiUrl);
+        }
 
         apiUrlText.setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_DONE) {
