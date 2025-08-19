@@ -1,9 +1,8 @@
 package io.branch.referral
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Unit tests for BranchLinkGenerationException hierarchy.

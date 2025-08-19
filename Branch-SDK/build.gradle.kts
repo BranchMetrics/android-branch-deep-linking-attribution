@@ -60,6 +60,10 @@ dependencies {
     androidTestImplementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
     androidTestImplementation("com.miui.referrer:homereferrer:1.0.0.7")
 
+    // JUnit dependencies for unit testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
+    
     testImplementation("org.json:json:20230227")
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
@@ -69,6 +73,9 @@ dependencies {
     testImplementation ("org.mockito.kotlin:mockito-kotlin:4.1.0")
     // For Android instrumented tests (if needed)
     androidTestImplementation ("org.mockito:mockito-android:4.11.0")
+
+    // Robolectric for Android unit testing
+    testImplementation("org.robolectric:robolectric:4.10.3")
 
     // Mockito needs these classes in the test class path
     testImplementation("androidx.browser:browser:1.8.0")
@@ -92,6 +99,12 @@ android {
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("proguard-consumer.txt")
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
     }
 
     lint {
