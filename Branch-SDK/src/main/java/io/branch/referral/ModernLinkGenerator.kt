@@ -10,12 +10,47 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Modern coroutine-based link generator replacing the deprecated AsyncTask pattern.
  * 
- * Key improvements over AsyncTask implementation:
- * - Non-blocking coroutine execution
- * - Structured timeout control
- * - Result-based error handling
- * - Thread-safe caching
- * - Proper exception handling
+ * This class represents the modern approach to link generation in the Branch SDK, utilizing
+ * Kotlin coroutines for improved performance, reliability, and maintainability compared to
+ * the original AsyncTask-based implementation.
+ * 
+ * ## Key Improvements Over AsyncTask Implementation
+ * - **Non-blocking coroutine execution**: Uses structured concurrency instead of thread pools
+ * - **Structured timeout control**: Proper timeout handling with cancellation support  
+ * - **Result-based error handling**: Type-safe error propagation using Result<T>
+ * - **Thread-safe caching**: Concurrent cache operations without locking overhead
+ * - **Proper exception handling**: Categorized exceptions with appropriate recovery strategies
+ * - **Memory leak prevention**: No Activity context retention issues
+ * 
+ * ## Fallback Strategy  
+ * This class integrates with [BranchLegacyLinkGenerator] to provide robust fallback behavior:
+ * 1. **Primary**: Modern coroutine-based link generation
+ * 2. **Fallback**: Legacy direct network calls via utility class  
+ * 3. **Final**: Long URL return if configured
+ * 
+ * ## Usage Examples
+ * ```kotlin
+ * // Async generation with callback  
+ * modernGenerator.generateShortLinkAsync(linkData, callback)
+ * 
+ * // Synchronous generation (Java-compatible)
+ * val url = modernGenerator.generateShortLinkSyncFromJava(linkData, defaultToLongUrl, longUrl, timeout)
+ * ```
+ * 
+ * ## Thread Safety
+ * All public methods are thread-safe and can be called concurrently from multiple threads.
+ * Internal coroutines use appropriate dispatchers for network and CPU-bound operations.
+ * 
+ * @param context Android context for application-level operations
+ * @param branchRemoteInterface Network interface for Branch API communication
+ * @param prefHelper Configuration helper for timeouts, URLs, and API keys
+ * @param scope Coroutine scope for structured concurrency (defaults to IO scope)  
+ * @param defaultTimeoutMs Default timeout for network operations in milliseconds
+ * 
+ * @since 5.3.0
+ * @author Branch SDK Team
+ * @see BranchLegacyLinkGenerator for fallback compatibility
+ * @see BranchLinkGenerationException for error types
  */
 class ModernLinkGenerator(
     private val context: Context,
@@ -24,6 +59,9 @@ class ModernLinkGenerator(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
     private val defaultTimeoutMs: Long = 10_000L
 ) {
+    
+    // Legacy generator for fallback compatibility
+    private val legacyGenerator = BranchLegacyLinkGenerator(prefHelper, branchRemoteInterface)
     
     /**
      * Java-compatible constructor with default parameters
@@ -109,6 +147,7 @@ class ModernLinkGenerator(
             if (request.isDefaultToLongUrl) request.longUrl else null
         }
     }
+
     
     /**
      * Generate short link with callback for compatibility with existing async API.
@@ -189,17 +228,18 @@ class ModernLinkGenerator(
     ): String? {
         if (linkData == null) return if (defaultToLongUrl) longUrl else null
         
-        return try {
-            runBlocking {
+        // First try modern coroutine-based approach
+        try {
+            return runBlocking {
                 val result = generateShortLink(linkData, (timeout + 2000).toLong())
-                result.getOrElse { 
-                    if (defaultToLongUrl) longUrl else null
-                }
+                result.getOrNull() ?: if (defaultToLongUrl) longUrl else null
             }
         } catch (e: Exception) {
-            BranchLogger.e("Error in synchronous link generation: ${e.message}")
-            if (defaultToLongUrl) longUrl else null
+            BranchLogger.d("Modern link generation failed, falling back to legacy: ${e.message}")
         }
+        
+        // Fallback to dedicated legacy utility class for maximum compatibility
+        return legacyGenerator.generateShortLinkSyncDirect(linkData, defaultToLongUrl, longUrl, linkCache)
     }
     
     @JvmName("generateShortLinkAsyncFromJava")
