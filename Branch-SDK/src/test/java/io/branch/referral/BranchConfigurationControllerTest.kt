@@ -40,17 +40,6 @@ class BranchConfigurationControllerTest : BranchTestBase() {
         prefHelperField.set(mockBranch, mockPrefHelper)
     }
 
-    @Test
-    fun `test setDelayedSessionInitUsed sets the correct value`() {
-        // Given
-        val expectedValue = true
-
-        // When
-        controller.setDelayedSessionInitUsed(expectedValue)
-
-        // Then
-        verify(mockPrefHelper).delayedSessionInitUsed = expectedValue
-    }
 
     @Test
     fun `test isTestModeEnabled returns correct value`() {
@@ -190,7 +179,6 @@ class BranchConfigurationControllerTest : BranchTestBase() {
     @Test
     fun `test serializeConfiguration returns correct JSON object`() {
         // Given
-        val expectedDelayedSessionInit = true
         val expectedTestMode = true
         val expectedInstantDeepLinkingEnabled = true
         val expectedDeferInitForPluginRuntime = true
@@ -198,7 +186,6 @@ class BranchConfigurationControllerTest : BranchTestBase() {
         val expectedBranchKeyFallbackUsed = false
 
         // Setup mocks
-        `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
         mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedTestMode)
         `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED)).thenReturn(expectedInstantDeepLinkingEnabled)
         `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME)).thenReturn(expectedDeferInitForPluginRuntime)
@@ -208,7 +195,6 @@ class BranchConfigurationControllerTest : BranchTestBase() {
         val result = controller.serializeConfiguration()
 
         // Then
-        assertEquals(expectedDelayedSessionInit, result.getBoolean("expectDelayedSessionInitialization"))
         assertEquals(expectedTestMode, result.getBoolean("testMode"))
         assertEquals(expectedInstantDeepLinkingEnabled, result.getBoolean("instantDeepLinkingEnabled"))
         assertEquals(expectedDeferInitForPluginRuntime, result.getBoolean("deferInitForPluginRuntime"))
@@ -219,7 +205,6 @@ class BranchConfigurationControllerTest : BranchTestBase() {
     @Test
     fun `test serializeConfiguration with branch key fallback used`() {
         // Given
-        val expectedDelayedSessionInit = false
         val expectedTestMode = false
         val expectedInstantDeepLinkingEnabled = false
         val expectedDeferInitForPluginRuntime = false
@@ -227,7 +212,6 @@ class BranchConfigurationControllerTest : BranchTestBase() {
         val expectedBranchKeyFallbackUsed = true
 
         // Setup mocks
-        `when`(mockPrefHelper.delayedSessionInitUsed).thenReturn(expectedDelayedSessionInit)
         mockedStaticBranchUtil.`when`<Boolean> { BranchUtil.isTestModeEnabled() }.thenReturn(expectedTestMode)
         `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED)).thenReturn(expectedInstantDeepLinkingEnabled)
         `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME)).thenReturn(expectedDeferInitForPluginRuntime)
@@ -237,7 +221,6 @@ class BranchConfigurationControllerTest : BranchTestBase() {
         val result = controller.serializeConfiguration()
 
         // Then
-        assertEquals(expectedDelayedSessionInit, result.getBoolean("expectDelayedSessionInitialization"))
         assertEquals(expectedTestMode, result.getBoolean("testMode"))
         assertEquals(expectedInstantDeepLinkingEnabled, result.getBoolean("instantDeepLinkingEnabled"))
         assertEquals(expectedDeferInitForPluginRuntime, result.getBoolean("deferInitForPluginRuntime"))
@@ -248,7 +231,7 @@ class BranchConfigurationControllerTest : BranchTestBase() {
     @Test
     fun `test serializeConfiguration handles NullPointerException gracefully`() {
         // Given
-        `when`(mockPrefHelper.delayedSessionInitUsed).thenThrow(NullPointerException("Test null pointer"))
+        `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED)).thenThrow(NullPointerException("Test null pointer"))
 
         // When
         val result = controller.serializeConfiguration()
@@ -267,13 +250,13 @@ class BranchConfigurationControllerTest : BranchTestBase() {
         // Then
         assertNotNull(result)
         // The result should either have all fields or be empty if an exception occurred
-        assert(result.length() == 0 || result.has("expectDelayedSessionInitialization"))
+        assert(result.length() == 0 || result.has("testMode"))
     }
 
     @Test
     fun `test serializeConfiguration handles generic exception gracefully`() {
         // Given
-        `when`(mockPrefHelper.delayedSessionInitUsed).thenThrow(RuntimeException("Test exception"))
+        `when`(mockPrefHelper.getBool(BranchConfigurationController.KEY_INSTANT_DEEP_LINKING_ENABLED)).thenThrow(RuntimeException("Test exception"))
 
         // When
         val result = controller.serializeConfiguration()
