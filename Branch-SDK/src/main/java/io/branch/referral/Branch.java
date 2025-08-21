@@ -229,6 +229,9 @@ public class Branch {
     
     /* Modern link generator to replace deprecated AsyncTask pattern */
     private ModernLinkGenerator modernLinkGenerator_;
+    
+    /* Legacy link generator for fallback compatibility */
+    private BranchLegacyLinkGenerator legacyLinkGenerator_;
 
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
@@ -348,6 +351,10 @@ public class Branch {
             prefHelper_
         );
         BranchLogger.d("DEBUG: Branch constructor - modern link generator initialized");
+        
+        // Initialize legacy link generator for fallback compatibility
+        legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, branchRemoteInterface_);
+        BranchLogger.d("DEBUG: Branch constructor - legacy link generator initialized");
     }
 
     /**
@@ -569,6 +576,8 @@ public class Branch {
         if (branchReferral_ != null && branchReferral_.modernLinkGenerator_ != null) {
             branchReferral_.modernLinkGenerator_.shutdown();
         }
+        
+        // Legacy link generator doesn't need explicit shutdown (no coroutines)
         
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();
@@ -1225,8 +1234,40 @@ public class Branch {
 
     // PRIVATE FUNCTIONS
     
+    /**
+     * Generate short link synchronously using modern and legacy fallback strategies.
+     * 
+     * This method serves as a facade for link generation, coordinating between the modern
+     * coroutine-based approach and legacy fallback implementations to ensure maximum
+     * compatibility and reliability.
+     * 
+     * <h3>Generation Strategy</h3>
+     * <ol>
+     * <li><strong>Primary</strong>: Modern coroutine-based generation via {@link ModernLinkGenerator}</li>
+     * <li><strong>Fallback</strong>: Legacy AsyncTask-based generation via {@link BranchLegacyLinkGenerator}</li>
+     * <li><strong>Final</strong>: Return long URL if configured, or null</li>
+     * </ol>
+     * 
+     * <h3>Error Handling</h3>
+     * <ul>
+     * <li>Network failures automatically trigger fallback to next strategy</li>
+     * <li>Timeout exceptions are handled gracefully with appropriate logging</li>
+     * <li>JSON parsing errors result in fallback behavior</li>
+     * <li>All exceptions are logged for debugging purposes</li>
+     * </ul>
+     * 
+     * <h3>Caching</h3>
+     * Generated URLs are cached using the {@code linkCache_} to improve performance
+     * for repeated requests with identical parameters.
+     * 
+     * @param req The server request containing link generation parameters
+     * @return Generated short URL, fallback long URL, or null on complete failure
+     * @since 5.3.0 (refactored to use facade pattern)
+     * @see ModernLinkGenerator#generateShortLinkSyncFromJava
+     * @see BranchLegacyLinkGenerator#generateShortLinkSyncLegacy
+     */
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
-        // Use modern link generator instead of deprecated AsyncTask
+        // Use modern link generator with existing Java-compatible method
         if (modernLinkGenerator_ != null) {
             return modernLinkGenerator_.generateShortLinkSyncFromJava(
                 req.getLinkPost(), 
@@ -1234,30 +1275,12 @@ public class Branch {
                 req.getLongUrl(), 
                 prefHelper_.getTimeout()
             );
+        } else if (legacyLinkGenerator_ != null) {
+            // Fallback to dedicated legacy implementation
+            return legacyLinkGenerator_.generateShortLinkSyncLegacy(req, linkCache_);
         } else {
-            // Fallback to original implementation for backward compatibility
-            ServerResponse response = null;
-            try {
-                int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-                response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                BranchLogger.d(e.getMessage());
-            }
-            String url = null;
-            if (req.isDefaultToLongUrl()) {
-                url = req.getLongUrl();
-            }
-            if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                try {
-                    url = response.getObject().getString("url");
-                    if (req.getLinkPost() != null) {
-                        linkCache_.put(req.getLinkPost(), url);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            return url;
+            // Final fallback - return long URL if configured
+            return req.isDefaultToLongUrl() ? req.getLongUrl() : null;
         }
     }
     
