@@ -226,10 +226,10 @@ public class Branch {
     public final BranchRequestQueueAdapter requestQueue_;
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
-    
+
     /* Modern link generator to replace deprecated AsyncTask pattern */
     private ModernLinkGenerator modernLinkGenerator_;
-    
+
     /* Legacy link generator for fallback compatibility */
     private BranchLegacyLinkGenerator legacyLinkGenerator_;
 
@@ -343,15 +343,15 @@ public class Branch {
         BranchLogger.d("DEBUG: Branch constructor - initializing request queue");
         requestQueue_.initialize();
         BranchLogger.d("DEBUG: Branch constructor - request queue initialized");
-        
+
         // Initialize modern link generator with default parameters
         modernLinkGenerator_ = new ModernLinkGenerator(
-            context, 
-            branchRemoteInterface_, 
+            context,
+            branchRemoteInterface_,
             prefHelper_
         );
         BranchLogger.d("DEBUG: Branch constructor - modern link generator initialized");
-        
+
         // Initialize legacy link generator for fallback compatibility
         legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, branchRemoteInterface_);
         BranchLogger.d("DEBUG: Branch constructor - legacy link generator initialized");
@@ -576,9 +576,9 @@ public class Branch {
         if (branchReferral_ != null && branchReferral_.modernLinkGenerator_ != null) {
             branchReferral_.modernLinkGenerator_.shutdown();
         }
-        
+
         // Legacy link generator doesn't need explicit shutdown (no coroutines)
-        
+
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();
         PrefHelper.shutDown();
@@ -1236,18 +1236,18 @@ public class Branch {
     
     /**
      * Generate short link synchronously using modern and legacy fallback strategies.
-     * 
+     *
      * This method serves as a facade for link generation, coordinating between the modern
      * coroutine-based approach and legacy fallback implementations to ensure maximum
      * compatibility and reliability.
-     * 
+     *
      * <h3>Generation Strategy</h3>
      * <ol>
      * <li><strong>Primary</strong>: Modern coroutine-based generation via {@link ModernLinkGenerator}</li>
      * <li><strong>Fallback</strong>: Legacy AsyncTask-based generation via {@link BranchLegacyLinkGenerator}</li>
      * <li><strong>Final</strong>: Return long URL if configured, or null</li>
      * </ol>
-     * 
+     *
      * <h3>Error Handling</h3>
      * <ul>
      * <li>Network failures automatically trigger fallback to next strategy</li>
@@ -1255,11 +1255,11 @@ public class Branch {
      * <li>JSON parsing errors result in fallback behavior</li>
      * <li>All exceptions are logged for debugging purposes</li>
      * </ul>
-     * 
+     *
      * <h3>Caching</h3>
      * Generated URLs are cached using the {@code linkCache_} to improve performance
      * for repeated requests with identical parameters.
-     * 
+     *
      * @param req The server request containing link generation parameters
      * @return Generated short URL, fallback long URL, or null on complete failure
      * @since 5.3.0 (refactored to use facade pattern)
@@ -1270,9 +1270,9 @@ public class Branch {
         // Use modern link generator with existing Java-compatible method
         if (modernLinkGenerator_ != null) {
             return modernLinkGenerator_.generateShortLinkSyncFromJava(
-                req.getLinkPost(), 
-                req.isDefaultToLongUrl(), 
-                req.getLongUrl(), 
+                req.getLinkPost(),
+                req.isDefaultToLongUrl(),
+                req.getLongUrl(),
                 prefHelper_.getTimeout()
             );
         } else if (legacyLinkGenerator_ != null) {
