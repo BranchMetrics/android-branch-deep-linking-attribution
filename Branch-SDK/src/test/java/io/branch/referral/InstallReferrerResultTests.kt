@@ -1,6 +1,5 @@
 package io.branch.referral
 
-import android.content.Context
 import io.branch.coroutines.getLatestInstallTimeStamp
 import io.branch.coroutines.getLatestValidReferrerStore
 import io.branch.data.InstallReferrerResult

@@ -53,7 +53,7 @@ public class PrefHelper {
      * Number of times to reattempt connection to the Branch server before giving up and throwing an
      * exception.
      */
-    private static final int MAX_RETRIES = 3; // Default retry count is 3
+    static final int MAX_RETRIES = 3; // Default retry count is 3
 
     static final int TIMEOUT = 5500; // Default timeout is 5.5 sec
     static final int CONNECT_TIMEOUT = 10000; // Default timeout is 10 seconds

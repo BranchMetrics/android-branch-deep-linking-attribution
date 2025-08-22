@@ -1,10 +1,10 @@
 package io.branch.referral
 
-import kotlinx.coroutines.runBlocking
+import io.branch.referral.network.BranchRemoteInterface
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito.*
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import org.mockito.Mockito.mock
 
 /**
  * Simple test to verify ModernLinkGenerator basic functionality
