@@ -122,10 +122,10 @@ class BranchConfigurationTest {
         assertTrue("Should accept minimum valid timeout", isValidTimeout(100))
         assertTrue("Should accept maximum valid timeout", isValidTimeout(300000)) // 5 minutes
         
-        // Test retry count boundaries
+        // Test retry count boundaries using actual SDK constants
         assertTrue("Should accept minimum retries", isValidRetryCount(0))
-        assertTrue("Should accept reasonable retries", isValidRetryCount(10))
-        assertFalse("Should reject excessive retries", isValidRetryCount(50))
+        assertTrue("Should accept SDK max retries", isValidRetryCount(PrefHelper.MAX_RETRIES))
+        assertFalse("Should reject excessive retries", isValidRetryCount(PrefHelper.MAX_RETRIES + 1))
     }
     
     // Helper methods that simulate Branch configuration logic
@@ -140,7 +140,8 @@ class BranchConfigurationTest {
     }
     
     private fun isValidRetryCount(retries: Int): Boolean {
-        return retries >= 0 && retries <= 20
+        // Use actual SDK constant to centralize logic and avoid hardcoded values
+        return retries >= 0 && retries <= PrefHelper.MAX_RETRIES
     }
     
     private fun isValidDeepLinkUrl(url: String?): Boolean {
