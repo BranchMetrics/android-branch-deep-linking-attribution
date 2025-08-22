@@ -1,5 +1,6 @@
 package io.branch.referral.modernization
 
+import io.branch.referral.BranchLogger
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -24,7 +25,7 @@ class ModernStrategyDemoTest {
         assertNotNull("Legacy wrapper should exist", legacyWrapperClass)
         assertNotNull("Preserved API should exist", preservedApiClass)
         
-        println("✅ Preservation architecture classes are available")
+        BranchLogger.i("✅ Preservation architecture classes are available")
     }
     
     @Test
@@ -37,7 +38,7 @@ class ModernStrategyDemoTest {
             assertNotNull("Modern core should exist", modernCoreClass)
             assertNotNull("Session manager should exist", sessionManagerClass)
             
-            println("✅ Modern core architecture is available")
+            BranchLogger.i("✅ Modern core architecture is available")
         } catch (e: ClassNotFoundException) {
             fail("Core modernization classes should be available: ${e.message}")
         }
@@ -53,7 +54,7 @@ class ModernStrategyDemoTest {
             assertNotNull("Analytics should exist", analyticsClass)
             assertNotNull("Registry should exist", registryClass)
             
-            println("✅ Analytics architecture is available")
+            BranchLogger.i("✅ Analytics architecture is available")
         } catch (e: ClassNotFoundException) {
             fail("Analytics classes should be available: ${e.message}")
         }
@@ -67,7 +68,7 @@ class ModernStrategyDemoTest {
             
             assertNotNull("Callback adapter should exist", adapterClass)
             
-            println("✅ Adapter architecture is available")
+            BranchLogger.i("✅ Adapter architecture is available")
         } catch (e: ClassNotFoundException) {
             fail("Adapter classes should be available: ${e.message}")
         }
@@ -86,7 +87,7 @@ class ModernStrategyDemoTest {
         assertTrue("Should preserve getInstance", methodNames.contains("getInstance"))
         assertTrue("Should preserve enableTestMode", methodNames.contains("enableTestMode"))
         
-        println("✅ API method preservation is working")
+        BranchLogger.i("✅ API method preservation is working")
     }
     
     @Test
@@ -100,7 +101,7 @@ class ModernStrategyDemoTest {
         assertTrue("Should preserve setIdentity", methodNames.contains("setIdentity"))
         assertTrue("Should preserve userCompletedAction", methodNames.contains("userCompletedAction"))
         
-        println("✅ Wrapper method preservation is working")
+        BranchLogger.i("✅ Wrapper method preservation is working")
     }
     
     @Test
@@ -114,7 +115,7 @@ class ModernStrategyDemoTest {
         assertTrue("Should have getUsageAnalytics", methodNames.contains("getUsageAnalytics"))
         assertTrue("Should have getApiRegistry", methodNames.contains("getApiRegistry"))
         
-        println("✅ Preservation manager capabilities are available")
+        BranchLogger.i("✅ Preservation manager capabilities are available")
     }
     
     @Test
@@ -148,7 +149,7 @@ class ModernStrategyDemoTest {
             }
         }
         
-        println("✅ Package organization is correct")
+        BranchLogger.i("✅ Package organization is correct")
     }
     
     @Test
@@ -191,7 +192,7 @@ class ModernStrategyDemoTest {
         assertTrue("Should have most components available", availableComponents >= 5)
         
         val completeness = (availableComponents.toDouble() / totalExpectedComponents * 100).toInt()
-        println("✅ Architecture is $completeness% complete ($availableComponents/$totalExpectedComponents components)")
+        BranchLogger.i("✅ Architecture is $completeness% complete ($availableComponents/$totalExpectedComponents components)")
     }
     
     @Test
@@ -211,6 +212,6 @@ class ModernStrategyDemoTest {
         // Check for proper method count (not too sparse, not too bloated)
         assertTrue("Should have reasonable method count", methods.size >= 5 && methods.size <= 50)
         
-        println("✅ Strategy pattern implementation is working")
+        BranchLogger.i("✅ Strategy pattern implementation is working")
     }
 }

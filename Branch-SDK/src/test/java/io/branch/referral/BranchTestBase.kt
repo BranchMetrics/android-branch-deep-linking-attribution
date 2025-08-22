@@ -40,6 +40,9 @@ abstract class BranchTestBase {
         // Set up Android logging
         ShadowLog.stream = System.out
         
+        // Enable BranchLogger for tests
+        BranchLogger.loggingEnabled = true
+        
         // Set up Looper for main thread operations
         val shadowMainLooper = Shadows.shadowOf(Looper.getMainLooper())
         shadowMainLooper.idle()
