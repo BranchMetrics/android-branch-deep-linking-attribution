@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v5
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -53,7 +53,7 @@ jobs:
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -93,7 +93,7 @@ jobs:
                   echo "Emulator has finished booting"
               # repo's gradle is configured to run on java 17
               - name: Setup java 17 for gradle
-                uses: actions/setup-java@v3
+                uses: actions/setup-java@v5
                 with:
                   distribution: ${{ env.JAVA_DISTRIBUTION }}
                   java-version: ${{ env.JAVA_VERSION }}
@@ -115,7 +115,7 @@ jobs:
         uses: actions/checkout@v5
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -152,7 +152,7 @@ jobs:
           echo "Emulator has finished booting"
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
