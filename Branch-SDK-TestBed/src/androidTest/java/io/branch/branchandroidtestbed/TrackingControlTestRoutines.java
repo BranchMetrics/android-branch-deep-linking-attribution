@@ -1,6 +1,8 @@
 package io.branch.branchandroidtestbed;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -36,6 +38,7 @@ public class TrackingControlTestRoutines {
     private static final int MAX_LOAD_CNT = 25;
     private static final String TAG = "Branch:TrackingCtrlTest";
     private final Context context;
+    private static Handler staticHandler;
     
     
     private static TrackingControlTestRoutines getInstance(Context context) {
@@ -172,12 +175,19 @@ public class TrackingControlTestRoutines {
     
     private void enableTrackingAndProceed(final int stateCnt) {
         Branch.getInstance().disableTracking(false);
-        new android.os.Handler().postDelayed(new Runnable() {
+        getStaticHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 runTrackingControlTest(stateCnt);
             }
         }, BRANCH_INIT_WAIT_TIME);
+    }
+    
+    private static Handler getStaticHandler() {
+        if (staticHandler == null) {
+            staticHandler = new Handler(Looper.getMainLooper());
+        }
+        return staticHandler;
     }
     
     private static boolean checkIsShortLink(String link) {
