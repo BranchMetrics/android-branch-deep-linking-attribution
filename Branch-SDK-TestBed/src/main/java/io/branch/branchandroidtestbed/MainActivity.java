@@ -126,9 +126,9 @@ public class MainActivity extends Activity {
                                 Branch.getInstance().setIdentity(userID, new BranchReferralInitListener() {
                                     @Override
                                     public void onInitFinished(JSONObject referringParams, BranchError error) {
-                                        Log.d("BranchSDK_Tester", "Identity set to " + userID + "\nInstall params = " + referringParams.toString());
+                                        BranchLogger.d("Identity set to " + userID + "\nInstall params = " + referringParams.toString());
                                         if (error != null) {
-                                            Log.e("BranchSDK_Tester", "branch set Identity failed. Caused by -" + error.getMessage());
+                                            BranchLogger.d("branch set Identity failed. Caused by -" + error.getMessage());
                                         }
                                         Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_LONG).show();
 
@@ -155,10 +155,10 @@ public class MainActivity extends Activity {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
                         if (error != null) {
-                            Log.e("BranchSDK_Tester", "onLogoutFinished Error: " + error);
+                            BranchLogger.d("onLogoutFinished Error: " + error);
                             Toast.makeText(getApplicationContext(), "Error Logging Out: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         } else {
-                            Log.d("BranchSDK_Tester", "onLogoutFinished succeeded: " + loggedOut);
+                            BranchLogger.d("onLogoutFinished succeeded: " + loggedOut);
                             Toast.makeText(getApplicationContext(), "Cleared User ID: " + currentUserId, Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -171,7 +171,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 JSONObject obj = Branch.getInstance().getFirstReferringParams();
-                Log.d("BranchSDK_Tester", "install params = " + obj.toString());
+                BranchLogger.d("install params = " + obj.toString());
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("First Referring Params");
@@ -190,7 +190,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 JSONObject obj = Branch.getInstance().getLatestReferringParams();
-                Log.d("BranchSDK_Tester", "Latest params = " + obj.toString());
+                BranchLogger.d("Latest params = " + obj.toString());
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("Latest Referring Params");
@@ -222,15 +222,15 @@ public class MainActivity extends Activity {
                 // txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
 
                 // Async Link creation example - this should trigger ModernLinkGenerator
-                Log.d("MODERNIZATION_DEBUG", "Starting generateShortUrl - should trigger ModernLinkGenerator");
+                BranchLogger.d("MODERNIZATION_DEBUG: Starting generateShortUrl - should trigger ModernLinkGenerator");
                 branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         if (error != null) {
-                            Log.e("MODERNIZATION_DEBUG", "Link creation failed: " + error.getMessage());
+                            BranchLogger.d("MODERNIZATION_DEBUG: Link creation failed: " + error.getMessage());
                             txtShortUrl.setText("ERROR: " + error.getMessage());
                         } else {
-                            Log.d("MODERNIZATION_DEBUG", "Link creation successful: " + url);
+                            BranchLogger.d("MODERNIZATION_DEBUG: Link creation successful: " + url);
                             txtShortUrl.setText(url);
                         }
                     }
@@ -257,7 +257,7 @@ public class MainActivity extends Activity {
                     .setListener(
                             (billingResult, list) -> {
                                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
-                                    Log.d("BillingClient", "Purchase was successful. Logging event");
+                                    BranchLogger.d("Purchase was successful. Logging event");
                                     for (Object purchase : list) {
                                         Branch.getInstance().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
                                     }
@@ -285,7 +285,7 @@ public class MainActivity extends Activity {
                         billingClient.queryProductDetailsAsync(
                                 params,
                                 (billingQueryResult, productDetailsList) -> {
-                                    Log.d("Billing", "Billing Query Result: " + billingQueryResult);
+                                    BranchLogger.d("Billing Query Result: " + billingQueryResult);
                                     List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
 
                                     BillingFlowParams.ProductDetailsParams productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
@@ -303,13 +303,13 @@ public class MainActivity extends Activity {
                         );
 
                     } else {
-                        Log.e("Billing Error", "Error setting up billing client" + billingResult);
+                        BranchLogger.d("Error setting up billing client" + billingResult);
                     }
                 }
 
                 @Override
                 public void onBillingServiceDisconnected() {
-                    Log.e("Billing Error", "Billing client disconnected");
+                    BranchLogger.d("Billing client disconnected");
                 }
             });
         });
@@ -375,12 +375,12 @@ public class MainActivity extends Activity {
                 Branch.getInstance().share(MainActivity.this, branchUniversalObject, linkProperties, new Branch.BranchNativeLinkShareListener() {
                             @Override
                             public void onLinkShareResponse(String sharedLink, BranchError error) {
-                                Log.d("Native Share Sheet:", "Link Shared: " + sharedLink);
+                                BranchLogger.d("Native Share Sheet: Link Shared: " + sharedLink);
                             }
 
                             @Override
                             public void onChannelSelected(String channelName) {
-                                Log.d("Native Share Sheet:", "Channel Selected: " + channelName);
+                                BranchLogger.d("Native Share Sheet: Channel Selected: " + channelName);
                             }
 
                         },
@@ -400,14 +400,14 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                Log.d("MODERNIZATION_DEBUG", "Starting getShortUrl (SYNC) - should trigger ModernLinkGenerator");
+                BranchLogger.d("MODERNIZATION_DEBUG: Starting getShortUrl (SYNC) - should trigger ModernLinkGenerator");
                 String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
                 if (shortURL == null) {
-                    Log.e("MODERNIZATION_DEBUG", "branchUniversalObject.getShortUrl returned null - check ModernLinkGenerator logs");
-                    Log.e("BranchSDK_Tester", "branchUniversalObject.getShortUrl = null");
+                    BranchLogger.d("MODERNIZATION_DEBUG: branchUniversalObject.getShortUrl returned null - check ModernLinkGenerator logs");
+                    BranchLogger.d("branchUniversalObject.getShortUrl = null");
                     return;
                 } else {
-                    Log.d("MODERNIZATION_DEBUG", "getShortUrl successful: " + shortURL);
+                    BranchLogger.d("MODERNIZATION_DEBUG: getShortUrl successful: " + shortURL);
                 }
 
                 intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
@@ -423,7 +423,7 @@ public class MainActivity extends Activity {
                         .setAutoCancel(true);
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                 notificationManager.notify(1, builder.build());
-                Log.d("BranchSDK_Tester", "Sent notification");
+                BranchLogger.d("Sent notification");
             }
         });
 
@@ -516,7 +516,7 @@ public class MainActivity extends Activity {
                                 ImageDialog.show();
 
                             } catch (Exception e) {
-                                Log.d("Adding Image to Alert", "Failed");
+                                BranchLogger.d("Adding Image to Alert: Failed");
                                 e.printStackTrace();
                             }
 
@@ -538,7 +538,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdCommerceEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("MODERNIZATION_DEBUG", "Starting Commerce Event - should trigger network operations");
+                BranchLogger.d("MODERNIZATION_DEBUG: Starting Commerce Event - should trigger network operations");
                 
                 new BranchEvent(BRANCH_STANDARD_EVENT.ADD_TO_CART)
                         .setAffiliation("test_affiliation")
@@ -556,13 +556,13 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
                             public void onSuccess(int responseCode) {
-                                Log.d("MODERNIZATION_DEBUG", "Commerce Event SUCCESS: " + responseCode);
+                                BranchLogger.d("MODERNIZATION_DEBUG: Commerce Event SUCCESS: " + responseCode);
                                 Toast.makeText(getApplicationContext(), "✅ Commerce Event Sent: " + responseCode, Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(Exception e) {
-                                Log.e("MODERNIZATION_DEBUG", "Commerce Event FAILED: " + e.toString());
+                                BranchLogger.d("MODERNIZATION_DEBUG: Commerce Event FAILED: " + e.toString());
                                 Log.d("BranchSDK_Tester", e.toString());
                                 Toast.makeText(getApplicationContext(), "❌ Commerce Event Failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                             }
@@ -634,7 +634,7 @@ public class MainActivity extends Activity {
                 Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
-                        Log.d("BranchSDK_Tester", "onLogoutFinished " + loggedOut + " errorMessage " + error);
+                        BranchLogger.d("onLogoutFinished " + loggedOut + " errorMessage " + error);
                         Toast.makeText(getApplicationContext(), "Logged Out", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -711,7 +711,7 @@ public class MainActivity extends Activity {
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        Log.d("BranchSDK_Tester", "initSession");
+        BranchLogger.d("initSession");
 
         initSessionsWithTests();
 
@@ -734,7 +734,7 @@ public class MainActivity extends Activity {
     // TODO Add to automation.
     //  Check that all events up to Event N-1 complete with user agent string.
     private void userAgentTests(boolean userAgentSync, int n) {
-        Log.i("BranchSDK_Tester", "Beginning stress tests");
+        BranchLogger.d("Beginning stress tests");
 
         // Initialize session first, then create events in callback
         initializeSessionWithEventTests(n);
@@ -779,7 +779,7 @@ public class MainActivity extends Activity {
          * Follows SRP - single responsibility for handling success scenario.
          */
         private void handleSessionInitializationSuccess(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties) {
-            Log.d("BranchSDK_Tester", "branch init complete!");
+            BranchLogger.d("branch init complete!");
             
             if (branchUniversalObject != null) {
                 logBranchUniversalObjectDetails(branchUniversalObject);
@@ -795,7 +795,7 @@ public class MainActivity extends Activity {
          * Follows SRP - single responsibility for error handling.
          */
         private void handleSessionInitializationError(BranchError error) {
-            Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+            BranchLogger.d("branch init failed. Caused by -" + error.getMessage());
         }
         
         /**
@@ -803,7 +803,7 @@ public class MainActivity extends Activity {
          * Follows SRP - single responsibility for event creation.
          */
         private void createTestEvents() {
-            Log.i("BranchSDK_Tester", "Creating " + eventCount + " test events after session initialization");
+            BranchLogger.d("Creating " + eventCount + " test events after session initialization");
             
             for (int i = 0; i < eventCount; i++) {
                 createAndLogTestEvent(i);
@@ -824,9 +824,9 @@ public class MainActivity extends Activity {
          * Follows SRP - single responsibility for logging object details.
          */
         private void logBranchUniversalObjectDetails(BranchUniversalObject branchUniversalObject) {
-            Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-            Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-            Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+            BranchLogger.d("title " + branchUniversalObject.getTitle());
+            BranchLogger.d("CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+            BranchLogger.d("metadata " + branchUniversalObject.getContentMetadata().convertToJson());
         }
         
         /**
@@ -834,8 +834,8 @@ public class MainActivity extends Activity {
          * Follows SRP - single responsibility for logging link properties.
          */
         private void logLinkPropertiesDetails(LinkProperties linkProperties) {
-            Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-            Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+            BranchLogger.d("Channel " + linkProperties.getChannel());
+            BranchLogger.d("control params " + linkProperties.getControlParams());
         }
     }
 
@@ -847,9 +847,9 @@ public class MainActivity extends Activity {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 if (error != null) {
-                    Log.e("BranchSDK_Tester", error.getMessage());
+                    BranchLogger.d(error.getMessage());
                 } else if (referringParams != null) {
-                    Log.d("BranchSDK_Tester", referringParams.toString());
+                    BranchLogger.d(referringParams.toString());
                 }
             }
         }).reInit();
@@ -868,7 +868,7 @@ public class MainActivity extends Activity {
         }
 
         if(requestCode == getResources().getInteger(R.integer.ShareRequestCode)){
-            Log.d("BranchSDK", "Sharing result was " + resultCode + " intent " + data);
+            BranchLogger.d("Sharing result was " + resultCode + " intent " + data);
         }
     }
 

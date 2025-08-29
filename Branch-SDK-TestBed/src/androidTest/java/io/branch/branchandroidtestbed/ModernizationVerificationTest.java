@@ -3,7 +3,6 @@ package io.branch.branchandroidtestbed;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -13,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.validators.IntegrationValidator;
 
 /**
@@ -30,7 +30,7 @@ public class ModernizationVerificationTest {
     @Before
     public void setUp() {
         context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        Log.d(TAG, "=== STARTING MODERNIZATION VERIFICATION TESTS ===");
+        BranchLogger.d("=== STARTING MODERNIZATION VERIFICATION TESTS ===");
     }
     
     /**
@@ -39,7 +39,7 @@ public class ModernizationVerificationTest {
      */
     @Test
     public void testBranchIntegrationModelModernization() {
-        Log.d(TAG, "Testing BranchIntegrationModel modernization...");
+        BranchLogger.d("Testing BranchIntegrationModel modernization...");
         
         // Run on main thread to avoid Handler issues
         if (Looper.myLooper() == null) {
@@ -69,7 +69,7 @@ public class ModernizationVerificationTest {
             }
         }
         
-        Log.d(TAG, "BranchIntegrationModel test completed. Check logs for MODERNIZATION_TRACE messages.");
+        BranchLogger.d("BranchIntegrationModel test completed. Check logs for MODERNIZATION_TRACE messages.");
     }
     
     /**
@@ -77,7 +77,7 @@ public class ModernizationVerificationTest {
      */
     @Test
     public void testUniversalResourceAnalyserModernization() {
-        Log.d(TAG, "Testing UniversalResourceAnalyser modernization...");
+        BranchLogger.d("Testing UniversalResourceAnalyser modernization...");
         
         // Prepare main looper
         if (Looper.myLooper() == null) {
@@ -107,7 +107,7 @@ public class ModernizationVerificationTest {
             }
         }
         
-        Log.d(TAG, "UniversalResourceAnalyser test completed. Check logs for MODERNIZATION_TRACE messages.");
+        BranchLogger.d("UniversalResourceAnalyser test completed. Check logs for MODERNIZATION_TRACE messages.");
     }
     
     /**
@@ -115,7 +115,7 @@ public class ModernizationVerificationTest {
      */
     @Test 
     public void testModernLinkGeneratorUsage() {
-        Log.d(TAG, "Testing ModernLinkGenerator usage...");
+        BranchLogger.d("Testing ModernLinkGenerator usage...");
         
         // Prepare main looper
         if (Looper.myLooper() == null) {
@@ -133,7 +133,7 @@ public class ModernizationVerificationTest {
                     .addParameters("source", "modernization_test")
                     .getShortUrl();
             generatedUrl[0] = url;
-            Log.d(TAG, "Generated URL with ModernLinkGenerator: " + url);
+            BranchLogger.d("Generated URL with ModernLinkGenerator: " + url);
             completed[0] = true;
         });
         
@@ -150,7 +150,7 @@ public class ModernizationVerificationTest {
             }
         }
         
-        Log.d(TAG, "ModernLinkGenerator test completed. Check logs for MODERNIZATION_TRACE messages.");
+        BranchLogger.d("ModernLinkGenerator test completed. Check logs for MODERNIZATION_TRACE messages.");
     }
     
     /**
@@ -158,7 +158,7 @@ public class ModernizationVerificationTest {
      */
     @Test
     public void testCompleteModernizationIntegration() {
-        Log.d(TAG, "=== COMPLETE MODERNIZATION INTEGRATION TEST ===");
+        BranchLogger.d("=== COMPLETE MODERNIZATION INTEGRATION TEST ===");
         
         // Prepare main looper
         if (Looper.myLooper() == null) {
@@ -170,19 +170,19 @@ public class ModernizationVerificationTest {
         
         mainHandler.post(() -> {
             // 1. Test BranchIntegrationModel (used by IntegrationValidator)
-            Log.d(TAG, "1. Testing BranchIntegrationModel via IntegrationValidator...");
+            BranchLogger.d("1. Testing BranchIntegrationModel via IntegrationValidator...");
             IntegrationValidator.validate(context);
             
             // 2. Test UniversalResourceAnalyser
-            Log.d(TAG, "2. Testing UniversalResourceAnalyser...");
+            BranchLogger.d("2. Testing UniversalResourceAnalyser...");
             Branch.getInstance().addWhiteListedScheme("https://test.com/*");
             
             // 3. Test ModernLinkGenerator
-            Log.d(TAG, "3. Testing ModernLinkGenerator...");
+            BranchLogger.d("3. Testing ModernLinkGenerator...");
             String shortUrl = new io.branch.referral.BranchShortLinkBuilder(context)
                     .addParameters("integration_test", "complete")
                     .getShortUrl();
-            Log.d(TAG, "Generated URL: " + shortUrl);
+            BranchLogger.d("Generated URL: " + shortUrl);
             
             allCompleted[0] = true;
         });
@@ -200,7 +200,7 @@ public class ModernizationVerificationTest {
             }
         }
         
-        Log.d(TAG, "=== MODERNIZATION INTEGRATION TEST COMPLETED ===");
-        Log.d(TAG, "Search for 'MODERNIZATION_TRACE' in logs to verify modern patterns are being used");
+        BranchLogger.d("=== MODERNIZATION INTEGRATION TEST COMPLETED ===");
+        BranchLogger.d("Search for 'MODERNIZATION_TRACE' in logs to verify modern patterns are being used");
     }
 }
