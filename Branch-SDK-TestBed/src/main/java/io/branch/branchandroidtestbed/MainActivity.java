@@ -47,6 +47,8 @@ import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.SharingHelper;
+import io.branch.referral.BranchLogger;
+import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.BranchEvent;
@@ -55,6 +57,7 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
+import io.branch.referral.validators.IntegrationValidator;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -218,13 +221,16 @@ public class MainActivity extends Activity {
                 // Sync link create example.  This makes a network call on the UI thread
                 // txtShortUrl.setText(branchUniversalObject.getShortUrl(MainActivity.this, linkProperties));
 
-                // Async Link creation example
+                // Async Link creation example - this should trigger ModernLinkGenerator
+                Log.d("MODERNIZATION_DEBUG", "Starting generateShortUrl - should trigger ModernLinkGenerator");
                 branchUniversalObject.generateShortUrl(MainActivity.this, linkProperties, new Branch.BranchLinkCreateListener() {
                     @Override
                     public void onLinkCreate(String url, BranchError error) {
                         if (error != null) {
-                            txtShortUrl.setText(error.getMessage());
+                            Log.e("MODERNIZATION_DEBUG", "Link creation failed: " + error.getMessage());
+                            txtShortUrl.setText("ERROR: " + error.getMessage());
                         } else {
+                            Log.d("MODERNIZATION_DEBUG", "Link creation successful: " + url);
                             txtShortUrl.setText(url);
                         }
                     }
@@ -334,7 +340,20 @@ public class MainActivity extends Activity {
                         .setAsFullWidthStyle(true)
                         .setSharingTitle("Share With");
 
-
+                // Create and show share sheet using BranchShareSheetBuilder
+                BranchLogger.d("MODERNIZATION_DEBUG: Starting share with BranchShareSheetBuilder...");
+                
+                JSONObject shareParams = new JSONObject();
+                try {
+                    shareParams.put("source", "testbed");
+                } catch (Exception e) {
+                    BranchLogger.d("Failed to create share params: " + e.getMessage());
+                }
+                
+                new BranchShareSheetBuilder(MainActivity.this, shareParams)
+                        .setMessage("Check out this awesome content!")
+                        .setSubject("Shared from Branch TestBed")
+                        .shareLink();
             }
         });
 
@@ -381,10 +400,14 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                Log.d("MODERNIZATION_DEBUG", "Starting getShortUrl (SYNC) - should trigger ModernLinkGenerator");
                 String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
                 if (shortURL == null) {
+                    Log.e("MODERNIZATION_DEBUG", "branchUniversalObject.getShortUrl returned null - check ModernLinkGenerator logs");
                     Log.e("BranchSDK_Tester", "branchUniversalObject.getShortUrl = null");
                     return;
+                } else {
+                    Log.d("MODERNIZATION_DEBUG", "getShortUrl successful: " + shortURL);
                 }
 
                 intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
@@ -452,6 +475,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.qrCode_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                BranchLogger.d("MODERNIZATION_DEBUG: Create QR Code button clicked");
                 BranchQRCode qrCode = new BranchQRCode()
                         .setCodeColor("#57dbe0")
                         .setBackgroundColor("#2a2e2e")
@@ -476,6 +500,7 @@ public class MainActivity extends Activity {
                     qrCode.getQRCodeAsImage(MainActivity.this, buo, lp, new BranchQRCode.BranchQRCodeImageHandler() {
                         @Override
                         public void onSuccess(Bitmap qrCodeImage) {
+                            BranchLogger.d("MODERNIZATION_DEBUG: QR Code generated successfully");
                             try {
                                 AlertDialog.Builder ImageDialog = new AlertDialog.Builder(MainActivity.this);
                                 ImageDialog.setTitle("Your QR Code");
@@ -499,7 +524,8 @@ public class MainActivity extends Activity {
 
                         @Override
                         public void onFailure(Exception e) {
-                            Log.d("Fail in main activity", String.valueOf(e));
+                            BranchLogger.d("MODERNIZATION_DEBUG: QR Code generation failed: " + e.getMessage());
+                            BranchLogger.d("Fail in main activity: " + String.valueOf(e));
 
                         }
                     });
@@ -512,7 +538,8 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdCommerceEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Log.d("MODERNIZATION_DEBUG", "Starting Commerce Event - should trigger network operations");
+                
                 new BranchEvent(BRANCH_STANDARD_EVENT.ADD_TO_CART)
                         .setAffiliation("test_affiliation")
                         .setCustomerEventAlias("my_custom_alias")
@@ -529,13 +556,15 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
                             public void onSuccess(int responseCode) {
-                                Toast.makeText(getApplicationContext(), "Sent Branch Commerce Event: " + responseCode, Toast.LENGTH_LONG).show();
+                                Log.d("MODERNIZATION_DEBUG", "Commerce Event SUCCESS: " + responseCode);
+                                Toast.makeText(getApplicationContext(), "✅ Commerce Event Sent: " + responseCode, Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(Exception e) {
+                                Log.e("MODERNIZATION_DEBUG", "Commerce Event FAILED: " + e.toString());
                                 Log.d("BranchSDK_Tester", e.toString());
-                                Toast.makeText(getApplicationContext(), "Error sending Branch Commerce Event: " + e.toString(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), "❌ Commerce Event Failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                             }
                         });
 
@@ -546,6 +575,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdContentEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                BranchLogger.d("MODERNIZATION_DEBUG: Send Content Event button clicked");
 
                 new BranchEvent(BRANCH_STANDARD_EVENT.SEARCH)
                         .setCustomerEventAlias("my_custom_alias")
@@ -556,12 +586,14 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
                             public void onSuccess(int responseCode) {
+                                BranchLogger.d("MODERNIZATION_DEBUG: Content Event sent successfully: " + responseCode);
                                 Toast.makeText(getApplicationContext(), "Sent Branch Content Event: " + responseCode, Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(Exception e) {
-                                Log.d("BranchSDK_Tester", e.toString());
+                                BranchLogger.d("MODERNIZATION_DEBUG: Content Event failed: " + e.getMessage());
+                                BranchLogger.d("BranchSDK_Tester: " + e.toString());
                                 Toast.makeText(getApplicationContext(), "Error sending Branch Content Event: " + e.toString(), Toast.LENGTH_LONG).show();
                             }
                         });
@@ -571,6 +603,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdLifecycleEvent).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                BranchLogger.d("MODERNIZATION_DEBUG: Send Lifecycle Event button clicked");
 
                 new BranchEvent(BRANCH_STANDARD_EVENT.COMPLETE_REGISTRATION)
                         .setCustomerEventAlias("my_custom_alias")
@@ -581,12 +614,14 @@ public class MainActivity extends Activity {
                         .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
                             @Override
                             public void onSuccess(int responseCode) {
+                                BranchLogger.d("MODERNIZATION_DEBUG: Lifecycle Event sent successfully: " + responseCode);
                                 Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event: " + responseCode, Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(Exception e) {
-                                Log.d("BranchSDK_Tester", e.toString());
+                                BranchLogger.d("MODERNIZATION_DEBUG: Lifecycle Event failed: " + e.getMessage());
+                                BranchLogger.d("BranchSDK_Tester: " + e.toString());
                                 Toast.makeText(getApplicationContext(), "Error sending Branch Lifecycle Event: " + e, Toast.LENGTH_LONG).show();
                             }
                         });
@@ -610,7 +645,9 @@ public class MainActivity extends Activity {
         findViewById(R.id.notifyInit_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                BranchLogger.d("MODERNIZATION_DEBUG: Simulate Plugin Notify Init button clicked");
                 Branch.notifyNativeToInit();
+                BranchLogger.d("MODERNIZATION_DEBUG: Branch.notifyNativeToInit() called");
             }
         });
 
@@ -683,7 +720,8 @@ public class MainActivity extends Activity {
         // Please look for "BranchSDK_Doctor" in the logcat to see the results.
         // IMP : Do not make this call in your production app
 
-        //IntegrationValidator.validate(MainActivity.this);
+        // Enable integration validation to test modernized components
+        IntegrationValidator.validate(MainActivity.this);
     }
 
 

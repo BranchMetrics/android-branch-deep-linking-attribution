@@ -226,19 +226,29 @@ class ModernLinkGenerator(
         longUrl: String?,
         timeout: Int
     ): String? {
+        BranchLogger.d("MODERNIZATION_TRACE: ModernLinkGenerator.generateShortLinkSyncFromJava called")
         if (linkData == null) return if (defaultToLongUrl) longUrl else null
         
         // First try modern coroutine-based approach
         try {
+            BranchLogger.d("MODERNIZATION_TRACE: Using Kotlin coroutines for link generation")
             return runBlocking {
                 val result = generateShortLink(linkData, (timeout + 2000).toLong())
-                result.getOrNull() ?: if (defaultToLongUrl) longUrl else null
+                val url = result.getOrNull()
+                if (url != null) {
+                    BranchLogger.d("MODERNIZATION_TRACE: Modern coroutine link generation succeeded")
+                    url
+                } else {
+                    BranchLogger.d("MODERNIZATION_TRACE: Modern coroutine link generation returned null, using fallback")
+                    if (defaultToLongUrl) longUrl else null
+                }
             }
         } catch (e: Exception) {
-            BranchLogger.d("Modern link generation failed, falling back to legacy: ${e.message}")
+            BranchLogger.d("MODERNIZATION_TRACE: Modern link generation failed, falling back to legacy: ${e.message}")
         }
         
         // Fallback to dedicated legacy utility class for maximum compatibility
+        BranchLogger.d("MODERNIZATION_TRACE: Using BranchLegacyLinkGenerator fallback")
         return legacyGenerator.generateShortLinkSyncDirect(linkData, defaultToLongUrl, longUrl, linkCache)
     }
     
@@ -247,6 +257,7 @@ class ModernLinkGenerator(
         linkData: BranchLinkData?,
         callback: Branch.BranchLinkCreateListener?
     ) {
+        BranchLogger.d("MODERNIZATION_TRACE: ModernLinkGenerator.generateShortLinkAsyncFromJava called")
         scope.launch {
             try {
                 if (linkData == null) {

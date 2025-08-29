@@ -16,7 +16,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -1195,9 +1194,11 @@ public class Branch {
             if (req.isAsync()) {
                 // Use modern link generator for async requests when available
                 if (modernLinkGenerator_ != null) {
+                    BranchLogger.d("MODERNIZATION_TRACE: Using ModernLinkGenerator for async link creation");
                     modernLinkGenerator_.generateShortLinkAsyncFromJava(req.getLinkPost(), req.getCallback());
                 } else {
                     // Fallback to request queue for backward compatibility
+                    BranchLogger.d("MODERNIZATION_TRACE: Falling back to legacy requestQueue for async link creation");
                     requestQueue_.handleNewRequest(req);
                 }
             } else {
@@ -1771,16 +1772,10 @@ public class Branch {
     }
 
 
-    /**
-     * Async Task to create  a short link for synchronous methods
-     */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
+    // Legacy GetShortLinkTask removed - modern link generation now uses:
+    // 1. ModernLinkGenerator (Kotlin coroutines) - primary strategy  
+    // 2. BranchLegacyLinkGenerator (AsyncTask) - fallback strategy
+    // See generateShortLinkSync() method for implementation
 
     //-------------------Auto deep link feature-------------------------------------------//
     
