@@ -755,7 +755,7 @@ public class Branch {
      * @param deviceIdFetch {@link Boolean with value true to disable reading the Android id from device}
      */
     public static void disableDeviceIDFetch(Boolean deviceIdFetch) {
-        disableDeviceIDFetch_ = deviceIdFetch;
+        return;
     }
     
     /**
@@ -764,7 +764,7 @@ public class Branch {
      * @return {@link Boolean} with value true to disable reading Android ID
      */
     public static boolean isDeviceIDFetchDisabled() {
-        return disableDeviceIDFetch_;
+        return false;
     }
     
     /**
