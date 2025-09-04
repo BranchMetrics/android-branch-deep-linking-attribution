@@ -16,6 +16,7 @@ import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
 
 /**
  * Base test class that sets up Android mocking and coroutines test environment.
@@ -35,6 +36,9 @@ abstract class BranchTestBase {
         
         // Set up coroutines test dispatcher
         Dispatchers.setMain(testDispatcher)
+        
+        // Set up Android logging
+        ShadowLog.stream = System.out
         
         // Enable BranchLogger for tests
         BranchLogger.loggingEnabled = true
