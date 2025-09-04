@@ -209,6 +209,9 @@ public class Branch {
      * the class during application runtime.</p>
      */
     private static Branch branchReferral_;
+    
+    // Static handler for lifecycle-aware delayed operations to prevent memory leaks
+    private static Handler staticHandler;
 
     private BranchRemoteInterface branchRemoteInterface_;
     final PrefHelper prefHelper_;
@@ -1366,12 +1369,7 @@ public class Branch {
         if (delay > 0) {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
             BranchLogger.d("DEBUG: Adding USER_SET_WAIT_LOCK with delay: " + delay);
-            new Handler().postDelayed(new Runnable() {
-                @Override public void run() {
-                    BranchLogger.d("DEBUG: Delay completed, processing session initialization");
-                    processSessionInitialization(initRequest);
-                }
-            }, delay);
+            getStaticHandler().postDelayed(new SessionInitRunnable(initRequest), delay);
         } else {
             BranchLogger.d("DEBUG: No delay, processing session initialization immediately");
             processSessionInitialization(initRequest);
@@ -2663,5 +2661,41 @@ public class Branch {
          * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
         void onChannelSelected(String channelName);
+    }
+
+    /**
+     * Lazy initialization of static handler to avoid issues in unit tests
+     */
+    private static Handler getStaticHandler() {
+        if (staticHandler == null) {
+            staticHandler = new Handler(android.os.Looper.getMainLooper());
+        }
+        return staticHandler;
+    }
+
+    /**
+     * Lifecycle-aware Runnable for session initialization that uses WeakReference to prevent memory leaks
+     */
+    private static class SessionInitRunnable implements Runnable {
+        private final ServerRequestInitSession initRequest;
+
+        SessionInitRunnable(ServerRequestInitSession initRequest) {
+            this.initRequest = initRequest;
+        }
+
+        @Override
+        public void run() {
+            try {
+                BranchLogger.d("DEBUG: Delay completed, processing session initialization");
+                // Check if Branch instance is still valid before proceeding
+                if (branchReferral_ != null) {
+                    branchReferral_.processSessionInitialization(initRequest);
+                } else {
+                    BranchLogger.d("Branch instance lost, skipping session initialization");
+                }
+            } catch (Exception e) {
+                BranchLogger.e("Error in delayed session initialization: " + e.getMessage());
+            }
+        }
     }
 }
