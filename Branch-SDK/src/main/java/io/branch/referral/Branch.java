@@ -237,8 +237,8 @@ public class Branch {
     /* Holds the current intent state. Default is set to PENDING. */
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
-    /* Holds the current Session state. Default is set to UNINITIALISED. */
-    SessionState initState_ = SessionState.UNINITIALISED;
+    /* Holds the current Session state. Default is set to UNINITIALIZED. */
+    BranchSessionState initState_ = BranchSessionState.Uninitialized.INSTANCE;
 
     // New StateFlow-based session state manager
     private final BranchSessionStateManager sessionStateManager = new BranchSessionStateManager();
@@ -619,14 +619,13 @@ public class Branch {
         } catch (Exception e) {
             BranchLogger.e("Error getting current session state: " + e.getMessage());
             // Fallback to legacy state mapping
-            switch (getInitState()) {
-                case INITIALISED:
-                    return BranchSessionState.Initialized.INSTANCE;
-                case INITIALISING:
-                    return BranchSessionState.Initializing.INSTANCE;
-                case UNINITIALISED:
-                default:
-                    return BranchSessionState.Uninitialized.INSTANCE;
+            BranchSessionState currentState = getInitState();
+            if (currentState instanceof BranchSessionState.Initialized) {
+                return BranchSessionState.Initialized.INSTANCE;
+            } else if (currentState instanceof BranchSessionState.Initializing) {
+                return BranchSessionState.Initializing.INSTANCE;
+            } else {
+                return BranchSessionState.Uninitialized.INSTANCE;
             }
         }
     }
@@ -642,7 +641,7 @@ public class Branch {
         } catch (Exception e) {
             BranchLogger.e("Error checking canPerformOperations: " + e.getMessage());
             // Fallback to legacy state check
-            return getInitState() == SESSION_STATE.INITIALISED;
+            return getInitState() instanceof BranchSessionState.Initialized;
         }
     }
 
@@ -657,7 +656,7 @@ public class Branch {
         } catch (Exception e) {
             BranchLogger.e("Error checking hasActiveSession: " + e.getMessage());
             // Fallback to legacy state check
-            return getInitState() == SESSION_STATE.INITIALISED;
+            return getInitState() instanceof BranchSessionState.Initialized;
         }
     }
 
@@ -828,7 +827,7 @@ public class Branch {
         BranchLogger.d("DEBUG: executeClose called - resetting session state");
 
         // Reset legacy session state first to ensure consistency
-        setInitState(SESSION_STATE.UNINITIALISED);
+        setInitState(BranchSessionState.Uninitialized.INSTANCE);
 
         // Reset session state via StateFlow system
         sessionStateManager.reset();
@@ -1258,23 +1257,19 @@ public class Branch {
         this.intentState_ = intentState;
     }
 
-    void setInitState(SessionState initState) {
+    void setInitState(BranchSessionState initState) {
         synchronized (sessionStateLock) {
             initState_ = initState;
         }
 
         // Update the StateFlow-based session state manager with proper error handling
         try {
-            switch (initState) {
-                case UNINITIALISED:
-                    sessionStateManager.reset();
-                    break;
-                case INITIALISING:
-                    sessionStateManager.initialize();
-                    break;
-                case INITIALISED:
-                    sessionStateManager.initializeComplete();
-                    break;
+            if (initState instanceof BranchSessionState.Uninitialized) {
+                sessionStateManager.reset();
+            } else if (initState instanceof BranchSessionState.Initializing) {
+                sessionStateManager.initialize();
+            } else if (initState instanceof BranchSessionState.Initialized) {
+                sessionStateManager.initializeComplete();
             }
         } catch (Exception e) {
             BranchLogger.e("Error updating session state manager: " + e.getMessage());
@@ -1288,7 +1283,7 @@ public class Branch {
      * and is ready to send events.
      * @return
      */
-    public SessionState getInitState() {
+    public BranchSessionState getInitState() {
         return initState_;
     }
 
@@ -1312,7 +1307,7 @@ public class Branch {
         }
 
         // Set initializing state immediately
-        setInitState(SESSION_STATE.INITIALISING);
+        setInitState(BranchSessionState.Initializing.INSTANCE);
         BranchLogger.d("DEBUG: Session state set to INITIALISING");
 
         if (delay > 0) {
@@ -1345,7 +1340,7 @@ public class Branch {
 
         boolean shouldInitialize = sessionState instanceof BranchSessionState.Uninitialized ||
                                   forceBranchSession ||
-                                  getInitState() == SessionState.UNINITIALISED ||
+                                  getInitState() instanceof BranchSessionState.Uninitialized ||
                                   // Allow re-initialization if session is in Initializing state but no valid session exists
                                   (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession);
 
@@ -1363,7 +1358,7 @@ public class Branch {
             // If we're in an incomplete Initializing state, reset to allow proper initialization
             if (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession) {
                 BranchLogger.d("DEBUG: Resetting incomplete Initializing state to allow re-initialization");
-                setInitState(SESSION_STATE.UNINITIALISED);
+                setInitState(BranchSessionState.Uninitialized.INSTANCE);
             }
 
             BranchLogger.d("DEBUG: Calling registerAppInit for request: " + initRequest);
@@ -1386,7 +1381,7 @@ public class Branch {
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean forceBranchSession) {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
          BranchLogger.d("DEBUG: Registering app init - forceBranchSession: " + forceBranchSession);
-         setInitState(SessionState.INITIALISING);
+         setInitState(BranchSessionState.Initializing.INSTANCE);
 
          ServerRequest req = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
          ServerRequestInitSession r = (req instanceof ServerRequestInitSession) ? (ServerRequestInitSession) req : null;
@@ -1487,8 +1482,8 @@ public class Branch {
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
         Intent intent = activity.getIntent();
-        SessionState sessionState = getInitState();
-        boolean grabIntentParams = intent != null && sessionState != SessionState.INITIALISED;
+        BranchSessionState sessionState = getInitState();
+        boolean grabIntentParams = intent != null && !(sessionState instanceof BranchSessionState.Initialized);
 
         BranchLogger.v("onIntentReady intent: " + intent + " sessionState: " + sessionState + " grabIntentParams: " + grabIntentParams);
 
@@ -1506,17 +1501,6 @@ public class Branch {
         BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-    }
-
-    /**
-     * A method to manually remove the pending intent wait lock. In rare cases, it is possible
-     * that the activity lifecycle callbacks may not execute.
-     */
-    public void unlockPendingIntent() {
-        BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
-        setIntentState(Branch.INTENT_STATE.READY);
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        requestQueue_.processNextQueueItem("unlockPendingIntent");
     }
 
     /**
@@ -2340,8 +2324,8 @@ public class Branch {
     public static void notifyNativeToInit(){
         BranchLogger.v("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
-        SessionState sessionState = Branch.getInstance().getInitState();
-        if(sessionState == SessionState.UNINITIALISED) {
+        BranchSessionState sessionState = Branch.getInstance().getInitState();
+        if(sessionState instanceof BranchSessionState.Uninitialized) {
             deferInitForPluginRuntime = false;
             if (Branch.getInstance().deferredSessionBuilder != null) {
                 Branch.getInstance().deferredSessionBuilder.init();

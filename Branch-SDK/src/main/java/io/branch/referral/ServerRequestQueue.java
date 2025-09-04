@@ -436,7 +436,7 @@ public class ServerRequestQueue {
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (Branch.getInstance().initState_ != Branch.SessionState.INITIALISED &&
+        if (!(Branch.getInstance().initState_ instanceof BranchSessionState.Initialized) &&
                 !(req instanceof ServerRequestInitSession
                         || req instanceof QueueOperationLogout
                         || req instanceof QueueOperationSetIdentity)) {
@@ -606,7 +606,7 @@ public class ServerRequestQueue {
                 }
 
                 if (thisReq_ instanceof ServerRequestInitSession) {
-                    Branch.getInstance().setInitState(Branch.SessionState.INITIALISED);
+                    Branch.getInstance().setInitState(BranchSessionState.Initialized.INSTANCE);
 
                     Branch.getInstance().checkForAutoDeepLinkConfiguration(); //TODO: Delete?
                 }
@@ -627,7 +627,7 @@ public class ServerRequestQueue {
             BranchLogger.v("onRequestFailed " + serverResponse.getMessage());
             // If failed request is an initialisation request (but not in the intra-app linking scenario) then mark session as not initialised
             if (thisReq_ instanceof ServerRequestInitSession && PrefHelper.NO_STRING_VALUE.equals(Branch.getInstance().prefHelper_.getSessionParams())) {
-                Branch.getInstance().setInitState(Branch.SessionState.UNINITIALISED);
+                Branch.getInstance().setInitState(BranchSessionState.Uninitialized.INSTANCE);
             }
 
             // On a bad request or in case of a conflict notify with call back and remove the request.

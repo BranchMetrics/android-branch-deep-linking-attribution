@@ -1,8 +1,8 @@
 package io.branch.branchandroidtestbed;
 
 import android.app.Activity;
-
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
