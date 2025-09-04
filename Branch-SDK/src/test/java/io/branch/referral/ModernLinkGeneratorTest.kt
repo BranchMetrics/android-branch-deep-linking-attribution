@@ -13,10 +13,10 @@ import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.MockitoJUnitRunner
 import java.net.HttpURLConnection
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 
 /**
  * Comprehensive unit tests for ModernLinkGenerator.
@@ -334,7 +334,7 @@ class ModernLinkGeneratorTest {
         
         // Then
         assertEquals(0, linkGenerator.getCacheSize())
-        assertTrue(testScope.isActive == false || testScope.isCancelled)
+        assertTrue(!testScope.isActive)
     }
     
     // HELPER METHODS
