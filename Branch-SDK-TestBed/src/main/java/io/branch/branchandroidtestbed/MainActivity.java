@@ -237,7 +237,7 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 BranchEvent viewItemEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM);
                 viewItemEvent.logEvent(MainActivity.this);
-                
+
                 Toast.makeText(MainActivity.this, "VIEW_ITEM event logged", Toast.LENGTH_SHORT).show();
             }
         });
@@ -333,8 +333,6 @@ public class MainActivity extends Activity {
                         .addPreferredSharingOption(SharingHelper.SHARE_WITH.TWITTER)
                         .setAsFullWidthStyle(true)
                         .setSharingTitle("Share With");
-
-
             }
         });
 
@@ -628,6 +626,36 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
+        findViewById(R.id.initSessionButton).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Branch.sessionBuilder(MainActivity.this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+                        @Override
+                        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                            if (error != null) {
+                                Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                            } else {
+                                Log.d("BranchSDK_Tester", "branch init complete!");
+                                if (branchUniversalObject != null) {
+                                    Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                                    Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                                    Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                                }
+
+                                if (linkProperties != null) {
+                                    Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                                    Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                                }
+                            }
+                        }
+                    }).withData(MainActivity.this.getIntent().getData()).init();
+                } catch (Exception e) {
+                    Log.e("BranchSDK_Tester", e.getMessage());
+                }
+            }
+        });
     }
 
     private void createNotificationChannel() {
@@ -670,13 +698,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        Branch.getInstance().setIdentity("testDevID");
+        Branch.getInstance().setIdentity("Initial_Identity");
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         Log.d("BranchSDK_Tester", "initSession");
 
-        initSessionsWithTests();
+        //initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -689,7 +717,7 @@ public class MainActivity extends Activity {
 
     private void initSessionsWithTests() {
         boolean testUserAgent = true;
-        userAgentTests(testUserAgent, 1);
+        userAgentTests(testUserAgent, 10);
     }
 
     // Enqueue several v2 events prior to init to simulate worst timing conditions for user agent fetch
@@ -705,7 +733,7 @@ public class MainActivity extends Activity {
     /**
      * Initializes Branch session and creates test events after successful initialization.
      * Follows SRP - single responsibility for session initialization with event creation.
-     * 
+     *
      * @param eventCount Number of test events to create after session initialization
      */
     private void initializeSessionWithEventTests(int eventCount) {
@@ -713,45 +741,45 @@ public class MainActivity extends Activity {
                 .withData(this.getIntent().getData())
                 .init();
     }
-    
+
     /**
      * Handler for Branch session initialization with event creation capability.
      * Follows SRP and DIP principles - separated concerns and depends on abstractions.
      */
     private class BranchSessionInitializationHandler implements Branch.BranchUniversalReferralInitListener {
         private final int eventCount;
-        
+
         public BranchSessionInitializationHandler(int eventCount) {
             this.eventCount = eventCount;
         }
-        
+
         @Override
         public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
             if (error != null) {
                 handleSessionInitializationError(error);
                 return;
             }
-            
+
             handleSessionInitializationSuccess(branchUniversalObject, linkProperties);
             createTestEvents();
         }
-        
+
         /**
          * Handles successful session initialization.
          * Follows SRP - single responsibility for handling success scenario.
          */
         private void handleSessionInitializationSuccess(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties) {
             Log.d("BranchSDK_Tester", "branch init complete!");
-            
+
             if (branchUniversalObject != null) {
                 logBranchUniversalObjectDetails(branchUniversalObject);
             }
-            
+
             if (linkProperties != null) {
                 logLinkPropertiesDetails(linkProperties);
             }
         }
-        
+
         /**
          * Handles session initialization errors.
          * Follows SRP - single responsibility for error handling.
@@ -759,19 +787,19 @@ public class MainActivity extends Activity {
         private void handleSessionInitializationError(BranchError error) {
             Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
         }
-        
+
         /**
          * Creates and logs test events after session is successfully initialized.
          * Follows SRP - single responsibility for event creation.
          */
         private void createTestEvents() {
             Log.i("BranchSDK_Tester", "Creating " + eventCount + " test events after session initialization");
-            
+
             for (int i = 0; i < eventCount; i++) {
                 createAndLogTestEvent(i);
             }
         }
-        
+
         /**
          * Creates and logs a single test event.
          * Follows SRP - single responsibility for individual event creation.
@@ -780,7 +808,7 @@ public class MainActivity extends Activity {
             BranchEvent event = new BranchEvent("Event " + eventIndex);
             event.logEvent(MainActivity.this);
         }
-        
+
         /**
          * Logs BranchUniversalObject details.
          * Follows SRP - single responsibility for logging object details.
@@ -790,7 +818,7 @@ public class MainActivity extends Activity {
             Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
             Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
         }
-        
+
         /**
          * Logs LinkProperties details.
          * Follows SRP - single responsibility for logging link properties.
