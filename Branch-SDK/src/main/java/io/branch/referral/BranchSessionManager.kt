@@ -57,13 +57,13 @@ class BranchSessionManager {
         val branchState = branch.getInitState()
 
         when {
-            branchState == Branch.SESSION_STATE.INITIALISED && currentState !is BranchSessionState.Initialized -> {
+            branchState is BranchSessionState.Initialized && currentState !is BranchSessionState.Initialized -> {
                 stateManager.transitionToInitialized()
             }
-            branchState == Branch.SESSION_STATE.INITIALISING && currentState !is BranchSessionState.Initializing -> {
+            branchState is BranchSessionState.Initializing && currentState !is BranchSessionState.Initializing -> {
                 stateManager.transitionToInitializing()
             }
-            branchState == Branch.SESSION_STATE.UNINITIALISED && currentState !is BranchSessionState.Uninitialized -> {
+            branchState is BranchSessionState.Uninitialized && currentState !is BranchSessionState.Uninitialized -> {
                 stateManager.transitionToUninitialized()
             }
         }
