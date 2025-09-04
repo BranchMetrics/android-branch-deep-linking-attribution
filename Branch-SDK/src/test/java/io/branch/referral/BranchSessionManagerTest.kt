@@ -220,7 +220,7 @@ class BranchSessionManagerTest : BranchTestBase() {
             sessionManager.addSessionStateListener(listener)
 
             // Test state update functionality
-            `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
+            `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initializing)
             sessionManager.updateFromBranchState(mockBranch)
 
             // Verify the facade is working by checking current state
@@ -254,7 +254,7 @@ class BranchSessionManagerTest : BranchTestBase() {
         sessionManager.updateFromBranchState(mockBranch)
         val state2 = sessionManager.getSessionState()
 
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.UNINITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Uninitialized)
         sessionManager.updateFromBranchState(mockBranch)
         val state3 = sessionManager.getSessionState()
         
