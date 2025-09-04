@@ -521,7 +521,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     // Additional logging after successful completion
                     if (request is ServerRequestInitSession) {
                         try {
-                            val legacyState = Branch.getInstance().initState_
+                            val legacyState = Branch.getInstance().initState
                             val hasUser = Branch.getInstance().prefHelper_.getRandomizedBundleToken() != PrefHelper.NO_STRING_VALUE
                             BranchLogger.d("DEBUG: After $request completion - LegacyState: $legacyState, hasUser: $hasUser")
                         } catch (e: Exception) {
@@ -548,7 +548,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
         val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
-        val sessionInitialized = branch.initState_ is BranchSessionState.Initialized
+        val sessionInitialized = branch.initState == Branch.SESSION_STATE.INITIALISED
         val canPerformOperations = branch.canPerformOperations()
         
         return (sessionInitialized || canPerformOperations) && hasSession && hasDeviceToken && 
@@ -628,7 +628,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             val hasSession = !branch.prefHelper_.sessionID.equals(PrefHelper.NO_STRING_VALUE)
             val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
             val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
-            val sessionInitialized = branch.initState_ is BranchSessionState.Initialized
+            val sessionInitialized = branch.initState == Branch.SESSION_STATE.INITIALISED
             val canPerformOperations = branch.canPerformOperations()
             
             BranchLogger.d("DEBUG: SDK_INIT_WAIT_LOCK resolution check - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, sessionInitialized: $sessionInitialized, canPerformOperations: $canPerformOperations")

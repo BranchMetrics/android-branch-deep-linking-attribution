@@ -48,7 +48,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         }
 
         if (branch != null) {
-            branch.setInitState(BranchSessionState.Uninitialized.INSTANCE);
+            branch.setInitState(Branch.SESSION_STATE.UNINITIALISED);
             Branch.shutDown();
             branch = null;
         }
