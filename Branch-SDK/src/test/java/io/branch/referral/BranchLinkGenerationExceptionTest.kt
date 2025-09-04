@@ -1,8 +1,8 @@
 package io.branch.referral
 
-import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Test
 
 /**
  * Unit tests for BranchLinkGenerationException hierarchy.

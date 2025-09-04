@@ -24,7 +24,7 @@ import org.junit.Assert.fail
  */
 @RunWith(MockitoJUnitRunner::class)
 class ModernLinkGeneratorTest {
-    
+
     @Mock
     private lateinit var mockContext: Context
     
@@ -51,7 +51,8 @@ class ModernLinkGeneratorTest {
     @Before
     fun setUp() {
         testScope = TestScope()
-        
+        testScope = TestScope(testDispatcher)
+
         // Setup mock defaults
         `when`(mockPrefHelper.apiBaseUrl).thenReturn("https://api.branch.io/")
         `when`(mockPrefHelper.branchKey).thenReturn("test-key")
@@ -71,6 +72,7 @@ class ModernLinkGeneratorTest {
     fun tearDown() {
         linkGenerator.shutdown()
         testScope.cancel()
+        super.tearDownBase()
     }
     
     @Test
