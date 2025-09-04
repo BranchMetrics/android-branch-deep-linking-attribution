@@ -74,20 +74,28 @@ class BranchSessionManagerTest : BranchTestBase() {
 
     @Test
     fun testUpdateFromBranchStateInitialized() {
+        // First transition to initializing to set up valid state transition
+        sessionManager.updateFromBranchState(mockBranch) // Start in uninitialized
+        
         // Set up mock branch in initialized state
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
-        // Update session manager from branch state
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initialized)
+        
+        // First move to initializing state
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initializing)
         sessionManager.updateFromBranchState(mockBranch)
-        // Should transition to initialized or stay in current state
+        assertEquals(BranchSessionState.Initializing, sessionManager.getSessionState())
+        
+        // Now try to move to initialized
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initialized)
+        sessionManager.updateFromBranchState(mockBranch)
         val finalState = sessionManager.getSessionState()
-        assertTrue("Should be in valid state after update", 
-            finalState == BranchSessionState.Initialized || finalState == BranchSessionState.Uninitialized)
+        assertEquals(BranchSessionState.Initialized, finalState)
     }
 
     @Test
     fun testUpdateFromBranchStateInitializing() {
         // Set up mock branch in initializing state
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initializing)
         // Update session manager from branch state
         sessionManager.updateFromBranchState(mockBranch)
         // Should transition to initializing
@@ -97,18 +105,17 @@ class BranchSessionManagerTest : BranchTestBase() {
     @Test
     fun testUpdateFromBranchStateUninitialized() {
         // Test that updateFromBranchState handles uninitialized state
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.UNINITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Uninitialized)
         sessionManager.updateFromBranchState(mockBranch)
-        // Should remain or transition to uninitialized
+        // Should remain uninitialized
         val finalState = sessionManager.getSessionState()
-        assertTrue("Should be in valid uninitialized-related state", 
-            finalState == BranchSessionState.Uninitialized || finalState == BranchSessionState.Resetting)
+        assertEquals(BranchSessionState.Uninitialized, finalState)
     }
 
     @Test
     fun testUpdateFromBranchStateNoChange() {
         // Test that repeated updates don't cause issues
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initialized)
         sessionManager.updateFromBranchState(mockBranch)
         val firstState = sessionManager.getSessionState()
         
@@ -135,7 +142,7 @@ class BranchSessionManagerTest : BranchTestBase() {
 
     @Test
     fun testGetDebugInfoAfterStateChanges() {
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initialized)
         sessionManager.updateFromBranchState(mockBranch)
         
         val debugInfo = sessionManager.getDebugInfo()
@@ -162,22 +169,22 @@ class BranchSessionManagerTest : BranchTestBase() {
         // Test that multiple state updates work without exceptions
         val initialState = sessionManager.getSessionState()
         
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initializing)
         sessionManager.updateFromBranchState(mockBranch)
         val state1 = sessionManager.getSessionState()
         
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initialized)
         sessionManager.updateFromBranchState(mockBranch)
         val state2 = sessionManager.getSessionState()
         
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.UNINITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Uninitialized)
         sessionManager.updateFromBranchState(mockBranch)
         val state3 = sessionManager.getSessionState()
         
         // Verify that the session manager is working properly
         val allStates = listOf(initialState, state1, state2, state3)
         assertTrue("Should have valid states throughout transitions", 
-            allStates.all { it != null })
+            allStates.all { it is BranchSessionState })
         
         // Verify at least some states are what we expect
         assertTrue("Should handle multiple state transitions", allStates.size == 4)
@@ -210,7 +217,7 @@ class BranchSessionManagerTest : BranchTestBase() {
             sessionManager.addSessionStateListener(listener)
             
             // Test state update functionality
-            `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
+            `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initializing)
             sessionManager.updateFromBranchState(mockBranch)
             
             // Verify the facade is working by checking current state
@@ -236,15 +243,15 @@ class BranchSessionManagerTest : BranchTestBase() {
         sessionManager.addSessionStateListener(listener)
         
         // Test multiple state transitions
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISING)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initializing)
         sessionManager.updateFromBranchState(mockBranch)
         val state1 = sessionManager.getSessionState()
         
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.INITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Initialized)
         sessionManager.updateFromBranchState(mockBranch)
         val state2 = sessionManager.getSessionState()
         
-        `when`(mockBranch.getInitState()).thenReturn(Branch.SESSION_STATE.UNINITIALISED)
+        `when`(mockBranch.getInitState()).thenReturn(BranchSessionState.Uninitialized)
         sessionManager.updateFromBranchState(mockBranch)
         val state3 = sessionManager.getSessionState()
         
