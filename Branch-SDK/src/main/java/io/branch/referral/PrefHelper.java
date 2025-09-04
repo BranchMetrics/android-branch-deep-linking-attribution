@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.URLUtil;
 
 import androidx.annotation.NonNull;

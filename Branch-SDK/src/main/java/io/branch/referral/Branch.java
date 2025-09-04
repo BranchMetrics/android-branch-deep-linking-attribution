@@ -238,7 +238,7 @@ public class Branch {
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
-    SESSION_STATE initState_ = SESSION_STATE.UNINITIALISED;
+    SessionState initState_ = SessionState.UNINITIALISED;
 
     // New StateFlow-based session state manager
     private final BranchSessionStateManager sessionStateManager = new BranchSessionStateManager();
@@ -477,8 +477,6 @@ public class Branch {
     public void disableAdNetworkCallouts(boolean disabled) {
         PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
     }
-
-
 
     /**
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
@@ -999,15 +997,8 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
-    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener
-            callback) {
-                if (userId != null && !userId.equals(prefHelper_.getIdentity())) {
-                    installDeveloperId = userId;
-                    prefHelper_.setIdentity(userId);
-                }
-                if (callback != null) {
-                    callback.onInitFinished(getFirstReferringParams(), null);
-                }
+    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
+        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, null, userId, callback));
     }
 
 
@@ -1031,14 +1022,8 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        prefHelper_.setIdentity(PrefHelper.NO_STRING_VALUE);
-        prefHelper_.clearUserValues();
-        //On Logout clear the link cache and all pending requests
-        linkCache_.clear();
-        requestQueue_.clear();
-        if (callback != null) {
-            callback.onLogoutFinished(true, null);
-        }
+        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, null, callback);
+        requestQueue_.handleNewRequest(queueOperationLogout);
     }
 
     /**
@@ -1273,7 +1258,7 @@ public class Branch {
         this.intentState_ = intentState;
     }
 
-    void setInitState(SESSION_STATE initState) {
+    void setInitState(SessionState initState) {
         synchronized (sessionStateLock) {
             initState_ = initState;
         }
@@ -1297,7 +1282,13 @@ public class Branch {
         }
     }
 
-    SESSION_STATE getInitState() {
+    /**
+     * Returns the initialization state of the session.
+     * SESSION_STATE.INITIALISED is the state that indicates the sdk has consumed the latest intent
+     * and is ready to send events.
+     * @return
+     */
+    public SessionState getInitState() {
         return initState_;
     }
 
@@ -1354,7 +1345,7 @@ public class Branch {
 
         boolean shouldInitialize = sessionState instanceof BranchSessionState.Uninitialized ||
                                   forceBranchSession ||
-                                  getInitState() == SESSION_STATE.UNINITIALISED ||
+                                  getInitState() == SessionState.UNINITIALISED ||
                                   // Allow re-initialization if session is in Initializing state but no valid session exists
                                   (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession);
 
@@ -1395,7 +1386,7 @@ public class Branch {
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean forceBranchSession) {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
          BranchLogger.d("DEBUG: Registering app init - forceBranchSession: " + forceBranchSession);
-         setInitState(SESSION_STATE.INITIALISING);
+         setInitState(SessionState.INITIALISING);
 
          ServerRequest req = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
          ServerRequestInitSession r = (req instanceof ServerRequestInitSession) ? (ServerRequestInitSession) req : null;
@@ -1495,7 +1486,11 @@ public class Branch {
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
-        boolean grabIntentParams = activity.getIntent() != null && getInitState() != Branch.SESSION_STATE.INITIALISED;
+        Intent intent = activity.getIntent();
+        SessionState sessionState = getInitState();
+        boolean grabIntentParams = intent != null && sessionState != SessionState.INITIALISED;
+
+        BranchLogger.v("onIntentReady intent: " + intent + " sessionState: " + sessionState + " grabIntentParams: " + grabIntentParams);
 
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
@@ -1511,6 +1506,17 @@ public class Branch {
         BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+    }
+
+    /**
+     * A method to manually remove the pending intent wait lock. In rare cases, it is possible
+     * that the activity lifecycle callbacks may not execute.
+     */
+    public void unlockPendingIntent() {
+        BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
+        setIntentState(Branch.INTENT_STATE.READY);
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
+        requestQueue_.processNextQueueItem("unlockPendingIntent");
     }
 
     /**
@@ -2334,8 +2340,8 @@ public class Branch {
     public static void notifyNativeToInit(){
         BranchLogger.v("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
-        SESSION_STATE sessionState = Branch.getInstance().getInitState();
-        if(sessionState == SESSION_STATE.UNINITIALISED) {
+        SessionState sessionState = Branch.getInstance().getInitState();
+        if(sessionState == SessionState.UNINITIALISED) {
             deferInitForPluginRuntime = false;
             if (Branch.getInstance().deferredSessionBuilder != null) {
                 Branch.getInstance().deferredSessionBuilder.init();
