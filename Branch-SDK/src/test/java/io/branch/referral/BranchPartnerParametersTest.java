@@ -1,5 +1,7 @@
 package io.branch.referral;
 
+import static io.branch.referral.Defines.Jsonkey.PartnerData;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -10,8 +12,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
-
-import static io.branch.referral.Defines.Jsonkey.PartnerData;
 
 @RunWith(JUnit4.class)
 public class BranchPartnerParametersTest {
