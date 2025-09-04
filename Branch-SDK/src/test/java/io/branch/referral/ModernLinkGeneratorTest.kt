@@ -322,9 +322,9 @@ class ModernLinkGeneratorTest {
         assertEquals("Should not receive URL", null, receivedUrl)
         assertNotNull("Should receive error", receivedError)
         val error = receivedError!!
-        assertTrue("Error should be network-related", 
-            error.message.contains("Network") || 
-            error.errorCode == BranchError.ERR_BRANCH_NO_CONNECTIVITY)
+        assertTrue("Error should be network-related",
+            error.message.contains("Network") ||
+                    error.errorCode == BranchError.ERR_BRANCH_NO_CONNECTIVITY)
     }
     
     @Test
