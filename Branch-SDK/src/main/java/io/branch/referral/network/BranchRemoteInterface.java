@@ -269,6 +269,23 @@ public abstract class BranchRemoteInterface {
             this.responseData = responseData;
             this.responseCode = responseCode;
         }
+        
+        /**
+         * Gets the response data from the server.
+         * @return The response data as a String, or null if there was an error
+         */
+        @Nullable
+        public String getResponseData() {
+            return responseData;
+        }
+        
+        /**
+         * Gets the HTTP response code.
+         * @return The HTTP response code (e.g., 200, 404, 500)
+         */
+        public int getResponseCode() {
+            return responseCode;
+        }
     }
 
     /**
@@ -292,6 +309,22 @@ public abstract class BranchRemoteInterface {
         public BranchRemoteException(int errorCode, String errorMessage) {
             branchErrorCode = errorCode;
             branchErrorMessage = errorMessage;
+        }
+        
+        /**
+         * Gets the Branch error code.
+         * @return The Branch error code
+         */
+        public int getBranchErrorCode() {
+            return branchErrorCode;
+        }
+        
+        /**
+         * Gets the Branch error message.
+         * @return The Branch error message
+         */
+        public String getBranchErrorMessage() {
+            return branchErrorMessage;
         }
     }
 
