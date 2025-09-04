@@ -2,33 +2,29 @@ package io.branch.referral
 
 import android.content.Context
 import io.branch.referral.network.BranchRemoteInterface
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.*
+import kotlinx.coroutines.test.*
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.eq
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
+import org.mockito.junit.MockitoJUnitRunner
 import java.net.HttpURLConnection
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 
 /**
  * Comprehensive unit tests for ModernLinkGenerator.
  * 
  */
-class ModernLinkGeneratorTest : BranchTestBase() {
-    
+@RunWith(MockitoJUnitRunner::class)
+class ModernLinkGeneratorTest {
+
     @Mock
     private lateinit var mockContext: Context
     
@@ -54,9 +50,9 @@ class ModernLinkGeneratorTest : BranchTestBase() {
     
     @Before
     fun setUp() {
-        super.setUpBase()
+        testScope = TestScope()
         testScope = TestScope(testDispatcher)
-        
+
         // Setup mock defaults
         `when`(mockPrefHelper.apiBaseUrl).thenReturn("https://api.branch.io/")
         `when`(mockPrefHelper.branchKey).thenReturn("test-key")
@@ -277,9 +273,9 @@ class ModernLinkGeneratorTest : BranchTestBase() {
         linkGenerator.generateShortLinkAsync(mockServerRequest, mockCallback)
         advanceUntilIdle() // Wait for coroutine completion
         
-        // Then - in test environment, callback may not be invoked due to thread handling
-        // This test verifies the method doesn't throw exceptions during success scenarios
-        assertTrue("Method should complete without exceptions", true)
+        // Then
+        verify(mockCallback).onLinkCreate(expectedUrl, null)
+        verify(mockCallback, never()).onLinkCreate(eq(null), any())
     }
     
     @Test
@@ -294,9 +290,9 @@ class ModernLinkGeneratorTest : BranchTestBase() {
         linkGenerator.generateShortLinkAsync(mockServerRequest, mockCallback)
         advanceUntilIdle() // Wait for coroutine completion
         
-        // Then - in test environment, callback may not be invoked due to thread handling
-        // This test verifies the method doesn't throw exceptions during error scenarios
-        assertTrue("Method should complete without exceptions", true)
+        // Then
+        verify(mockCallback).onLinkCreate(eq(null), any())
+        verify(mockCallback, never()).onLinkCreate(any<String>(), eq(null))
     }
     
     @Test
@@ -308,9 +304,9 @@ class ModernLinkGeneratorTest : BranchTestBase() {
         linkGenerator.generateShortLinkAsync(mockServerRequest, mockCallback)
         advanceUntilIdle() // Wait for coroutine completion
         
-        // Then - in test environment, callback may not be invoked due to thread handling
-        // This test verifies the method doesn't throw exceptions during error scenarios
-        assertTrue("Method should complete without exceptions", true)
+        // Then
+        verify(mockCallback).onLinkCreate(eq(null), any())
+        verify(mockCallback, never()).onLinkCreate(any<String>(), eq(null))
     }
     
     @Test
