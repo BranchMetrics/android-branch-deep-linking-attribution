@@ -680,6 +680,7 @@ public class PrefHelper {
      *                   link.
      */
     public void setLinkClickIdentifier(String identifier) {
+        BranchLogger.v("setLinkClickIdentifier: " + identifier);
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
     }
     
@@ -1336,6 +1337,7 @@ public class PrefHelper {
      * Should be called before setting a new Branch-Key. </p>
      */
     private void clearPrefOnBranchKeyChange() {
+        BranchLogger.v("clearPrefOnBranchKeyChange");
         // If stored key isn't the same as the current key, we need to clean up
         // Note: Link Click Identifier is not cleared because of the potential for that to mess up a deep link
         String linkClickID = getLinkClickID();
