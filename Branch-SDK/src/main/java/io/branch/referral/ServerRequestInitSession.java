@@ -115,13 +115,8 @@ abstract class ServerRequestInitSession extends ServerRequest {
             prefHelper_.setLinkClickIdentifier(NO_STRING_VALUE);
             prefHelper_.setLinkClickID(NO_STRING_VALUE);
         }
-        else if(TextUtils.isEmpty(prefHelper_.getLinkClickIdentifier())){
-            BranchLogger.v("linkIdentifier is was an empty string, resetting to bnc_no_value");
-            prefHelper_.setLinkClickIdentifier(NO_STRING_VALUE);
-            prefHelper_.setLinkClickID(NO_STRING_VALUE);
-        }
         else if(TextUtils.isEmpty(prefHelper_.getLinkClickIdentifier().trim())){
-            BranchLogger.v("linkIdentifier is was non-empty, whitespace string, resetting to bnc_no_value");
+            BranchLogger.v("linkIdentifier is was empty, whitespace string, resetting to bnc_no_value");
             prefHelper_.setLinkClickIdentifier(NO_STRING_VALUE);
             prefHelper_.setLinkClickID(NO_STRING_VALUE);
         }
