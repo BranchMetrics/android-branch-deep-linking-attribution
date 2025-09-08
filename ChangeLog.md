@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.20.1
+* _*Master Release*_ - Sep 8, 2025
+  - Fixed a state where a malformed URL could result in service errors and prevent sdk init. 
+
 - v5.20.0
 * _*Master Release*_ - Aug 5, 2025
   - Fix race condition with setIdentity and logout, now happen in order of events enqueued.
