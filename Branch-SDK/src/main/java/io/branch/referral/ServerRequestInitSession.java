@@ -111,7 +111,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         // If there is corrupted link click id info locally stored we need to reset it
         // to allow for a successful response
         if(prefHelper_.getLinkClickIdentifier() == null || TextUtils.isEmpty(prefHelper_.getLinkClickIdentifier().trim())){
-            BranchLogger.v("linkIdentifier is null, resetting to bnc_no_value");
+            BranchLogger.v("linkIdentifier is null or empty, resetting to bnc_no_value");
             prefHelper_.setLinkClickIdentifier(NO_STRING_VALUE);
             prefHelper_.setLinkClickID(NO_STRING_VALUE);
         }
