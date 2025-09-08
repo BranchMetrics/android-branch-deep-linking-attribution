@@ -68,8 +68,10 @@ class ServerRequestCreateUrl extends ServerRequest {
 
         linkPost_ = new BranchLinkData();
         try {
-            if (!prefHelper_.getLinkClickID().equals(PrefHelper.NO_STRING_VALUE)) {
-                linkPost_.put(Defines.Jsonkey.LinkClickID.getKey(), prefHelper_.getLinkClickID());
+            String linkClickId = prefHelper_.getLinkClickID();
+            BranchLogger.v("ServerRequestCreateUrl linkClickId: " +  linkClickId);
+            if (!linkClickId.equals(PrefHelper.NO_STRING_VALUE)) {
+                linkPost_.put(Defines.Jsonkey.LinkClickID.getKey(), linkClickId);
             }
 
             linkPost_.putType(type);

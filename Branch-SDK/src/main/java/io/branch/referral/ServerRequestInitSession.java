@@ -106,7 +106,29 @@ abstract class ServerRequestInitSession extends ServerRequest {
      */
     void updateLinkReferrerParams() {
         // Add link identifier if present
+        BranchLogger.v("updateLinkReferrerParams retrieved " + prefHelper_.getLinkClickIdentifier());
+
+
+        // If there is corrupted link id info locally stored we need to reset it
+        // to allow for a successful response
+        if(prefHelper_.getLinkClickIdentifier() == null){
+            BranchLogger.v("linkIdentifier is null, resetting to bnc_no_value");
+            prefHelper_.setLinkClickIdentifier(NO_STRING_VALUE);
+            prefHelper_.setLinkClickID(NO_STRING_VALUE);
+        }
+        else if(TextUtils.isEmpty(prefHelper_.getLinkClickIdentifier())){
+            BranchLogger.v("linkIdentifier is was an empty string, resetting to bnc_no_value");
+            prefHelper_.setLinkClickIdentifier(NO_STRING_VALUE);
+            prefHelper_.setLinkClickID(NO_STRING_VALUE);
+        }
+        else if(TextUtils.isEmpty(prefHelper_.getLinkClickIdentifier().trim())){
+            BranchLogger.v("linkIdentifier is was non-empty, whitespace string, resetting to bnc_no_value");
+            prefHelper_.setLinkClickIdentifier(NO_STRING_VALUE);
+            prefHelper_.setLinkClickID(NO_STRING_VALUE);
+        }
+
         String linkIdentifier = prefHelper_.getLinkClickIdentifier();
+
         if (!linkIdentifier.equals(NO_STRING_VALUE)) {
             try {
                 getPost().put(Defines.Jsonkey.LinkIdentifier.getKey(), linkIdentifier);

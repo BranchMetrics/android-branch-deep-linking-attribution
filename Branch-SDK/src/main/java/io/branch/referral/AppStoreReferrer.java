@@ -47,6 +47,7 @@ public class AppStoreReferrer {
                 //Always set the raw referrer string:
                 prefHelper.setAppStoreReferrer(rawReferrerString);
                 for (String referrerParam : referralParams) {
+                    BranchLogger.v("Processing referrerParam: " + referrerParam);
                     if (!TextUtils.isEmpty(referrerParam)) {
                         String splitter = "=";
                         if (!referrerParam.contains("=") && referrerParam.contains("-")) {
@@ -60,8 +61,8 @@ public class AppStoreReferrer {
                 }
                 if (referrerMap.containsKey(Defines.Jsonkey.LinkClickID.getKey())) {
                     installID_ = referrerMap.get(Defines.Jsonkey.LinkClickID.getKey());
+                    BranchLogger.v("processReferrerInfo found Link Id: " + installID_);
                     prefHelper.setLinkClickIdentifier(installID_);
-
                 }
                 // Check for full app conversion
                 if (referrerMap.containsKey(Defines.Jsonkey.IsFullAppConv.getKey())
