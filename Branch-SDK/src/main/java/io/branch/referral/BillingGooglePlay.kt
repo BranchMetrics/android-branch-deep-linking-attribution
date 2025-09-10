@@ -19,11 +19,32 @@ class BillingGooglePlay private constructor() {
                 if (!::instance.isInitialized) {
                     instance = BillingGooglePlay()
 
-                    instance.billingClient =
-                        BillingClient.newBuilder(Branch.getInstance().applicationContext)
-                            .setListener(instance.purchasesUpdatedListener)
-                            .enablePendingPurchases()
-                            .build()
+                    val builder = BillingClient.newBuilder(Branch.getInstance().applicationContext)
+                        .setListener(instance.purchasesUpdatedListener)
+
+                    // Use of try-catch to attempt to call enablePendingPurchases determined by dependency
+                    // Google Billing Library 8.0.+ requires parameters within enablePendingPurchases function
+
+                    try {
+                        // Try to find new method: enablePendingPurchases(PendingPurchasesParams)
+                        val paramsClass = Class.forName("com.android.billincclient.api.PendingPurchasesParams")
+                        val paramsBuilderClass = Class.forName("com.android.billingclient.api.PendingPurchasesParams\$Builder")
+                        val newParams = paramsBuilderClass.getMethod("enableOneTimeProducts").invoke(paramsBuilderClass.getMethod("newBuilder").invoke(null))
+                        val newMethod = builder::class.java.getMethod("enablePendingPurchases", paramsClass)
+                        newMethod.invoke(builder, newParams)
+                    } catch (e: NoSuchMethodException) {
+                        // If new method isn't found, try the old method with no parameters
+                        try {
+                            val oldMethod = builder::class.java.getMethod("enablePendingPurchases")
+                            oldMethod.invoke(builder)
+                        } catch (e2: NoSuchMethodException) {
+                            // If neither method is found, do nothing and proceed.
+                            // Handles case if method was never introduced to the user's library version.
+                        }
+                    }
+
+                    // Build client from configured builder
+                    instance.billingClient = builder.build()
                 }
                 return instance
             }
@@ -93,14 +114,16 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             querySubsProductDetailsParams
-        ) { billingResult: BillingResult, subsProductDetailsList: List<ProductDetails?> ->
+            // Edited Here
+        ) { billingResult: BillingResult, subsProductDetailsList: QueryProductDetailsResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 val contentItemBUOs: MutableList<BranchUniversalObject> =
                     ArrayList()
                 var currency: CurrencyType = CurrencyType.USD
                 var revenue = 0.00
 
-                for (product: ProductDetails? in subsProductDetailsList) {
+                // Edited Here
+                for (product: ProductDetails? in subsProductDetailsList.productDetailsList) {
                     val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
                     contentItemBUOs.add(buo)
 
@@ -126,7 +149,8 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             queryProductDetailsParams
-        ) { billingResult: BillingResult, productDetailsList: List<ProductDetails?> ->
+            // Edited Here
+        ) { billingResult: BillingResult, productDetailsList: QueryProductDetailsResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 
                 val contentItemBUOs: MutableList<BranchUniversalObject> =
@@ -134,8 +158,8 @@ class BillingGooglePlay private constructor() {
                 var currency: CurrencyType = CurrencyType.USD
                 var revenue = 0.00
                 val quantity: Int = purchase.quantity
-
-                for (product: ProductDetails? in productDetailsList) {
+                // Edited Here
+                for (product: ProductDetails? in productDetailsList.productDetailsList) {
                     val buo: BranchUniversalObject =
                         createBUOWithInAppProductDetails(product, quantity)
                     contentItemBUOs.add(buo)

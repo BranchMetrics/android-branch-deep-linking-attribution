@@ -40,7 +40,7 @@ dependencies {
     compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
 
     // Google Play Billing library
-    compileOnly("com.android.billingclient:billing:6.0.1")
+    compileOnly("com.android.billingclient:billing:8.0.0")
 
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
