@@ -1058,7 +1058,7 @@ public class Branch {
      *                 the data associated with the user id being assigned, if available.
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
-        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, null, userId, callback));
+        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, Defines.RequestPath.SetIdentity, userId, callback));
     }
 
     /**
@@ -1120,7 +1120,7 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, null, callback);
+        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, Defines.RequestPath.Logout, callback);
         requestQueue_.handleNewRequest(queueOperationLogout);
     }
 

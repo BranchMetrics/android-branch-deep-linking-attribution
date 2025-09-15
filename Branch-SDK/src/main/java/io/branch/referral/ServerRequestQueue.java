@@ -329,8 +329,12 @@ public class ServerRequestQueue {
                 if (req != null) {
                     BranchLogger.d("processNextQueueItem, req " + req);
                     if (!req.isWaitingOnProcessToFinish()) {
-                        // All request except Install request need a valid RandomizedBundleToken
-                        if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
+                        // All network requests except Install request and queue operations need a valid RandomizedBundleToken
+                        if (!(req instanceof ServerRequestRegisterInstall)
+                                && !(req instanceof QueueOperationLogout)
+                                && !(req instanceof QueueOperationSetIdentity)
+                                && !hasUser()
+                        ) {
                             BranchLogger.d("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
                             BranchLogger.v("Invoking " + req + " handleFailure. Has no session. hasUser: " + hasUser());
@@ -681,6 +685,7 @@ public class ServerRequestQueue {
                 // already called handleFailure above
                 thisReq_.clearCallbacks();
             } else {
+                //
                 ServerRequestQueue.this.remove(thisReq_);
             }
         }
