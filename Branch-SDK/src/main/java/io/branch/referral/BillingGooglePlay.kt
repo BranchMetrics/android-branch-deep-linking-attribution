@@ -5,6 +5,7 @@ import com.android.billingclient.api.*
 import io.branch.indexing.BranchUniversalObject
 import io.branch.referral.util.*
 import java.math.BigDecimal
+import kotlin.reflect.full.memberProperties
 
 class BillingGooglePlay private constructor() {
 
@@ -114,32 +115,31 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             querySubsProductDetailsParams
-            // Edited Here
-        ) { billingResult: BillingResult, subsProductDetailsList: QueryProductDetailsResult ->
+        ) { billingResult: BillingResult, subsProductDetailsResult: Any? ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val contentItemBUOs: MutableList<BranchUniversalObject> =
-                    ArrayList()
-                var currency: CurrencyType = CurrencyType.USD
-                var revenue = 0.00
+                val subsProductDetailsList = getProductDetailsList(subsProductDetailsResult)
+                if (subsProductDetailsList != null) {
+                    val contentItemBUOs: MutableList<BranchUniversalObject> =
+                        ArrayList()
+                    var currency: CurrencyType = CurrencyType.USD
+                    var revenue = 0.00
 
-                // Edited Here
-                for (product: ProductDetails? in subsProductDetailsList.productDetailsList) {
-                    val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
-                    contentItemBUOs.add(buo)
-
-                    revenue += buo.contentMetadata.price
-                    currency = buo.contentMetadata.currencyType
-                }
-
-                if (contentItemBUOs.isNotEmpty()) {
-                    createAndLogEventForPurchase(
-                        context,
-                        purchase,
-                        contentItemBUOs,
-                        currency,
-                        revenue,
-                        BillingClient.ProductType.SUBS
-                    )
+                    for (product: ProductDetails? in subsProductDetailsList) {
+                        val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
+                        contentItemBUOs.add(buo)
+                        revenue += buo.contentMetadata.price
+                        currency = buo.contentMetadata.currencyType
+                    }
+                    if (contentItemBUOs.isNotEmpty()) {
+                        createAndLogEventForPurchase(
+                            context,
+                            purchase,
+                            contentItemBUOs,
+                            currency,
+                            revenue,
+                            BillingClient.ProductType.SUBS
+                        )
+                    }
                 }
             }
             else {
@@ -149,36 +149,36 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             queryProductDetailsParams
-            // Edited Here
-        ) { billingResult: BillingResult, productDetailsList: QueryProductDetailsResult ->
+        ) { billingResult: BillingResult, productDetailsResult: Any? ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                val productDetailsList = getProductDetailsList(productDetailsResult)
+                if (productDetailsList != null) {
+                    val contentItemBUOs: MutableList<BranchUniversalObject> =
+                        ArrayList()
+                    var currency: CurrencyType = CurrencyType.USD
+                    var revenue = 0.00
+                    val quantity: Int = purchase.quantity
+                    for (product: ProductDetails? in productDetailsList) {
+                        val buo: BranchUniversalObject =
+                            createBUOWithInAppProductDetails(product, quantity)
+                        contentItemBUOs.add(buo)
 
-                val contentItemBUOs: MutableList<BranchUniversalObject> =
-                    ArrayList()
-                var currency: CurrencyType = CurrencyType.USD
-                var revenue = 0.00
-                val quantity: Int = purchase.quantity
-                // Edited Here
-                for (product: ProductDetails? in productDetailsList.productDetailsList) {
-                    val buo: BranchUniversalObject =
-                        createBUOWithInAppProductDetails(product, quantity)
-                    contentItemBUOs.add(buo)
+                        revenue += (BigDecimal(buo.contentMetadata.price.toString()) * BigDecimal(
+                            quantity.toString()
+                        )).toDouble()
+                        currency = buo.contentMetadata.currencyType
+                    }
 
-                    revenue += (BigDecimal(buo.contentMetadata.price.toString()) * BigDecimal(
-                        quantity.toString()
-                    )).toDouble()
-                    currency = buo.contentMetadata.currencyType
-                }
-
-                if (contentItemBUOs.isNotEmpty()) {
-                    createAndLogEventForPurchase(
-                        context,
-                        purchase,
-                        contentItemBUOs,
-                        currency,
-                        revenue,
-                        BillingClient.ProductType.INAPP
-                    )
+                    if (contentItemBUOs.isNotEmpty()) {
+                        createAndLogEventForPurchase(
+                            context,
+                            purchase,
+                            contentItemBUOs,
+                            currency,
+                            revenue,
+                            BillingClient.ProductType.INAPP
+                        )
+                    }
                 }
             }
             else {
@@ -278,5 +278,24 @@ class BillingGooglePlay private constructor() {
             .logEvent(context)
 
         BranchLogger.i("Successfully logged in-app purchase as Branch Event")
+    }
+
+    private fun getProductDetailsList(queryResult: Any?): List<ProductDetails?>? {
+        if (queryResult == null) return null
+
+        try {
+            val productDetailsListProperty = queryResult::class.memberProperties.find { it.name == "productDetailsList"}
+            if (productDetailsListProperty != null) {
+                val list = productDetailsListProperty.call(queryResult)
+                @Suppress("UNCHECKED_CAST")
+                return list as? List<ProductDetails?>
+            }
+        } catch (e: Exception) {
+            // Log or handle the exception if needed
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        return queryResult as? List<ProductDetails?>
+
     }
 }
