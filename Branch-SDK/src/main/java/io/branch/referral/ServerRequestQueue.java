@@ -245,7 +245,7 @@ public class ServerRequestQueue {
     void clear() {
         synchronized (reqQueueLockObject) {
             try {
-                BranchLogger.v("Queue operation clear");
+                BranchLogger.v("Queue operation clear: " + queue);
                 queue.clear();
                 BranchLogger.v("Queue cleared.");
             } catch (UnsupportedOperationException e) {
