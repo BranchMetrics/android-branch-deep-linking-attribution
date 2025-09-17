@@ -22,6 +22,8 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.21")
 
+    api("androidx.appcompat:appcompat:1.6.1")
+
     // --- optional dependencies -----
     // Please note that the Branch SDK does not require any of the below optional dependencies to operate.
     // Import these into your app to enable these features.
@@ -75,7 +77,7 @@ dependencies {
 
     // Mockito needs these classes in the test class path
     testImplementation("androidx.browser:browser:1.8.0")
-    testImplementation("com.android.billingclient:billing:6.0.1")
+    testImplementation("com.android.billingclient:billing:8.0.0")
 
 }
 

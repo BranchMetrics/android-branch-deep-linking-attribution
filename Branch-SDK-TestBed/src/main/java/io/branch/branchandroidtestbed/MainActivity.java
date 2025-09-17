@@ -1,12 +1,16 @@
 package io.branch.branchandroidtestbed;
 
-import android.app.Activity;
+import android.Manifest;
+
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,27 +22,19 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingClientStateListener;
-import com.android.billingclient.api.BillingFlowParams;
-import com.android.billingclient.api.BillingResult;
-import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.QueryProductDetailsParams;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
@@ -57,11 +53,14 @@ import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private EditText txtShortUrl;
     private BranchUniversalObject branchUniversalObject;
 
     private final static String branchChannelID = "BranchChannelID";
+    private ActivityResultLauncher<String> requestPermissionLauncher;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,9 +71,22 @@ public class MainActivity extends Activity {
 
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
 
-        getActionBar().setTitle("Branch Testbed");
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Branch Testbed");
+        }
 
         createNotificationChannel();
+
+        requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        showNotification();
+                    } else {
+                        Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
 
         // Create a BranchUniversal object for the content referred on this activity instance
         branchUniversalObject = new BranchUniversalObject()
@@ -245,67 +257,7 @@ public class MainActivity extends Activity {
 
         findViewById(R.id.cmdInAppPurchase).setOnClickListener(v -> {
             String productId = "credits";
-
-            BillingClient billingClient = BillingClient.newBuilder(MainActivity.this)
-                    .enablePendingPurchases()
-                    .setListener(
-                            (billingResult, list) -> {
-                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
-                                    Log.d("BillingClient", "Purchase was successful. Logging event");
-                                    for (Object purchase : list) {
-                                        Branch.getInstance().logEventWithPurchase(MainActivity.this, (Purchase) purchase);
-                                    }
-                                }
-                            }
-                    ).build();
-
-            billingClient.startConnection(new BillingClientStateListener() {
-                @Override
-                public void onBillingSetupFinished(BillingResult billingResult) {
-                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-
-                        List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
-
-                        QueryProductDetailsParams.Product inAppProduct = QueryProductDetailsParams.Product.newBuilder()
-                                .setProductId(productId)
-                                .setProductType(BillingClient.ProductType.INAPP)
-                                .build();
-                        productList.add(inAppProduct);
-
-                        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
-                                .setProductList(productList)
-                                .build();
-
-                        billingClient.queryProductDetailsAsync(
-                                params,
-                                (billingQueryResult, productDetailsList) -> {
-                                    Log.d("Billing", "Billing Query Result: " + billingQueryResult);
-                                    List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
-
-                                    BillingFlowParams.ProductDetailsParams productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
-                                            .setProductDetails(productDetailsList.get(0))
-                                            .build();
-
-                                    productDetailsParamsList.add(productDetailsParams);
-
-                                    BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                                            .setProductDetailsParamsList(productDetailsParamsList)
-                                            .build();
-
-                                    billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
-                                }
-                        );
-
-                    } else {
-                        Log.e("Billing Error", "Error setting up billing client" + billingResult);
-                    }
-                }
-
-                @Override
-                public void onBillingServiceDisconnected() {
-                    Log.e("Billing Error", "Billing client disconnected");
-                }
-            });
+            io.branch.referral.BillingGooglePlay.Companion.getInstance().purchaseProduct(MainActivity.this, productId);
         });
 
         findViewById(R.id.share_btn).setOnClickListener(new OnClickListener() {
@@ -427,27 +379,21 @@ public class MainActivity extends Activity {
         findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
-                if (shortURL == null) {
-                    Log.e("BranchSDK_Tester", "branchUniversalObject.getShortUrl = null");
-                    return;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(
+                            MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) ==
+                            PackageManager.PERMISSION_GRANTED
+                    ) {
+                        // Permission is already granted, proceed with showing the notification
+                        showNotification();
+                    } else {
+                        // Permission is not granted, request it from the user
+                        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+                    }
+                } else {
+                    // Devices on Android 12 or lower don't need this permission, proceed.
+                    showNotification();
                 }
-
-                intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
-                intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
-                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
-                        .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("BranchTest")
-                        .setContentText(shortURL)
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                notificationManager.notify(1, builder.build());
-                Log.d("BranchSDK_Tester", "Sent notification");
             }
         });
 
@@ -857,5 +803,34 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void showNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // If permission is not granted, log an error and return
+            Log.e("BranchSDK_Tester", "Notification permission not granted, cannot post notification.");
+            return;
+        }
 
+        Intent intent = new Intent(MainActivity.this, MainActivity.class);
+        String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
+        if (shortURL == null) {
+            Log.e("BranchSDK_Tester", "branchUniversalObject.getShortUrl = null");
+            return;
+        }
+
+        intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
+        intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle("BranchTest")
+                .setContentText(shortURL)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+        notificationManager.notify(1, builder.build());
+        Log.d("BranchSDK_Tester", "Sent notification");
+    }
 }

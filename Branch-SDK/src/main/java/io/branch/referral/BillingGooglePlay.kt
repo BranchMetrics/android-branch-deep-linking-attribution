@@ -1,11 +1,13 @@
 package io.branch.referral
 
+import android.app.Activity
 import android.content.Context
 import com.android.billingclient.api.*
 import io.branch.indexing.BranchUniversalObject
 import io.branch.referral.util.*
 import java.math.BigDecimal
 import kotlin.reflect.full.memberProperties
+import kotlin.collections.*
 
 class BillingGooglePlay private constructor() {
 
@@ -280,6 +282,45 @@ class BillingGooglePlay private constructor() {
         BranchLogger.i("Successfully logged in-app purchase as Branch Event")
     }
 
+    // Encapsulates billing library purchase flow
+
+    fun purchaseProduct(context: Context, productId: String) {
+        if (!billingClient.isReady) {
+            BranchLogger.e("Billing client is not ready. Try again later.")
+            return
+        }
+
+        val queryProductDetailsParams = QueryProductDetailsParams.newBuilder()
+            .setProductList(
+                listOf(
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(productId)
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build()
+                )
+            )
+            .build()
+
+        billingClient.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, result: Any? ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                val productDetailsList = getProductDetailsList(result)
+                val productDetails = productDetailsList?.firstOrNull()
+                if (productDetails != null) {
+                    val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(productDetails)
+                        .build()
+
+                    val billingFlowParams = BillingFlowParams.newBuilder()
+                        .setProductDetailsParamsList(listOf(productDetailsParams))
+                        .build()
+
+                    billingClient.launchBillingFlow(context as Activity, billingFlowParams)
+                } else {
+                    BranchLogger.e("Failed to query product details. Error: ${billingResult.debugMessage}")
+                }
+            }
+        }
+    }
     private fun getProductDetailsList(queryResult: Any?): List<ProductDetails?>? {
         if (queryResult == null) return null
 
