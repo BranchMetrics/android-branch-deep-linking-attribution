@@ -245,7 +245,7 @@ public class ServerRequestQueue {
     void clear() {
         synchronized (reqQueueLockObject) {
             try {
-                BranchLogger.v("Queue operation clear");
+                BranchLogger.v("Queue operation clear: " + queue);
                 queue.clear();
                 BranchLogger.v("Queue cleared.");
             } catch (UnsupportedOperationException e) {
@@ -329,8 +329,12 @@ public class ServerRequestQueue {
                 if (req != null) {
                     BranchLogger.d("processNextQueueItem, req " + req);
                     if (!req.isWaitingOnProcessToFinish()) {
-                        // All request except Install request need a valid RandomizedBundleToken
-                        if (!(req instanceof ServerRequestRegisterInstall) && !hasUser()) {
+                        // All network requests except Install request and queue operations need a valid RandomizedBundleToken
+                        if (!(req instanceof ServerRequestRegisterInstall)
+                                && !(req instanceof QueueOperationLogout)
+                                && !(req instanceof QueueOperationSetIdentity)
+                                && !hasUser()
+                        ) {
                             BranchLogger.d("Branch Error: User session has not been initialized!");
                             networkCount_ = 0;
                             BranchLogger.v("Invoking " + req + " handleFailure. Has no session. hasUser: " + hasUser());
