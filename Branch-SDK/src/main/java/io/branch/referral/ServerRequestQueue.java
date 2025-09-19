@@ -651,12 +651,10 @@ public class ServerRequestQueue {
                                 updateRequestsInQueue = true;
                             }
                         }
-
                         if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
                             Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
                             updateRequestsInQueue = true;
                         }
-
                         if (updateRequestsInQueue) {
                             updateAllRequestsInQueue();
                         }
@@ -687,7 +685,6 @@ public class ServerRequestQueue {
                 // already called handleFailure above
                 thisReq_.clearCallbacks();
             } else {
-                //
                 ServerRequestQueue.this.remove(thisReq_);
             }
         }
