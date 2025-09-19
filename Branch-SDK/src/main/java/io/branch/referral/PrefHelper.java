@@ -554,6 +554,7 @@ public class PrefHelper {
      *                 within preferences.
      */
     public void setIdentity(String identity) {
+        BranchLogger.v("[Storage] setIdentity: " + identity);
         setString(KEY_IDENTITY, identity);
     }
     

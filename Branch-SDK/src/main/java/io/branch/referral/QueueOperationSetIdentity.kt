@@ -30,10 +30,10 @@ class QueueOperationSetIdentity(
     public override fun doFinalUpdateOnMainThread() {
         try {
             v("doFinalUpdateOnMainThread $this")
-            if (userId_ != null && userId_ != prefHelper_.identity) {
+            if (userId_ != null) {
                 Branch.installDeveloperId = userId_
                 prefHelper_.identity = userId_
-                v("Identity set to: " + prefHelper_.identity)
+                v("Identity is now set to: " + Branch.installDeveloperId)
             }
         } catch (e: Exception) {
             e("Caught Exception: doFinalUpdateOnMainThread " + this + " " + e.message)
