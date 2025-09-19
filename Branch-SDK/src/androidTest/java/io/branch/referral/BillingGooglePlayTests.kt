@@ -1,11 +1,13 @@
 package io.branch.referral
 
+import android.Manifest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.rule.GrantPermissionRule
 import com.android.billingclient.api.Purchase
 import io.branch.referral.util.CurrencyType
-
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -45,5 +47,15 @@ class BillingGooglePlayTests : BranchTest() {
             eventRequest.requestPath
         )
         Assert.assertTrue(eventRequest.isWaitingOnProcessToFinish)
+    }
+
+    @Test
+    fun getBillingLibraryVersionReturnsCorrectVersion() {
+        // Act
+        val version = BillingGooglePlayReflection.getBillingLibraryVersion()
+
+        // Assert
+        //Change the assertion to match the version you have in your build.gradle file
+        Assert.assertEquals("Version 6.0 or higher", version)
     }
 }

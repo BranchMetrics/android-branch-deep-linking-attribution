@@ -13,6 +13,11 @@ jacoco {
     toolVersion = "0.8.10"
 }
 
+configurations.all {
+    resolutionStrategy {
+        force("com.android.billingclient:billing:6.0.0")
+    }
+}
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to "*.jar")))
     implementation(kotlin("stdlib"))
@@ -41,7 +46,6 @@ dependencies {
 
     // Google Play Billing library
     compileOnly("com.android.billingclient:billing:6.0.1")
-
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
 
