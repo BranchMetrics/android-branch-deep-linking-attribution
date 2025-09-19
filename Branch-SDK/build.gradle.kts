@@ -15,7 +15,7 @@ jacoco {
 
 configurations.all {
     resolutionStrategy {
-        force("com.android.billingclient:billing:6.0.0")
+        force("com.android.billingclient:billing:5.0.0")
     }
 }
 dependencies {
