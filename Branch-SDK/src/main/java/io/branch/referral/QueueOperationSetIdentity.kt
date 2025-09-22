@@ -30,16 +30,15 @@ class QueueOperationSetIdentity(
     public override fun doFinalUpdateOnMainThread() {
         try {
             v("doFinalUpdateOnMainThread $this")
-            if (userId_ != null && userId_ != prefHelper_.identity) {
+            if (userId_ != null) {
                 Branch.installDeveloperId = userId_
                 prefHelper_.identity = userId_
-                v("Identity set to: " + prefHelper_.identity)
+                v("Identity is now set to: " + Branch.installDeveloperId)
             }
         } catch (e: Exception) {
             e("Caught Exception: doFinalUpdateOnMainThread " + this + " " + e.message)
         }
     }
-
 
     override fun handleErrors(context: Context): Boolean {
         return false
@@ -59,6 +58,13 @@ class QueueOperationSetIdentity(
     }
 
     override fun handleFailure(statusCode: Int, causeMsg: String) {
+        v("QueueOperationSetIdentity handleFailure $this")
+        if (callback_ != null) {
+            v("QueueOperationSetIdentity handleFailure $this")
+            val currentIdentity = prefHelper_.identity
+            val error = BranchError("Error in setIdentity method. Current identity value: $currentIdentity $causeMsg", -1)
+            callback_!!.onInitFinished(JSONObject(), error)
+        }
     }
 
     override fun isGetRequest(): Boolean {
@@ -66,5 +72,10 @@ class QueueOperationSetIdentity(
     }
 
     override fun clearCallbacks() {
+    }
+
+    // For backwards compat with deprecated disableTracking
+    override fun prepareExecuteWithoutTracking(): Boolean {
+        return true
     }
 }

@@ -27,6 +27,7 @@ public final class CustomBranchApp extends Application {
 //        };
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
         Branch.getAutoInstance(this);
+        Branch.expectDelayedSessionInitialization(true);
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
