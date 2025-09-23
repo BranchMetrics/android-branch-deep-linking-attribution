@@ -669,8 +669,25 @@ public class ServerRequestQueue {
                                 updateRequestsInQueue = true;
                             }
                         }
+                        //TODO: This field presents itself when the service encounters a pre-release version in production
+                        // Set as rbt
+                        else if(respJson.has("identity_id")){
+                            String new_Randomized_Bundle_Token = respJson.getString("identity_id");
+                            if (!Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
+                                //On setting a new Randomized Bundle Token clear the link cache
+                                Branch.getInstance().linkCache_.clear();
+                                Branch.getInstance().prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
+                                updateRequestsInQueue = true;
+                            }
+                        }
                         if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
                             Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
+                            updateRequestsInQueue = true;
+                        }
+                        //TODO: This field presents itself when the service encounters a pre-release version in production
+                        // Set as rdt
+                        else if(respJson.has("device_fingerprint_id")){
+                            Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString("device_fingerprint_id"));
                             updateRequestsInQueue = true;
                         }
                         if (updateRequestsInQueue) {
