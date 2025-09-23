@@ -38,7 +38,7 @@ public final class CustomBranchApp extends Application {
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
             public void onRequestCompleted(String localRequestId, JSONObject request, JSONObject response, String error) {
-                Log.d("Spotify_Test", "Request ID: " + localRequestId
+                Log.d("Shortlink_Session_Test", "Request ID: " + localRequestId
                         + "\nRequest: " + request
                         + "\nResponse: " + response
                         + "\nError Message: " + error
