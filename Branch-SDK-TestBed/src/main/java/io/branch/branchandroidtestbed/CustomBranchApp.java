@@ -7,6 +7,8 @@ import android.util.Log;
 
 import androidx.browser.customtabs.CustomTabsIntent;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
@@ -15,6 +17,7 @@ import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
+import io.branch.referral.IBranchRequestTracingCallback;
 
 public final class CustomBranchApp extends Application {
     @Override
@@ -32,6 +35,16 @@ public final class CustomBranchApp extends Application {
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
         Branch.getInstance().setCustomTabsIntent(customTabsIntent);
+        Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
+            @Override
+            public void onRequestCompleted(String localRequestId, JSONObject request, JSONObject response, String error) {
+                Log.d("Spotify_Test", "Request ID: " + localRequestId
+                        + "\nRequest: " + request
+                        + "\nResponse: " + response
+                        + "\nError Message: " + error
+                );
+            }
+        });
     }
 
     private void saveLogToFile(String logMessage) {

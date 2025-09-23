@@ -578,7 +578,25 @@ public class ServerRequestQueue {
         }
 
         void onPostExecuteInner(ServerResponse serverResponse) {
-            BranchLogger.v("onPostExecuteInner " + this + " " + serverResponse);
+            try {
+                if (Branch.getCallbackForTracingRequests() != null) {
+                    String localRequestId = thisReq_.uuid;
+                    JSONObject requestJson = thisReq_.getPost();
+                    JSONObject requestResponse = serverResponse.getObject();
+
+                    String error = "";
+
+                    if (serverResponse.getStatusCode() != 200) {
+                        error = (new BranchError(serverResponse.getMessage(), serverResponse.getStatusCode())).toString();
+                    }
+
+                    Branch.getCallbackForTracingRequests().onRequestCompleted(localRequestId, requestJson, requestResponse, error);
+                }
+            }
+            catch (Exception exception){
+                BranchLogger.e("Failed to invoke tracing request callback:" + exception.getMessage());
+            }
+
             if (latch_ != null) {
                 latch_.countDown();
             }
