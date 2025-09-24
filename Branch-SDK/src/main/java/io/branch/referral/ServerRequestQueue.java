@@ -578,7 +578,32 @@ public class ServerRequestQueue {
         }
 
         void onPostExecuteInner(ServerResponse serverResponse) {
-            BranchLogger.v("onPostExecuteInner " + this + " " + serverResponse);
+            try {
+                // For the time being, execute the callback only for init requests
+                BranchLogger.v("onPostExecuteInner " + thisReq_);
+                if (Branch.getCallbackForTracingRequests() != null && (thisReq_ instanceof ServerRequestInitSession)) {
+                    String uri = "";
+
+                    if(thisReq_.getPost().has(Defines.Jsonkey.External_Intent_URI.getKey())){
+                        uri = thisReq_.getPost().getString(Defines.Jsonkey.External_Intent_URI.getKey());
+                    }
+
+                    JSONObject requestJson = thisReq_.getPost();
+                    JSONObject requestResponse = serverResponse.getObject();
+
+                    String error = "";
+
+                    if (serverResponse.getStatusCode() != 200) {
+                        error = (new BranchError(serverResponse.getMessage(), serverResponse.getStatusCode())).toString();
+                    }
+
+                    Branch.getCallbackForTracingRequests().onRequestCompleted(uri, requestJson, requestResponse, error, thisReq_.getRequestUrl());
+                }
+            }
+            catch (Exception exception){
+                BranchLogger.e("Failed to invoke tracing request callback:" + exception.getMessage());
+            }
+
             if (latch_ != null) {
                 latch_.countDown();
             }

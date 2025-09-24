@@ -309,6 +309,8 @@ public class Branch {
     private Uri deferredUri;
     private InitSessionBuilder deferredSessionBuilder;
 
+    private static IBranchRequestTracingCallback _iBranchRequestTracingCallback;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -2820,5 +2822,13 @@ public class Branch {
         catch (Exception ex){
             BranchLogger.e("launchExternalBrowser caught exception: " + ex);
         }
+    }
+
+    public static void setCallbackForTracingRequests(IBranchRequestTracingCallback iBranchRequestTracingCallback){
+        _iBranchRequestTracingCallback = iBranchRequestTracingCallback;
+    }
+
+    public static IBranchRequestTracingCallback getCallbackForTracingRequests(){
+        return _iBranchRequestTracingCallback;
     }
 }
