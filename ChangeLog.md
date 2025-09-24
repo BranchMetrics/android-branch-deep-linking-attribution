@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.20.3
+* _*Master Release*_ - Sep 24, 2025
+  - Add some additional debug logging.
+
 - v5.20.2
 * _*Master Release*_ - Sep 19, 2025
   - Fixed bug where `identity` may not be set on some opens.
