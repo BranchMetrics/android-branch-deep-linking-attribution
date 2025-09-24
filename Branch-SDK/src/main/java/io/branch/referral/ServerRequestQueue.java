@@ -580,7 +580,12 @@ public class ServerRequestQueue {
         void onPostExecuteInner(ServerResponse serverResponse) {
             try {
                 if (Branch.getCallbackForTracingRequests() != null) {
-                    String localRequestId = thisReq_.uuid;
+                    String uri = "";
+
+                    if(thisReq_.getPost().has(Defines.Jsonkey.External_Intent_URI.getKey())){
+                        uri = thisReq_.getPost().getString(Defines.Jsonkey.External_Intent_URI.getKey());
+                    }
+
                     JSONObject requestJson = thisReq_.getPost();
                     JSONObject requestResponse = serverResponse.getObject();
 
@@ -590,7 +595,7 @@ public class ServerRequestQueue {
                         error = (new BranchError(serverResponse.getMessage(), serverResponse.getStatusCode())).toString();
                     }
 
-                    Branch.getCallbackForTracingRequests().onRequestCompleted(localRequestId, requestJson, requestResponse, error);
+                    Branch.getCallbackForTracingRequests().onRequestCompleted(uri, requestJson, requestResponse, error, thisReq_.getRequestUrl());
                 }
             }
             catch (Exception exception){
