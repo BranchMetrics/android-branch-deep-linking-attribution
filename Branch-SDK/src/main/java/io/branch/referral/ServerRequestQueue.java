@@ -579,7 +579,9 @@ public class ServerRequestQueue {
 
         void onPostExecuteInner(ServerResponse serverResponse) {
             try {
-                if (Branch.getCallbackForTracingRequests() != null) {
+                // For the time being, execute the callback only for init requests
+                BranchLogger.v("onPostExecuteInner " + thisReq_);
+                if (Branch.getCallbackForTracingRequests() != null && (thisReq_ instanceof ServerRequestInitSession)) {
                     String uri = "";
 
                     if(thisReq_.getPost().has(Defines.Jsonkey.External_Intent_URI.getKey())){
