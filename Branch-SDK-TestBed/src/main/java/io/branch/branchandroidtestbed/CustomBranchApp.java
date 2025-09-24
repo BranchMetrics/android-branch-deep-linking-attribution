@@ -13,10 +13,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 
-import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
-import io.branch.referral.Defines;
 import io.branch.referral.IBranchRequestTracingCallback;
 
 public final class CustomBranchApp extends Application {
@@ -35,13 +33,16 @@ public final class CustomBranchApp extends Application {
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
         Branch.getInstance().setCustomTabsIntent(customTabsIntent);
+        //Branch.setAPIUrl("https://api.stage.branch.io/");
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
-            public void onRequestCompleted(String localRequestId, JSONObject request, JSONObject response, String error) {
-                Log.d("Shortlink_Session_Test", "Request ID: " + localRequestId
+            public void onRequestCompleted(String uri, JSONObject request, JSONObject response, String error, String requestUrl) {
+                Log.d("Shortlink_Session_Test",
+                        "URI Sent to Branch: " + uri
                         + "\nRequest: " + request
                         + "\nResponse: " + response
                         + "\nError Message: " + error
+                        + "\nRequest Url: " + requestUrl
                 );
             }
         });
