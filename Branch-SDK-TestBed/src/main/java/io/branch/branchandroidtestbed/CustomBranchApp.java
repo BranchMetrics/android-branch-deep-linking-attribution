@@ -33,7 +33,6 @@ public final class CustomBranchApp extends Application {
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
         Branch.getInstance().setCustomTabsIntent(customTabsIntent);
-        //Branch.setAPIUrl("https://api.stage.branch.io/");
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
             public void onRequestCompleted(String uri, JSONObject request, JSONObject response, String error, String requestUrl) {
