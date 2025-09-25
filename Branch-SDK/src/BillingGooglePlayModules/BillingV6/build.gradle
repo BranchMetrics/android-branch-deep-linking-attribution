@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    compileSdk ANDROID_BUILD_SDK_VERSION_COMPILE.toInt() // Or your project's compile SDK version
+
+    defaultConfig {
+        minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("proguard-consumer.txt")
+    }
+
+    // This section is for library-specific configurations
+    buildTypes {
+        fun String.wrapInQuotes(): String {
+            return "\"$this\""
+        }
+
+        debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+            buildConfigField("long", "VERSION_CODE", VERSION_CODE)
+            buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
+        }
+        release {
+            buildConfigField("long", "VERSION_CODE", VERSION_CODE)
+            buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
+        }
+    }
+}
+
+dependencies {
+    // This is the older V6 version of the billing library
+    implementation 'com.android.billingclient:billing:6.0.1'
+
+    // Add any other dependencies specific to this module
+    implementation 'androidx.core:core-ktx:1.9.0'
+}
