@@ -47,6 +47,7 @@ dependencies {
 
     // Google Play Billing library
     compileOnly("com.android.billingclient:billing:6.0.1")
+
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
 
@@ -141,18 +142,6 @@ android {
     signing {
         isRequired = isReleaseBuild()
     }
-
-    flavorDimensions.add("billing")
-
-    productFlavors {
-        create("billing_v6v7") {
-            dimension = "billing"
-        }
-        create("billing_v8") {
-            dimension = "billing"
-        }
-    }
-
 }
 
 fun getRepositoryUsername(): String {

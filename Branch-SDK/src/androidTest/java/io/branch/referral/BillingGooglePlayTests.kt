@@ -56,6 +56,6 @@ class BillingGooglePlayTests : BranchTest() {
 
         // Assert
         //Change the assertion to match the version you have in your build.gradle file
-        Assert.assertEquals("Version 6.0 or higher", version)
+        Assert.assertEquals("6", version)
     }
 }

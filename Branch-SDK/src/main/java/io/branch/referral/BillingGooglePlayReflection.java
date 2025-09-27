@@ -4,26 +4,32 @@ import java.lang.ClassNotFoundException;
 
 public class BillingGooglePlayReflection {
     public static BillingGooglePlayInterface getBillingLibraryVersion() {
-        try {
-            // Check for a class added in version 8.0 or higher
-            Class billingClientBuilderClass = Class.forName("com.android.billingclient.api.BillingClient$Builder");
-            billingClientBuilderClass.getMethod("enableAutoServiceReconnection");
-            return new BillingGooglePlayV8();
-        } catch (NoSuchMethodException | ClassNotFoundException version8CheckFailed) {
-            try {
-                // Check for a class added in version 7.0 or higher
-                Class.forName("com.android.billingclient.api.ProductDetails$InstallmentPlanDetails");
+        String billingClient = com.android.billingclient.BuildConfig.VERSION_NAME;
+        BillingGooglePlayInterface billingInterface;
 
-                return new BillingGooglePlayV6V7();
-            } catch (ClassNotFoundException version7CheckFailed) {
-                try {
-                    // Check for a class added in version 6.0 or higher
-                    Class.forName("com.android.billingclient.api.BillingFlowParams$SubscriptionUpdateParams$ReplacementMode");
-                    return new BillingGooglePlayV6V7();
-                } catch (ClassNotFoundException version6CheckFailed) {
-                    return new BillingGooglePlayV6V7();
-                }
+        try {
+            int majorIndex = billingClient.indexOf(".");
+            String majorVersion = billingClient.substring(0, majorIndex);
+
+            switch (majorVersion) {
+                case "8":
+                    billingInterface = new BillingGooglePlayV8();
+                    break;
+                case "7":
+                case "6":
+                    billingInterface = new BillingGooglePlayV6V7();
+                    break;
+                default:
+                    billingInterface = new BillingGooglePlayDefault();
+                    break;
             }
+
+        } catch (Exception e) {
+            System.err.println("Error parsing billing client version: " + e.getMessage());
+
+            billingInterface = new BillingGooglePlayDefault();
         }
+
+        return billingInterface;
     }
 }
