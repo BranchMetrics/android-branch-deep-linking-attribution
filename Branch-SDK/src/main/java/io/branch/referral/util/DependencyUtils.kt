@@ -30,3 +30,9 @@ const val xiaomiInstallReferrerClass = "com.miui.referrer.api.GetAppsReferrerCli
 const val billingGooglePlayClass = "com.android.billingclient.api.BillingClient"
 
 const val androidBrowserClass = "androidx.browser.customtabs.CustomTabsIntent"
+
+fun dependencyMajorVersionFinder(dependencyNameString: String): String {
+    val majorIndex = dependencyNameString.indexOf(".")
+    val majorVersion = dependencyNameString.substring(0, majorIndex)
+    return majorVersion
+}

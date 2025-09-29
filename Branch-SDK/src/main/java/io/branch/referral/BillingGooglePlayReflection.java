@@ -2,16 +2,16 @@ package io.branch.referral;
 
 import java.lang.ClassNotFoundException;
 
+import io.branch.referral.util.DependencyUtilsKt;
+
 public class BillingGooglePlayReflection {
     public static BillingGooglePlayInterface getBillingLibraryVersion() {
-        String billingClient = com.android.billingclient.BuildConfig.VERSION_NAME;
+        String billingClientVersionString = com.android.billingclient.BuildConfig.VERSION_NAME;
         BillingGooglePlayInterface billingInterface;
 
         try {
-            int majorIndex = billingClient.indexOf(".");
-            String majorVersion = billingClient.substring(0, majorIndex);
-
-            switch (majorVersion) {
+            String billingMajorVersion = DependencyUtilsKt.dependencyMajorVersionFinder(billingClientVersionString);
+            switch (billingMajorVersion) {
                 case "8":
                     billingInterface = new BillingGooglePlayV8();
                     break;
@@ -25,7 +25,7 @@ public class BillingGooglePlayReflection {
             }
 
         } catch (Exception e) {
-            System.err.println("Error parsing billing client version: " + e.getMessage());
+            BranchLogger.e("Error parsing billing client version: " + e.getMessage());
 
             billingInterface = new BillingGooglePlayDefault();
         }

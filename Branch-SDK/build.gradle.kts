@@ -13,12 +13,6 @@ jacoco {
     toolVersion = "0.8.10"
 }
 
-//configurations.all {
-//    resolutionStrategy {
-//        force("com.android.billingclient:billing:8.0.0")
-//    }
-//}
-
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to "*.jar")))
     implementation(kotlin("stdlib"))
