@@ -19,6 +19,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -43,6 +44,7 @@ import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
@@ -737,11 +739,40 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        Branch.getInstance().setIdentity("Initial_Identity");
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         BranchLogger.d("initSession");
+
+        Branch.getInstance().setIdentity("Identity1");
+
+        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+            @Override
+            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                if (error != null) {
+                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                    Log.d("BranchSDK_Tester", "Session state should be not be INITIALISED, actual: " + Branch.getInstance().getInitState());
+                } else {
+                    Log.d("BranchSDK_Tester", "branch init complete!");
+                    Log.d("BranchSDK_Tester", "Session state should be INITIALISED, actual: " + Branch.getInstance().getInitState());
+                    if (branchUniversalObject != null) {
+                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                    }
+
+                    if (linkProperties != null) {
+                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                    }
+                }
+
+
+                // QA purpose only
+                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+            }
+        }).withData(this.getIntent().getData()).init();
 
         //initSessionsWithTests();
 
@@ -751,7 +782,7 @@ public class MainActivity extends Activity {
         // IMP : Do not make this call in your production app
 
         // Enable integration validation to test modernized components
-        IntegrationValidator.validate(MainActivity.this);
+        //IntegrationValidator.validate(MainActivity.this);
     }
 
 
