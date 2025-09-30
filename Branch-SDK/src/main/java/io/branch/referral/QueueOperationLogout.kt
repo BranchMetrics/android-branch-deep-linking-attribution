@@ -43,6 +43,10 @@ class QueueOperationLogout(
 
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
         v("QueueOperationLogout onRequestSucceeded $this")
+            //On Logout clear the link cache and all pending requests
+            Branch.getInstance().linkCache_.clear();
+            Branch.getInstance().requestQueue_.clear();
+
         if (callback_ != null) {
             callback_!!.onLogoutFinished(true, null)
         }
