@@ -16,7 +16,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -209,6 +208,9 @@ public class Branch {
      * the class during application runtime.</p>
      */
     private static Branch branchReferral_;
+    
+    // Static handler for lifecycle-aware delayed operations to prevent memory leaks
+    private static Handler staticHandler;
 
     private BranchRemoteInterface branchRemoteInterface_;
     final PrefHelper prefHelper_;
@@ -318,6 +320,8 @@ public class Branch {
         INITIALISING,
         INITIALISED
     }
+
+    private static IBranchRequestTracingCallback _iBranchRequestTracingCallback;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -1019,7 +1023,7 @@ public class Branch {
      *                 the data associated with the user id being assigned, if available.
      */
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
-        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, null, userId, callback));
+        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, Defines.RequestPath.SetIdentity, userId, callback));
     }
 
 
@@ -1043,7 +1047,7 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, null, callback);
+        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, Defines.RequestPath.Logout, callback);
         requestQueue_.handleNewRequest(queueOperationLogout);
     }
 
@@ -1176,9 +1180,11 @@ public class Branch {
             if (req.isAsync()) {
                 // Use modern link generator for async requests when available
                 if (modernLinkGenerator_ != null) {
+                    BranchLogger.d("MODERNIZATION_TRACE: Using ModernLinkGenerator for async link creation");
                     modernLinkGenerator_.generateShortLinkAsyncFromJava(req.getLinkPost(), req.getCallback());
                 } else {
                     // Fallback to request queue for backward compatibility
+                    BranchLogger.d("MODERNIZATION_TRACE: Falling back to legacy requestQueue for async link creation");
                     requestQueue_.handleNewRequest(req);
                 }
             } else {
@@ -1366,12 +1372,7 @@ public class Branch {
         if (delay > 0) {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
             BranchLogger.d("DEBUG: Adding USER_SET_WAIT_LOCK with delay: " + delay);
-            new Handler().postDelayed(new Runnable() {
-                @Override public void run() {
-                    BranchLogger.d("DEBUG: Delay completed, processing session initialization");
-                    processSessionInitialization(initRequest);
-                }
-            }, delay);
+            getStaticHandler().postDelayed(new SessionInitRunnable(initRequest), delay);
         } else {
             BranchLogger.d("DEBUG: No delay, processing session initialization immediately");
             processSessionInitialization(initRequest);
@@ -1763,16 +1764,10 @@ public class Branch {
     }
 
 
-    /**
-     * Async Task to create  a short link for synchronous methods
-     */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
+    // Legacy GetShortLinkTask removed - modern link generation now uses:
+    // 1. ModernLinkGenerator (Kotlin coroutines) - primary strategy  
+    // 2. BranchLegacyLinkGenerator (AsyncTask) - fallback strategy
+    // See generateShortLinkSync() method for implementation
 
     //-------------------Auto deep link feature-------------------------------------------//
     
@@ -2663,5 +2658,50 @@ public class Branch {
          * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
         void onChannelSelected(String channelName);
+    }
+
+    /**
+     * Lazy initialization of static handler to avoid issues in unit tests
+     */
+    private static Handler getStaticHandler() {
+        if (staticHandler == null) {
+            staticHandler = new Handler(android.os.Looper.getMainLooper());
+        }
+        return staticHandler;
+    }
+
+    /**
+     * Lifecycle-aware Runnable for session initialization that uses WeakReference to prevent memory leaks
+     */
+    private static class SessionInitRunnable implements Runnable {
+        private final ServerRequestInitSession initRequest;
+
+        SessionInitRunnable(ServerRequestInitSession initRequest) {
+            this.initRequest = initRequest;
+        }
+
+        @Override
+        public void run() {
+            try {
+                BranchLogger.d("DEBUG: Delay completed, processing session initialization");
+                // Check if Branch instance is still valid before proceeding
+                if (branchReferral_ != null) {
+                    branchReferral_.processSessionInitialization(initRequest);
+                } else {
+                    BranchLogger.d("Branch instance lost, skipping session initialization");
+                }
+            } catch (Exception e) {
+                BranchLogger.e("Error in delayed session initialization: " + e.getMessage());
+            }
+        }
+    }
+
+    public static void setCallbackForTracingRequests(IBranchRequestTracingCallback iBranchRequestTracingCallback){
+        _iBranchRequestTracingCallback = iBranchRequestTracingCallback;
+    }
+
+    public static IBranchRequestTracingCallback getCallbackForTracingRequests(){
+        return _iBranchRequestTracingCallback;
+
     }
 }
