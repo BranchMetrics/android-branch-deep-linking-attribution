@@ -9,6 +9,7 @@ plugins {
     id("jacoco")
 }
 val coroutinesVersion = "1.6.4"
+val googlePlayBillingVersion = "7.1.1"
 jacoco {
     toolVersion = "0.8.10"
 }
@@ -40,7 +41,7 @@ dependencies {
     compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
 
     // Google Play Billing library
-    compileOnly("com.android.billingclient:billing:8.0.0")
+    compileOnly("com.android.billingclient:billing:$googlePlayBillingVersion")
 
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
@@ -56,7 +57,7 @@ dependencies {
     androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
     androidTestImplementation("com.huawei.hms:ads-installreferrer:3.4.39.302")
     androidTestImplementation("com.huawei.hms:base:4.0.2.300")
-    androidTestImplementation("com.android.billingclient:billing:6.0.1")
+    androidTestImplementation("com.android.billingclient:billing:$googlePlayBillingVersion")
     androidTestImplementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
     androidTestImplementation("com.miui.referrer:homereferrer:1.0.0.7")
 
@@ -74,7 +75,7 @@ dependencies {
 
     // Mockito needs these classes in the test class path
     testImplementation("androidx.browser:browser:1.8.0")
-    testImplementation("com.android.billingclient:billing:6.0.1")
+    testImplementation("com.android.billingclient:billing:$googlePlayBillingVersion")
 
 }
 
@@ -91,6 +92,7 @@ fun isReleaseBuild(): Boolean {
 android {
     compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
     defaultConfig {
+        targetSdk = 36 // For instrumented tests
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("proguard-consumer.txt")

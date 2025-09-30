@@ -23,7 +23,7 @@ public class KeyTest extends BranchTest {
 
     @Test
     public void testAutoInstanceWithKey() {
-        final String expectedKey = "key_XXX";
+        final String expectedKey = "key_live_testing_only";
         initBranchInstance(expectedKey);
 
         final String actualKey = PrefHelper.getInstance(getTestContext()).getBranchKey();

@@ -2652,13 +2652,26 @@ public class Branch {
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
         if (classExists(billingGooglePlayClass)) {
-            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-                if (succeeded) {
-                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-                } else {
-                    BranchLogger.e("Cannot log IAP event. Billing client setup failed");                }
-                return null;
-            });
+            String version = com.android.billingclient.BuildConfig.VERSION_NAME;
+            BranchLogger.v("Version is " + version);
+            String majorVersion = DependencyUtilsKt.dependencyMajorVersionFinder(version);
+
+            if("6".equals(majorVersion) || "7".equals(majorVersion)) {
+                BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
+                    if (succeeded) {
+                        BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
+                    } else {
+                        BranchLogger.e("Cannot log IAP event. Billing client setup failed");
+                    }
+                    return null;
+                });
+            }
+            else if("8".equals(majorVersion)){
+                // Call v8 here
+            }
+            else {
+                BranchLogger.e("Google Play Billing Client Version " + version + " is not supported.");
+            }
         }
     }
 
