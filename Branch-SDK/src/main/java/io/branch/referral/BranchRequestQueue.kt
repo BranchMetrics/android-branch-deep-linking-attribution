@@ -439,6 +439,8 @@ class BranchRequestQueue private constructor(private val context: Context) {
             // Background processing
             BranchLogger.d("DEBUG: Executing doFinalUpdateOnBackgroundThread")
             request.doFinalUpdateOnBackgroundThread()
+
+
             
             // Check if tracking is disabled
             val branch = Branch.getInstance()
@@ -448,30 +450,39 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 handleResponse(request, response)
                 return@withContext
             }
-            
-            // Execute network call
-            val branchKey = branch.prefHelper_.branchKey
-            BranchLogger.d("DEBUG: Executing network call with branch key: $branchKey")
-            val response = if (request.isGetRequest) {
-                branch.branchRemoteInterface.make_restful_get(
-                    request.requestUrl,
-                    request.getParams,
-                    request.requestPath,
-                    branchKey
-                )
-            } else {
-                branch.branchRemoteInterface.make_restful_post(
-                    request.getPostWithInstrumentationValues(instrumentationExtraData),
-                    request.requestUrl,
-                    request.requestPath,
-                    branchKey
-                )
+
+            // TODO: Handle enqueuing setIdentity & Logout more elegantly
+            if(request is QueueOperationSetIdentity || request is QueueOperationLogout) {
+                val response = ServerResponse("", 200, "", "")
+                withContext(Dispatchers.Main) {
+                    BranchLogger.d("DEBUG: Handling response on main thread")
+                    handleResponse(request, response)
+                }
             }
-            
-            // Handle response on Main thread
-            withContext(Dispatchers.Main) {
-                BranchLogger.d("DEBUG: Handling response on main thread")
-                handleResponse(request, response)
+            // Execute network call
+            else {
+                val branchKey = branch.prefHelper_.branchKey
+                BranchLogger.d("DEBUG: Executing network call with branch key: $branchKey")
+                val response = if (request.isGetRequest) {
+                    branch.branchRemoteInterface.make_restful_get(
+                        request.requestUrl,
+                        request.getParams,
+                        request.requestPath,
+                        branchKey
+                    )
+                } else {
+                    branch.branchRemoteInterface.make_restful_post(
+                        request.getPostWithInstrumentationValues(instrumentationExtraData),
+                        request.requestUrl,
+                        request.requestPath,
+                        branchKey
+                    )
+                }
+                // Handle response on Main thread
+                withContext(Dispatchers.Main) {
+                    BranchLogger.d("DEBUG: Handling response on main thread")
+                    handleResponse(request, response)
+                }
             }
             
         } catch (e: Exception) {
@@ -773,6 +784,8 @@ class BranchRequestQueue private constructor(private val context: Context) {
         val result = when (request) {
             is ServerRequestInitSession -> false
             is ServerRequestCreateUrl -> false
+            is QueueOperationLogout -> false
+            is QueueOperationSetIdentity -> false
             else -> true
         }
         BranchLogger.d("DEBUG: requestNeedsSession for ${request::class.simpleName} - result: $result")
