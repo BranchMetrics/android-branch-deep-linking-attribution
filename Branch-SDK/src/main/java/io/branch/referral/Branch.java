@@ -38,6 +38,7 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.util.Iterator;
@@ -2652,11 +2653,11 @@ public class Branch {
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
         if (classExists(billingGooglePlayClass)) {
-            String version = com.android.billingclient.BuildConfig.VERSION_NAME;
             BranchLogger.v("Version is " + version);
-            String majorVersion = DependencyUtilsKt.dependencyMajorVersionFinder(version);
+            String libraryVersion = DependencyUtilsKt.getBillingLibraryVersion();
+            String majorVersion = DependencyUtilsKt.dependencyMajorVersionFinder(libraryVersion);
 
-            if("6".equals(majorVersion) || "7".equals(majorVersion)) {
+            if ("6".equals(majorVersion) || "7".equals(majorVersion)) {
                 BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
                     if (succeeded) {
                         BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
@@ -2666,12 +2667,13 @@ public class Branch {
                     return null;
                 });
             }
-            else if("8".equals(majorVersion)){
+            else if ("8".equals(majorVersion)) {
                 // Call v8 here
             }
             else {
-                BranchLogger.e("Google Play Billing Client Version " + version + " is not supported.");
+                BranchLogger.e("Google Play Billing Client major version " + majorVersion + " is not supported.");
             }
+
         }
     }
 
