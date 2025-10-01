@@ -37,7 +37,7 @@ jobs:
 
       # --- Step 3: Build the Branch SDK AAR ---
       - name: Set up JDK for SDK build
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17' # Ensure this matches the SDK's build requirements
@@ -65,7 +65,7 @@ jobs:
 
       # --- Step 6: Build the BranchLinkSimulatorAndroid App using the local AAR ---
       - name: Set up JDK for App build
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17' # Ensure this matches the App's build requirements

@@ -1,4 +1,21 @@
 # Branch Android SDK change log
+- v5.20.3
+* _*Master Release*_ - Sep 24, 2025
+  - Add some additional debug logging.
+
+- v5.20.2
+* _*Master Release*_ - Sep 19, 2025
+  - Fixed bug where `identity` may not be set on some opens.
+
+- v5.20.1
+* _*Master Release*_ - Sep 8, 2025
+  - Fixed a state where a malformed URL could result in service errors and prevent sdk init. 
+
+- v5.20.0
+* _*Master Release*_ - Aug 5, 2025
+  - Fix race condition with setIdentity and logout, now happen in order of events enqueued.
+  - Expose `getInitState()` for callers to determine session status.
+
 - v5.19.0
 * _*Master Release*_ - Jun 23, 2025
   - Add method for manually removing intent lock for rare cases where onResume is not called or lock is placed after lifecycle callback.
