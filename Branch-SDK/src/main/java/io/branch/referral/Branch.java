@@ -1343,7 +1343,7 @@ public class Branch {
         }
     }
 
-    SESSION_STATE getInitState() {
+    public SESSION_STATE getInitState() {
         return initState_;
     }
 
