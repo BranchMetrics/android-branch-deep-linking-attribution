@@ -630,6 +630,36 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.initSessionButton).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Branch.sessionBuilder(MainActivity.this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+                        @Override
+                        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                            if (error != null) {
+                                Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                            } else {
+                                Log.d("BranchSDK_Tester", "branch init complete!");
+                                if (branchUniversalObject != null) {
+                                    Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                                    Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                                    Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                                }
+
+                                if (linkProperties != null) {
+                                    Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                                    Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                                }
+                            }
+                        }
+                    }).withData(MainActivity.this.getIntent().getData()).init();
+                } catch (Exception e) {
+                    Log.e("BranchSDK_Tester", e.getMessage());
+                }
+            }
+        });
+
         findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
