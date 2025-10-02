@@ -3,7 +3,7 @@ package io.branch.referral;
 import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
-import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVI
+import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
 import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 
@@ -1343,7 +1343,7 @@ public class Branch {
         }
     }
 
-    SESSION_STATE getInitState() {
+    public SESSION_STATE getInitState() {
         return initState_;
     }
 
