@@ -134,12 +134,6 @@
                 />
 
             <Button
-                android:id="@+id/initSessionButton"
-                style="@style/testbed_button_style"
-                android:drawableStart="@drawable/baseline_document_scanner_24"
-                android:text="Init Session" />
-
-            <Button
                 android:id="@+id/openInAppBrowser"
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/baseline_document_scanner_24"

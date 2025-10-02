@@ -46,7 +46,6 @@ class QueueOperationLogout(
             //On Logout clear the link cache and all pending requests
             Branch.getInstance().linkCache_.clear();
             Branch.getInstance().requestQueue_.clear();
-
         if (callback_ != null) {
             callback_!!.onLogoutFinished(true, null)
         }

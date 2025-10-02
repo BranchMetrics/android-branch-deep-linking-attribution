@@ -81,7 +81,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         // Enhanced session validation with fallback to legacy system
         val needsSession = requestNeedsSession(request)
         val canPerformOperations = Branch.getInstance().canPerformOperations()
-        val legacyInitialized = Branch.getInstance().initState_ is BranchSessionState.Initialized
+        val legacyInitialized = Branch.getInstance().initState == Branch.SESSION_STATE.INITIALISED
         val hasValidSession = try {
             Branch.getInstance().hasActiveSession() &&
             !Branch.getInstance().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
