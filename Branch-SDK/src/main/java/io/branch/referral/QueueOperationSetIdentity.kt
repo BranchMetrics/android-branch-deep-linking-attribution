@@ -1,0 +1,81 @@
+package io.branch.referral
+
+import android.content.Context
+import io.branch.referral.Branch.BranchReferralInitListener
+import io.branch.referral.BranchLogger.e
+import io.branch.referral.BranchLogger.v
+import io.branch.referral.Defines.RequestPath
+import org.json.JSONObject
+
+/**
+ * This class implements the setIdentity feature through the legacy queueing system.
+ * To maintain queue compatibility and reduce complexity, do not invoke network task as operation is
+ * completely client side.
+ */
+class QueueOperationSetIdentity(
+    var context_: Context,
+    requestPath: RequestPath?,
+    var userId_: String?,
+    var callback_: BranchReferralInitListener?
+) :
+    ServerRequest(context_, requestPath) {
+    override fun onPreExecute() {
+        //NO-OP
+    }
+
+    public override fun doFinalUpdateOnBackgroundThread() {
+        //NO-OP
+    }
+
+    public override fun doFinalUpdateOnMainThread() {
+        try {
+            v("doFinalUpdateOnMainThread $this")
+            if (userId_ != null) {
+                Branch.installDeveloperId = userId_
+                prefHelper_.identity = userId_
+                v("Identity is now set to: " + Branch.installDeveloperId)
+            }
+        } catch (e: Exception) {
+            e("Caught Exception: doFinalUpdateOnMainThread " + this + " " + e.message)
+        }
+    }
+
+    override fun handleErrors(context: Context): Boolean {
+        return false
+    }
+
+    override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
+        v("onRequestSucceeded $this")
+        if (callback_ != null) {
+            var latestReferringParams: JSONObject? = null
+            try {
+                latestReferringParams = branch.firstReferringParams
+            } catch (e: Exception) {
+                e("Caught exception " + this + " onRequestSucceeded: " + e.message)
+            }
+            callback_!!.onInitFinished(latestReferringParams, null)
+        }
+    }
+
+    override fun handleFailure(statusCode: Int, causeMsg: String) {
+        v("QueueOperationSetIdentity handleFailure $this")
+        if (callback_ != null) {
+            v("QueueOperationSetIdentity handleFailure $this")
+            val currentIdentity = prefHelper_.identity
+            val error = BranchError("Error in setIdentity method. Current identity value: $currentIdentity $causeMsg", -1)
+            callback_!!.onInitFinished(JSONObject(), error)
+        }
+    }
+
+    override fun isGetRequest(): Boolean {
+        return false
+    }
+
+    override fun clearCallbacks() {
+    }
+
+    // For backwards compat with deprecated disableTracking
+    override fun prepareExecuteWithoutTracking(): Boolean {
+        return true
+    }
+}

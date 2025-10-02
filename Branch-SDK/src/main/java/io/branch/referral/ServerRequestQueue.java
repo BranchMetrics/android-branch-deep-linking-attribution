@@ -228,7 +228,7 @@ public class ServerRequestQueue {
         synchronized (reqQueueLockObject) {
             try {
                 BranchLogger.v("Queue operation remove. Request: " + request);
-                isRemoved = queue.remove(request);
+                isRemoved = queue.remove(request) || !queue.contains(request);;
                 BranchLogger.v("Queue operation remove. Removed: " + isRemoved);
             } catch (UnsupportedOperationException e) {
                 BranchLogger.e("Caught UnsupportedOperationException " + e.getMessage());
