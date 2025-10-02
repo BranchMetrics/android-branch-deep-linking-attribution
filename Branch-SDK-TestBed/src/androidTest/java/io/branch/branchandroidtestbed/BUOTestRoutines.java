@@ -116,13 +116,35 @@ public class BUOTestRoutines {
             if (isLinkTestPassed) {
                 isLinkTestPassed = checkIfIdenticalJson(BranchUniversalObject.createInstance(linkdata).convertToJson(), linkdata.optJSONObject("data"), true);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return isLinkTestPassed;
-
+    }
+    
+    private static JSONObject fetchURLContent(String url, String branchKey) {
+        HttpsURLConnection connection = null;
+        JSONObject respObject = new JSONObject();
+        try {
+            URL urlObject = new URL("https://api.branch.io/v1/url?url=" + url + "&" + "branch_key=" + branchKey);
+            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection.setConnectTimeout(1500);
+            connection.setReadTimeout(1500);
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                if (connection.getInputStream() != null) {
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    respObject = new JSONObject(rd.readLine());
+                }
+            }
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        return respObject;
     }
 
     private static boolean checkIfIdenticalJson(JSONObject obj1, JSONObject obj2, boolean expectBranchExtras) {
@@ -169,6 +191,7 @@ public class BUOTestRoutines {
 
         return isIdentical;
     }
+
 
     private static JSONObject getURLContent(String url, String branchKey) {
         HttpsURLConnection connection = null;
@@ -228,5 +251,4 @@ public class BUOTestRoutines {
         }
         return respObject;
     }
-
 }

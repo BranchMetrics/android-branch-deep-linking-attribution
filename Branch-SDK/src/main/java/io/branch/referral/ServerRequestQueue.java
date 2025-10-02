@@ -384,41 +384,6 @@ public class ServerRequestQueue {
         }
     }
 
-    private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
-        BranchLogger.v("executeTimedBranchPostTask " + req);
-        if(req instanceof ServerRequestInitSession){
-            BranchLogger.v("callback to be returned " + ((ServerRequestInitSession) req).callback_);
-        }
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        final BranchPostTask postTask = new BranchPostTask(req, latch);
-
-        postTask.executeTask();
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            new Thread(new Runnable() {
-                @Override public void run() {
-                    awaitTimedBranchPostTask(latch, timeout, postTask);
-                }
-            }).start();
-        } else {
-            awaitTimedBranchPostTask(latch, timeout, postTask);
-        }
-    }
-
-    private void awaitTimedBranchPostTask(CountDownLatch latch, int timeout, BranchPostTask postTask) {
-        try {
-            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", "Thread task timed out. Timeout: " + timeout));
-            }
-        } catch (InterruptedException e) {
-            BranchLogger.e("Caught InterruptedException " + e.getMessage());
-            postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", e.getMessage()));
-        }
-    }
-
-
     /**
      * Handles execution of a new request other than open or install.
      * Checks for the session initialisation and adds a install/Open request in front of this request
@@ -448,8 +413,6 @@ public class ServerRequestQueue {
 
         this.enqueue(req);
         req.onRequestQueued();
-
-        // Modern queue processes automatically after enqueue - no manual trigger needed
     }
 
     // If there is 1 (currently being removed) or 0 init requests in the queue, clear the init data

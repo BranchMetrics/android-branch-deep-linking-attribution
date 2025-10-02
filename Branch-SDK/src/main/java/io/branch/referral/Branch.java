@@ -236,7 +236,6 @@ public class Branch {
     private CustomTabsIntent customTabsIntentOverride;
 
     // Replace SESSION_STATE enum with SessionState
-    // Legacy session state lock - kept for backward compatibility
     private final Object sessionStateLock = new Object();
 
     /* Holds the current intent state. Default is set to PENDING. */

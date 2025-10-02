@@ -116,38 +116,73 @@ class UniversalResourceAnalyser {
     
     void checkAndUpdateSkipURLFormats(Context context) {
         try {
-            BranchLogger.d("MODERNIZATION_TRACE: UniversalResourceAnalyser using CompletableFuture pattern");
-            CompletableFuture.supplyAsync(() -> {
-                BranchLogger.d("MODERNIZATION_TRACE: Executing URL skip list update in CompletableFuture");
-                return updateUrlSkipList(context);
-            }, executor).whenComplete((result, throwable) -> {
-                if (throwable != null) {
-                    BranchLogger.w("Failed to update URL skip list: " + throwable.getMessage());
-                } else if (result != null && result.length() > 0) {
-                    try {
-                        PrefHelper prefHelper = PrefHelper.getInstance(context);
-                        int currentVersion = skipURLFormats.optInt(VERSION_KEY, 0);
-                        int newVersion = result.optInt(VERSION_KEY, 0);
-                        
-                        if (newVersion > currentVersion) {
-                            skipURLFormats = result;
-                            prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());
-                            BranchLogger.d("MODERNIZATION_TRACE: Updated URL skip list to version " + newVersion + " via CompletableFuture");
-                        } else {
-                            BranchLogger.d("MODERNIZATION_TRACE: URL skip list is already up to date (version " + currentVersion + ")");
-                        }
-                    } catch (Exception e) {
-                        BranchLogger.w("Error processing URL skip list update: " + e.getMessage());
-                    }
-                } else {
-                    BranchLogger.d("No URL skip list update available");
-                }
-            }).exceptionally(throwable -> {
-                BranchLogger.w("URL skip list update failed with exception: " + throwable.getMessage());
-                return null;
-            });
+            //TODO: This needs min api 24
+//            BranchLogger.d("MODERNIZATION_TRACE: UniversalResourceAnalyser using CompletableFuture pattern");
+//            CompletableFuture.supplyAsync(() -> {
+//                BranchLogger.d("MODERNIZATION_TRACE: Executing URL skip list update in CompletableFuture");
+//                return updateUrlSkipList(context);
+//            }, executor).whenComplete((result, throwable) -> {
+//                if (throwable != null) {
+//                    BranchLogger.w("Failed to update URL skip list: " + throwable.getMessage());
+//                } else if (result != null && result.length() > 0) {
+//                    try {
+//                        PrefHelper prefHelper = PrefHelper.getInstance(context);
+//                        int currentVersion = skipURLFormats.optInt(VERSION_KEY, 0);
+//                        int newVersion = result.optInt(VERSION_KEY, 0);
+//
+//                        if (newVersion > currentVersion) {
+//                            skipURLFormats = result;
+//                            prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());
+//                            BranchLogger.d("MODERNIZATION_TRACE: Updated URL skip list to version " + newVersion + " via CompletableFuture");
+//                        } else {
+//                            BranchLogger.d("MODERNIZATION_TRACE: URL skip list is already up to date (version " + currentVersion + ")");
+//                        }
+//                    } catch (Exception e) {
+//                        BranchLogger.w("Error processing URL skip list update: " + e.getMessage());
+//                    }
+//                } else {
+//                    BranchLogger.d("No URL skip list update available");
+//                }
+//            }).exceptionally(throwable -> {
+//                BranchLogger.w("URL skip list update failed with exception: " + throwable.getMessage());
+//                return null;
+//            });
+            // Direct network call instead of AsyncTask for thread safety
+            updateSkipURLFormatsDirectly(context);
         } catch (Exception e) {
             BranchLogger.w("Failed to initiate URL skip list update: " + e.getMessage());
+        }
+    }
+    
+    private void updateSkipURLFormatsDirectly(Context context) {
+        PrefHelper prefHelper = PrefHelper.getInstance(context);
+        TrafficStats.setThreadStatsTag(0);
+        JSONObject respObject = new JSONObject();
+        HttpsURLConnection connection = null;
+        try {
+            String update_url_path = UPDATE_URL_PATH.replace("%", PrefHelper.getCDNBaseUrl());
+            URL urlObject = new URL(update_url_path.replace("#", Integer.toString(skipURLFormats.optInt(VERSION_KEY) + 1)));
+            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection.setConnectTimeout(1500);
+            connection.setReadTimeout(1500);
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                if (connection.getInputStream() != null) {
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    respObject = new JSONObject(rd.readLine());
+                }
+            }
+            
+            if (respObject.optInt(VERSION_KEY) > skipURLFormats.optInt(VERSION_KEY)) {
+                skipURLFormats = respObject;
+                prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());
+            }
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
     }
     
@@ -188,7 +223,7 @@ class UniversalResourceAnalyser {
         }
         return strippedURL;
     }
-    
+
     private JSONObject updateUrlSkipList(Context context) {
         TrafficStats.setThreadStatsTag(0);
         JSONObject respObject = new JSONObject();
@@ -259,5 +294,4 @@ class UniversalResourceAnalyser {
         }
         return respObject;
     }
-    
 }
