@@ -239,6 +239,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         val result = when (request) {
             is ServerRequestInitSession -> false
             is ServerRequestCreateUrl -> false
+            is QueueOperationLogout -> false
+            is QueueOperationSetIdentity -> false
             else -> true
         }
         BranchLogger.d("DEBUG: BranchRequestQueueAdapter.requestNeedsSession for ${request::class.simpleName} - result: $result")

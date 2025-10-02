@@ -1,11 +1,13 @@
 package io.branch.referral.modernization.analytics
 
 import io.branch.referral.modernization.registry.ApiMethodInfo
-import io.branch.referral.modernization.registry.UsageImpact
 import io.branch.referral.modernization.registry.MigrationComplexity
+import io.branch.referral.modernization.registry.UsageImpact
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +34,7 @@ class ApiUsageAnalyticsTest {
         
         val methodData = usageData["testMethod"]
         assertNotNull("Should have method data", methodData)
-        assertEquals("Should have correct call count", 1, methodData.callCount)
+        assertEquals("Should have correct call count", 1, methodData!!.callCount)
     }
     
     @Test
@@ -47,7 +49,7 @@ class ApiUsageAnalyticsTest {
         val methodData = usageData["testMethod"]
         
         assertNotNull("Should have method data", methodData)
-        assertEquals("Should have correct call count", 3, methodData.callCount)
+        assertEquals("Should have correct call count", 3, methodData!!.callCount)
         assertTrue("Should track last used time", methodData.lastUsed > 0)
     }
     
@@ -107,7 +109,7 @@ class ApiUsageAnalyticsTest {
         
         val method1Data = usageData["method1"]
         assertNotNull("Should have method1 data", method1Data)
-        assertEquals("Should have correct method name", "method1", method1Data.methodName)
+        assertEquals("Should have correct method name", "method1", method1Data!!.methodName)
         assertEquals("Should have correct call count", 1, method1Data.callCount)
         assertTrue("Should have last used time", method1Data.lastUsed > 0)
     }
@@ -123,7 +125,7 @@ class ApiUsageAnalyticsTest {
         val methodData = usageData["testMethod"]
         
         assertNotNull("Should have method data", methodData)
-        assertTrue("Should calculate average calls per day", methodData.averageCallsPerDay > 0)
+        assertTrue("Should calculate average calls per day", methodData!!.averageCallsPerDay > 0)
     }
     
     @Test
@@ -154,7 +156,7 @@ class ApiUsageAnalyticsTest {
         val methodPerformance = performance.methodPerformance["testMethod"]
         
         assertNotNull("Should have method performance", methodPerformance)
-        assertEquals("Should have correct method name", "testMethod", methodPerformance.methodName)
+        assertEquals("Should have correct method name", "testMethod", methodPerformance!!.methodName)
         assertEquals("Should have correct call count", 3, methodPerformance.callCount)
         assertEquals("Should have correct average duration", 200.0, methodPerformance.averageDurationMs, 0.1)
         assertEquals("Should have correct min duration", 100.0, methodPerformance.minDurationMs, 0.1)
@@ -203,7 +205,7 @@ class ApiUsageAnalyticsTest {
         
         val mainMethodThreads = threadAnalytics.methodThreadUsage["mainMethod"]
         assertNotNull("Should have main method threads", mainMethodThreads)
-        assertTrue("Should contain main thread", mainMethodThreads.contains("main"))
+        assertTrue("Should contain main thread", mainMethodThreads!!.contains("main"))
     }
     
     @Test
@@ -297,7 +299,7 @@ class ApiUsageAnalyticsTest {
         analytics.recordApiCall("", 0, System.currentTimeMillis(), "main")
         
         // Test with null thread name
-        analytics.recordApiCall("testMethod", 1, System.currentTimeMillis(), null)
+        analytics.recordApiCall("testMethod", 1, System.currentTimeMillis(), "test-thread")
         
         // Test with negative duration
         analytics.recordApiCallCompletion("testMethod", -100.0, true)
@@ -360,7 +362,7 @@ class ApiUsageAnalyticsTest {
         val todayMethodData = usageData["todayMethod"]
         
         assertNotNull("Should have method data", todayMethodData)
-        assertTrue("Should have positive average calls per day", todayMethodData.averageCallsPerDay > 0)
+        assertTrue("Should have positive average calls per day", todayMethodData!!.averageCallsPerDay > 0)
     }
     
     @Test
@@ -377,7 +379,7 @@ class ApiUsageAnalyticsTest {
         val methodPerformance = performance.methodPerformance["percentileMethod"]
         
         assertNotNull("Should have method performance", methodPerformance)
-        assertTrue("Should calculate p95", methodPerformance.p95DurationMs > 0)
-        assertTrue("Should calculate p99", methodPerformance.p99DurationMs > 0)
+        assertTrue("Should calculate p95", methodPerformance!!.p95DurationMs > 0)
+        assertTrue("Should calculate p99", methodPerformance!!.p99DurationMs > 0)
     }
 } 

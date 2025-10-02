@@ -243,7 +243,7 @@ public class ServerRequestQueue {
     void clear() {
         synchronized (reqQueueLockObject) {
             try {
-                BranchLogger.v("Queue operation clear");
+                BranchLogger.v("Queue operation clear: " + queue);
                 queue.clear();
                 BranchLogger.v("Queue cleared.");
             } catch (UnsupportedOperationException e) {
@@ -378,41 +378,6 @@ public class ServerRequestQueue {
         }
     }
 
-    private void executeTimedBranchPostTask(final ServerRequest req, final int timeout) {
-        BranchLogger.v("executeTimedBranchPostTask " + req);
-        if(req instanceof ServerRequestInitSession){
-            BranchLogger.v("callback to be returned " + ((ServerRequestInitSession) req).callback_);
-        }
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        final BranchPostTask postTask = new BranchPostTask(req, latch);
-
-        postTask.executeTask();
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            new Thread(new Runnable() {
-                @Override public void run() {
-                    awaitTimedBranchPostTask(latch, timeout, postTask);
-                }
-            }).start();
-        } else {
-            awaitTimedBranchPostTask(latch, timeout, postTask);
-        }
-    }
-
-    private void awaitTimedBranchPostTask(CountDownLatch latch, int timeout, BranchPostTask postTask) {
-        try {
-            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                postTask.cancel(true);
-                postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", "Thread task timed out. Timeout: " + timeout));
-            }
-        } catch (InterruptedException e) {
-            BranchLogger.e("Caught InterruptedException " + e.getMessage());
-            postTask.cancel(true);
-            postTask.onPostExecuteInner(new ServerResponse(postTask.thisReq_.getRequestPath(), ERR_BRANCH_TASK_TIMEOUT, "", e.getMessage()));
-        }
-    }
-
-
     /**
      * Handles execution of a new request other than open or install.
      * Checks for the session initialisation and adds a install/Open request in front of this request
@@ -439,8 +404,6 @@ public class ServerRequestQueue {
 
         this.enqueue(req);
         req.onRequestQueued();
-
-        // Modern queue processes automatically after enqueue - no manual trigger needed
     }
 
     // If there is 1 (currently being removed) or 0 init requests in the queue, clear the init data
@@ -513,7 +476,32 @@ public class ServerRequestQueue {
         }
 
         void onPostExecuteInner(ServerResponse serverResponse) {
-            BranchLogger.v("onPostExecuteInner " + this + " " + serverResponse);
+            try {
+                // For the time being, execute the callback only for init requests
+                BranchLogger.v("onPostExecuteInner " + thisReq_);
+                if (Branch.getCallbackForTracingRequests() != null && (thisReq_ instanceof ServerRequestInitSession)) {
+                    String uri = "";
+
+                    if(thisReq_.getPost().has(Defines.Jsonkey.External_Intent_URI.getKey())){
+                        uri = thisReq_.getPost().getString(Defines.Jsonkey.External_Intent_URI.getKey());
+                    }
+
+                    JSONObject requestJson = thisReq_.getPost();
+                    JSONObject requestResponse = serverResponse.getObject();
+
+                    String error = "";
+
+                    if (serverResponse.getStatusCode() != 200) {
+                        error = (new BranchError(serverResponse.getMessage(), serverResponse.getStatusCode())).toString();
+                    }
+
+                    Branch.getCallbackForTracingRequests().onRequestCompleted(uri, requestJson, requestResponse, error, thisReq_.getRequestUrl());
+                }
+            }
+            catch (Exception exception){
+                BranchLogger.e("Failed to invoke tracing request callback:" + exception.getMessage());
+            }
+
             if (latch_ != null) {
                 latch_.countDown();
             }
@@ -573,8 +561,25 @@ public class ServerRequestQueue {
                                 updateRequestsInQueue = true;
                             }
                         }
+                        //TODO: This field is present when the service encounters a pre-release version in production
+                        // Set as rbt
+                        else if(respJson.has("identity_id")){
+                            String new_Randomized_Bundle_Token = respJson.getString("identity_id");
+                            if (!Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(new_Randomized_Bundle_Token)) {
+                                //On setting a new Randomized Bundle Token clear the link cache
+                                Branch.getInstance().linkCache_.clear();
+                                Branch.getInstance().prefHelper_.setRandomizedBundleToken(new_Randomized_Bundle_Token);
+                                updateRequestsInQueue = true;
+                            }
+                        }
                         if (respJson.has(Defines.Jsonkey.RandomizedDeviceToken.getKey())) {
                             Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.getKey()));
+                            updateRequestsInQueue = true;
+                        }
+                        //TODO: This field is present when the service encounters a pre-release version in production
+                        // Set as rdt
+                        else if(respJson.has("device_fingerprint_id")){
+                            Branch.getInstance().prefHelper_.setRandomizedDeviceToken(respJson.getString("device_fingerprint_id"));
                             updateRequestsInQueue = true;
                         }
                         if (updateRequestsInQueue) {
