@@ -395,7 +395,7 @@ public class ServerRequestQueue {
             return;
         }
         //If not initialised put an open or install request in front of this request(only if this needs session)
-        if (Branch.getInstance().initState_ != Branch.SESSION_STATE.INITIALISED && !(req instanceof ServerRequestInitSession)) {
+        if (!(Branch.getInstance().getInitState() instanceof BranchSessionState.Initialized) && !(req instanceof ServerRequestInitSession)) {
             if (requestNeedsSession(req)) {
                 BranchLogger.d("handleNewRequest " + req + " needs a session");
                 req.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
