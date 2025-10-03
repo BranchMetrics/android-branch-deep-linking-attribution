@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 import android.webkit.URLUtil;
 
 import androidx.annotation.NonNull;
@@ -54,7 +53,7 @@ public class PrefHelper {
      * Number of times to reattempt connection to the Branch server before giving up and throwing an
      * exception.
      */
-    private static final int MAX_RETRIES = 3; // Default retry count is 3
+    static final int MAX_RETRIES = 3; // Default retry count is 3
 
     static final int TIMEOUT = 5500; // Default timeout is 5.5 sec
     static final int CONNECT_TIMEOUT = 10000; // Default timeout is 10 seconds
@@ -124,7 +123,6 @@ public class PrefHelper {
     static final String KEY_INSTALL_BEGIN_SERVER_TS = "bnc_install_begin_server_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
     static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
-    static final String KEY_DELAYED_SESSION_INIT_USED = "bnc_delayed_session_init_used";
     static final String KEY_BRANCH_KEY_SOURCE = "bnc_branch_key_source";
 
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
@@ -554,6 +552,7 @@ public class PrefHelper {
      *                 within preferences.
      */
     public void setIdentity(String identity) {
+        BranchLogger.v("[Storage] setIdentity: " + identity);
         setString(KEY_IDENTITY, identity);
     }
     
@@ -680,6 +679,7 @@ public class PrefHelper {
      *                   link.
      */
     public void setLinkClickIdentifier(String identifier) {
+        BranchLogger.v("setLinkClickIdentifier: " + identifier);
         setString(KEY_LINK_CLICK_IDENTIFIER, identifier);
     }
     
@@ -1340,6 +1340,7 @@ public class PrefHelper {
      * Should be called before setting a new Branch-Key. </p>
      */
     private void clearPrefOnBranchKeyChange() {
+        BranchLogger.v("clearPrefOnBranchKeyChange");
         // If stored key isn't the same as the current key, we need to clean up
         // Note: Link Click Identifier is not cleared because of the potential for that to mess up a deep link
         String linkClickID = getLinkClickID();
@@ -1513,30 +1514,6 @@ public class PrefHelper {
         return getLong(KEY_URL_LOAD_MS);
     }
 
-    /**
-     * Sets whether delayed session initialization was used.
-     * This flag is used to track if the app has used delayed session initialization,
-     * which is important for analytics and debugging purposes.
-     * The value is stored in SharedPreferences and can be retrieved using {@link #getDelayedSessionInitUsed()}.
-     *
-     * @param used Boolean indicating if delayed session initialization was used
-     * @see Branch#expectDelayedSessionInitialization(boolean)
-     */
-    public void setDelayedSessionInitUsed(boolean used) {
-        setBool(KEY_DELAYED_SESSION_INIT_USED, used);
-    }
-
-    /**
-     * Gets whether delayed session initialization was used.
-     * This can be used to check if the app has previously used delayed session initialization.
-     * The value is retrieved from SharedPreferences and is set using {@link #setDelayedSessionInitUsed(boolean)}.
-     *
-     * @return Boolean indicating if delayed session initialization was used
-     * @see Branch#expectDelayedSessionInitialization(boolean)
-     */
-    public boolean getDelayedSessionInitUsed() {
-        return getBool(KEY_DELAYED_SESSION_INIT_USED);
-    }
 
     /**
      * Sets the source of the Branch key configuration.

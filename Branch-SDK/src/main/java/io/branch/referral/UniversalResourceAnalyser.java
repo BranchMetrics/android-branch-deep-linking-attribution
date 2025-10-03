@@ -14,6 +14,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,6 +40,12 @@ class UniversalResourceAnalyser {
     private static final String UPDATE_URL_PATH = "%sdk/uriskiplist_v#.json";
     
     private final JSONObject DEFAULT_SKIP_URL_LIST;
+    
+    private static final ExecutorService executor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "URLAnalyzer-Worker");
+        t.setDaemon(true);
+        return t;
+    });
 
     private static UniversalResourceAnalyser instance;
     
@@ -107,9 +116,73 @@ class UniversalResourceAnalyser {
     
     void checkAndUpdateSkipURLFormats(Context context) {
         try {
-            new UrlSkipListUpdateTask(context).executeTask();
+            //TODO: This needs min api 24
+//            BranchLogger.d("MODERNIZATION_TRACE: UniversalResourceAnalyser using CompletableFuture pattern");
+//            CompletableFuture.supplyAsync(() -> {
+//                BranchLogger.d("MODERNIZATION_TRACE: Executing URL skip list update in CompletableFuture");
+//                return updateUrlSkipList(context);
+//            }, executor).whenComplete((result, throwable) -> {
+//                if (throwable != null) {
+//                    BranchLogger.w("Failed to update URL skip list: " + throwable.getMessage());
+//                } else if (result != null && result.length() > 0) {
+//                    try {
+//                        PrefHelper prefHelper = PrefHelper.getInstance(context);
+//                        int currentVersion = skipURLFormats.optInt(VERSION_KEY, 0);
+//                        int newVersion = result.optInt(VERSION_KEY, 0);
+//
+//                        if (newVersion > currentVersion) {
+//                            skipURLFormats = result;
+//                            prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());
+//                            BranchLogger.d("MODERNIZATION_TRACE: Updated URL skip list to version " + newVersion + " via CompletableFuture");
+//                        } else {
+//                            BranchLogger.d("MODERNIZATION_TRACE: URL skip list is already up to date (version " + currentVersion + ")");
+//                        }
+//                    } catch (Exception e) {
+//                        BranchLogger.w("Error processing URL skip list update: " + e.getMessage());
+//                    }
+//                } else {
+//                    BranchLogger.d("No URL skip list update available");
+//                }
+//            }).exceptionally(throwable -> {
+//                BranchLogger.w("URL skip list update failed with exception: " + throwable.getMessage());
+//                return null;
+//            });
+            // Direct network call instead of AsyncTask for thread safety
+            updateSkipURLFormatsDirectly(context);
+        } catch (Exception e) {
+            BranchLogger.w("Failed to initiate URL skip list update: " + e.getMessage());
+        }
+    }
+    
+    private void updateSkipURLFormatsDirectly(Context context) {
+        PrefHelper prefHelper = PrefHelper.getInstance(context);
+        TrafficStats.setThreadStatsTag(0);
+        JSONObject respObject = new JSONObject();
+        HttpsURLConnection connection = null;
+        try {
+            String update_url_path = UPDATE_URL_PATH.replace("%", PrefHelper.getCDNBaseUrl());
+            URL urlObject = new URL(update_url_path.replace("#", Integer.toString(skipURLFormats.optInt(VERSION_KEY) + 1)));
+            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection.setConnectTimeout(1500);
+            connection.setReadTimeout(1500);
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                if (connection.getInputStream() != null) {
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    respObject = new JSONObject(rd.readLine());
+                }
+            }
+            
+            if (respObject.optInt(VERSION_KEY) > skipURLFormats.optInt(VERSION_KEY)) {
+                skipURLFormats = respObject;
+                prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());
+            }
         } catch (Exception e) {
             BranchLogger.d(e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
     }
     
@@ -150,51 +223,75 @@ class UniversalResourceAnalyser {
         }
         return strippedURL;
     }
-    
-    private static class UrlSkipListUpdateTask extends BranchAsyncTask<Void, Void, JSONObject> {
-        private final PrefHelper prefHelper;
-        private final int TIME_OUT = 1500;
+
+    private JSONObject updateUrlSkipList(Context context) {
+        TrafficStats.setThreadStatsTag(0);
+        JSONObject respObject = new JSONObject();
+        HttpsURLConnection connection = null;
+        final int TIME_OUT = 1500;
         
-        private UrlSkipListUpdateTask(Context context) {
-            this.prefHelper = PrefHelper.getInstance(context);
-        }
-        
-        @Override
-        protected JSONObject doInBackground(Void... params) {
-            TrafficStats.setThreadStatsTag(0);
-            JSONObject respObject = new JSONObject();
-            HttpsURLConnection connection = null;
-            try {
-                String update_url_path = UPDATE_URL_PATH.replace("%", PrefHelper.getCDNBaseUrl());
-                URL urlObject = new URL(update_url_path.replace("#", Integer.toString(skipURLFormats.optInt(VERSION_KEY) + 1)));
-                connection = (HttpsURLConnection) urlObject.openConnection();
-                connection.setConnectTimeout(TIME_OUT);
-                connection.setReadTimeout(TIME_OUT);
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    if (connection.getInputStream() != null) {
-                        BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                        respObject = new JSONObject(rd.readLine());
+        try {
+            String cdnBaseUrl = PrefHelper.getCDNBaseUrl();
+            if (cdnBaseUrl == null || cdnBaseUrl.isEmpty()) {
+                BranchLogger.w("CDN base URL is not available");
+                return respObject;
+            }
+            
+            String update_url_path = UPDATE_URL_PATH.replace("%", cdnBaseUrl);
+            int nextVersion = skipURLFormats.optInt(VERSION_KEY, 0) + 1;
+            String finalUrl = update_url_path.replace("#", Integer.toString(nextVersion));
+            
+            BranchLogger.d("Checking for URL skip list update at: " + finalUrl);
+            
+            URL urlObject = new URL(finalUrl);
+            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(TIME_OUT);
+            connection.setReadTimeout(TIME_OUT);
+            connection.setUseCaches(true);
+            connection.setDefaultUseCaches(true);
+            
+            int responseCode = connection.getResponseCode();
+            BranchLogger.d("URL skip list update response code: " + responseCode);
+            
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                if (connection.getInputStream() != null) {
+                    try (BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = rd.readLine()) != null) {
+                            response.append(line);
+                        }
+                        if (response.length() > 0) {
+                            respObject = new JSONObject(response.toString());
+                            BranchLogger.d("Successfully parsed URL skip list update");
+                        }
                     }
                 }
-            } catch (Exception e) {
-                BranchLogger.d(e.getMessage());
-            } finally {
-                if (connection != null) {
+            } else if (responseCode == HttpsURLConnection.HTTP_NOT_FOUND) {
+                BranchLogger.d("No newer URL skip list version available");
+            } else {
+                BranchLogger.w("URL skip list update failed with response code: " + responseCode);
+            }
+        } catch (java.net.MalformedURLException e) {
+            BranchLogger.w("Invalid URL for skip list update: " + e.getMessage());
+        } catch (java.net.SocketTimeoutException e) {
+            BranchLogger.w("URL skip list update timed out: " + e.getMessage());
+        } catch (java.io.IOException e) {
+            BranchLogger.w("Network error during URL skip list update: " + e.getMessage());
+        } catch (org.json.JSONException e) {
+            BranchLogger.w("Invalid JSON in URL skip list response: " + e.getMessage());
+        } catch (Exception e) {
+            BranchLogger.w("Unexpected error during URL skip list update: " + e.getMessage());
+        } finally {
+            if (connection != null) {
+                try {
                     connection.disconnect();
+                } catch (Exception e) {
+                    BranchLogger.d("Error disconnecting HTTP connection: " + e.getMessage());
                 }
             }
-            return respObject;
         }
-        
-        @Override
-        protected void onPostExecute(JSONObject updatedURLFormatsObj) {
-            super.onPostExecute(updatedURLFormatsObj);
-            if (updatedURLFormatsObj.optInt(VERSION_KEY) > skipURLFormats.optInt(VERSION_KEY)) {
-                skipURLFormats = updatedURLFormatsObj;
-                prefHelper.setString(SKIP_URL_FORMATS_KEY, skipURLFormats.toString());
-            }
-        }
+        return respObject;
     }
-    
 }
