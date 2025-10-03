@@ -2,7 +2,7 @@
 - v6.0.0-alpha.1
 * _*Alpha Release*_ - Oct 3, 2025
  - Removal of `expectDelayedSessionInitialization(Boolean)` flag
-  - SDK will no longer automatically initialize, you must call SessionBuilder.init() in onStart() and onNewIntent() as per public documentation steps: https://help.branch.io/developers-hub/docs/android-basic-integration
+    - SDK will no longer automatically initialize, you must call SessionBuilder.init() in onStart() and onNewIntent() as per public documentation steps: https://help.branch.io/developers-hub/docs/android-basic-integration
  - Internal improvements to event processing architecture
  - Introduction of experimental session state listener
         ```
