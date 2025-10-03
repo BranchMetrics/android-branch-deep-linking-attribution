@@ -1,4 +1,20 @@
 # Branch Android SDK change log
+- v6.0.0-alpha.1
+* _*Alpha Release*_ - Oct 3, 2025
+ - Removal of `expectDelayedSessionInitialization(Boolean)` flag
+    - SDK will no longer automatically initialize, you must call SessionBuilder.init() in onStart() and onNewIntent() as per public documentation steps: https://help.branch.io/developers-hub/docs/android-basic-integration
+ - Internal improvements to event processing architecture
+ - Introduction of experimental session state listener
+        ```
+        Branch.getInstance().addSessionStateObserver(
+          new SimpleBranchSessionStateListener() {
+            @Override
+            public void onStateChanged(@NotNull BranchSessionState state) {
+              
+            }
+        });
+        ```
+
 - v5.20.3
 * _*Master Release*_ - Sep 24, 2025
   - Add some additional debug logging.
