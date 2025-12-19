@@ -38,9 +38,11 @@ dependencies {
     compileOnly("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
     // Xiaomi install referrer
     compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
+    //implementation(project(":BranchGooglePlayBillingV8"))
+
+    compileOnly("com.android.billingclient:billing:6.0.1")
 
     // Google Play Billing library
-    compileOnly("com.android.billingclient:billing:6.0.1")
 
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")

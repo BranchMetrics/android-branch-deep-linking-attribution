@@ -2,6 +2,7 @@ package io.branch.referral
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.billingclient.api.Purchase
+import com.example.branchgoogleplaybillingv8.BillingV8
 import io.branch.referral.util.CurrencyType
 
 import org.junit.Assert
@@ -25,7 +26,7 @@ class BillingGooglePlayTests : BranchTest() {
             "XDFlSNC9Gqs+PPmO3xOFdLMaQ4FbsBEpTxBuOd+6adEEcz5Uovlgep+F5Xbr08+x/xzCEyNzybDYDcNg/PTzwfoK6Aeq44mocW4CPA1w/r1rdmgtwBD8nAdWIr3BbwXmcl6LYEGA6dL0N+/3zzjNzK/VWdqXazSdRyXxtlHnx8wsBFdPCBs1e9LtEwUcganA6ot0ttO2ySCKYNne2pEm2ScU+uuWZqZJ00VM7KH9pT+SKOOlSs6rRuFEvbGsoPUdybZQ0WoiXg6JD2hz9/35mQJF4Lkjh2kVgTh5MV4sCNnbMuUmhX/d09+pK2Fw6xiUng3FClOetFV9MaTtsmbz/g=="
         val mockPurchase = Purchase(purchaseJsonString, purchaseSignature)
 
-        BillingGooglePlay.getInstance().createAndLogEventForPurchase(testContext, mockPurchase, listOf(), CurrencyType.USD, 99.99, "IAP")
+        BillingV8.getInstance().createAndLogEventForPurchase(testContext, mockPurchase, listOf(), CurrencyType.USD, 99.99, "IAP")
 
         val queue = ServerRequestQueue.getInstance(testContext)
         val eventRequest = queue.peekAt(0)

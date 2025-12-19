@@ -1,58 +1,67 @@
-package io.branch.referral
+package com.example.branchgoogleplaybillingv8
 
 import android.content.Context
-import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
+import com.android.billingclient.api.ProductDetails
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryProductDetailsResult
 import io.branch.indexing.BranchUniversalObject
-import io.branch.referral.util.*
+import io.branch.interfaces.GooglePlayBillingWrapper
+import io.branch.referral.Branch
+import io.branch.referral.BranchLogger
+import io.branch.referral.util.BRANCH_STANDARD_EVENT
+import io.branch.referral.util.BranchContentSchema
+import io.branch.referral.util.BranchEvent
+import io.branch.referral.util.ContentMetadata
+import io.branch.referral.util.CurrencyType
 import java.math.BigDecimal
 
-class BillingGooglePlay private constructor() {
+class BillingV8Implementation : GooglePlayBillingWrapper {
 
     lateinit var billingClient: BillingClient
 
-    companion object {
-        @Volatile
-        private lateinit var instance: BillingGooglePlay
-
-        fun getInstance(): BillingGooglePlay {
-            synchronized(this) {
-                if (!::instance.isInitialized) {
-                    instance = BillingGooglePlay()
-
-                    instance.billingClient =
-                        BillingClient.newBuilder(Branch.getInstance().applicationContext)
-                            .setListener(instance.purchasesUpdatedListener)
-                            .enablePendingPurchases()
-                            .build()
-                }
-                return instance
-            }
+    override fun connect() {
+        if (!::billingClient.isInitialized) {
+            billingClient = BillingClient.newBuilder(Branch.getInstance().applicationContext)
+                .setListener(purchasesUpdatedListener)
+                .enablePendingPurchases(
+                    PendingPurchasesParams.newBuilder()
+                        .enableOneTimeProducts()
+                        .build()
+                )
+                .build()
         }
-    }
-
-    fun startBillingClient(callback: (Boolean) -> Unit) {
         if (billingClient.isReady) {
-            BranchLogger.v("Billing Client has already been started..")
-            callback(true)
+            BranchLogger.v("Billing Client already ready.")
         } else {
             billingClient.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(billingResult: BillingResult) {
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                         BranchLogger.v("Billing Client setup finished.")
-                        callback(true)
                     } else {
                         val errorMessage =
                             "Billing Client setup failed with error: ${billingResult.debugMessage}"
                         BranchLogger.e(errorMessage)
-                        callback(false)
                     }
                 }
 
                 override fun onBillingServiceDisconnected() {
                     BranchLogger.w("Billing Client disconnected")
-                    callback(false)
                 }
             })
+        }
+    }
+
+    override fun logEventWithPurchase(context: Context, purchase: Any) {
+        if (purchase is Purchase) {
+            handlePurchaseLogic(context, purchase)
+        } else {
+            BranchLogger.e("BillingV8 Object passed is not valid Purchase object.")
         }
     }
 
@@ -64,7 +73,8 @@ class BillingGooglePlay private constructor() {
      * @param context  Current context
      * @param purchase Respective purchase
      */
-    fun logEventWithPurchase(context: Context, purchase: Purchase) {
+
+    private fun handlePurchaseLogic(context: Context, purchase: Purchase) {
         val productIds = purchase.products
         val productList: MutableList<QueryProductDetailsParams.Product> = ArrayList()
         val subsList: MutableList<QueryProductDetailsParams.Product> = ArrayList()
@@ -93,14 +103,14 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             querySubsProductDetailsParams
-        ) { billingResult: BillingResult, subsProductDetailsList: List<ProductDetails?> ->
+        ) { billingResult: BillingResult, subsProductDetailsList: QueryProductDetailsResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 val contentItemBUOs: MutableList<BranchUniversalObject> =
                     ArrayList()
                 var currency: CurrencyType = CurrencyType.USD
                 var revenue = 0.00
 
-                for (product: ProductDetails? in subsProductDetailsList) {
+                for (product: ProductDetails? in subsProductDetailsList.productDetailsList) {
                     val buo: BranchUniversalObject = createBUOWithSubsProductDetails(product)
                     contentItemBUOs.add(buo)
 
@@ -126,7 +136,7 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             queryProductDetailsParams
-        ) { billingResult: BillingResult, productDetailsList: List<ProductDetails?> ->
+        ) { billingResult: BillingResult, productDetailsList: QueryProductDetailsResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 
                 val contentItemBUOs: MutableList<BranchUniversalObject> =
@@ -135,7 +145,7 @@ class BillingGooglePlay private constructor() {
                 var revenue = 0.00
                 val quantity: Int = purchase.quantity
 
-                for (product: ProductDetails? in productDetailsList) {
+                for (product: ProductDetails? in productDetailsList.productDetailsList) {
                     val buo: BranchUniversalObject =
                         createBUOWithInAppProductDetails(product, quantity)
                     contentItemBUOs.add(buo)

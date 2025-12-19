@@ -6,7 +6,6 @@ import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
 import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
 import static io.branch.referral.PrefHelper.isValidBranchKey;
-import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 
 import android.app.Activity;
@@ -50,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.interfaces.GooglePlayBillingWrapper;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener;
@@ -2652,16 +2652,25 @@ public class Branch {
         }
     }
 
+    private GooglePlayBillingWrapper billingHandler = null;
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        if (classExists(billingGooglePlayClass)) {
-            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-                if (succeeded) {
-                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-                } else {
-                    BranchLogger.e("Cannot log IAP event. Billing client setup failed");                }
-                return null;
-            });
+        // New Code Begins
+        billingHandler = GooglePlayBillingManager.INSTANCE.getBillingImplementation();
+
+        if (billingHandler != null) {
+            billingHandler.connect();
         }
+        // New Code Ends
+
+//        if (classExists(billingGooglePlayClass)) {
+//            BillingV6.Companion.getInstance().startBillingClient(succeeded -> {
+//                if (succeeded) {
+//                    BillingV6.Companion.getInstance().logEventWithPurchase(context, purchase);
+//                } else {
+//                    BranchLogger.e("Cannot log IAP event. Billing client setup failed");                }
+//                return null;
+//            });
+//        }
     }
 
     /**
