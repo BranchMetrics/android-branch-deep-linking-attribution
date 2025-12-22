@@ -9,6 +9,7 @@ import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import io.branch.indexing.BranchUniversalObject
+import io.branch.interfaces.GooglePlayBillingWrapper
 import io.branch.referral.util.BRANCH_STANDARD_EVENT
 import io.branch.referral.util.BranchContentSchema
 import io.branch.referral.util.BranchEvent
@@ -16,29 +17,59 @@ import io.branch.referral.util.ContentMetadata
 import io.branch.referral.util.CurrencyType
 import java.math.BigDecimal
 
-class GooglePlayBillingLibraryV6 private constructor() {
+class GooglePlayBillingLibraryV6 private constructor() : GooglePlayBillingWrapper {
 
-    lateinit var billingClient: BillingClient
+//    companion object {
+//        @Volatile
+//        private lateinit var instance: GooglePlayBillingLibraryV6
+//
+//        fun getInstance(): GooglePlayBillingLibraryV6 {
+//            synchronized(this) {
+//                if (!::instance.isInitialized) {
+//                    instance = GooglePlayBillingLibraryV6()
+//
+//                    instance.billingClient =
+//                        BillingClient.newBuilder(Branch.getInstance().applicationContext)
+//                            .setListener(instance.purchasesUpdatedListener)
+//                            .enablePendingPurchases()
+//                            .build()
+//                }
+//                return instance
+//            }
+//        }
+//    }
 
     companion object {
         @Volatile
-        private lateinit var instance: GooglePlayBillingLibraryV6
+        private var instance: GooglePlayBillingLibraryV6? = null
 
+        @JvmStatic
         fun getInstance(): GooglePlayBillingLibraryV6 {
-            synchronized(this) {
-                if (!::instance.isInitialized) {
-                    instance = GooglePlayBillingLibraryV6()
-
-                    instance.billingClient =
-                        BillingClient.newBuilder(Branch.getInstance().applicationContext)
-                            .setListener(instance.purchasesUpdatedListener)
-                            .enablePendingPurchases()
-                            .build()
-                }
-                return instance
+            return instance ?: synchronized(this) {
+                instance ?: GooglePlayBillingLibraryV6().also {instance = it}
             }
         }
     }
+
+    override fun connect() {
+        startBillingClient { succeeded ->
+            if (succeeded) {
+                BranchLogger.v("V6 Client Connected via Wrapper.")
+            }
+        }
+    }
+
+    override fun logEventWithPurchase(context: Context, purchase: Any) {
+        // You must cast the generic 'Any' to the V6 Purchase type
+        // Note: Check imports to ensure this is the com.android.billingclient.api.Purchase
+        if (purchase is com.android.billingclient.api.Purchase) {
+            logEventWithPurchase(context, purchase)
+        } else {
+            BranchLogger.e("Object passed to V6 wrapper was not a valid Purchase object")
+        }
+    }
+
+    lateinit var billingClient: BillingClient
 
     fun startBillingClient(callback: (Boolean) -> Unit) {
         if (billingClient.isReady) {

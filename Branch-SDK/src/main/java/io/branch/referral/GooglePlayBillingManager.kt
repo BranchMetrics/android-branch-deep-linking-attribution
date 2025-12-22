@@ -6,16 +6,17 @@ object GooglePlayBillingManager {
     fun getBillingImplementation(): GooglePlayBillingWrapper? {
         // Try to load V8 first
         try {
-            val clazz = Class.forName("com.branch.billing.v8.BillingV8Implementation")
-            return clazz.getConstructor().newInstance() as GooglePlayBillingWrapper
-        } catch (e: ClassNotFoundException) {
+            val classVal = Class.forName("com.branch.billing.v8.BillingV8Implementation")
+            return classVal.getDeclaredConstructor().newInstance() as GooglePlayBillingWrapper
+        } catch (e: Exception) {
             // V8 not found, try V6
         }
 
         try {
-            val clazz = Class.forName("com.branch.billing.v6.BillingV6Implementation")
-            return clazz.getConstructor().newInstance() as GooglePlayBillingWrapper
-        } catch (e: ClassNotFoundException) {
+            val classVal = Class.forName("io.branch.referral.GooglePlayBillingLibraryV6")
+            val getInstanceMethod = classVal.getMethod("getInstance")
+            return getInstanceMethod.invoke(null) as GooglePlayBillingWrapper
+        } catch (e: Exception) {
             // Neither version is linked in the user's app
             BranchLogger.e("No Billing Library dependency found!")
             return null
