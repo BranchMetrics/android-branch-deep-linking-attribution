@@ -2524,6 +2524,8 @@ public class Branch {
                 return;
             }
 
+            BranchModuleManager.INSTANCE.initializeModules();
+
             BranchLogger.v("isInstantDeepLinkPossible " + branch.isInstantDeepLinkPossible);
             // readAndStripParams (above) may set isInstantDeepLinkPossible to true
             if (branch.isInstantDeepLinkPossible) {
@@ -2655,10 +2657,12 @@ public class Branch {
     private GooglePlayBillingWrapper billingHandler = null;
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
         // New Code Begins
-        billingHandler = GooglePlayBillingManager.INSTANCE.getBillingImplementation();
+        billingHandler = BranchModuleManager.INSTANCE.getBillingImplementation();
 
         if (billingHandler != null) {
-            billingHandler.connect();
+            billingHandler.logEventWithPurchase(context, purchase);
+        } else {
+            BranchLogger.e("Cannot log IAP event. Branch Google Play Billing Module not integrated.");
         }
         // New Code Ends
 

@@ -10,6 +10,7 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryProductDetailsResult
+import com.google.auto.service.AutoService
 import io.branch.indexing.BranchUniversalObject
 import io.branch.interfaces.GooglePlayBillingWrapper
 import io.branch.referral.Branch
@@ -21,6 +22,7 @@ import io.branch.referral.util.ContentMetadata
 import io.branch.referral.util.CurrencyType
 import java.math.BigDecimal
 
+@AutoService(GooglePlayBillingWrapper::class)
 class BillingV8Implementation : GooglePlayBillingWrapper {
 
     lateinit var billingClient: BillingClient
@@ -58,11 +60,27 @@ class BillingV8Implementation : GooglePlayBillingWrapper {
     }
 
     override fun logEventWithPurchase(context: Context, purchase: Any) {
-        if (purchase is Purchase) {
-            handlePurchaseLogic(context, purchase)
+        if (billingClient.isReady) {
+            if (purchase is Purchase) {
+                handlePurchaseLogic(context, purchase)
+            } else {
+                BranchLogger.e("BillingV8 Object passed is not valid Purchase object.")
+            }
         } else {
-            BranchLogger.e("BillingV8 Object passed is not valid Purchase object.")
+            billingClient.startConnection(object : BillingClientStateListener {
+                override fun onBillingSetupFinished(billingResult: BillingResult) {
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        if (purchase is Purchase) {
+                            handlePurchaseLogic(context, purchase)
+                        } else {
+                            BranchLogger.e("BillingV8 Object passed is not valid Purchase object.")
+                        }
+                    }
+                }
+                override fun onBillingServiceDisconnected() {}
+            })
         }
+
     }
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { _, _ -> }
