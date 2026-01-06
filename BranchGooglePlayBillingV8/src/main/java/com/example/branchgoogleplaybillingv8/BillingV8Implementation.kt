@@ -22,6 +22,7 @@ import io.branch.referral.util.ContentMetadata
 import io.branch.referral.util.CurrencyType
 import java.math.BigDecimal
 
+@Suppress("unused")
 @AutoService(GooglePlayBillingWrapper::class)
 class BillingV8Implementation : GooglePlayBillingWrapper {
 
