@@ -367,6 +367,8 @@ public class Branch {
             branchReferral_.setActivityLifeCycleObserver((Application) context);
         }
 
+        BranchModuleManager.INSTANCE.initializeModules();
+
         return branchReferral_;
     }
 
@@ -2523,8 +2525,6 @@ public class Branch {
                 }
                 return;
             }
-
-            BranchModuleManager.INSTANCE.initializeModules();
 
             BranchLogger.v("isInstantDeepLinkPossible " + branch.isInstantDeepLinkPossible);
             // readAndStripParams (above) may set isInstantDeepLinkPossible to true
