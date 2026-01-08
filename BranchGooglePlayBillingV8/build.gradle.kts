@@ -43,12 +43,16 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    // Google Play Billing library
+
+    // ----------Google Play Billing library----------
+    // Main: Do NOT bundle (let the user provide it)
     compileOnly("com.android.billingclient:billing:8.0.0")
+    // Mockito needs this class in the test class path to run Unit Tests
     testImplementation("com.android.billingclient:billing:8.0.0")
+    // For Android instrumented tests
     androidTestImplementation("com.android.billingclient:billing:8.0.0")
 
-    // Branch SDK Implementations
+    // ----------Branch SDK Implementations----------
     implementation(project(":Branch-SDK"))
 
 }
