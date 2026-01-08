@@ -4,26 +4,20 @@ import io.branch.interfaces.GooglePlayBillingWrapper
 import java.util.ServiceLoader
 
 object BranchModuleManager {
-    // Google Play Billing wrapper
-    private var billingModule: GooglePlayBillingWrapper? = null
+    private var googlePlayBillingModule: GooglePlayBillingWrapper? = null
 
     fun initializeModules() {
-        // Find and load Google Play Billing Module
-        val billingLoader = ServiceLoader.load(GooglePlayBillingWrapper::class.java)
-        billingModule = billingLoader.iterator().asSequence().firstOrNull()
-        if (billingModule != null) {
-            BranchLogger.v("Billing module found and loaded.")
-            billingModule?.connect()
+        val googlePlayBillingLoader = ServiceLoader.load(GooglePlayBillingWrapper::class.java)
+        googlePlayBillingModule = googlePlayBillingLoader.iterator().asSequence().firstOrNull()
+        if (googlePlayBillingModule != null) {
+            BranchLogger.v("Google Play Billing module found and loaded.")
+            googlePlayBillingModule?.connect()
         } else {
-            BranchLogger.w("No Billing Module found. Billing features disabled.")
+            BranchLogger.w("No Google Play Billing Module found. Google Play Billing features disabled.")
         }
-
-        // Repeat above code to add new modules
     }
 
-    fun getBillingImplementation(): GooglePlayBillingWrapper? {
-        return billingModule
+    fun getGooglePlayBillingImplementation(): GooglePlayBillingWrapper? {
+        return googlePlayBillingModule
     }
-
-    // Repeat above code to add new wrappers
 }

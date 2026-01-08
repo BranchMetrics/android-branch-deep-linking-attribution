@@ -38,11 +38,6 @@ dependencies {
     compileOnly("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
     // Xiaomi install referrer
     compileOnly("com.miui.referrer:homereferrer:1.0.0.7")
-    //implementation(project(":BranchGooglePlayBillingV8"))
-
-    compileOnly("com.android.billingclient:billing:6.0.1")
-
-    // Google Play Billing library
 
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
@@ -58,7 +53,6 @@ dependencies {
     androidTestImplementation("com.huawei.hms:ads-identifier:3.4.62.300")
     androidTestImplementation("com.huawei.hms:ads-installreferrer:3.4.39.302")
     androidTestImplementation("com.huawei.hms:base:4.0.2.300")
-    androidTestImplementation("com.android.billingclient:billing:6.0.1")
     androidTestImplementation("store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0")
     androidTestImplementation("com.miui.referrer:homereferrer:1.0.0.7")
 
@@ -76,8 +70,6 @@ dependencies {
 
     // Mockito needs these classes in the test class path
     testImplementation("androidx.browser:browser:1.8.0")
-    testImplementation("com.android.billingclient:billing:6.0.1")
-
 }
 
 val VERSION_NAME: String by project

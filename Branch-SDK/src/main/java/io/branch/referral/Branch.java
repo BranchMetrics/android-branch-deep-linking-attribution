@@ -29,8 +29,6 @@ import androidx.annotation.RequiresApi;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
 
-import com.android.billingclient.api.Purchase;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -2654,27 +2652,14 @@ public class Branch {
         }
     }
 
-    private GooglePlayBillingWrapper billingHandler = null;
-    public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        // New Code Begins
-        billingHandler = BranchModuleManager.INSTANCE.getBillingImplementation();
+    public void logEventWithPurchase(@NonNull Context context, @NonNull Object purchase) {
+        GooglePlayBillingWrapper googlePlayBillingHandler = BranchModuleManager.INSTANCE.getGooglePlayBillingImplementation();
 
-        if (billingHandler != null) {
-            billingHandler.logEventWithPurchase(context, purchase);
+        if (googlePlayBillingHandler != null) {
+            googlePlayBillingHandler.logEventWithPurchase(context, purchase);
         } else {
             BranchLogger.e("Cannot log IAP event. Branch Google Play Billing Module not integrated.");
         }
-        // New Code Ends
-
-//        if (classExists(billingGooglePlayClass)) {
-//            BillingV6.Companion.getInstance().startBillingClient(succeeded -> {
-//                if (succeeded) {
-//                    BillingV6.Companion.getInstance().logEventWithPurchase(context, purchase);
-//                } else {
-//                    BranchLogger.e("Cannot log IAP event. Billing client setup failed");                }
-//                return null;
-//            });
-//        }
     }
 
     /**

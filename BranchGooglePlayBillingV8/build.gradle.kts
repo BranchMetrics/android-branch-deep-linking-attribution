@@ -45,6 +45,8 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     // Google Play Billing library
     compileOnly("com.android.billingclient:billing:8.0.0")
+    testImplementation("com.android.billingclient:billing:8.0.0")
+    androidTestImplementation("com.android.billingclient:billing:8.0.0")
 
     // Branch SDK Implementations
     implementation(project(":Branch-SDK"))
