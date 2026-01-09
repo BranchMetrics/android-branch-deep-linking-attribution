@@ -68,7 +68,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         }
         // Check for any stored identity otherwise, this will be cleared on logout()
         else if(!TextUtils.isEmpty(prefHelper_.getIdentity()) && !prefHelper_.getIdentity().equals(NO_STRING_VALUE)){
-            post.put(Defines.Jsonkey.Identity.getKey(), identity);
+            post.put(Defines.Jsonkey.Identity.getKey(), prefHelper_.getIdentity());
         }
     }
 
