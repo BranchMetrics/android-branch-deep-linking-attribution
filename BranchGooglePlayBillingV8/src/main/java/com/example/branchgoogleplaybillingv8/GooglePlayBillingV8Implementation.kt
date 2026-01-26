@@ -24,7 +24,7 @@ import java.math.BigDecimal
 
 @Suppress("unused")
 @AutoService(GooglePlayBillingInterface::class)
-class BillingV8Implementation : GooglePlayBillingInterface {
+class GooglePlayBillingV8Implementation : GooglePlayBillingInterface {
 
     lateinit var billingClient: BillingClient
 
