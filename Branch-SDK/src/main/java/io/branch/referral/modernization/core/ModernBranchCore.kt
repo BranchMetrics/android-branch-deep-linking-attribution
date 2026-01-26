@@ -1,10 +1,12 @@
 package io.branch.referral.modernization.core
 
 import android.content.Context
-import androidx.annotation.NonNull
+import android.util.Log
+import io.branch.interfaces.GooglePlayBillingInterface
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
+import io.branch.referral.util.classExists
 
 /**
  * Modern Branch SDK core implementation using reactive architecture.
@@ -28,6 +30,7 @@ interface ModernBranchCore {
     val eventManager: EventManager
     val dataManager: DataManager
     val configurationManager: ConfigurationManager
+    val moduleManager: ModuleManager
     
     // State Management
     val isInitialized: StateFlow<Boolean>
@@ -61,6 +64,7 @@ class ModernBranchCoreImpl private constructor(
     override val eventManager: EventManager = EventManagerImpl(scope)
     override val dataManager: DataManager = DataManagerImpl(scope)
     override val configurationManager: ConfigurationManager = ConfigurationManagerImpl(scope)
+    override val moduleManager: ModuleManager = ModuleManagerImpl(scope)
     
     // State flows
     private val _isInitialized = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -95,6 +99,7 @@ class ModernBranchCoreImpl private constructor(
             linkManager.initialize(context)
             eventManager.initialize(context)
             dataManager.initialize(context)
+            moduleManager.initialize(context)
             
             _isInitialized.value = true
             Result.success(Unit)
@@ -173,6 +178,14 @@ interface ConfigurationManager {
     fun setDebugMode(enabled: Boolean): Result<Unit>
     fun setTimeout(timeoutMs: Long): Result<Unit>
     fun isTestModeEnabled(): Boolean
+}
+
+/**
+ * Third party dependency management.
+ */
+interface ModuleManager {
+    suspend fun initialize(context: Context)
+    fun initializeModules()
 }
 
 // Data Classes
@@ -419,4 +432,44 @@ private class ConfigurationManagerImpl(private val scope: CoroutineScope) : Conf
     }
     
     override fun isTestModeEnabled(): Boolean = testModeEnabled
-} 
+}
+
+private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManager {
+    override suspend fun initialize(context: Context) {
+        // Add initialization logic and details here
+    }
+
+    override fun initializeModules() {
+        // Stuff for module initialization
+        // Get class implementations here? or call each separately?
+        initializeGooglePlayBilling()
+
+    }
+
+    private var googlePlayBillingModule: GooglePlayBillingInterface? = null
+    private val billingV8Class = "com.branch.billing.v8.BillingV8Implementation"
+    fun initializeGooglePlayBilling() {
+        if (classExists(billingV8Class)) {
+            try {
+                val billingClass = Class.forName(billingV8Class)
+                val instance = billingClass.getDeclaredConstructor().newInstance()
+
+                googlePlayBillingModule = instance as? GooglePlayBillingInterface
+
+                if (googlePlayBillingModule != null) {
+                    Log.e("Branch SDK", "Google Play billing module found and loaded via Reflection.")
+                    googlePlayBillingModule?.connect()
+                }
+
+            } catch (e: Exception) {
+                Log.e("Branch SDK","Found Billing V8 class but failed to instantiate it: \${e.message}")
+            }
+        } else {
+            Log.e("Branch SDK", "No Google Play Billing Module found. Google Play Billing features disabled.")
+        }
+    }
+
+    fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface? {
+        return googlePlayBillingModule
+    }
+}
