@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.branchgoogleplaybillingv8"
+    namespace = "com.branch.googleplaybilling"
     compileSdk = 34
 
     defaultConfig {

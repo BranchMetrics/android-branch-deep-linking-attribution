@@ -1,4 +1,4 @@
-package com.example.branchgoogleplaybillingv8
+package com.branch.googleplaybilling
 
 import org.junit.Test
 

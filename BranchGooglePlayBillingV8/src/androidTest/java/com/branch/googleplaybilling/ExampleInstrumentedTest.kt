@@ -1,4 +1,4 @@
-package com.example.branchgoogleplaybillingv8
+package com.branch.googleplaybilling
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

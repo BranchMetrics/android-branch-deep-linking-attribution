@@ -1,8 +1,10 @@
 package io.branch.referral.modernization.core
 
+import io.branch.interfaces.GooglePlayBillingInterface
+
 import android.content.Context
 import android.util.Log
-import io.branch.interfaces.GooglePlayBillingInterface
+import io.branch.referral.util.billingGooglePlayClass
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
@@ -446,11 +448,11 @@ private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManag
     }
 
     private var googlePlayBillingModule: GooglePlayBillingInterface? = null
-    private val billingV8Class = "com.branch.billing.v8.BillingV8Implementation"
+    private val billingClass = billingGooglePlayClass
     fun initializeGooglePlayBilling() {
-        if (classExists(billingV8Class)) {
+        if (classExists(billingClass)) {
             try {
-                val billingClass = Class.forName(billingV8Class)
+                val billingClass = Class.forName(billingClass)
                 val instance = billingClass.getDeclaredConstructor().newInstance()
 
                 googlePlayBillingModule = instance as? GooglePlayBillingInterface
