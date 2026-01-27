@@ -40,8 +40,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.interfaces.GooglePlayBillingInterface;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Defines.PreinstallKey;
+import io.branch.referral.modernization.core.ModernBranchCore;
+import io.branch.referral.modernization.core.ModernBranchCoreImpl;
+import io.branch.referral.modernization.core.ModuleManager;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
@@ -2376,15 +2380,16 @@ public class Branch {
         }
     }
 
-    public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        if (classExists(billingGooglePlayClass)) {
-            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-                if (succeeded) {
-                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-                } else {
-                    BranchLogger.e("Cannot log IAP event. Billing client setup failed");                }
-                return null;
-            });
+    public void logEventWithPurchase(@NonNull Context context, @NonNull Object purchase) {
+        ModernBranchCore sdk = ModernBranchCoreImpl.Companion.getInstance();
+        ModuleManager moduleManager = sdk.getModuleManager();
+
+        GooglePlayBillingInterface billingHandler = moduleManager.getGooglePlayBillingImplementation();
+
+        if (billingHandler != null) {
+            billingHandler.logEventWithPurchase(context, purchase);
+        } else {
+            BranchLogger.e("Cannot log IAP event. Module not integrated.");
         }
     }
 

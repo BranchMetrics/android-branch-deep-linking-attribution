@@ -186,6 +186,7 @@ interface ConfigurationManager {
 interface ModuleManager {
     suspend fun initialize(context: Context)
     fun initializeModules()
+    fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface?
 }
 
 // Data Classes
@@ -436,14 +437,12 @@ private class ConfigurationManagerImpl(private val scope: CoroutineScope) : Conf
 
 private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManager {
     override suspend fun initialize(context: Context) {
-        // Add initialization logic and details here
+        // Implementation Details and startup logging need to be added.
+        initializeModules()
     }
 
     override fun initializeModules() {
-        // Stuff for module initialization
-        // Get class implementations here? or call each separately?
         initializeGooglePlayBilling()
-
     }
 
     private var googlePlayBillingModule: GooglePlayBillingInterface? = null
@@ -469,7 +468,7 @@ private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManag
         }
     }
 
-    fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface? {
+    override fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface? {
         return googlePlayBillingModule
     }
 }
