@@ -458,15 +458,15 @@ private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManag
                 googlePlayBillingModule = instance as? GooglePlayBillingInterface
 
                 if (googlePlayBillingModule != null) {
-                    Log.e("Branch SDK", "Google Play billing module found and loaded via Reflection.")
+                    Log.i("Branch SDK", "Google Play Billing module found and loaded via Reflection.")
                     googlePlayBillingModule?.connect()
                 }
 
             } catch (e: Exception) {
-                Log.e("Branch SDK","Found Billing V8 class but failed to instantiate it: \${e.message}")
+                Log.e("Branch SDK","Found Google Play Billing module but failed to instantiate it: ${e.message}")
             }
         } else {
-            Log.e("Branch SDK", "No Google Play Billing Module found. Google Play Billing features disabled.")
+            Log.i("Branch SDK", "No Google Play Billing module found. Google Play Billing features disabled.")
         }
     }
 
