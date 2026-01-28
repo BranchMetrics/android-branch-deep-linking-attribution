@@ -26,8 +26,6 @@ import androidx.annotation.RequiresApi;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
 
-import com.android.billingclient.api.Purchase;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

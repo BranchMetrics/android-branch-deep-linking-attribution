@@ -4,7 +4,9 @@ import io.branch.interfaces.GooglePlayBillingInterface
 
 import android.content.Context
 import android.util.Log
+import io.branch.interfaces.InstallReferrerInterface
 import io.branch.referral.util.billingGooglePlayClass
+import io.branch.referral.util.installReferrerClass
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
@@ -445,14 +447,15 @@ private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManag
 
     override fun initializeModules() {
         initializeGooglePlayBilling()
+        initializeInstallReferrers()
     }
 
+    // ---------- Google Play Billing Module ----------
     private var googlePlayBillingModule: GooglePlayBillingInterface? = null
-    private val billingClass = billingGooglePlayClass
     fun initializeGooglePlayBilling() {
-        if (classExists(billingClass)) {
+        if (classExists(billingGooglePlayClass)) {
             try {
-                val billingClass = Class.forName(billingClass)
+                val billingClass = Class.forName(billingGooglePlayClass)
                 val instance = billingClass.getDeclaredConstructor().newInstance()
 
                 googlePlayBillingModule = instance as? GooglePlayBillingInterface
@@ -472,5 +475,29 @@ private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManag
 
     override fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface? {
         return googlePlayBillingModule
+    }
+
+    // ---------- Install Referrer Module ----------
+    private var installReferrerModule: InstallReferrerInterface? = null
+
+    fun initializeInstallReferrers() {
+        if (classExists(installReferrerClass)) {
+            try {
+                val installReferrerClass = Class.forName(installReferrerClass)
+                val instance = installReferrerClass.getDeclaredConstructor().newInstance()
+
+                installReferrerModule = instance as? InstallReferrerInterface
+
+                if (installReferrerModule != null) {
+                    Log.i("Branch SDK", "Install Referrer module found and loaded via Reflection.")
+                    installReferrerModule?.connect()
+                }
+
+            } catch (e: Exception) {
+                Log.e("Branch SDK","Found Install Referrer module but failed to instantiate it: ${e.message}")
+            }
+        } else {
+            Log.i("Branch SDK", "No Install Referrer module found. Install Referrer features disabled.")
+        }
     }
 }

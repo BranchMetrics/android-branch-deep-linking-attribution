@@ -30,3 +30,5 @@ const val xiaomiInstallReferrerClass = "com.miui.referrer.api.GetAppsReferrerCli
 const val billingGooglePlayClass = "com.branch.googleplaybilling"
 
 const val androidBrowserClass = "androidx.browser.customtabs.CustomTabsIntent"
+
+const val installReferrerClass = "com.branch.installreferrer"

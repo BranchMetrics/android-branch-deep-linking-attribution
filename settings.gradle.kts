@@ -9,4 +9,5 @@ pluginManagement {
         mavenCentral()
     }
 }
-include(":BranchGooglePlayBillingV8")
+include(":BranchGooglePlayBilling")
+include(":BranchInstallReferrer")
