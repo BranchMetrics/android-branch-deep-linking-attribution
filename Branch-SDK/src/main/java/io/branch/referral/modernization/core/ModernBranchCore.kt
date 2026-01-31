@@ -191,6 +191,7 @@ interface ModuleManager {
     suspend fun initialize(context: Context)
     fun initializeModules()
     fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface?
+    fun getInstallReferrerImplementation(): InstallReferrerInterface?
 }
 
 // Data Classes
@@ -499,5 +500,9 @@ private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManag
         } else {
             Log.i("Branch SDK", "No Install Referrer module found. Install Referrer features disabled.")
         }
+    }
+
+    override fun getInstallReferrerImplementation(): InstallReferrerInterface? {
+        return installReferrerModule
     }
 }

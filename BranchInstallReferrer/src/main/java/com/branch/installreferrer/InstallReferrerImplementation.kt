@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
-import com.branch.installreferrer.InstallReferrerResult
 import io.branch.interfaces.InstallReferrerFetchEvents
 import io.branch.interfaces.InstallReferrerInterface
 import io.branch.referral.AppStoreReferrer
@@ -50,19 +49,17 @@ class InstallReferrerImplementation : InstallReferrerInterface {
         if (installReferrerClient.isReady) {
             BranchLogger.v("InstallReferrer Client already ready.")
         } else {
-            installReferrerClient.startConnection(object : InstallReferrerClientStateListener {
-                override fun onInstallReferrerSetupFinished(installReferrerResult: InstallReferrerResult) {
-                    if (installReferrerResult.responseCode == InstallReferrerClient.InstallReferrerResponse.OK) {
+            installReferrerClient.startConnection(object : InstallReferrerStateListener {
+                override fun onInstallReferrerSetupFinished(responseCode: Int) {
+                    if (responseCode == InstallReferrerClient.InstallReferrerResponse.OK) {
                         BranchLogger.v("Install Referrer Client setup finished.")
                     } else {
-                        val errorMessage =
-                            "InstallReferrer Client setup failed with error: ${installReferrerResult.debugMessage}"
-                        BranchLogger.e(errorMessage)
+                        BranchLogger.e("InstallReferrer setup failed code: $responseCode")
                     }
                 }
 
                 override fun onInstallReferrerServiceDisconnected() {
-                    BranchLogger.w("Billing Client disconnected")
+                    BranchLogger.w("Install Referrer service disconnected")
                 }
             })
         }

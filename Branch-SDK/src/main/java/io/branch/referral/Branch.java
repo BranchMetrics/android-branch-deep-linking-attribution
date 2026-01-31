@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.interfaces.GooglePlayBillingInterface;
 import io.branch.interfaces.IBranchLoggingCallbacks;
+import io.branch.interfaces.InstallReferrerInterface;
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.modernization.core.ModernBranchCore;
 import io.branch.referral.modernization.core.ModernBranchCoreImpl;
@@ -1477,14 +1478,19 @@ public class Branch {
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
             BranchLogger.d("DEBUG: Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
 
-            deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
-                @Override
-                public void onInstallReferrersFinished() {
+            ModernBranchCore sdk = ModernBranchCoreImpl.Companion.getInstance();
+            ModuleManager moduleManager = sdk.getModuleManager();
+            InstallReferrerInterface installReferrerClient = moduleManager.getInstallReferrerImplementation();
+
+            if (installReferrerClient != null) {
+                installReferrerClient.fetchInstallReferrerData(context_, () -> {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                     BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
                     BranchLogger.d("DEBUG: Install referrer fetch completed, lock removed");
-                }
-            });
+                });
+            } else {
+                request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+            }
         }
 
         request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
