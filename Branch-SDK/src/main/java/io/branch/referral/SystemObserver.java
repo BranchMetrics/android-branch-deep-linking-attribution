@@ -506,8 +506,6 @@ abstract class SystemObserver {
         }
     }
 
-
-
     private void fetchGoogleAdId(Context context, AdsParamsFetchEvents callback) {
         BranchLogger.v("Begin fetchGoogleAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
@@ -589,46 +587,6 @@ abstract class SystemObserver {
                 }
             }
         });
-    }
-
-    public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
-        BranchLogger.v("Begin fetchInstallReferrer");
-        try {
-            InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
-                @NonNull
-                @Override
-                public CoroutineContext getContext() {
-                    return EmptyCoroutineContext.INSTANCE;
-                }
-
-                @Override
-                public void resumeWith(@NonNull Object o) {
-                    if (o != null) {
-                        BranchLogger.v("fetchInstallReferrer resumeWith got result: " + o);
-                        InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
-                        AppStoreReferrer.processReferrerInfo(context_,
-                                latestReferrer.getInstallReferrer(),
-                                latestReferrer.getReferrerClickTimestampSeconds(),
-                                latestReferrer.getInstallBeginTimestampSeconds(),
-                                latestReferrer.getAppStore(),
-                                latestReferrer.isClickThrough(),
-                                latestReferrer.getInstallBeginTimestampServerSeconds(),
-                                latestReferrer.getReferrerClickTimestampServerSeconds());
-                    } else {
-                        BranchLogger.v("fetchInstallReferrer resumeWith got null result");
-                    }
-
-                    if (callback != null) {
-                        callback.onInstallReferrersFinished();
-                    }
-                }
-            });
-        } catch(Exception e) {
-            BranchLogger.e("Caught Exception SystemObserver fetchInstallReferrer " + e.getMessage());
-            if (callback != null) {
-                callback.onInstallReferrersFinished();
-            }
-        }
     }
 
     interface AdsParamsFetchEvents {

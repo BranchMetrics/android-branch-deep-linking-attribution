@@ -491,9 +491,7 @@ private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManag
 
                 if (installReferrerModule != null) {
                     Log.i("Branch SDK", "Install Referrer module found and loaded via Reflection.")
-                    installReferrerModule?.connect()
                 }
-
             } catch (e: Exception) {
                 Log.e("Branch SDK","Found Install Referrer module but failed to instantiate it: ${e.message}")
             }

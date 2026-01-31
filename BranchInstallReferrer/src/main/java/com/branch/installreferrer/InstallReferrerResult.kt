@@ -8,7 +8,6 @@ data class InstallReferrerResult(
     var installBeginTimestampServerSeconds: Long?,
     var referrerClickTimestampServerSeconds: Long?,
     var isClickThrough: Boolean = true,
-
     var responseCode: Int = 0,
     var debugMessage: String? = null
 )

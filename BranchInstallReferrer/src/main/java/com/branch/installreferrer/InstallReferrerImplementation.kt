@@ -32,38 +32,12 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
+@Suppress("unused")
 class InstallReferrerImplementation : InstallReferrerInterface {
     private val installReferrer = "install_referrer"
     private val isCt = "is_ct"
     private val actualTimestamp = "actual_timestamp"
-
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    lateinit var installReferrerClient: InstallReferrerClient
-
-    override fun connect() {
-        if (!::installReferrerClient.isInitialized) {
-            installReferrerClient = InstallReferrerClient.newBuilder(Branch.getInstance().applicationContext)
-                .build()
-        }
-        if (installReferrerClient.isReady) {
-            BranchLogger.v("InstallReferrer Client already ready.")
-        } else {
-            installReferrerClient.startConnection(object : InstallReferrerStateListener {
-                override fun onInstallReferrerSetupFinished(responseCode: Int) {
-                    if (responseCode == InstallReferrerClient.InstallReferrerResponse.OK) {
-                        BranchLogger.v("Install Referrer Client setup finished.")
-                    } else {
-                        BranchLogger.e("InstallReferrer setup failed code: $responseCode")
-                    }
-                }
-
-                override fun onInstallReferrerServiceDisconnected() {
-                    BranchLogger.w("Install Referrer service disconnected")
-                }
-            })
-        }
-    }
 
     override fun fetchInstallReferrerData(context: Context, callback: InstallReferrerFetchEvents) {
         scope.launch {
@@ -102,7 +76,6 @@ class InstallReferrerImplementation : InstallReferrerInterface {
             e("Caught Exception SystemObserver fetchInstallReferrer " + e.message)
             callback?.onInstallReferrersFinished()
         }
-
     }
 
     suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrerResult? {
