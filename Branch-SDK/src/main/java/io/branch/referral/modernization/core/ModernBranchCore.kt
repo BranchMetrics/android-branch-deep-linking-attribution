@@ -1,10 +1,16 @@
 package io.branch.referral.modernization.core
 
+import io.branch.interfaces.GooglePlayBillingInterface
+
 import android.content.Context
-import androidx.annotation.NonNull
+import android.util.Log
+import io.branch.interfaces.InstallReferrerInterface
+import io.branch.referral.util.billingGooglePlayClass
+import io.branch.referral.util.installReferrerClass
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
+import io.branch.referral.util.classExists
 
 /**
  * Modern Branch SDK core implementation using reactive architecture.
@@ -28,6 +34,7 @@ interface ModernBranchCore {
     val eventManager: EventManager
     val dataManager: DataManager
     val configurationManager: ConfigurationManager
+    val moduleManager: ModuleManager
     
     // State Management
     val isInitialized: StateFlow<Boolean>
@@ -61,6 +68,7 @@ class ModernBranchCoreImpl private constructor(
     override val eventManager: EventManager = EventManagerImpl(scope)
     override val dataManager: DataManager = DataManagerImpl(scope)
     override val configurationManager: ConfigurationManager = ConfigurationManagerImpl(scope)
+    override val moduleManager: ModuleManager = ModuleManagerImpl(scope)
     
     // State flows
     private val _isInitialized = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -95,6 +103,7 @@ class ModernBranchCoreImpl private constructor(
             linkManager.initialize(context)
             eventManager.initialize(context)
             dataManager.initialize(context)
+            moduleManager.initialize(context)
             
             _isInitialized.value = true
             Result.success(Unit)
@@ -173,6 +182,16 @@ interface ConfigurationManager {
     fun setDebugMode(enabled: Boolean): Result<Unit>
     fun setTimeout(timeoutMs: Long): Result<Unit>
     fun isTestModeEnabled(): Boolean
+}
+
+/**
+ * Third party dependency management.
+ */
+interface ModuleManager {
+    suspend fun initialize(context: Context)
+    fun initializeModules()
+    fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface?
+    fun getInstallReferrerImplementation(): InstallReferrerInterface?
 }
 
 // Data Classes
@@ -419,4 +438,69 @@ private class ConfigurationManagerImpl(private val scope: CoroutineScope) : Conf
     }
     
     override fun isTestModeEnabled(): Boolean = testModeEnabled
-} 
+}
+
+private class ModuleManagerImpl(private val scope: CoroutineScope) : ModuleManager {
+    override suspend fun initialize(context: Context) {
+        // Implementation Details and startup logging need to be added.
+        initializeModules()
+    }
+
+    override fun initializeModules() {
+        initializeGooglePlayBilling()
+        initializeInstallReferrers()
+    }
+
+    // ---------- Google Play Billing Module ----------
+    private var googlePlayBillingModule: GooglePlayBillingInterface? = null
+    fun initializeGooglePlayBilling() {
+        if (classExists(billingGooglePlayClass)) {
+            try {
+                val billingClass = Class.forName(billingGooglePlayClass)
+                val instance = billingClass.getDeclaredConstructor().newInstance()
+
+                googlePlayBillingModule = instance as? GooglePlayBillingInterface
+
+                if (googlePlayBillingModule != null) {
+                    Log.i("Branch SDK", "Google Play Billing module found and loaded via Reflection.")
+                    googlePlayBillingModule?.connect()
+                }
+
+            } catch (e: Exception) {
+                Log.e("Branch SDK","Found Google Play Billing module but failed to instantiate it: ${e.message}")
+            }
+        } else {
+            Log.i("Branch SDK", "No Google Play Billing module found. Google Play Billing features disabled.")
+        }
+    }
+
+    override fun getGooglePlayBillingImplementation(): GooglePlayBillingInterface? {
+        return googlePlayBillingModule
+    }
+
+    // ---------- Install Referrer Module ----------
+    private var installReferrerModule: InstallReferrerInterface? = null
+
+    fun initializeInstallReferrers() {
+        if (classExists(installReferrerClass)) {
+            try {
+                val installReferrerClass = Class.forName(installReferrerClass)
+                val instance = installReferrerClass.getDeclaredConstructor().newInstance()
+
+                installReferrerModule = instance as? InstallReferrerInterface
+
+                if (installReferrerModule != null) {
+                    Log.i("Branch SDK", "Install Referrer module found and loaded via Reflection.")
+                }
+            } catch (e: Exception) {
+                Log.e("Branch SDK","Found Install Referrer module but failed to instantiate it: ${e.message}")
+            }
+        } else {
+            Log.i("Branch SDK", "No Install Referrer module found. Install Referrer features disabled.")
+        }
+    }
+
+    override fun getInstallReferrerImplementation(): InstallReferrerInterface? {
+        return installReferrerModule
+    }
+}

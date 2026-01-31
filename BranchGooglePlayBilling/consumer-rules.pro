@@ -1,0 +1,2 @@
+-keep class com.branch.googleplaybilling.GooglePlayBillingV8Implementation { *; }
+-keep class io.branch.interfaces.GooglePlayBillingInterface { *; }

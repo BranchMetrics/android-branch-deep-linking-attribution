@@ -4,7 +4,6 @@ import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
 import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
-import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 
 import android.app.Activity;
@@ -27,8 +26,6 @@ import androidx.annotation.RequiresApi;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
 
-import com.android.billingclient.api.Purchase;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,8 +37,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.interfaces.GooglePlayBillingInterface;
 import io.branch.interfaces.IBranchLoggingCallbacks;
+import io.branch.interfaces.InstallReferrerInterface;
 import io.branch.referral.Defines.PreinstallKey;
+import io.branch.referral.modernization.core.ModernBranchCore;
+import io.branch.referral.modernization.core.ModernBranchCoreImpl;
+import io.branch.referral.modernization.core.ModuleManager;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
@@ -1476,14 +1478,19 @@ public class Branch {
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
             BranchLogger.d("DEBUG: Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
 
-            deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
-                @Override
-                public void onInstallReferrersFinished() {
+            ModernBranchCore sdk = ModernBranchCoreImpl.Companion.getInstance();
+            ModuleManager moduleManager = sdk.getModuleManager();
+            InstallReferrerInterface installReferrerClient = moduleManager.getInstallReferrerImplementation();
+
+            if (installReferrerClient != null) {
+                installReferrerClient.fetchInstallReferrerData(context_, () -> {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                     BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
                     BranchLogger.d("DEBUG: Install referrer fetch completed, lock removed");
-                }
-            });
+                });
+            } else {
+                request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+            }
         }
 
         request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
@@ -2376,15 +2383,16 @@ public class Branch {
         }
     }
 
-    public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
-        if (classExists(billingGooglePlayClass)) {
-            BillingGooglePlay.Companion.getInstance().startBillingClient(succeeded -> {
-                if (succeeded) {
-                    BillingGooglePlay.Companion.getInstance().logEventWithPurchase(context, purchase);
-                } else {
-                    BranchLogger.e("Cannot log IAP event. Billing client setup failed");                }
-                return null;
-            });
+    public void logEventWithPurchase(@NonNull Context context, @NonNull Object purchase) {
+        ModernBranchCore sdk = ModernBranchCoreImpl.Companion.getInstance();
+        ModuleManager moduleManager = sdk.getModuleManager();
+
+        GooglePlayBillingInterface billingHandler = moduleManager.getGooglePlayBillingImplementation();
+
+        if (billingHandler != null) {
+            billingHandler.logEventWithPurchase(context, purchase);
+        } else {
+            BranchLogger.e("Cannot log IAP event. Module not integrated.");
         }
     }
 
