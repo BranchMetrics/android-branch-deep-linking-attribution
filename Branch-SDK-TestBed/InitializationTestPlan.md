@@ -6,7 +6,7 @@ be updated. Unless noted, initialization is expected to work in all scenarios.
 
 
 ## Assumptions:
-* User followed [Android documentation](https://docs.branch.io/apps/android/)
+* User followed [Android documentation](https://help.branch.io/developer-hub/docs/android-sdk-overview)
 * Application can have multiple activities (launcher activity is called
 `SplashActivity` and all others are `NextActivity`)
 * Latest Branch SDK version is being used
