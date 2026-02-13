@@ -701,8 +701,8 @@ public class Branch {
      * <p>The connect timeout controls how long to wait for the TCP handshake to complete.
      * The read timeout controls how long to wait for the server to send response data.</p>
      *
-     * @param connectTimeout milliseconds to wait for connection establishment. Must be &gt; 0.
-     * @param readTimeout    milliseconds to wait for response data. Must be &gt; 0.
+     * @param connectTimeout milliseconds to wait for connection establishment. Must be positive.
+     * @param readTimeout    milliseconds to wait for response data. Must be positive.
      */
     public void setNetworkTimeout(int connectTimeout, int readTimeout) {
         if (prefHelper_ != null && connectTimeout > 0 && readTimeout > 0) {
