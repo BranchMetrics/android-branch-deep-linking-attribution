@@ -677,16 +677,21 @@ public class Branch {
     }
     
     /**
-     * <p>Sets the duration in milliseconds that the system should wait for a response before timing
-     * out any Branch API. Default 5500 ms. Note that this is the total time allocated for all request
-     * retries as set in {@link #setRetryCount(int)}.
+     * <p>Sets the duration in milliseconds that the system should wait before timing out
+     * any Branch API network request. This sets both the connection timeout and the read
+     * timeout to the same value.</p>
      *
-     * @param timeout An {@link Integer} value specifying the number of milliseconds to wait before
-     *                considering the request to have timed out.
+     * <p>Default is 5000 ms for read and 3000 ms for connect. Use
+     * {@link #setNetworkTimeout(int, int)} for independent control over connect and read
+     * timeouts.</p>
+     *
+     * @param timeout An {@link Integer} value specifying the number of milliseconds to
+     *                use for both connection and read timeouts.
      */
     public void setNetworkTimeout(int timeout) {
         if (prefHelper_ != null && timeout > 0) {
             prefHelper_.setTimeout(timeout);
+            prefHelper_.setConnectTimeout(timeout);
         }
     }
 
