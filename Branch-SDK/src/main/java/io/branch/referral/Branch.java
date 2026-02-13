@@ -712,12 +712,15 @@ public class Branch {
     }
 
     /**
-     * <p>Sets the duration in milliseconds that the system should wait for initializing a network
-     * * request.</p>
+     * <p>Sets the duration in milliseconds that the system should wait for initializing a
+     * network request.</p>
      *
-     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to wait before
-     *                considering the initialization to have timed out.
+     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to
+     *                       wait before considering the connection to have timed out.
+     * @deprecated Use {@link #setNetworkTimeout(int)} to set both timeouts uniformly, or
+     *             {@link #setNetworkTimeout(int, int)} for independent connect and read control.
      */
+    @Deprecated
     public void setNetworkConnectTimeout(int connectTimeout) {
         if (prefHelper_ != null && connectTimeout > 0) {
             prefHelper_.setConnectTimeout(connectTimeout);
