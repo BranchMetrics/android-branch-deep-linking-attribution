@@ -189,19 +189,10 @@ public class Branch {
      * Package private user agent string cached to save on repeated queries
      */
     public static String _userAgentString = "";
+    static boolean referringLinkAttributionForPreinstalledAppsEnabled = false;
 
     /* Json object containing key-value pairs for debugging deep linking */
     private JSONObject deeplinkDebugParams_;
-
-
-
-
-
-
-
-    static boolean disableAutoSessionInitialization;
-
-    static boolean referringLinkAttributionForPreinstalledAppsEnabled = false;
 
     /**
      * <p>A {@link Branch} object that is instantiated on init and holds the singleton instance of
@@ -1135,7 +1126,7 @@ public class Branch {
     public void clearPartnerParameters() {
         prefHelper_.partnerParams_.clearAllParameters();
     }
-    
+
     /**
      * Append the deep link debug params to the original params
      *
@@ -1159,9 +1150,9 @@ public class Branch {
         }
         return originalParams;
     }
-    
 
-    
+
+
     
     //-----------------Generate Short URL      -------------------------------------------//
     
@@ -1508,20 +1499,16 @@ public class Branch {
         String sessionId = prefHelper_.getSessionID();
         String deviceToken = prefHelper_.getRandomizedDeviceToken();
 
-        BranchLogger.d("DEBUG: getInstallOrOpenRequest - hasUser: " + hasUser +
-                      ", bundleToken: " + (bundleToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
-                      ", sessionId: " + (sessionId.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
-                      ", deviceToken: " + (deviceToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS"));
+        BranchLogger.d("getInstallOrOpenRequest - hasUser: " + hasUser +
+                ", bundleToken: " + (bundleToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
+                ", sessionId: " + (sessionId.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
+                ", deviceToken: " + (deviceToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS"));
 
         ServerRequestInitSession request;
         if (hasUser) {
-            // If there is user this is open
-            request = new ServerRequestRegisterOpen(context_, callback, isAutoInitialization);
-            BranchLogger.d("DEBUG: Created ServerRequestRegisterOpen - hasUser: true, isAutoInitialization: " + isAutoInitialization);
+            request = new io.branch.referral.RequestOpen(context_, callback, isAutoInitialization);
         } else {
-            // If no user this is an Install
             request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
-            BranchLogger.d("DEBUG: Created ServerRequestRegisterInstall - hasUser: false, isAutoInitialization: " + isAutoInitialization);
         }
         return request;
     }

@@ -745,7 +745,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         BranchLogger.d("initSession");
 
-        Branch.getInstance().setIdentity("Identity1");
+        //Branch.getInstance().setIdentity("Identity1");
 
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override
@@ -775,7 +775,7 @@ public class MainActivity extends Activity {
             }
         }).withData(this.getIntent().getData()).init();
 
-        initSessionsWithTests();
+        //initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -833,7 +833,7 @@ public class MainActivity extends Activity {
             }
             
             handleSessionInitializationSuccess(branchUniversalObject, linkProperties);
-            createTestEvents();
+            //createTestEvents();
         }
         
         /**

@@ -25,11 +25,9 @@ import kotlin.math.pow
 
 /**
  * Modern coroutine-based network layer for Branch SDK.
- * 
- * Replaces blocking Thread.sleep() calls with proper coroutine delay mechanisms,
+ * * Replaces blocking Thread.sleep() calls with proper coroutine delay mechanisms,
  * implements exponential backoff, and provides cancellation support.
- * 
- * Key improvements:
+ * * Key improvements:
  * - Non-blocking retry mechanism using coroutine delay
  * - Exponential backoff with jitter for better network behavior
  * - Proper cancellation support through structured concurrency
@@ -40,26 +38,26 @@ class BranchAsyncNetworkLayer(
     @NonNull private val branch: Branch,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
-    
+
     companion object {
         private const val THREAD_TAG_POST = 102
         private const val RETRY_NUMBER = "retryNumber"
-        
+
         // Exponential backoff configuration
         private const val BASE_DELAY_MS = 1000L // 1 second base delay
         private const val MAX_DELAY_MS = 30000L // 30 seconds max delay
         private const val BACKOFF_MULTIPLIER = 2.0
         private const val JITTER_FACTOR = 0.1 // 10% jitter
     }
-    
+
     private val prefHelper: PrefHelper = PrefHelper.getInstance(branch.applicationContext)
     private val retryLimit: Int = prefHelper.retryCount
-    
+
     // State tracking for debugging
     private var lastResponseCode = -1
     private var lastResponseMessage = ""
     private var lastRequestId = ""
-    
+
     /**
      * Performs a RESTful GET request with coroutine-based retry mechanism.
      */
@@ -81,11 +79,29 @@ class BranchAsyncNetworkLayer(
             }
         }
     }
-    
+
     /**
      * Performs a RESTful POST request with coroutine-based retry mechanism.
      */
     suspend fun doRestfulPost(url: String, payload: JSONObject): BranchRemoteInterface.BranchResponse {
+
+        try {
+            // If user_data exists, it already has the SDK version in it as part of the v2 request
+            if (!payload.has(Defines.Jsonkey.UserData.key)) {
+                payload.put(Defines.Jsonkey.SDK.key, "android" + Branch.getSdkVersionNumber())
+            }
+
+            if (!payload.has(Defines.Jsonkey.BranchKey.key) && prefHelper.branchKey != PrefHelper.NO_STRING_VALUE) {
+                payload.put(Defines.Jsonkey.BranchKey.key, prefHelper.branchKey)
+            }
+        } catch (e: JSONException) {
+            BranchLogger.w("BranchAsyncNetworkLayer: Failed to add common params: ${e.message}")
+        }
+
+        BranchLogger.v("posting to $url")
+        BranchLogger.v("Post value = $payload")
+        // ------------------------------------------------
+
         BranchLogger.d("BranchAsyncNetworkLayer: Starting POST request to $url with payload size ${payload.toString().length} chars")
         return withContext(Dispatchers.IO) {
             val startTime = System.currentTimeMillis()
@@ -103,7 +119,7 @@ class BranchAsyncNetworkLayer(
             }
         }
     }
-    
+
     /**
      * Generic retry mechanism with exponential backoff and proper cancellation support.
      */
@@ -112,26 +128,26 @@ class BranchAsyncNetworkLayer(
     ): BranchRemoteInterface.BranchResponse {
         var retryNumber = 0
         BranchLogger.d("BranchAsyncNetworkLayer: Starting request with retry limit $retryLimit")
-        
+
         while (retryNumber <= retryLimit) {
             try {
                 BranchLogger.v("BranchAsyncNetworkLayer: Executing request attempt #$retryNumber")
                 val response = operation(retryNumber)
-                
+
                 // Check if we need to retry based on response code
                 if (shouldRetry(response.getResponseCode(), retryNumber)) {
                     val delay = calculateRetryDelay(retryNumber)
                     BranchLogger.w("BranchAsyncNetworkLayer: Response code ${response.getResponseCode()} requires retry #$retryNumber. Using coroutine delay of ${delay}ms (eliminates Thread.sleep!)")
-                    
+
                     // Non-blocking delay with cancellation support - THIS REPLACES Thread.sleep()!
                     delay(delay)
                     retryNumber++
                     continue
                 }
-                
-                BranchLogger.d("BranchAsyncNetworkLayer: Request successful on attempt #$retryNumber with response code ${response.getResponseCode()}")
+
+                BranchLogger.d("BranchAsyncNetworkLayer: Network execution completed on attempt #$retryNumber with response code ${response.getResponseCode()}")
                 return response
-                
+
             } catch (e: CancellationException) {
                 BranchLogger.i("BranchAsyncNetworkLayer: Network request cancelled via coroutine cancellation")
                 throw e
@@ -139,19 +155,19 @@ class BranchAsyncNetworkLayer(
                 if (shouldRetryOnException(e, retryNumber)) {
                     val delay = calculateRetryDelay(retryNumber)
                     BranchLogger.w("BranchAsyncNetworkLayer: Exception occurred (${e.javaClass.simpleName}), retrying #$retryNumber after ${delay}ms coroutine delay: ${e.message}")
-                    
+
                     // Non-blocking delay with cancellation support - THIS REPLACES Thread.sleep()!
                     delay(delay)
                     retryNumber++
                     continue
                 }
-                
+
                 BranchLogger.e("BranchAsyncNetworkLayer: Request failed permanently after $retryNumber attempts: ${e.message}")
                 // Convert to appropriate BranchRemoteException
                 throw convertToBranchRemoteException(e)
             }
         }
-        
+
         // Should not reach here, but provide fallback
         BranchLogger.e("BranchAsyncNetworkLayer: Max retries ($retryLimit) exceeded")
         throw BranchRemoteInterface.BranchRemoteException(
@@ -159,7 +175,7 @@ class BranchAsyncNetworkLayer(
             "Maximum retry attempts exceeded"
         )
     }
-    
+
     /**
      * Calculates retry delay using exponential backoff with jitter.
      * This replaces the old linear retry with Thread.sleep().
@@ -167,22 +183,22 @@ class BranchAsyncNetworkLayer(
     private fun calculateRetryDelay(retryNumber: Int): Long {
         val baseDelay = BASE_DELAY_MS * BACKOFF_MULTIPLIER.pow(retryNumber).toLong()
         val cappedDelay = min(baseDelay, MAX_DELAY_MS)
-        
+
         // Add jitter to prevent thundering herd
         val jitter = (cappedDelay * JITTER_FACTOR * Math.random()).toLong()
         val finalDelay = cappedDelay + jitter
-        
+
         BranchLogger.v("BranchAsyncNetworkLayer: Calculated exponential backoff delay: ${finalDelay}ms for retry #$retryNumber (base: ${baseDelay}ms, jitter: ${jitter}ms)")
         return finalDelay
     }
-    
+
     /**
      * Determines if we should retry based on HTTP response code.
      */
     private fun shouldRetry(responseCode: Int, retryNumber: Int): Boolean {
         return responseCode >= 500 && retryNumber < retryLimit
     }
-    
+
     /**
      * Determines if we should retry based on exception type.
      */
@@ -194,14 +210,14 @@ class BranchAsyncNetworkLayer(
             else -> false
         }
     }
-    
+
     /**
      * Converts generic exceptions to BranchRemoteException.
      */
     private fun convertToBranchRemoteException(exception: Exception): BranchRemoteInterface.BranchRemoteException {
         return when (exception) {
             is SocketException -> BranchRemoteInterface.BranchRemoteException(
-                BranchError.ERR_BRANCH_NO_CONNECTIVITY, 
+                BranchError.ERR_BRANCH_NO_CONNECTIVITY,
                 exception.message ?: "Network connectivity error"
             )
             is SocketTimeoutException -> BranchRemoteInterface.BranchRemoteException(
@@ -226,41 +242,42 @@ class BranchAsyncNetworkLayer(
             )
         }
     }
-    
+
     /**
      * Performs the actual GET request.
      */
     private suspend fun performGetRequest(url: String, retryNumber: Int): BranchRemoteInterface.BranchResponse {
         return withContext(Dispatchers.IO) {
             var connection: HttpsURLConnection? = null
-            
+
             try {
                 val timeout = prefHelper.timeout
                 val connectTimeout = prefHelper.connectTimeout
+
                 val appendKey = if (url.contains("?")) "&" else "?"
                 val modifiedUrl = "$url$appendKey$RETRY_NUMBER=$retryNumber"
-                
+
                 val urlObject = URL(modifiedUrl)
                 connection = urlObject.openConnection() as HttpsURLConnection
                 connection.connectTimeout = connectTimeout
                 connection.readTimeout = timeout
-                
+
                 val requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.key)
                 val responseCode = connection.responseCode
-                
+
                 lastResponseCode = responseCode
                 lastResponseMessage = connection.responseMessage ?: ""
                 lastRequestId = requestId ?: ""
-                
+
                 val result = if (responseCode != HttpsURLConnection.HTTP_OK && connection.errorStream != null) {
                     BranchRemoteInterface.BranchResponse(getResponseString(connection.errorStream), responseCode)
                 } else {
                     BranchRemoteInterface.BranchResponse(getResponseString(connection.inputStream), responseCode)
                 }
-                
+
                 result.requestId = Strings.emptyToNull(requestId)
                 result
-                
+
             } catch (e: FileNotFoundException) {
                 BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber))
                 BranchRemoteInterface.BranchResponse(null, lastResponseCode)
@@ -270,41 +287,41 @@ class BranchAsyncNetworkLayer(
             }
         }
     }
-    
+
     /**
      * Performs the actual POST request.
      */
     private suspend fun performPostRequest(
-        url: String, 
-        payload: JSONObject, 
+        url: String,
+        payload: JSONObject,
         retryNumber: Int
     ): BranchRemoteInterface.BranchResponse {
         return withContext(Dispatchers.IO) {
             var connection: HttpsURLConnection? = null
-            
+
             try {
                 // Set thread stats tag for POST if API 26+
                 if (android.os.Build.VERSION.SDK_INT >= 26) {
                     TrafficStats.setThreadStatsTag(THREAD_TAG_POST)
                 }
-                
+
                 val timeout = prefHelper.timeout
                 val connectTimeout = prefHelper.connectTimeout
-                
+
                 // Add retry number to payload
                 try {
                     payload.put(RETRY_NUMBER, retryNumber)
                 } catch (e: JSONException) {
                     BranchLogger.e("Failed to add retry number: ${e.message}")
                 }
-                
+
                 val urlObject = URL(url)
                 connection = urlObject.openConnection() as HttpsURLConnection
                 connection.connectTimeout = connectTimeout
                 connection.readTimeout = timeout
                 connection.doInput = true
                 connection.doOutput = true
-                
+
                 if (url.contains(Defines.Jsonkey.QRCodeTag.key)) {
                     connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
                     connection.setRequestProperty("Accept", "image/*")
@@ -313,31 +330,31 @@ class BranchAsyncNetworkLayer(
                     connection.setRequestProperty("Accept", "application/json")
                 }
                 connection.requestMethod = "POST"
-                
+
                 // Write payload
                 OutputStreamWriter(connection.outputStream).use { writer ->
                     writer.write(payload.toString())
                     writer.flush()
                 }
-                
+
                 val requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.key)
                 val responseCode = connection.responseCode
-                
+
                 lastRequestId = requestId ?: ""
                 lastResponseCode = responseCode
                 lastResponseMessage = connection.responseMessage ?: ""
-                
+
                 BranchLogger.d("Response: $lastResponseMessage")
-                
+
                 val result = if (responseCode != HttpsURLConnection.HTTP_OK && connection.errorStream != null) {
                     BranchLogger.e(
                         "Branch Networking Error: " +
-                        "\nURL: $url" +
-                        "\nResponse Code: $lastResponseCode" +
-                        "\nResponse Message: $lastResponseMessage" +
-                        "\nRetry number: $retryNumber" +
-                        "\nFinal attempt: true" +
-                        "\nrequestId: $lastRequestId"
+                                "\nURL: $url" +
+                                "\nResponse Code: $lastResponseCode" +
+                                "\nResponse Message: $lastResponseMessage" +
+                                "\nRetry number: $retryNumber" +
+                                "\nFinal attempt: true" +
+                                "\nrequestId: $lastRequestId"
                     )
                     BranchRemoteInterface.BranchResponse(getResponseString(connection.errorStream), responseCode)
                 } else {
@@ -352,22 +369,22 @@ class BranchAsyncNetworkLayer(
                     } else {
                         getResponseString(connection.inputStream)
                     }
-                    
+
                     BranchLogger.v(
                         "Branch Networking Success" +
-                        "\nURL: $url" +
-                        "\nResponse Code: $lastResponseCode" +
-                        "\nResponse Message: $lastResponseMessage" +
-                        "\nRetry number: $retryNumber" +
-                        "\nrequestId: $lastRequestId"
+                                "\nURL: $url" +
+                                "\nResponse Code: $lastResponseCode" +
+                                "\nResponse Message: $lastResponseMessage" +
+                                "\nRetry number: $retryNumber" +
+                                "\nrequestId: $lastRequestId"
                     )
-                    
+
                     BranchRemoteInterface.BranchResponse(responseData, responseCode)
                 }
-                
+
                 result.requestId = requestId
                 result
-                
+
             } catch (e: FileNotFoundException) {
                 BranchLogger.e(getNetworkErrorMessage(e, url, retryNumber))
                 BranchRemoteInterface.BranchResponse(null, lastResponseCode)
@@ -377,13 +394,13 @@ class BranchAsyncNetworkLayer(
             }
         }
     }
-    
+
     /**
      * Reads response string from input stream.
      */
     private fun getResponseString(inputStream: InputStream?): String? {
         if (inputStream == null) return null
-        
+
         return try {
             BufferedReader(InputStreamReader(inputStream)).use { reader ->
                 reader.readText()
@@ -393,7 +410,7 @@ class BranchAsyncNetworkLayer(
             null
         }
     }
-    
+
     /**
      * Resets internal state tracking.
      */
@@ -402,7 +419,7 @@ class BranchAsyncNetworkLayer(
         lastResponseCode = -1
         lastResponseMessage = ""
     }
-    
+
     /**
      * Generates detailed error message for debugging.
      */
@@ -418,7 +435,7 @@ class BranchAsyncNetworkLayer(
                 "\nException Message: ${exception.message}" +
                 "\nStacktrace: ${BranchLogger.stackTraceToString(exception)}"
     }
-    
+
     /**
      * Cancels all ongoing network operations.
      */
