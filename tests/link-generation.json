@@ -1,0 +1,21 @@
+{
+  "name": "[Android] Link Generation",
+  "steps": [
+    {
+      "id": 1,
+      "type": "tap",
+      "text": "Create Branch Link"
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Wait up to 5 seconds for the Branch link URL to be generated and displayed in the text field below the buttons. The URL should start with 'https://' and contain 'branch' or 'app.link'."
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "Check if a URL containing 'bnctestbed.app.link' is visible on the screen. The URL will have additional characters after it. If visible, succeed. If not visible, fail the test."
+    }
+  ],
+  "params": {}
+}
