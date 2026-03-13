@@ -1,0 +1,21 @@
+{
+  "name": "[Android] Create QR Code",
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Tap on the button that says exactly 'Create QR Code'. Do not scroll."
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Wait up to 5 seconds for a dialog with the title 'Your QR Code' to appear on the screen. The dialog should contain a QR code image and a 'Dismiss' button. If the dialog is visible, succeed. If not, fail the test."
+    },
+    {
+      "id": 3,
+      "type": "tap",
+      "text": "Dismiss"
+    }
+  ],
+  "params": {}
+}
