@@ -22,11 +22,10 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-//        IBranchLoggingCallbacks loggingCallbacks = (message, tag) -> {
-//            Log.d("BranchTestbed", message);
-//            saveLogToFile(message);
-//        };
-        Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
+        Branch.enableLogging((message, tag) -> {
+            Log.d("BranchTestbed", message);
+            saveLogToFile(message);
+        }, BranchLogger.BranchLogLevel.VERBOSE);
         Branch branch = Branch.getAutoInstance(this);
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
