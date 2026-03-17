@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -66,6 +68,12 @@ public class MainActivity extends Activity {
     private BranchUniversalObject branchUniversalObject;
 
     private final static String branchChannelID = "BranchChannelID";
+
+    private void showLongToast(String message) {
+        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
+        toast.show();
+        new Handler(Looper.getMainLooper()).postDelayed(toast::show, 3000);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -246,7 +254,7 @@ public class MainActivity extends Activity {
                 BranchEvent viewItemEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM);
                 viewItemEvent.logEvent(MainActivity.this);
                 
-                Toast.makeText(MainActivity.this, "VIEW_ITEM event logged", Toast.LENGTH_SHORT).show();
+                showLongToast("VIEW_ITEM event logged");
             }
         });
 
@@ -559,7 +567,7 @@ public class MainActivity extends Activity {
                             @Override
                             public void onSuccess(int responseCode) {
                                 BranchLogger.d("MODERNIZATION_DEBUG: Commerce Event SUCCESS: " + responseCode);
-                                Toast.makeText(getApplicationContext(), "✅ Commerce Event Sent: " + responseCode, Toast.LENGTH_LONG).show();
+                                showLongToast("✅ Commerce Event Sent: " + responseCode);
                             }
 
                             @Override
@@ -589,7 +597,7 @@ public class MainActivity extends Activity {
                             @Override
                             public void onSuccess(int responseCode) {
                                 BranchLogger.d("MODERNIZATION_DEBUG: Content Event sent successfully: " + responseCode);
-                                Toast.makeText(getApplicationContext(), "Sent Branch Content Event: " + responseCode, Toast.LENGTH_LONG).show();
+                                showLongToast("Sent Branch Content Event: " + responseCode);
                             }
 
                             @Override
@@ -617,7 +625,7 @@ public class MainActivity extends Activity {
                             @Override
                             public void onSuccess(int responseCode) {
                                 BranchLogger.d("MODERNIZATION_DEBUG: Lifecycle Event sent successfully: " + responseCode);
-                                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event: " + responseCode, Toast.LENGTH_LONG).show();
+                                showLongToast("Sent Branch Lifecycle Event: " + responseCode);
                             }
 
                             @Override
