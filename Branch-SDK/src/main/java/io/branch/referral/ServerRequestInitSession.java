@@ -15,7 +15,7 @@ import io.branch.referral.validators.DeepLinkRoutingValidator;
  * Abstract for Session init request. All request which do initialize session should extend from this.
  * </p>
  */
-abstract class ServerRequestInitSession extends ServerRequest {
+public abstract class ServerRequestInitSession extends ServerRequest {
     static final String ACTION_OPEN = "open";
     static final String ACTION_INSTALL = "install";
     private final Context context_;
@@ -26,16 +26,16 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
     static final String INITIATED_BY_CLIENT = "INITIATED_BY_CLIENT";
 
-    Branch.BranchReferralInitListener callback_;
+    protected Branch.BranchReferralInitListener callback_;
     boolean initiatedByClient;
 
-    ServerRequestInitSession(Context context, Defines.RequestPath requestPath, boolean isAutoInitialization) {
+    public ServerRequestInitSession(Context context, Defines.RequestPath requestPath, boolean isAutoInitialization) {
         super(context, requestPath);
         context_ = context;
         initiatedByClient = !isAutoInitialization;
     }
 
-    ServerRequestInitSession(Defines.RequestPath requestPath, JSONObject post, Context context, boolean isAutoInitialization) {
+    public ServerRequestInitSession(Defines.RequestPath requestPath, JSONObject post, Context context, boolean isAutoInitialization) {
         super(requestPath, post, context);
         context_ = context;
         initiatedByClient = !isAutoInitialization;
@@ -85,7 +85,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
         Branch.getInstance().unlockSDKInitWaitLock();
     }
 
-    void onInitSessionCompleted(ServerResponse response, Branch branch) {
+    protected void onInitSessionCompleted(ServerResponse response, Branch branch) {
         // Set the session state to INITIALISED after successful initialization
         branch.setInitState(BranchSessionState.Initialized.INSTANCE);
         

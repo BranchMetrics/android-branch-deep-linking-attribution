@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.branch.coroutines.RequestDeepLink;
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Defines.PreinstallKey;
@@ -2299,9 +2300,6 @@ public class Branch {
         }
     }
 
-    boolean isIDLSession() {
-        return Boolean.parseBoolean(Branch.getInstance().requestQueue_.instrumentationExtraData_.get(Defines.Jsonkey.InstantDeepLinkSession.getKey()));
-    }
     /**
      * <p> Create Branch session builder. Add configuration variables with the available methods
      * in the returned {@link InitSessionBuilder} class. Must be finished with init() or reInit(),
@@ -2682,5 +2680,34 @@ public class Branch {
     public static IBranchRequestTracingCallback getCallbackForTracingRequests(){
         return _iBranchRequestTracingCallback;
 
+    }
+
+    /**
+     * Public API to manually request deep link data for a specific URI.
+     * This is coroutine-friendly when called within a LifecycleScope or specialized dispatcher.
+     * * @param uri The URI (App Link or Scheme) to resolve.
+     * @param callback A {@link BranchReferralInitListener} to receive the params.
+     */
+    public void requestDeepLinkData(@NonNull Uri uri, @Nullable BranchReferralInitListener callback) {
+        BranchLogger.d("Public API: requestDeepLinkData called for URI: " + uri);
+
+        // We use the context directly from the Branch instance (context_)
+        // instead of trying to pull it from prefHelper_.
+        RequestDeepLink request = new RequestDeepLink(
+                context_,
+                uri,
+                callback,
+                false
+        );
+
+        // Hand the request to the modernized queue for processing via the Kotlin Channel
+        if (requestQueue_ != null) {
+            requestQueue_.handleNewRequest(request);
+        } else {
+            BranchLogger.e("RequestDeepLink failed: requestQueue_ is null");
+            if (callback != null) {
+                callback.onInitFinished(null, new BranchError("SDK not initialized", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
+            }
+        }
     }
 }

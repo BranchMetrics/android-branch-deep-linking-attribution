@@ -1,11 +1,20 @@
-package io.branch.referral
+package io.branch.coroutines
 
 import android.content.Context
+import android.net.Uri
+import io.branch.referral.Branch
+import io.branch.referral.BranchError
+import io.branch.referral.BranchLogger
+import io.branch.referral.Defines
+import io.branch.referral.PrefHelper
+import io.branch.referral.ServerRequestInitSession
+import io.branch.referral.ServerResponse
 import org.json.JSONException
 import org.json.JSONObject
 
-internal class RequestOpen(
+internal class RequestDeepLink(
     context: Context,
+    private val uri: Uri?,
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean
 ) : ServerRequestInitSession(context, Defines.RequestPath.RegisterOpen, isAutoInitialization) {
@@ -14,6 +23,12 @@ internal class RequestOpen(
         callback_ = callback
         try {
             val openPost = JSONObject()
+
+            // Adding the URI to the payload as the server expects
+            uri?.let {
+                openPost.put(Defines.Jsonkey.AndroidAppLinkURL.key, it.toString())
+            }
+
             openPost.put(Defines.Jsonkey.RandomizedDeviceToken.key, prefHelper_.randomizedDeviceToken)
             openPost.put(Defines.Jsonkey.RandomizedBundleToken.key, prefHelper_.randomizedBundleToken)
             setPost(openPost)
@@ -24,12 +39,12 @@ internal class RequestOpen(
     }
 
     override fun getRequestUrl(): String {
-        return "https://rlogan-go-gateway.eks-stage-puffin-usw2.branch.io/v1/open"
+        return "https://rlogan-go-gateway.eks-stage-puffin-usw2.branch.io/v1/deeplink"
     }
 
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
         super.onRequestSucceeded(response, branch)
-        BranchLogger.v("RequestOpen Succeeded. Response: ${response.`object`}")
+        BranchLogger.v("RequestDeepLink Succeeded. Response: ${response.`object`}")
 
         try {
             val responseJson = response.`object`
@@ -40,38 +55,28 @@ internal class RequestOpen(
                 prefHelper_.linkClickID = PrefHelper.NO_STRING_VALUE
             }
 
-            // Check for enhanced web link UX override
-            if (responseJson.has(Defines.Jsonkey.Invoke_Features.key) &&
-                responseJson.getJSONObject(Defines.Jsonkey.Invoke_Features.key).has("enhanced_web_link_ux")) {
-
-                val invokeFeaturesJson = responseJson.getJSONObject(Defines.Jsonkey.Invoke_Features.key)
-                BranchLogger.v("Opening browser from open request.")
-                branch.openBrowserExperience(invokeFeaturesJson)
-
+            if (responseJson.has(Defines.Jsonkey.Data.key)) {
+                val params = responseJson.getString(Defines.Jsonkey.Data.key)
+                prefHelper_.sessionParams = params
             } else {
-                if (responseJson.has(Defines.Jsonkey.Data.key)) {
-                    val params = responseJson.getString(Defines.Jsonkey.Data.key)
-                    prefHelper_.sessionParams = params
-                } else {
-                    prefHelper_.sessionParams = PrefHelper.NO_STRING_VALUE
-                }
-
-                if (callback_ != null) {
-                    callback_!!.onInitFinished(branch.latestReferringParams, null)
-                }
+                prefHelper_.sessionParams = PrefHelper.NO_STRING_VALUE
             }
 
-            prefHelper_.appVersion = DeviceInfo.getInstance()?.appVersion ?: ""
+            if (callback_ != null) {
+                callback_!!.onInitFinished(branch.latestReferringParams, null)
+            }
+
+            prefHelper_.appVersion = prefHelper_.appVersion
 
         } catch (ex: Exception) {
-            BranchLogger.w("Caught Exception processing RequestOpen response: ${ex.message}")
+            BranchLogger.w("Caught Exception processing RequestDeepLink response: ${ex.message}")
         }
 
         onInitSessionCompleted(response, branch)
     }
 
     override fun handleFailure(statusCode: Int, causeMsg: String) {
-        val serverErrorMessage = "Request Open failed with HTTP code: $statusCode. Server says: $causeMsg"
+        val serverErrorMessage = "Request DeepLink failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
 
         if (callback_ != null) {
@@ -88,7 +93,7 @@ internal class RequestOpen(
         }
     }
 
-    override fun getRequestActionName(): String = ACTION_OPEN
+    override fun getRequestActionName(): String = "deeplink"
 
     override fun isGetRequest(): Boolean = false
 

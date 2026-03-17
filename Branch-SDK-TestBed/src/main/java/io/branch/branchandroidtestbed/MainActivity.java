@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -695,6 +696,32 @@ public class MainActivity extends Activity {
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
+            }
+        });
+
+        findViewById(R.id.btn_request_deeplink).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri testUri = null;
+
+                Log.d("BranchTestbed", "Triggering requestDeepLinkData: " + testUri);
+
+                Branch.getInstance().requestDeepLinkData(testUri, new Branch.BranchReferralInitListener() {
+                    @Override
+                    public void onInitFinished(JSONObject params, BranchError error) {
+                        if (error == null) {
+                            if (params != null) {
+                                try {
+                                    Log.d("BranchTestbed", "Deep Link Params: " + params.toString(2));
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        } else {
+                            Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
+                        }
+                    }
+                });
             }
         });
     }
