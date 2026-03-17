@@ -1,0 +1,58 @@
+{
+  "name": "[Android Dependency] Enable App Link",
+  "mobileboost_id": "gMTZpITvB9ejIJTtbZPd",
+  "tags": [],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Go to device home screen"
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "To show installed applications scroll down once."
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "Long tap on Branch Link Simulator icon"
+    },
+    {
+      "id": 4,
+      "type": "ai",
+      "instruction": "Click on App info button"
+    },
+    {
+      "id": 5,
+      "type": "ai",
+      "instruction": "Scroll down until you see Open by default"
+    },
+    {
+      "id": 6,
+      "type": "ai",
+      "instruction": "Click on open by default"
+    },
+    {
+      "id": 7,
+      "type": "ai",
+      "instruction": "Click on Add link"
+    },
+    {
+      "id": 8,
+      "type": "tap",
+      "text": "prod-freedom.branchcustom.xyz"
+    },
+    {
+      "id": 9,
+      "type": "ai",
+      "instruction": "Tap on add"
+    },
+    {
+      "id": 10,
+      "type": "ai",
+      "instruction": "Go to device home screen"
+    }
+  ],
+  "params": {}
+}
