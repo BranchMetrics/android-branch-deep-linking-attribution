@@ -16,7 +16,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,14 +34,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
-import java.net.HttpURLConnection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.interfaces.IBranchLoggingCallbacks;
@@ -51,6 +46,7 @@ import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
 import io.branch.referral.util.LinkProperties;
+
 
 /**
  * <p>
@@ -212,6 +208,9 @@ public class Branch {
      * the class during application runtime.</p>
      */
     private static Branch branchReferral_;
+    
+    // Static handler for lifecycle-aware delayed operations to prevent memory leaks
+    private static Handler staticHandler;
 
     private BranchRemoteInterface branchRemoteInterface_;
     final PrefHelper prefHelper_;
@@ -226,19 +225,24 @@ public class Branch {
 
     final ConcurrentHashMap<BranchLinkData, String> linkCache_ = new ConcurrentHashMap<>();
 
+    /* Modern link generator to replace deprecated AsyncTask pattern */
+    private ModernLinkGenerator modernLinkGenerator_;
+
+    /* Legacy link generator for fallback compatibility */
+    private BranchLegacyLinkGenerator legacyLinkGenerator_;
+
     /* Set to true when {@link Activity} life cycle callbacks are registered. */
     private static boolean isActivityLifeCycleCallbackRegistered_ = false;
     private CustomTabsIntent customTabsIntentOverride;
 
     // Replace SESSION_STATE enum with SessionState
-    // Legacy session state lock - kept for backward compatibility
     private final Object sessionStateLock = new Object();
 
     /* Holds the current intent state. Default is set to PENDING. */
     private INTENT_STATE intentState_ = INTENT_STATE.PENDING;
     
     /* Holds the current Session state. Default is set to UNINITIALISED. */
-    SessionState initState_ = SessionState.UNINITIALISED;
+    BranchSessionState initState_ = BranchSessionState.Uninitialized.INSTANCE;
 
     // New StateFlow-based session state manager
     private final BranchSessionStateManager sessionStateManager = new BranchSessionStateManager();
@@ -316,6 +320,8 @@ public class Branch {
         INITIALISED
     }
 
+    private static IBranchRequestTracingCallback _iBranchRequestTracingCallback;
+
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
      * pattern.</p>
@@ -336,6 +342,18 @@ public class Branch {
         BranchLogger.d("DEBUG: Branch constructor - initializing request queue");
         requestQueue_.initialize();
         BranchLogger.d("DEBUG: Branch constructor - request queue initialized");
+
+        // Initialize modern link generator with default parameters
+        modernLinkGenerator_ = new ModernLinkGenerator(
+            context,
+            branchRemoteInterface_,
+            prefHelper_
+        );
+        BranchLogger.d("DEBUG: Branch constructor - modern link generator initialized");
+
+        // Initialize legacy link generator for fallback compatibility
+        legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, branchRemoteInterface_);
+        BranchLogger.d("DEBUG: Branch constructor - legacy link generator initialized");
     }
 
     /**
@@ -478,6 +496,8 @@ public class Branch {
         PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
     }
 
+
+
     /**
      * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
      * @param url The {@link String} URL base URL that the Branch API uses.
@@ -551,6 +571,13 @@ public class Branch {
     // Package Private
     // For Unit Testing, we need to reset the Branch state
     static void shutDown() {
+        // Shutdown modern link generator before other components
+        if (branchReferral_ != null && branchReferral_.modernLinkGenerator_ != null) {
+            branchReferral_.modernLinkGenerator_.shutdown();
+        }
+
+        // Legacy link generator doesn't need explicit shutdown (no coroutines)
+
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();
         PrefHelper.shutDown();
@@ -619,14 +646,13 @@ public class Branch {
         } catch (Exception e) {
             BranchLogger.e("Error getting current session state: " + e.getMessage());
             // Fallback to legacy state mapping
-            switch (getInitState()) {
-                case INITIALISED:
-                    return BranchSessionState.Initialized.INSTANCE;
-                case INITIALISING:
-                    return BranchSessionState.Initializing.INSTANCE;
-                case UNINITIALISED:
-                default:
-                    return BranchSessionState.Uninitialized.INSTANCE;
+            BranchSessionState currentState = getInitState();
+            if (currentState instanceof BranchSessionState.Initialized) {
+                return BranchSessionState.Initialized.INSTANCE;
+            } else if (currentState instanceof BranchSessionState.Initializing) {
+                return BranchSessionState.Initializing.INSTANCE;
+            } else {
+                return BranchSessionState.Uninitialized.INSTANCE;
             }
         }
     }
@@ -642,7 +668,7 @@ public class Branch {
         } catch (Exception e) {
             BranchLogger.e("Error checking canPerformOperations: " + e.getMessage());
             // Fallback to legacy state check
-            return getInitState() == SESSION_STATE.INITIALISED;
+            return getInitState() instanceof BranchSessionState.Initialized;
         }
     }
 
@@ -657,7 +683,7 @@ public class Branch {
         } catch (Exception e) {
             BranchLogger.e("Error checking hasActiveSession: " + e.getMessage());
             // Fallback to legacy state check
-            return getInitState() == SESSION_STATE.INITIALISED;
+            return getInitState() instanceof BranchSessionState.Initialized;
         }
     }
 
@@ -828,7 +854,7 @@ public class Branch {
         BranchLogger.d("DEBUG: executeClose called - resetting session state");
 
         // Reset legacy session state first to ensure consistency
-        setInitState(SESSION_STATE.UNINITIALISED);
+        setInitState(BranchSessionState.Uninitialized.INSTANCE);
 
         // Reset session state via StateFlow system
         sessionStateManager.reset();
@@ -997,8 +1023,9 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} callback instance that will return
      *                 the data associated with the user id being assigned, if available.
      */
+
     public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
-        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, null, userId, callback));
+        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, Defines.RequestPath.SetIdentity, userId, callback));
     }
 
 
@@ -1022,7 +1049,7 @@ public class Branch {
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
     public void logout(LogoutStatusListener callback) {
-        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, null, callback);
+        QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, Defines.RequestPath.Logout, callback);
         requestQueue_.handleNewRequest(queueOperationLogout);
     }
 
@@ -1153,7 +1180,15 @@ public class Branch {
                 return url;
             }
             if (req.isAsync()) {
-                requestQueue_.handleNewRequest(req);
+                // Use modern link generator for async requests when available
+                if (modernLinkGenerator_ != null) {
+                    BranchLogger.d("MODERNIZATION_TRACE: Using ModernLinkGenerator for async link creation");
+                    modernLinkGenerator_.generateShortLinkAsyncFromJava(req.getLinkPost(), req.getCallback());
+                } else {
+                    // Fallback to request queue for backward compatibility
+                    BranchLogger.d("MODERNIZATION_TRACE: Falling back to legacy requestQueue for async link creation");
+                    requestQueue_.handleNewRequest(req);
+                }
             } else {
                 return generateShortLinkSync(req);
             }
@@ -1187,29 +1222,54 @@ public class Branch {
 
     // PRIVATE FUNCTIONS
     
+    /**
+     * Generate short link synchronously using modern and legacy fallback strategies.
+     *
+     * This method serves as a facade for link generation, coordinating between the modern
+     * coroutine-based approach and legacy fallback implementations to ensure maximum
+     * compatibility and reliability.
+     *
+     * <h3>Generation Strategy</h3>
+     * <ol>
+     * <li><strong>Primary</strong>: Modern coroutine-based generation via {@link ModernLinkGenerator}</li>
+     * <li><strong>Fallback</strong>: Legacy AsyncTask-based generation via {@link BranchLegacyLinkGenerator}</li>
+     * <li><strong>Final</strong>: Return long URL if configured, or null</li>
+     * </ol>
+     *
+     * <h3>Error Handling</h3>
+     * <ul>
+     * <li>Network failures automatically trigger fallback to next strategy</li>
+     * <li>Timeout exceptions are handled gracefully with appropriate logging</li>
+     * <li>JSON parsing errors result in fallback behavior</li>
+     * <li>All exceptions are logged for debugging purposes</li>
+     * </ul>
+     *
+     * <h3>Caching</h3>
+     * Generated URLs are cached using the {@code linkCache_} to improve performance
+     * for repeated requests with identical parameters.
+     *
+     * @param req The server request containing link generation parameters
+     * @return Generated short URL, fallback long URL, or null on complete failure
+     * @since 5.3.0 (refactored to use facade pattern)
+     * @see ModernLinkGenerator#generateShortLinkSyncFromJava
+     * @see BranchLegacyLinkGenerator#generateShortLinkSyncLegacy
+     */
     private String generateShortLinkSync(ServerRequestCreateUrl req) {
-        ServerResponse response = null;
-        try {
-            int timeOut = prefHelper_.getTimeout() + 2000; // Time out is set to slightly more than link creation time to prevent any edge case
-            response = new GetShortLinkTask().execute(req).get(timeOut, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            BranchLogger.d(e.getMessage());
+        // Use modern link generator with existing Java-compatible method
+        if (modernLinkGenerator_ != null) {
+            return modernLinkGenerator_.generateShortLinkSyncFromJava(
+                req.getLinkPost(),
+                req.isDefaultToLongUrl(),
+                req.getLongUrl(),
+                prefHelper_.getTimeout()
+            );
+        } else if (legacyLinkGenerator_ != null) {
+            // Fallback to dedicated legacy implementation
+            return legacyLinkGenerator_.generateShortLinkSyncLegacy(req, linkCache_);
+        } else {
+            // Final fallback - return long URL if configured
+            return req.isDefaultToLongUrl() ? req.getLongUrl() : null;
         }
-        String url = null;
-        if (req.isDefaultToLongUrl()) {
-            url = req.getLongUrl();
-        }
-        if (response != null && response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-            try {
-                url = response.getObject().getString("url");
-                if (req.getLinkPost() != null) {
-                    linkCache_.put(req.getLinkPost(), url);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        return url;
     }
     
     private JSONObject convertParamsStringToDictionary(String paramString) {
@@ -1258,23 +1318,19 @@ public class Branch {
         this.intentState_ = intentState;
     }
 
-    void setInitState(SessionState initState) {
+    void setInitState(BranchSessionState initState) {
         synchronized (sessionStateLock) {
             initState_ = initState;
         }
 
         // Update the StateFlow-based session state manager with proper error handling
         try {
-            switch (initState) {
-                case UNINITIALISED:
-                    sessionStateManager.reset();
-                    break;
-                case INITIALISING:
-                    sessionStateManager.initialize();
-                    break;
-                case INITIALISED:
-                    sessionStateManager.initializeComplete();
-                    break;
+            if (initState instanceof BranchSessionState.Uninitialized) {
+                sessionStateManager.reset();
+            } else if (initState instanceof BranchSessionState.Initializing) {
+                sessionStateManager.initialize();
+            } else if (initState instanceof BranchSessionState.Initialized) {
+                sessionStateManager.initializeComplete();
             }
         } catch (Exception e) {
             BranchLogger.e("Error updating session state manager: " + e.getMessage());
@@ -1282,13 +1338,7 @@ public class Branch {
         }
     }
 
-    /**
-     * Returns the initialization state of the session.
-     * SESSION_STATE.INITIALISED is the state that indicates the sdk has consumed the latest intent
-     * and is ready to send events.
-     * @return
-     */
-    public SessionState getInitState() {
+    public BranchSessionState getInitState() {
         return initState_;
     }
 
@@ -1312,18 +1362,13 @@ public class Branch {
         }
 
         // Set initializing state immediately
-        setInitState(SESSION_STATE.INITIALISING);
+        setInitState(BranchSessionState.Initializing.INSTANCE);
         BranchLogger.d("DEBUG: Session state set to INITIALISING");
 
         if (delay > 0) {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
             BranchLogger.d("DEBUG: Adding USER_SET_WAIT_LOCK with delay: " + delay);
-            new Handler().postDelayed(new Runnable() {
-                @Override public void run() {
-                    BranchLogger.d("DEBUG: Delay completed, processing session initialization");
-                    processSessionInitialization(initRequest);
-                }
-            }, delay);
+            getStaticHandler().postDelayed(new SessionInitRunnable(initRequest), delay);
         } else {
             BranchLogger.d("DEBUG: No delay, processing session initialization immediately");
             processSessionInitialization(initRequest);
@@ -1345,7 +1390,7 @@ public class Branch {
 
         boolean shouldInitialize = sessionState instanceof BranchSessionState.Uninitialized ||
                                   forceBranchSession ||
-                                  getInitState() == SessionState.UNINITIALISED ||
+                                  getInitState() instanceof BranchSessionState.Uninitialized ||
                                   // Allow re-initialization if session is in Initializing state but no valid session exists
                                   (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession);
 
@@ -1363,7 +1408,7 @@ public class Branch {
             // If we're in an incomplete Initializing state, reset to allow proper initialization
             if (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession) {
                 BranchLogger.d("DEBUG: Resetting incomplete Initializing state to allow re-initialization");
-                setInitState(SESSION_STATE.UNINITIALISED);
+                setInitState(BranchSessionState.Uninitialized.INSTANCE);
             }
 
             BranchLogger.d("DEBUG: Calling registerAppInit for request: " + initRequest);
@@ -1386,7 +1431,7 @@ public class Branch {
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean forceBranchSession) {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
          BranchLogger.d("DEBUG: Registering app init - forceBranchSession: " + forceBranchSession);
-         setInitState(SessionState.INITIALISING);
+         setInitState(BranchSessionState.Initializing.INSTANCE);
 
          ServerRequest req = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
          ServerRequestInitSession r = (req instanceof ServerRequestInitSession) ? (ServerRequestInitSession) req : null;
@@ -1486,11 +1531,7 @@ public class Branch {
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
-        Intent intent = activity.getIntent();
-        SessionState sessionState = getInitState();
-        boolean grabIntentParams = intent != null && sessionState != SessionState.INITIALISED;
-
-        BranchLogger.v("onIntentReady intent: " + intent + " sessionState: " + sessionState + " grabIntentParams: " + grabIntentParams);
+        boolean grabIntentParams = activity.getIntent() != null && !(getInitState() instanceof BranchSessionState.Initialized);
 
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
@@ -1506,17 +1547,6 @@ public class Branch {
         BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
         setIntentState(Branch.INTENT_STATE.READY);
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-    }
-
-    /**
-     * A method to manually remove the pending intent wait lock. In rare cases, it is possible
-     * that the activity lifecycle callbacks may not execute.
-     */
-    public void unlockPendingIntent() {
-        BranchLogger.v("unlockPendingIntent removing INTENT_PENDING_WAIT_LOCK");
-        setIntentState(Branch.INTENT_STATE.READY);
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
-        requestQueue_.processNextQueueItem("unlockPendingIntent");
     }
 
     /**
@@ -1726,16 +1756,10 @@ public class Branch {
     }
 
 
-    /**
-     * Async Task to create  a short link for synchronous methods
-     */
-    private class GetShortLinkTask extends AsyncTask<ServerRequest, Void, ServerResponse> {
-        @Override protected ServerResponse doInBackground(ServerRequest... serverRequests) {
-            return branchRemoteInterface_.make_restful_post(serverRequests[0].getPost(),
-                    prefHelper_.getAPIBaseUrl() + Defines.RequestPath.GetURL.getPath(),
-                    Defines.RequestPath.GetURL.getPath(), prefHelper_.getBranchKey());
-        }
-    }
+    // Legacy GetShortLinkTask removed - modern link generation now uses:
+    // 1. ModernLinkGenerator (Kotlin coroutines) - primary strategy  
+    // 2. BranchLegacyLinkGenerator (AsyncTask) - fallback strategy
+    // See generateShortLinkSync() method for implementation
 
     //-------------------Auto deep link feature-------------------------------------------//
     
@@ -2340,8 +2364,8 @@ public class Branch {
     public static void notifyNativeToInit(){
         BranchLogger.v("notifyNativeToInit deferredSessionBuilder " + Branch.getInstance().deferredSessionBuilder);
 
-        SessionState sessionState = Branch.getInstance().getInitState();
-        if(sessionState == SessionState.UNINITIALISED) {
+        BranchSessionState sessionState = Branch.getInstance().getInitState();
+        if(sessionState instanceof BranchSessionState.Uninitialized) {
             deferInitForPluginRuntime = false;
             if (Branch.getInstance().deferredSessionBuilder != null) {
                 Branch.getInstance().deferredSessionBuilder.init();
@@ -2626,5 +2650,50 @@ public class Branch {
          * @param channelName Name of the selected application to share the link. An empty string is returned if unable to resolve selected client name.
          */
         void onChannelSelected(String channelName);
+    }
+
+    /**
+     * Lazy initialization of static handler to avoid issues in unit tests
+     */
+    private static Handler getStaticHandler() {
+        if (staticHandler == null) {
+            staticHandler = new Handler(android.os.Looper.getMainLooper());
+        }
+        return staticHandler;
+    }
+
+    /**
+     * Lifecycle-aware Runnable for session initialization that uses WeakReference to prevent memory leaks
+     */
+    private static class SessionInitRunnable implements Runnable {
+        private final ServerRequestInitSession initRequest;
+
+        SessionInitRunnable(ServerRequestInitSession initRequest) {
+            this.initRequest = initRequest;
+        }
+
+        @Override
+        public void run() {
+            try {
+                BranchLogger.d("DEBUG: Delay completed, processing session initialization");
+                // Check if Branch instance is still valid before proceeding
+                if (branchReferral_ != null) {
+                    branchReferral_.processSessionInitialization(initRequest);
+                } else {
+                    BranchLogger.d("Branch instance lost, skipping session initialization");
+                }
+            } catch (Exception e) {
+                BranchLogger.e("Error in delayed session initialization: " + e.getMessage());
+            }
+        }
+    }
+
+    public static void setCallbackForTracingRequests(IBranchRequestTracingCallback iBranchRequestTracingCallback){
+        _iBranchRequestTracingCallback = iBranchRequestTracingCallback;
+    }
+
+    public static IBranchRequestTracingCallback getCallbackForTracingRequests(){
+        return _iBranchRequestTracingCallback;
+
     }
 }

@@ -270,7 +270,9 @@ public class Defines {
         TrackStandardEvent("v2/event/standard"),
         TrackCustomEvent("v2/event/custom"),
         GetLATD("v1/cpid/latd"),
-        QRCode("v1/qr-code");
+        QRCode("v1/qr-code"),
+        Logout("local/logout"),
+        SetIdentity("local/setIdentity");
 
         private final String key;
         

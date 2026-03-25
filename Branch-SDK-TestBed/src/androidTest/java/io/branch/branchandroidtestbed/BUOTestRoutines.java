@@ -13,12 +13,14 @@ import java.net.URL;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.referral.BranchAsyncTask;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.util.BranchContentSchema;
@@ -34,6 +36,11 @@ import io.branch.referral.util.ProductCategory;
  * </p>
  */
 public class BUOTestRoutines {
+    private static final ExecutorService executor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "BUOTest-Worker");
+        t.setDaemon(true);
+        return t;
+    });
     public static boolean TestBUOFunctionalities(Context context) {
         boolean succeeded = false;
 
@@ -102,18 +109,42 @@ public class BUOTestRoutines {
         boolean isLinkTestPassed = false;
         String url = buo.getShortUrl(context, new LinkProperties());
         try {
-            JSONObject linkdata = new URLContentViewer().execute(url, BranchUtil.readBranchKey(context)).get();
+            CompletableFuture<JSONObject> future = CompletableFuture.supplyAsync(() -> 
+                getURLContent(url, BranchUtil.readBranchKey(context)), executor);
+            JSONObject linkdata = future.get();
             isLinkTestPassed = checkIfIdenticalJson(buo.convertToJson(), linkdata.optJSONObject("data"), true);
             if (isLinkTestPassed) {
                 isLinkTestPassed = checkIfIdenticalJson(BranchUniversalObject.createInstance(linkdata).convertToJson(), linkdata.optJSONObject("data"), true);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return isLinkTestPassed;
-
+    }
+    
+    private static JSONObject fetchURLContent(String url, String branchKey) {
+        HttpsURLConnection connection = null;
+        JSONObject respObject = new JSONObject();
+        try {
+            URL urlObject = new URL("https://api.branch.io/v1/url?url=" + url + "&" + "branch_key=" + branchKey);
+            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection.setConnectTimeout(1500);
+            connection.setReadTimeout(1500);
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                if (connection.getInputStream() != null) {
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    respObject = new JSONObject(rd.readLine());
+                }
+            }
+        } catch (Exception e) {
+            BranchLogger.d(e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        return respObject;
     }
 
     private static boolean checkIfIdenticalJson(JSONObject obj1, JSONObject obj2, boolean expectBranchExtras) {
@@ -161,34 +192,63 @@ public class BUOTestRoutines {
         return isIdentical;
     }
 
-    private static class URLContentViewer extends BranchAsyncTask<String, Void, JSONObject> {
 
-        @Override
-        protected JSONObject doInBackground(String... strings) {
-            HttpsURLConnection connection = null;
-            JSONObject respObject = new JSONObject();
-            try {
-                URL urlObject = new URL("https://api.branch.io/v1/url?url=" + strings[0] + "&" + "branch_key=" + strings[1]);
-                connection = (HttpsURLConnection) urlObject.openConnection();
-                connection.setConnectTimeout(1500);
-                connection.setReadTimeout(1500);
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    if (connection.getInputStream() != null) {
-                        BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                        respObject = new JSONObject(rd.readLine());
-                    }
-                }
-            } catch (Exception e) {
-                BranchLogger.d(e.getMessage());
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-
+    private static JSONObject getURLContent(String url, String branchKey) {
+        HttpsURLConnection connection = null;
+        JSONObject respObject = new JSONObject();
+        
+        if (url == null || url.isEmpty() || branchKey == null || branchKey.isEmpty()) {
+            BranchLogger.w("Invalid parameters for URL content retrieval");
             return respObject;
         }
+        
+        try {
+            String requestUrl = "https://api.branch.io/v1/url?url=" + url + "&branch_key=" + branchKey;
+            URL urlObject = new URL(requestUrl);
+            connection = (HttpsURLConnection) urlObject.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(1500);
+            connection.setReadTimeout(1500);
+            
+            int responseCode = connection.getResponseCode();
+            BranchLogger.d("API response code: " + responseCode);
+            
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                if (connection.getInputStream() != null) {
+                    try (BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = rd.readLine()) != null) {
+                            response.append(line);
+                        }
+                        if (response.length() > 0) {
+                            respObject = new JSONObject(response.toString());
+                            BranchLogger.d("Successfully parsed API response");
+                        }
+                    }
+                }
+            } else {
+                BranchLogger.w("API request failed with response code: " + responseCode);
+            }
+        } catch (java.net.MalformedURLException e) {
+            BranchLogger.w("Invalid URL for API request: " + e.getMessage());
+        } catch (java.net.SocketTimeoutException e) {
+            BranchLogger.w("API request timed out: " + e.getMessage());
+        } catch (java.io.IOException e) {
+            BranchLogger.w("Network error during API request: " + e.getMessage());
+        } catch (org.json.JSONException e) {
+            BranchLogger.w("Invalid JSON in API response: " + e.getMessage());
+        } catch (Exception e) {
+            BranchLogger.w("Unexpected error during API request: " + e.getMessage());
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.disconnect();
+                } catch (Exception e) {
+                    BranchLogger.d("Error disconnecting HTTP connection: " + e.getMessage());
+                }
+            }
+        }
+        return respObject;
     }
-
 }

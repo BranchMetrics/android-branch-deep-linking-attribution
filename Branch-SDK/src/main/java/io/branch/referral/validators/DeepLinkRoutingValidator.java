@@ -8,11 +8,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
@@ -27,6 +30,13 @@ public class DeepLinkRoutingValidator {
     private static final String URI_REDIRECT_MODE = "2";
     private static final int LAUNCH_TEST_TEMPLATE_DELAY = 500; // .5 sec delay to settle any auto deep linking
     private static WeakReference<Activity> current_activity_reference = null;
+    
+    // Static handler for lifecycle-aware delayed operations
+    private static Handler staticHandler;
+    
+    // Task management for cancellation support
+    private static final ConcurrentHashMap<Integer, Runnable> pendingTasks = new ConcurrentHashMap<>();
+    private static final AtomicInteger taskIdCounter = new AtomicInteger(0);
 
     public static void validate(final WeakReference<Activity> activity) {
         current_activity_reference = activity;
@@ -40,16 +50,89 @@ public class DeepLinkRoutingValidator {
                     displayErrorMessage();
                 }
             } else if (response_data.optBoolean(VALIDATE_SDK_LINK_PARAM_KEY)) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        launchTestTemplate(getUpdatedLinkWithTestStat(response_data, ""));
-                    }
-                }, LAUNCH_TEST_TEMPLATE_DELAY);
+                scheduleTask(new ValidatorRunnable(response_data), LAUNCH_TEST_TEMPLATE_DELAY);
             }
         }
     }
 
+    /**
+     * Schedules a task with proper lifecycle management and cancellation support
+     * @param runnable The task to execute
+     * @param delay Delay in milliseconds
+     * @return Task ID for cancellation purposes
+     */
+    private static int scheduleTask(Runnable runnable, long delay) {
+        int taskId = taskIdCounter.incrementAndGet();
+        pendingTasks.put(taskId, runnable);
+        
+        Runnable wrappedRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Remove from pending tasks when executed
+                    pendingTasks.remove(taskId);
+                    runnable.run();
+                } catch (Exception e) {
+                    BranchLogger.e("Error executing scheduled validator task: " + e.getMessage());
+                }
+            }
+        };
+        
+        getStaticHandler().postDelayed(wrappedRunnable, delay);
+        return taskId;
+    }
+
+    /**
+     * Cancels a scheduled task by ID
+     * @param taskId The task ID to cancel
+     */
+    public static void cancelTask(int taskId) {
+        Runnable task = pendingTasks.remove(taskId);
+        if (task != null) {
+            getStaticHandler().removeCallbacks(task);
+        }
+    }
+
+    /**
+     * Cancels all pending validator tasks - useful for cleanup
+     */
+    public static void cancelAllTasks() {
+        pendingTasks.clear();
+        if (staticHandler != null) {
+            staticHandler.removeCallbacksAndMessages(null);
+        }
+    }
+
+    /**
+     * Lazy initialization of static handler to avoid issues in unit tests
+     */
+    private static Handler getStaticHandler() {
+        if (staticHandler == null) {
+            staticHandler = new Handler(Looper.getMainLooper());
+        }
+        return staticHandler;
+    }
+
+    /**
+     * Lifecycle-aware Runnable that uses WeakReference to prevent memory leaks
+     */
+    private static class ValidatorRunnable implements Runnable {
+        private final JSONObject responseData;
+
+        ValidatorRunnable(JSONObject responseData) {
+            this.responseData = responseData;
+        }
+
+        @Override
+        public void run() {
+            // Check if activity is still valid before proceeding
+            if (current_activity_reference != null && current_activity_reference.get() != null) {
+                launchTestTemplate(getUpdatedLinkWithTestStat(responseData, ""));
+            } else {
+                BranchLogger.d("Activity reference lost, skipping validator task execution");
+            }
+        }
+    }
 
     private static void validateDeeplinkRouting(final JSONObject validate_json) {
         AlertDialog.Builder builder;

@@ -38,17 +38,32 @@ import io.branch.referral.PrefHelper;
  * Created by sojanpr on 5/31/17.
  * Class for implementing BranchRemoteInterface using the HttpUrlConnection.
  * This class provides implementation for Branch RESTful operations using HTTP URL Connection.
+ * 
+ * MODERNIZATION NOTE: This class has been updated to use modern coroutine-based networking
+ * when the feature flag is enabled, eliminating blocking Thread.sleep() calls.
  */
 public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private static final int THREAD_TAG_POST = 102;
 
     private @NonNull
     final Branch branch;
+    
+    // Modern async implementation - replaces blocking Thread.sleep() with coroutine delays
+    private BranchRemoteInterfaceUrlConnectionAsync asyncImplementation;
+    private boolean useAsyncImplementation;
 
     public BranchRemoteInterfaceUrlConnection(@NonNull Branch branch) {
         this.branch = branch;
         this.prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
         this.retryLimit = prefHelper.getRetryCount();
+        
+        // Initialize modern async implementation
+        this.asyncImplementation = new BranchRemoteInterfaceUrlConnectionAsync(branch);
+        
+        // Enable async implementation by default to eliminate Thread.sleep() issues
+        this.useAsyncImplementation = true;
+        
+        BranchLogger.i("BranchRemoteInterfaceUrlConnection: Initialized with async implementation enabled (Thread.sleep eliminated)");
     }
 
     private int lastResponseCode = -1;
@@ -59,11 +74,25 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
 
     @Override
     public BranchResponse doRestfulGet(String url) throws BranchRemoteException {
+        if (useAsyncImplementation) {
+            BranchLogger.d("BranchRemoteInterfaceUrlConnection: Using async implementation for GET (no Thread.sleep)");
+            // Use modern coroutine-based implementation (eliminates Thread.sleep())
+            return asyncImplementation.doRestfulGet(url);
+        }
+        BranchLogger.w("BranchRemoteInterfaceUrlConnection: Using legacy implementation for GET (contains Thread.sleep)");
+        // Fallback to legacy implementation
         return doRestfulGet(url, 0);
     }
 
     @Override
     public BranchResponse doRestfulPost(String url, JSONObject payload) throws BranchRemoteException {
+        if (useAsyncImplementation) {
+            BranchLogger.d("BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)");
+            // Use modern coroutine-based implementation (eliminates Thread.sleep())
+            return asyncImplementation.doRestfulPost(url, payload);
+        }
+        BranchLogger.w("BranchRemoteInterfaceUrlConnection: Using legacy implementation for POST (contains Thread.sleep)");
+        // Fallback to legacy implementation
         return doRestfulPost(url, payload, 0);
     }
 
@@ -371,5 +400,39 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 "\nObject: " + this +
                 "\nException Message: " + e.getMessage() +
                 "\nStacktrace: " + BranchLogger.stackTraceToString(e);
+    }
+    
+    /**
+     * Enables or disables the modern async implementation.
+     * 
+     * @param enabled true to use coroutine-based networking (eliminates Thread.sleep()),
+     *                false to use legacy implementation
+     */
+    public void setAsyncImplementationEnabled(boolean enabled) {
+        boolean wasEnabled = this.useAsyncImplementation;
+        this.useAsyncImplementation = enabled;
+        
+        if (enabled && !wasEnabled) {
+            BranchLogger.i("BranchRemoteInterfaceUrlConnection: Switched to async implementation (Thread.sleep eliminated)");
+        } else if (!enabled && wasEnabled) {
+            BranchLogger.w("BranchRemoteInterfaceUrlConnection: Switched to legacy implementation (Thread.sleep will be used)");
+        }
+    }
+    
+    /**
+     * Returns whether the async implementation is currently enabled.
+     */
+    public boolean isAsyncImplementationEnabled() {
+        return useAsyncImplementation;
+    }
+    
+    /**
+     * Cancels all ongoing async network operations.
+     * Should be called during cleanup to prevent resource leaks.
+     */
+    public void cancelAsyncOperations() {
+        if (asyncImplementation != null) {
+            asyncImplementation.cancelAllOperations();
+        }
     }
 }

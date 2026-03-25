@@ -250,7 +250,6 @@ class DeviceInfo {
                 userDataObj.put(Defines.Jsonkey.UserAgent.getKey(), Branch._userAgentString);
 
                 Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                // Modern queue processes automatically after unlock - no manual trigger needed
             }
             else if (Branch.userAgentSync) {
                 // If user agent sync is false, then the async coroutine is executed instead but may not have finished yet.
@@ -277,7 +276,6 @@ class DeviceInfo {
                         }
 
                         Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                        // Modern queue processes automatically after unlock - no manual trigger needed
                     }
                 });
             }
@@ -305,7 +303,6 @@ class DeviceInfo {
                         }
 
                         Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-                        // Modern queue processes automatically after unlock - no manual trigger needed
                     }
                 });
             }
@@ -313,7 +310,6 @@ class DeviceInfo {
         catch (Exception exception){
             BranchLogger.w("Caught exception trying to set userAgent " + exception.getMessage());
             Branch.getInstance().requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK);
-            // Modern queue processes automatically after unlock - no manual trigger needed
         }
     }
 

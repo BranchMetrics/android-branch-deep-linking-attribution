@@ -125,10 +125,4 @@ public class SettingsActivity extends Activity {
         });
 
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d("BranchSDK_Tester", "Branch initialization status:" + Branch.getInstance().getInitState());
-    }
 }

@@ -1,8 +1,8 @@
 import  org.gradle.api.tasks.testing.logging.*
 
 plugins {
-    id("com.android.library") version "8.10.1" apply false
-    id("com.android.application") version "8.10.1" apply false
+    id("com.android.library") version "8.12.2" apply false
+    id("com.android.application") version "8.12.2" apply false
     id("org.jetbrains.kotlin.android") version "1.6.21" apply false
 }
 

@@ -15,29 +15,6 @@ class BranchConfigurationController {
         const val KEY_DEFER_INIT_FOR_PLUGIN_RUNTIME = "bnc_defer_init_for_plugin_runtime"
     }
 
-    /**
-     * Sets whether delayed session initialization was used.
-     * This flag is used to track if the app has used delayed session initialization,
-     * which is important for analytics and debugging purposes.
-     *
-     * @param used Boolean indicating if delayed session initialization was used
-     * @see Branch.expectDelayedSessionInitialization
-     */
-    fun setDelayedSessionInitUsed(used: Boolean) {
-        Branch.getInstance()?.let { branch ->
-            branch.prefHelper_.delayedSessionInitUsed = used
-        }
-    }
-
-    /**
-     * Gets whether delayed session initialization was used.
-     * This can be used to check if the app has previously used delayed session initialization.
-     * @return Boolean indicating if delayed session initialization was used
-     * @see Branch.expectDelayedSessionInitialization
-     */
-    private fun getDelayedSessionInitUsed(): Boolean {
-        return Branch.getInstance()?.prefHelper_?.delayedSessionInitUsed ?: false
-    }
 
     /**
      * Gets whether test mode is enabled.
@@ -120,7 +97,6 @@ class BranchConfigurationController {
     fun serializeConfiguration(): JSONObject {
         return try {
             JSONObject().apply {
-                put("expectDelayedSessionInitialization", getDelayedSessionInitUsed())
                 put("testMode", isTestModeEnabled())
                 put("instantDeepLinkingEnabled", isInstantDeepLinkingEnabled())
                 put("deferInitForPluginRuntime", isDeferInitForPluginRuntime())
