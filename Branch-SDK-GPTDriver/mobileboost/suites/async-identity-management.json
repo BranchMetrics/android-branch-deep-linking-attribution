@@ -1,0 +1,16 @@
+{
+  "name": "[Android] Async Identity Management",
+  "mobileboost_id": "1esSo4Nd29pYdrEykd5j",
+  "tags": [
+    "Android",
+    "SDK Rewrite"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Execute the test: [Android] Async Identity Management. Follow all steps as defined in MobileBoost Studio."
+    }
+  ],
+  "params": {}
+}

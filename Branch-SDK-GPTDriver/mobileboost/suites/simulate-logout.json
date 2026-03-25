@@ -1,0 +1,31 @@
+{
+  "name": "[Android] Simulate Logout",
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Ensure the Branch TestBed app is open on its main screen. If you see buttons like 'Create Branch Link', 'Simulate Logout', you are already on the main screen. If you are on a different screen, press Back repeatedly until you reach the main screen, or go to the device home screen, then find and open the 'Branch-SDK-TestBed' app."
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Scroll down until the button 'Simulate Logout' is visible on the screen."
+    },
+    {
+      "id": 3,
+      "type": "tap",
+      "text": "Simulate Logout"
+    },
+    {
+      "id": 4,
+      "type": "ai",
+      "instruction": "After tapping, wait 3 seconds. Then scroll down until the button 'Load Branch Logs' is visible and tap on it."
+    },
+    {
+      "id": 5,
+      "type": "ai",
+      "instruction": "A new screen with log content should appear. Wait up to 5 seconds for the text to load. Look for any text containing 'onLogoutFinished' in the log output. If you find it, the test succeeds. If the log screen is empty or shows no relevant logout entries, the test fails."
+    }
+  ],
+  "params": {}
+}
