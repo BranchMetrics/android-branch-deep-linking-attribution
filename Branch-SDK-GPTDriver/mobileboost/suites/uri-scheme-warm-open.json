@@ -1,0 +1,67 @@
+{
+  "name": "[Android] URI Scheme - Warm Open",
+  "mobileboost_id": "tjzKXu9T6pTMPoOUkC64",
+  "tags": [
+    "Android",
+    "Flaky"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Go to OS home screen"
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "open Chrome"
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "dismiss all pop ups until you can focus on the address bar"
+    },
+    {
+      "id": 4,
+      "type": "type",
+      "text": "https://bboothe-branch.github.io/BrandonBranch/"
+    },
+    {
+      "id": 5,
+      "type": "tap",
+      "text": "the result with \"https://bboothe-branch.github.io/BrandonBranch/\" written twice, and wait for the screen to stabilize"
+    },
+    {
+      "id": 6,
+      "type": "tap",
+      "text": "Tap Here to Open App (URI Scheme)"
+    },
+    {
+      "id": 7,
+      "type": "scrollUntil",
+      "direction": "up",
+      "text": "See Requests"
+    },
+    {
+      "id": 8,
+      "type": "tap",
+      "text": "See Requests\"scrollUpUntilVisible.text: \"See Requests"
+    },
+    {
+      "id": 9,
+      "type": "tap",
+      "text": "See Requests"
+    },
+    {
+      "id": 10,
+      "type": "ai",
+      "instruction": "Tap on top most text with https://"
+    },
+    {
+      "id": 11,
+      "type": "ai",
+      "instruction": "Check if you see \"external_intent_uri\": \"branchlinksimulator://open/OpenedWithUriScheme\", if so succeed the test"
+    }
+  ],
+  "params": {}
+}

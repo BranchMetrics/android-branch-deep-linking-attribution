@@ -22,17 +22,16 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-//        IBranchLoggingCallbacks loggingCallbacks = (message, tag) -> {
-//            Log.d("BranchTestbed", message);
-//            saveLogToFile(message);
-//        };
-        Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
-        Branch.getAutoInstance(this);
-        Branch.expectDelayedSessionInitialization(true);
+        Branch.enableLogging((message, tag) -> {
+            Log.d("BranchTestbed", message);
+            saveLogToFile(message);
+        }, BranchLogger.BranchLogLevel.VERBOSE);
+        Branch branch = Branch.getAutoInstance(this);
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
-        Branch.getInstance().setCustomTabsIntent(customTabsIntent);
+        branch.setCustomTabsIntent(customTabsIntent);
+
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
             public void onRequestCompleted(String uri, JSONObject request, JSONObject response, String error, String requestUrl) {

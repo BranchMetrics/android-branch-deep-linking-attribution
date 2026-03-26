@@ -1,0 +1,65 @@
+{
+  "name": "[Android] Set Customer Event Alias",
+  "mobileboost_id": "Fv7Yl2Fb6zVuNypF0Q3Q",
+  "tags": [
+    "Android"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Scroll down to bottom of the page"
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Wait for screen to stabilize"
+    },
+    {
+      "id": 3,
+      "type": "tap",
+      "text": "Set Customer Event Alias and wait until you can focus on the text input"
+    },
+    {
+      "id": 4,
+      "type": "type",
+      "text": "aliasExample\" into the text input"
+    },
+    {
+      "id": 5,
+      "type": "tap",
+      "text": "Save"
+    },
+    {
+      "id": 6,
+      "type": "ai",
+      "instruction": "Scroll up to the top of the page"
+    },
+    {
+      "id": 7,
+      "type": "tap",
+      "text": "Send Custom Event"
+    },
+    {
+      "id": 8,
+      "type": "ai",
+      "instruction": "Scroll down until you see \"See Requests\""
+    },
+    {
+      "id": 9,
+      "type": "tap",
+      "text": "See Requests"
+    },
+    {
+      "id": 10,
+      "type": "tap",
+      "text": "the first result at the top of the page that says \"v2/event/custom\" in the text"
+    },
+    {
+      "id": 11,
+      "type": "ai",
+      "instruction": "if you see \"customer_event_alias\": \"aliasExample\" in the logs, succeed the test"
+    }
+  ],
+  "params": {}
+}

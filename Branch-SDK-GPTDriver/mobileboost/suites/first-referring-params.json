@@ -1,0 +1,31 @@
+{
+  "name": "[Android] View First Referring Params",
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Go to the device home screen."
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Find and tap on the 'Branch-SDK-TestBed' app icon to open it."
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "You should now see the main screen with buttons. Tap on 'View First Referring Params'."
+    },
+    {
+      "id": 4,
+      "type": "ai",
+      "instruction": "A dialog should now be visible with JSON content and an 'OK' button. If you see it, succeed."
+    },
+    {
+      "id": 5,
+      "type": "tap",
+      "text": "OK"
+    }
+  ],
+  "params": {}
+}
