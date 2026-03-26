@@ -1,0 +1,52 @@
+package io.branch.gptdriver.tests
+
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withSubstring
+import io.branch.branchandroidtestbed.R
+import io.branch.gptdriver.BaseGptDriverTest
+import org.junit.Test
+
+/**
+ * DETERMINISTIC approach — 100% Espresso.
+ *
+ * All actions and assertions use resource IDs and Espresso matchers.
+ * GPTDriver is only used for session status reporting.
+ *
+ * Best for: fixed UI elements, known resource IDs, predictable flows.
+ */
+class LinkCreationDeterministicTest : BaseGptDriverTest() {
+
+    @Test
+    fun createBranchLink_generatesValidUrl() {
+        // Tap "Create Branch Link" by resource ID
+        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
+
+        // Wait for async link generation
+        Thread.sleep(3000)
+
+        // Assert URL field contains the expected Branch domain
+        // TestBed uses test mode → domain is bnctestbed.test-app.link
+        onView(withId(R.id.editReferralShortUrl))
+            .check(matches(withSubstring("bnctestbed")))
+
+        driver.setSessionStatus("success")
+    }
+
+    @Test
+    fun createBranchLink_urlStartsWithHttps() {
+        // Tap button by resource ID
+        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
+
+        // Wait for async link generation
+        Thread.sleep(3000)
+
+        // Assert URL starts with https
+        onView(withId(R.id.editReferralShortUrl))
+            .check(matches(withSubstring("https://")))
+
+        driver.setSessionStatus("success")
+    }
+}
