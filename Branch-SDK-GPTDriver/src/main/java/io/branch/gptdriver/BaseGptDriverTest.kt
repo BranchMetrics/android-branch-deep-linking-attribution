@@ -50,12 +50,7 @@ abstract class BaseGptDriverTest {
 
     @After
     open fun tearDown() {
-        if (::driver.isInitialized) {
-            try {
-                driver.setSessionStatus("success")
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to set session status", e)
-            }
-        }
+        // Session status should be set by the individual tests upon successful completion.
+        // Setting it here would mark failed tests as "success" — a false positive.
     }
 }
