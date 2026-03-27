@@ -10,7 +10,7 @@ val mobileboostApiKey: String by lazy {
         ?: rootProject.file("local.properties").let { file ->
             if (file.exists()) {
                 val props = Properties()
-                props.load(file.inputStream())
+                file.inputStream().use { props.load(it) }
                 props.getProperty("MOBILEBOOST_API_KEY")?.takeIf { it.isNotEmpty() }
             } else null
         }
