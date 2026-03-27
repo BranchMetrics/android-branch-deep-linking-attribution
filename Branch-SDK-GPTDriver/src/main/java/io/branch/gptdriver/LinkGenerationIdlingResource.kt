@@ -19,7 +19,7 @@ class LinkGenerationIdlingResource(
 
     private var callback: IdlingResource.ResourceCallback? = null
 
-    override fun getName(): String = "LinkGenerationIdlingResource"
+    override fun getName(): String = "LinkGenerationIdlingResource_${System.identityHashCode(this)}"
 
     override fun isIdleNow(): Boolean {
         val text = editText.text?.toString().orEmpty()

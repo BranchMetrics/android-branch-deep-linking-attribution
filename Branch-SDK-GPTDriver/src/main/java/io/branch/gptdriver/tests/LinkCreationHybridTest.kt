@@ -10,7 +10,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BaseGptDriverTest
+import androidx.test.espresso.IdlingResource
 import io.branch.gptdriver.LinkGenerationIdlingResource
+import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -24,6 +26,13 @@ import org.junit.Test
  * or when you need to validate UX behavior beyond text matching.
  */
 class LinkCreationHybridTest : BaseGptDriverTest() {
+
+    private var idlingResource: IdlingResource? = null
+
+    @After
+    fun tearDownIdlingResource() {
+        idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+    }
 
     @Test
     fun createBranchLink_fullValidation() {
@@ -81,8 +90,10 @@ class LinkCreationHybridTest : BaseGptDriverTest() {
     private fun waitForLinkGeneration() {
         activityRule.scenario.onActivity { activity ->
             val editText = activity.findViewById<EditText>(R.id.editReferralShortUrl)
-            val idling = LinkGenerationIdlingResource(editText)
-            IdlingRegistry.getInstance().register(idling)
+            idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+            idlingResource = LinkGenerationIdlingResource(editText).also {
+                IdlingRegistry.getInstance().register(it)
+            }
         }
     }
 }
