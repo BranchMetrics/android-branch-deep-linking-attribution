@@ -1,12 +1,15 @@
 package io.branch.gptdriver.tests
 
+import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BaseGptDriverTest
+import io.branch.gptdriver.LinkGenerationIdlingResource
 import org.junit.Test
 
 /**
@@ -24,8 +27,8 @@ class LinkCreationDeterministicTest : BaseGptDriverTest() {
         // Tap "Create Branch Link" by resource ID
         onView(withId(R.id.cmdRefreshShortURL)).perform(click())
 
-        // Wait for async link generation
-        Thread.sleep(3000)
+        // Wait for async link generation using IdlingResource
+        waitForLinkGeneration()
 
         // Assert URL field contains the expected Branch domain
         // TestBed uses test mode → domain is bnctestbed.test-app.link
@@ -40,13 +43,21 @@ class LinkCreationDeterministicTest : BaseGptDriverTest() {
         // Tap button by resource ID
         onView(withId(R.id.cmdRefreshShortURL)).perform(click())
 
-        // Wait for async link generation
-        Thread.sleep(3000)
+        // Wait for async link generation using IdlingResource
+        waitForLinkGeneration()
 
         // Assert URL starts with https
         onView(withId(R.id.editReferralShortUrl))
             .check(matches(withSubstring("https://")))
 
         driver.setSessionStatus("success")
+    }
+
+    private fun waitForLinkGeneration() {
+        activityRule.scenario.onActivity { activity ->
+            val editText = activity.findViewById<EditText>(R.id.editReferralShortUrl)
+            val idling = LinkGenerationIdlingResource(editText)
+            IdlingRegistry.getInstance().register(idling)
+        }
     }
 }
