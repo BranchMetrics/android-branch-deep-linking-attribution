@@ -50,10 +50,13 @@ class LinkCreationHybridTest : BaseGptDriverTest() {
         onView(withId(R.id.editReferralShortUrl))
             .check(matches(withSubstring("https://")))
 
-        // AI: validate visual aspects Espresso can't check
-        driver.assertCondition(
-            "The generated URL is fully visible in the text field and is not " +
-                "truncated or cut off. The complete URL is readable."
+        // AI: validate visual aspects Espresso can't check (multiple conditions)
+        driver.assertBulk(
+            listOf(
+                "The generated URL is fully visible in the text field and is not truncated or cut off",
+                "The URL text field is not showing an error message",
+                "The complete URL is readable and starts with 'https://'"
+            )
         )
 
         driver.setSessionStatus("success")
