@@ -31,10 +31,12 @@ class LinkCreationAITest : BaseGptDriverTest() {
                 "at the top of the screen. The URL should start with 'https://'."
         )
 
-        // AI validates the result
-        driver.assertCondition(
-            "The text field at the top contains a URL that starts with 'https://' " +
-                "and contains 'bnctestbed' in the domain"
+        // AI validates multiple conditions at once
+        driver.assertBulk(
+            listOf(
+                "The text field at the top contains a URL that starts with 'https://'",
+                "The URL in the text field contains 'bnctestbed' in the domain"
+            )
         )
 
         driver.setSessionStatus("success")
