@@ -137,6 +137,8 @@ public class PrefHelper {
     static final String KEY_ENHANCED_WEB_LINK_UX_USED = "bnc_enhanced_web_link_ux_used";
     static final String KEY_URL_LOAD_MS = "bnc_url_load_ms";
 
+    static final String KEY_INSTALL_REFERRER_TIMEOUT_MS = "bnc_install_referrer_timeout";
+
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -1510,6 +1512,14 @@ public class PrefHelper {
 
     public long getWebLinkLoadTime(){
         return getLong(KEY_URL_LOAD_MS);
+    }
+
+    public void setInstallReferrerTimeout(int timeoutMs){
+        setInteger(KEY_INSTALL_REFERRER_TIMEOUT_MS, timeoutMs);
+    }
+
+    public int getInstallReferrerTimeout(){
+        return getInteger(KEY_INSTALL_REFERRER_TIMEOUT_MS, 0);
     }
 
     /**

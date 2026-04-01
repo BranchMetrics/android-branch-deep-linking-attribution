@@ -395,6 +395,8 @@ public class Branch {
 
             BranchUtil.setCPPLevelFromConfig(context);
 
+            BranchUtil.setInstallReferrerTimeoutFromConfig(context);
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -425,6 +427,7 @@ public class Branch {
             BranchUtil.setAPIBaseUrlFromConfig(context);
             BranchUtil.setFbAppIdFromConfig(context);
             BranchUtil.setCPPLevelFromConfig(context);
+            BranchUtil.setInstallReferrerTimeoutFromConfig(context);
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {
@@ -1569,7 +1572,7 @@ public class Branch {
 
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;
-        if (requestQueue_.hasUser()) {
+        if (false) {
             // If there is user this is open
             request = new ServerRequestRegisterOpen(context_, callback, isAutoInitialization);
         } else {
@@ -2712,6 +2715,16 @@ public class Branch {
             if (trackingController.isTrackingDisabled()) {
                 trackingController.disableTracking(context_, false, callback);
             }
+        }
+    }
+
+    public void setInstallReferrerTimeout(int timeoutMs){
+        if (timeoutMs > 0) {
+            PrefHelper.getInstance(context_).setInstallReferrerTimeout(timeoutMs);
+            BranchLogger.v("set Install Referrer timeout to " + timeoutMs);
+        }
+        else {
+            BranchLogger.w("setInstallReferrerTimeout: timeoutMs cannot be 0");
         }
     }
 
