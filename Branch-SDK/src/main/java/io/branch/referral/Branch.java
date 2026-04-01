@@ -1572,7 +1572,7 @@ public class Branch {
 
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         ServerRequestInitSession request;
-        if (false) {
+        if (requestQueue_.hasUser()) {
             // If there is user this is open
             request = new ServerRequestRegisterOpen(context_, callback, isAutoInitialization);
         } else {
