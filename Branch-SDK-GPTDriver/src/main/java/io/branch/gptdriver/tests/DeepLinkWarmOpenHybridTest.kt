@@ -21,17 +21,22 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * HYBRID — Tests deep link warm open (app already in foreground → receives Branch link).
+ * HYBRID — Tests deep link warm open (app already running → receives Branch link).
+ *
+ * Simulates:  App is in foreground → user taps a Branch link → system delivers
+ *             new intent → onNewIntent() calls Branch.sessionBuilder().reInit()
  *
  * Flow:
  * 1. App is already running (via BaseGptDriverTest's ActivityScenarioRule)
  * 2. Generate a real Branch link
- * 3. Extract the URL
- * 4. Deliver a new ACTION_VIEW intent to the running activity (triggers onNewIntent)
- * 5. Verify "Latest Referring Params" updated with the deep link data
+ * 3. Extract the URL via AI
+ * 4. Deliver a new intent to the activity (same as system calling onNewIntent)
+ * 5. Verify "Latest Referring Params" updated with the deep link metadata
  *
- * This simulates a user clicking a Branch link while the app is already open,
- * which triggers onNewIntent() → Branch.sessionBuilder().reInit().
+ * Note: We call onNewIntent() directly. MainActivity.onNewIntent() does:
+ *   this.setIntent(intent)
+ *   Branch.sessionBuilder(this).withCallback(...).reInit()
+ * This is the exact production code path for warm opens.
  */
 class DeepLinkWarmOpenHybridTest : BaseGptDriverTest() {
 
@@ -48,13 +53,11 @@ class DeepLinkWarmOpenHybridTest : BaseGptDriverTest() {
 
     @Test
     fun warmOpen_receivesDeepLinkViaNewIntent() {
-        // PHASE 1: Generate a real Branch link while the app is running
+        // PHASE 1: Generate a real Branch link while app is running
         onView(withId(R.id.cmdRefreshShortURL)).perform(click())
 
-        // Wait for link generation
         waitForLinkGeneration()
 
-        // Verify link was generated
         onView(withId(R.id.editReferralShortUrl))
             .check(matches(withSubstring("https://")))
 
@@ -68,47 +71,50 @@ class DeepLinkWarmOpenHybridTest : BaseGptDriverTest() {
             generatedUrl.startsWith("https://")
         )
 
-        // PHASE 2: Deliver a deep link intent to the running activity (warm open)
-        // This triggers onNewIntent() → Branch.sessionBuilder().reInit()
+        // PHASE 2: Deliver deep link intent to running activity
+        // FLAG_ACTIVITY_SINGLE_TOP matches the singleTask launchMode behavior
         val deepLinkIntent = Intent(Intent.ACTION_VIEW, Uri.parse(generatedUrl)).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
 
+        // Directly invoke onNewIntent — this is the production code path:
+        // MainActivity.onNewIntent() → setIntent() → Branch.sessionBuilder().reInit()
         activityRule.scenario.onActivity { activity ->
             activity.onNewIntent(deepLinkIntent)
         }
 
-        // Wait for Branch to process the deep link via reInit
+        // Wait for Branch reInit to resolve the deep link
         Thread.sleep(5000)
 
-        // PHASE 3: Verify deep link was received via "Latest Referring Params"
+        // PHASE 3: Verify deep link data via "Latest Referring Params"
         onView(withId(R.id.cmdPrintLatestParam)).perform(click())
 
-        // DETERMINISTIC: Verify dialog appeared
         onView(withText("Latest Referring Params"))
             .check(matches(isDisplayed()))
 
-        // AI: Validate the referring params contain deep link data
-        driver.assertBulk(
-            listOf(
-                "An alert dialog is visible showing JSON text",
-                "The JSON contains '+clicked_branch_link' with value 'true' " +
-                    "or the JSON contains a '~' prefixed key (like '~channel' or '~feature'), " +
-                    "indicating the deep link was received and parsed by the Branch SDK"
-            )
+        // AI: Validate the JSON contains link metadata from the deep link
+        // The generated link has channel="Sharing_Channel_name", feature="my_feature_name"
+        driver.assertCondition(
+            "An alert dialog is showing JSON text. The JSON should contain " +
+                "link metadata keys such as '~channel', '~feature', '$canonical_identifier', " +
+                "'~creation_source', or '+match_guaranteed'. " +
+                "Any of these keys being present proves the deep link was resolved by the SDK."
         )
 
-        // AI: Extract JSON to verify programmatically
+        // AI: Extract JSON for programmatic validation
         val jsonExtracted = driver.extract(listOf("json_content_in_dialog"))
         val jsonContent = jsonExtracted["json_content_in_dialog"]?.toString() ?: ""
-        Log.i(TAG, "Latest Referring Params JSON: $jsonContent")
+        Log.i(TAG, "Warm open referring params: $jsonContent")
 
         assertTrue(
             "Referring params should not be empty after warm open, got: '$jsonContent'",
             jsonContent.isNotEmpty()
         )
+        assertTrue(
+            "Referring params should contain JSON object, got: '$jsonContent'",
+            jsonContent.trimStart().startsWith("{")
+        )
 
-        // DETERMINISTIC: Dismiss dialog
         onView(withText("OK")).perform(click())
 
         driver.setSessionStatus("success")

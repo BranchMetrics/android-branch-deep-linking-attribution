@@ -29,17 +29,23 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * HYBRID — Tests deep link cold open (app not running → launched via Branch link).
+ * HYBRID — Tests deep link cold open (app launched directly via Branch link).
+ *
+ * Simulates:  User taps a Branch link → app launches with the link as intent data
+ *             → Branch SDK processes the link during session init in onStart().
  *
  * Flow:
  * 1. Launch the app normally to generate a real Branch link
- * 2. Extract the URL
- * 3. Close the app completely
+ * 2. Extract the URL via AI
+ * 3. Close the activity
  * 4. Relaunch with an ACTION_VIEW intent containing the Branch link
- * 5. Verify "Latest Referring Params" contains the deep link data
+ *    (FLAG_ACTIVITY_CLEAR_TASK forces a fresh activity + session init with the URI)
+ * 5. Verify "Latest Referring Params" shows link metadata (channel, feature, tags)
  *
- * This does NOT extend BaseGptDriverTest because we need to control
- * the activity lifecycle manually (close and relaunch with a deep link intent).
+ * Note: ActivityScenario.close() does not kill the process, so Branch singleton
+ * persists. However, FLAG_ACTIVITY_CLEAR_TASK + new intent data triggers a fresh
+ * sessionBuilder().withData(intent.getData()).init() in onStart(), which is the
+ * same code path as a real cold open.
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
@@ -75,13 +81,11 @@ class DeepLinkColdOpenHybridTest {
 
     @Test
     fun coldOpen_receivesDeepLinkParams() {
-        // PHASE 1: Launch app normally and generate a Branch link
+        // PHASE 1: Generate a real Branch link
         val normalLaunch = ActivityScenario.launch(MainActivity::class.java)
 
-        // Click "Create Branch Link" to generate a URL
         onView(withId(R.id.cmdRefreshShortURL)).perform(click())
 
-        // Wait for link generation using IdlingResource
         normalLaunch.onActivity { activity ->
             val editText = activity.findViewById<EditText>(R.id.editReferralShortUrl)
             idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
@@ -90,11 +94,10 @@ class DeepLinkColdOpenHybridTest {
             }
         }
 
-        // Verify link was generated
         onView(withId(R.id.editReferralShortUrl))
             .check(matches(withSubstring("https://")))
 
-        // AI: Extract the generated URL for use in deep link test
+        // AI: Extract the generated URL
         val extracted = driver.extract(listOf("url_in_text_field"))
         val generatedUrl = extracted["url_in_text_field"]?.toString() ?: ""
         Log.i(TAG, "Generated Branch link: $generatedUrl")
@@ -104,14 +107,15 @@ class DeepLinkColdOpenHybridTest {
             generatedUrl.startsWith("https://")
         )
 
-        // Unregister idling resource before closing
+        // Cleanup idling resource before closing
         idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
         idlingResource = null
 
-        // Close the app completely
         normalLaunch.close()
 
-        // PHASE 2: Relaunch app with a deep link intent (simulates cold open)
+        // PHASE 2: Relaunch with deep link intent
+        // CLEAR_TASK forces fresh activity creation → onStart() calls
+        // Branch.sessionBuilder().withData(intent.getData()).init()
         val deepLinkIntent = Intent(Intent.ACTION_VIEW, Uri.parse(generatedUrl)).apply {
             setClassName(
                 InstrumentationRegistry.getInstrumentation().targetContext,
@@ -122,29 +126,40 @@ class DeepLinkColdOpenHybridTest {
 
         val deepLinkLaunch = ActivityScenario.launch<MainActivity>(deepLinkIntent)
 
-        // Wait for Branch session init to process the deep link
+        // Wait for Branch session init to resolve the deep link
         Thread.sleep(5000)
 
-        // PHASE 3: Verify deep link was received via "Latest Referring Params"
+        // PHASE 3: Verify deep link data via "Latest Referring Params"
         onView(withId(R.id.cmdPrintLatestParam)).perform(click())
 
-        // DETERMINISTIC: Verify dialog appeared
         onView(withText("Latest Referring Params"))
             .check(matches(isDisplayed()))
 
-        // AI: Validate the referring params contain deep link data
-        driver.assertBulk(
-            listOf(
-                "An alert dialog is visible showing JSON text",
-                "The JSON contains '+clicked_branch_link' with value 'true' " +
-                    "or the JSON contains a '~' prefixed key (like '~channel' or '~feature'), " +
-                    "indicating the deep link was received and parsed by the Branch SDK"
-            )
+        // AI: Validate the JSON contains link metadata
+        // The link was created with channel="Sharing_Channel_name", feature="my_feature_name"
+        // so these should appear in the referring params, along with standard Branch keys
+        driver.assertCondition(
+            "An alert dialog is showing JSON text. The JSON should contain " +
+                "link metadata keys such as '~channel', '~feature', '$canonical_identifier', " +
+                "'~creation_source', or '+match_guaranteed'. " +
+                "Any of these keys being present proves the deep link was resolved by the SDK."
         )
 
-        // DETERMINISTIC: Dismiss dialog
-        onView(withText("OK")).perform(click())
+        // AI: Extract and log for debugging
+        val jsonExtracted = driver.extract(listOf("json_content_in_dialog"))
+        val jsonContent = jsonExtracted["json_content_in_dialog"]?.toString() ?: ""
+        Log.i(TAG, "Cold open referring params: $jsonContent")
 
+        assertTrue(
+            "Referring params should not be empty after cold open, got: '$jsonContent'",
+            jsonContent.isNotEmpty()
+        )
+        assertTrue(
+            "Referring params should contain JSON object, got: '$jsonContent'",
+            jsonContent.trimStart().startsWith("{")
+        )
+
+        onView(withText("OK")).perform(click())
         deepLinkLaunch.close()
 
         driver.setSessionStatus("success")
