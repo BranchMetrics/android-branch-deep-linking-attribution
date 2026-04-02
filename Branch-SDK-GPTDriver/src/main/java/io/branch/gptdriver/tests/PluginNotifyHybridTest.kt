@@ -39,7 +39,9 @@ class PluginNotifyHybridTest : BaseGptDriverTest() {
         onView(withId(R.id.notifyInit_btn))
             .perform(scrollTo(), click())
 
-        // Allow time for the native init callback to process
+        // Allow time for the native init callback to process.
+        // Note: Thread.sleep is used here because notifyNativeToInit() has no observable
+        // state change to wait on — it triggers an internal SDK init with no UI feedback.
         Thread.sleep(2000)
 
         // Verify SDK is still alive by creating a Branch link
@@ -62,6 +64,7 @@ class PluginNotifyHybridTest : BaseGptDriverTest() {
     private fun waitForLinkGeneration() {
         activityRule.scenario.onActivity { activity ->
             val editText = activity.findViewById<EditText>(R.id.editReferralShortUrl)
+            requireNotNull(editText) { "EditText with ID editReferralShortUrl not found" }
             idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
             idlingResource = LinkGenerationIdlingResource(editText).also {
                 IdlingRegistry.getInstance().register(it)

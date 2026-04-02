@@ -107,6 +107,7 @@ class SessionAndLogsHybridTest : BaseGptDriverTest() {
     private fun waitForLinkGeneration() {
         activityRule.scenario.onActivity { activity ->
             val editText = activity.findViewById<EditText>(R.id.editReferralShortUrl)
+            requireNotNull(editText) { "EditText with ID editReferralShortUrl not found" }
             idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
             idlingResource = LinkGenerationIdlingResource(editText).also {
                 IdlingRegistry.getInstance().register(it)

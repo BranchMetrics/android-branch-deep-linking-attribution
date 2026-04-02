@@ -59,13 +59,17 @@ class DeepLinkColdOpenHybridTest {
     @Before
     fun setUp() {
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
-            key.ifEmpty { System.getenv("GPTDRIVER_API_KEY") ?: "" }
+            key.ifEmpty {
+                @Suppress("DEPRECATION")
+                androidx.test.InstrumentationRegistry.getArguments()
+                    .getString("GPTDRIVER_API_KEY") ?: ""
+            }
         }
         if (apiKey.isEmpty()) {
             throw IllegalStateException(
                 "MOBILEBOOST_API_KEY must be set in local.properties, " +
                     "gradle property (-PMOBILEBOOST_API_KEY=xxx), " +
-                    "or env var GPTDRIVER_API_KEY"
+                    "or instrumentation arg GPTDRIVER_API_KEY"
             )
         }
         driver = GptDriver(apiKey)
@@ -86,6 +90,7 @@ class DeepLinkColdOpenHybridTest {
 
         normalLaunch.onActivity { activity ->
             val editText = activity.findViewById<EditText>(R.id.editReferralShortUrl)
+            requireNotNull(editText) { "EditText with ID editReferralShortUrl not found" }
             idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
             idlingResource = LinkGenerationIdlingResource(editText).also {
                 IdlingRegistry.getInstance().register(it)
@@ -126,7 +131,10 @@ class DeepLinkColdOpenHybridTest {
 
         val deepLinkLaunch = ActivityScenario.launch<MainActivity>(deepLinkIntent)
 
-        // Wait for Branch session init to resolve the deep link
+        // Wait for Branch session init to resolve the deep link.
+        // Note: Thread.sleep is used because after ActivityScenario relaunch, there is no
+        // observable UI state to create an IdlingResource for — the SDK init happens
+        // internally before any UI update. The AI driver handles the rest.
         Thread.sleep(5000)
 
         // PHASE 3: Verify deep link data via "Latest Referring Params"

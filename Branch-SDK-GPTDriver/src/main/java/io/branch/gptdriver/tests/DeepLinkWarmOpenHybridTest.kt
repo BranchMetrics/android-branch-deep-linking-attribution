@@ -50,13 +50,17 @@ class DeepLinkWarmOpenHybridTest {
     @Before
     fun setUp() {
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
-            key.ifEmpty { System.getenv("GPTDRIVER_API_KEY") ?: "" }
+            key.ifEmpty {
+                @Suppress("DEPRECATION")
+                androidx.test.InstrumentationRegistry.getArguments()
+                    .getString("GPTDRIVER_API_KEY") ?: ""
+            }
         }
         if (apiKey.isEmpty()) {
             throw IllegalStateException(
                 "MOBILEBOOST_API_KEY must be set in local.properties, " +
                     "gradle property (-PMOBILEBOOST_API_KEY=xxx), " +
-                    "or env var GPTDRIVER_API_KEY"
+                    "or instrumentation arg GPTDRIVER_API_KEY"
             )
         }
         driver = GptDriver(apiKey)
@@ -82,6 +86,7 @@ class DeepLinkWarmOpenHybridTest {
         // Wait for link generation
         scenario!!.onActivity { activity ->
             val editText = activity.findViewById<EditText>(R.id.editReferralShortUrl)
+            requireNotNull(editText) { "EditText with ID editReferralShortUrl not found" }
             idlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
             idlingResource = LinkGenerationIdlingResource(editText).also {
                 IdlingRegistry.getInstance().register(it)
@@ -118,7 +123,9 @@ class DeepLinkWarmOpenHybridTest {
         }
         InstrumentationRegistry.getInstrumentation().targetContext.startActivity(deepLinkIntent)
 
-        // Wait for Branch reInit to resolve the deep link
+        // Wait for Branch reInit to resolve the deep link.
+        // Note: Thread.sleep is used because after startActivity with a new intent,
+        // the SDK reInit happens internally with no observable UI change to wait on.
         Thread.sleep(5000)
 
         // PHASE 3: Verify deep link data via "Latest Referring Params"

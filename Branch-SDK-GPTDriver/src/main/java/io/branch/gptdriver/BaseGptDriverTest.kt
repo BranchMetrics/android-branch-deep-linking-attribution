@@ -33,14 +33,18 @@ abstract class BaseGptDriverTest {
     @Before
     open fun setUp() {
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
-            key.ifEmpty { System.getenv("GPTDRIVER_API_KEY") ?: "" }
+            key.ifEmpty {
+                @Suppress("DEPRECATION")
+                androidx.test.InstrumentationRegistry.getArguments()
+                    .getString("GPTDRIVER_API_KEY") ?: ""
+            }
         }
 
         if (apiKey.isEmpty()) {
             throw IllegalStateException(
                 "MOBILEBOOST_API_KEY must be set in local.properties, " +
                     "gradle property (-PMOBILEBOOST_API_KEY=xxx), " +
-                    "or env var GPTDRIVER_API_KEY"
+                    "or instrumentation arg GPTDRIVER_API_KEY"
             )
         }
 
