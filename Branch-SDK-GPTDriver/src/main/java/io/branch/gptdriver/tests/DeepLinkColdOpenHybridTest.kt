@@ -10,10 +10,8 @@ import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withSubstring
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
@@ -98,8 +96,10 @@ class DeepLinkColdOpenHybridTest {
             .check(matches(withSubstring("https://")))
 
         // AI: Extract the generated URL
+        // driver.extract() may return the value wrapped in quotes, so trim them
         val extracted = driver.extract(listOf("url_in_text_field"))
-        val generatedUrl = extracted["url_in_text_field"]?.toString() ?: ""
+        val generatedUrl = extracted["url_in_text_field"]?.toString()
+            ?.trim()?.trim('"') ?: ""
         Log.i(TAG, "Generated Branch link: $generatedUrl")
 
         assertTrue(
@@ -130,36 +130,26 @@ class DeepLinkColdOpenHybridTest {
         Thread.sleep(5000)
 
         // PHASE 3: Verify deep link data via "Latest Referring Params"
-        onView(withId(R.id.cmdPrintLatestParam)).perform(click())
-
-        onView(withText("Latest Referring Params"))
-            .check(matches(isDisplayed()))
-
-        // AI: Validate the JSON contains link metadata
-        // The link was created with channel="Sharing_Channel_name", feature="my_feature_name"
-        // so these should appear in the referring params, along with standard Branch keys
-        driver.assertCondition(
-            "An alert dialog is showing JSON text. The JSON should contain " +
-                "link metadata keys such as '~channel', '~feature', '$canonical_identifier', " +
-                "'~creation_source', or '+match_guaranteed'. " +
-                "Any of these keys being present proves the deep link was resolved by the SDK."
+        // After ActivityScenario relaunch, Espresso may lose window focus.
+        // Use AI for all post-relaunch interactions to avoid RootViewWithoutFocusException.
+        driver.execute(
+            "The Branch TestBed app should be on the main screen. " +
+                "Tap the button that says 'View Latest Referring Params'."
         )
 
-        // AI: Extract and log for debugging
-        val jsonExtracted = driver.extract(listOf("json_content_in_dialog"))
-        val jsonContent = jsonExtracted["json_content_in_dialog"]?.toString() ?: ""
-        Log.i(TAG, "Cold open referring params: $jsonContent")
-
-        assertTrue(
-            "Referring params should not be empty after cold open, got: '$jsonContent'",
-            jsonContent.isNotEmpty()
-        )
-        assertTrue(
-            "Referring params should contain JSON object, got: '$jsonContent'",
-            jsonContent.trimStart().startsWith("{")
+        // AI: Validate the dialog shows JSON with link metadata
+        driver.assertBulk(
+            listOf(
+                "An alert dialog titled 'Latest Referring Params' is visible showing JSON text",
+                "The JSON contains link metadata keys such as '~channel', '~feature', " +
+                    "'~creation_source', or '+match_guaranteed' — " +
+                    "any of these proves the deep link was resolved by the SDK"
+            )
         )
 
-        onView(withText("OK")).perform(click())
+        // AI: Dismiss dialog
+        driver.execute("Tap the 'OK' button to dismiss the dialog")
+
         deepLinkLaunch.close()
 
         driver.setSessionStatus("success")
