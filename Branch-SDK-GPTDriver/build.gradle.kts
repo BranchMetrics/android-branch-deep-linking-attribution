@@ -28,6 +28,7 @@ android {
 
     defaultConfig {
         minSdk = 24
+        targetSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
 
