@@ -2718,13 +2718,18 @@ public class Branch {
         }
     }
 
+    /**
+     * Provides a setting to cancel the external Install Referrer string fetch.
+     * Default is 0 milliseconds, no timeout.
+     * @param timeoutMs
+     */
     public void setInstallReferrerTimeout(int timeoutMs){
-        if (timeoutMs > 0) {
+        if (timeoutMs >= 0) {
             PrefHelper.getInstance(context_).setInstallReferrerTimeout(timeoutMs);
             BranchLogger.v("set Install Referrer timeout to " + timeoutMs);
         }
         else {
-            BranchLogger.w("setInstallReferrerTimeout: timeoutMs cannot be 0");
+            BranchLogger.w("setInstallReferrerTimeout: timeoutMs timeoutMs must be 0 or greater");
         }
     }
 

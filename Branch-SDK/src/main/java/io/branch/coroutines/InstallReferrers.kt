@@ -367,14 +367,12 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
         getLatestValidReferrerStore(allReferrers)
     }
 
-    return if(timeoutMs > 0){
-        withTimeoutOrNull(timeoutMs.toLong()){
-            fetchAll()
-        }
-    }
-    else {
-        fetchAll()
-    }
+    return if (timeoutMs > 0) {
+                withTimeoutOrNull(timeoutMs.toLong()) { fetchAll() }
+            }
+            else {
+                fetchAll()
+            }
 }
 
 /**

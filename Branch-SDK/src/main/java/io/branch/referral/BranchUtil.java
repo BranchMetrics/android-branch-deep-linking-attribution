@@ -271,7 +271,7 @@ public class BranchUtil {
         BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
         Integer timeout = jsonConfig.getInstallReferrerFetchTimeout();
 
-        if (timeout != null && timeout > 0) {
+        if (timeout != null && timeout >= 0) {
             PrefHelper.getInstance(context).setInstallReferrerTimeout(timeout);
         }
     }
