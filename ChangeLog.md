@@ -2,7 +2,8 @@
 - v5.21.0
   - Add an optional configuration to allow cancelling Install Referrer fetch.
     - `setInstallReferrerTimeout(int timeoutInMilliseconds)`
-    - After the Branch singleton is initialized in Application onCreate call
+    - After the Branch singleton is initialized in Application onCreate
+      For example:
         `Branch.getInstance().setInstallReferrerTimeout(250)`
       Or use branch.json
       ```
