@@ -347,7 +347,7 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
  */
 suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult? {
     val timeoutMs = PrefHelper.getInstance(context).installReferrerTimeout
-    BranchLogger.v("Referral fetch timeout in milliseconds: $timeoutMs")
+    BranchLogger.v("InstallReferrer fetch timeout in milliseconds: $timeoutMs")
 
     suspend fun fetchAll(): InstallReferrerResult? = supervisorScope {
         val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }

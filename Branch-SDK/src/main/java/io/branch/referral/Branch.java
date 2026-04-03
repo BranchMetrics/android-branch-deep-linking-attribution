@@ -2729,7 +2729,7 @@ public class Branch {
             BranchLogger.v("set Install Referrer timeout to " + timeoutMs);
         }
         else {
-            BranchLogger.w("setInstallReferrerTimeout: timeoutMs timeoutMs must be 0 or greater");
+            BranchLogger.w("setInstallReferrerTimeout: timeoutMs must be 0 or greater");
         }
     }
 
