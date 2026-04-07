@@ -1,6 +1,5 @@
 {
   "name": "[Android] Reactive Session State Observation (removal of expectDelayedSessionInitialization)",
-  "mobileboost_id": "r50p5oTR3ppoJ4k90HjI",
   "tags": [
     "Android",
     "SDK Rewrite",

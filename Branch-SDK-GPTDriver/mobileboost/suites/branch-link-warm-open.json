@@ -1,7 +1,8 @@
 {
   "name": "[Android] Branch Link - Warm Open",
-  "mobileboost_id": "zrOC8morEgX0jzLEGMdd",
-  "dependencies": ["gMTZpITvB9ejIJTtbZPd"],
+  "dependencies": [
+    "gMTZpITvB9ejIJTtbZPd"
+  ],
   "tags": [
     "Android",
     "Release"

@@ -10,8 +10,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -47,12 +45,11 @@ import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchLogger;
+import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.SharingHelper;
-import io.branch.referral.BranchLogger;
-import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.BranchEvent;
@@ -70,9 +67,7 @@ public class MainActivity extends Activity {
     private final static String branchChannelID = "BranchChannelID";
 
     private void showLongToast(String message) {
-        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
-        toast.show();
-        new Handler(Looper.getMainLooper()).postDelayed(toast::show, 3000);
+        TestBedHelper.showLongToast(this, message);
     }
 
     @Override
@@ -810,101 +805,8 @@ public class MainActivity extends Activity {
         initializeSessionWithEventTests(n);
     }
 
-    /**
-     * Initializes Branch session and creates test events after successful initialization.
-     * Follows SRP - single responsibility for session initialization with event creation.
-     * 
-     * @param eventCount Number of test events to create after session initialization
-     */
     private void initializeSessionWithEventTests(int eventCount) {
-        Branch.sessionBuilder(this).withCallback(new BranchSessionInitializationHandler(eventCount))
-                .withData(this.getIntent().getData())
-                .init();
-    }
-    
-    /**
-     * Handler for Branch session initialization with event creation capability.
-     * Follows SRP and DIP principles - separated concerns and depends on abstractions.
-     */
-    private class BranchSessionInitializationHandler implements Branch.BranchUniversalReferralInitListener {
-        private final int eventCount;
-        
-        public BranchSessionInitializationHandler(int eventCount) {
-            this.eventCount = eventCount;
-        }
-        
-        @Override
-        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
-            if (error != null) {
-                handleSessionInitializationError(error);
-                return;
-            }
-            
-            handleSessionInitializationSuccess(branchUniversalObject, linkProperties);
-            createTestEvents();
-        }
-        
-        /**
-         * Handles successful session initialization.
-         * Follows SRP - single responsibility for handling success scenario.
-         */
-        private void handleSessionInitializationSuccess(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties) {
-            BranchLogger.d("branch init complete!");
-            if (branchUniversalObject != null) {
-                logBranchUniversalObjectDetails(branchUniversalObject);
-            }
-            
-            if (linkProperties != null) {
-                logLinkPropertiesDetails(linkProperties);
-            }
-        }
-        
-        /**
-         * Handles session initialization errors.
-         * Follows SRP - single responsibility for error handling.
-         */
-        private void handleSessionInitializationError(BranchError error) {
-            BranchLogger.d("branch init failed. Caused by -" + error.getMessage());
-        }
-        
-        /**
-         * Creates and logs test events after session is successfully initialized.
-         * Follows SRP - single responsibility for event creation.
-         */
-        private void createTestEvents() {
-            BranchLogger.d("Creating " + eventCount + " test events after session initialization");
-            for (int i = 0; i < eventCount; i++) {
-                createAndLogTestEvent(i);
-            }
-        }
-        
-        /**
-         * Creates and logs a single test event.
-         * Follows SRP - single responsibility for individual event creation.
-         */
-        private void createAndLogTestEvent(int eventIndex) {
-            BranchEvent event = new BranchEvent("Event " + eventIndex);
-            event.logEvent(MainActivity.this);
-        }
-        
-        /**
-         * Logs BranchUniversalObject details.
-         * Follows SRP - single responsibility for logging object details.
-         */
-        private void logBranchUniversalObjectDetails(BranchUniversalObject branchUniversalObject) {
-            BranchLogger.d("title " + branchUniversalObject.getTitle());
-            BranchLogger.d("CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-            BranchLogger.d("metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-        }
-        
-        /**
-         * Logs LinkProperties details.
-         * Follows SRP - single responsibility for logging link properties.
-         */
-        private void logLinkPropertiesDetails(LinkProperties linkProperties) {
-            BranchLogger.d("Channel " + linkProperties.getChannel());
-            BranchLogger.d("control params " + linkProperties.getControlParams());
-        }
+        TestBedHelper.initializeSessionWithEventTests(this, eventCount);
     }
 
     @Override

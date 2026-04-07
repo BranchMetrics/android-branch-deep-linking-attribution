@@ -60,8 +60,7 @@ class DeepLinkColdOpenHybridTest {
     fun setUp() {
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
             key.ifEmpty {
-                @Suppress("DEPRECATION")
-                androidx.test.InstrumentationRegistry.getArguments()
+                androidx.test.platform.app.InstrumentationRegistry.getArguments()
                     .getString("GPTDRIVER_API_KEY") ?: ""
             }
         }

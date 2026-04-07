@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class LogOutputActivity extends Activity {
@@ -46,22 +45,15 @@ public class LogOutputActivity extends Activity {
 
     private void displayLogs() {
         if (logFile.exists()) {
-            List<String> lines = new ArrayList<>();
-
+            StringBuilder logContent = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile)))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    lines.add(line);
+                    logContent.insert(0, line + "\n");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                lines.add("Error reading log file.");
-            }
-
-            Collections.reverse(lines);
-            StringBuilder logContent = new StringBuilder();
-            for (String line : lines) {
-                logContent.append(line).append("\n");
+                logContent.append("Error reading log file.");
             }
             logOutputTextView.setText(logContent.toString());
         } else {

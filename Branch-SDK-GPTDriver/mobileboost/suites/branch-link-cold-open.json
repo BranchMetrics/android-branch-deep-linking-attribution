@@ -1,7 +1,8 @@
 {
   "name": "[Android] Branch Link - Cold Open",
-  "mobileboost_id": "zEEAFq54CSn5wi3a5wEp",
-  "dependencies": ["bbZzyJWXDMT9WQUVpFMT"],
+  "dependencies": [
+    "bbZzyJWXDMT9WQUVpFMT"
+  ],
   "tags": [
     "Android",
     "Release"
