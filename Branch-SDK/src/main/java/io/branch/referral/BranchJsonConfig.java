@@ -32,7 +32,8 @@ public class BranchJsonConfig {
         deferInitForPluginRuntime,
         apiUrl,
         fbAppId,
-        cppLevel
+        cppLevel,
+        installReferrerFetchTimeout
     }
 
     /*
@@ -238,6 +239,26 @@ public class BranchJsonConfig {
             }
 
             return mConfiguration.getString(BranchJsonKey.cppLevel.toString());
+        }
+        catch (JSONException exception) {
+            Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());
+            return null;
+        }
+    }
+
+    @Nullable
+    public Integer getInstallReferrerFetchTimeout() {
+        BranchLogger.v("getInstallReferrerFetchTimeout " + mConfiguration);
+        if (mConfiguration == null) {
+            return null;
+        }
+
+        try {
+            if (!mConfiguration.has(BranchJsonKey.installReferrerFetchTimeout.toString())) {
+                return null;
+            }
+
+            return mConfiguration.getInt(BranchJsonKey.installReferrerFetchTimeout.toString());
         }
         catch (JSONException exception) {
             Log.e(TAG, "Error parsing branch.json: " + exception.getMessage());

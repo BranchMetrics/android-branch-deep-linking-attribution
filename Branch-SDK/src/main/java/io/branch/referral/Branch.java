@@ -395,6 +395,8 @@ public class Branch {
 
             BranchUtil.setCPPLevelFromConfig(context);
 
+            BranchUtil.setInstallReferrerTimeoutFromConfig(context);
+
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             branchReferral_ = initBranchSDK(context, BranchUtil.readBranchKey(context));
             getPreinstallSystemData(branchReferral_, context);
@@ -425,6 +427,7 @@ public class Branch {
             BranchUtil.setAPIBaseUrlFromConfig(context);
             BranchUtil.setFbAppIdFromConfig(context);
             BranchUtil.setCPPLevelFromConfig(context);
+            BranchUtil.setInstallReferrerTimeoutFromConfig(context);
             BranchUtil.setTestMode(BranchUtil.checkTestMode(context));
             // If a Branch key is passed already use it. Else read the key
             if (!isValidBranchKey(branchKey)) {
@@ -2712,6 +2715,21 @@ public class Branch {
             if (trackingController.isTrackingDisabled()) {
                 trackingController.disableTracking(context_, false, callback);
             }
+        }
+    }
+
+    /**
+     * Provides a setting to cancel the external Install Referrer string fetch.
+     * Default is 0 milliseconds, no timeout.
+     * @param timeoutMs
+     */
+    public void setInstallReferrerTimeout(int timeoutMs){
+        if (timeoutMs >= 0) {
+            PrefHelper.getInstance(context_).setInstallReferrerTimeout(timeoutMs);
+            BranchLogger.v("set Install Referrer timeout to " + timeoutMs);
+        }
+        else {
+            BranchLogger.w("setInstallReferrerTimeout: timeoutMs must be 0 or greater");
         }
     }
 

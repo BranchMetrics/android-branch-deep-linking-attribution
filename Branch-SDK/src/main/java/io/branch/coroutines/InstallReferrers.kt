@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONException
 import org.json.JSONObject
 import java.net.URLDecoder
@@ -345,21 +346,33 @@ private fun queryProvider(context: Context, provider: String): InstallReferrerRe
  * Await all and then do list operations
  */
 suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult? {
-    return supervisorScope {
+    val timeoutMs = PrefHelper.getInstance(context).installReferrerTimeout
+    BranchLogger.v("InstallReferrer fetch timeout in milliseconds: $timeoutMs")
+
+    suspend fun fetchAll(): InstallReferrerResult? = supervisorScope {
         val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }
         val huaweiReferrer = async { getHuaweiAppGalleryReferrerDetails(context) }
         val samsungReferrer = async { getSamsungGalaxyStoreReferrerDetails(context) }
         val xiaomiReferrer = async { getXiaomiGetAppsReferrerDetails(context) }
         val metaReferrer = async { getMetaInstallReferrerDetails(context) }
 
-        val allReferrers: List<InstallReferrerResult?> = listOf(googleReferrer.await(), huaweiReferrer.await(), samsungReferrer.await(), xiaomiReferrer.await(), metaReferrer.await())
-        val latestReferrer = getLatestValidReferrerStore(allReferrers)
+        val allReferrers: List<InstallReferrerResult?> = listOf(
+            googleReferrer.await(),
+            huaweiReferrer.await(),
+            samsungReferrer.await(),
+            xiaomiReferrer.await(),
+            metaReferrer.await()
+        )
 
-        BranchLogger.v("All Install Referrers: $allReferrers")
-        BranchLogger.v("Latest Install Referrer: $latestReferrer")
-
-        latestReferrer
+        getLatestValidReferrerStore(allReferrers)
     }
+
+    return if (timeoutMs > 0) {
+                withTimeoutOrNull(timeoutMs.toLong()) { fetchAll() }
+            }
+            else {
+                fetchAll()
+            }
 }
 
 /**

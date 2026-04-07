@@ -1,4 +1,18 @@
 # Branch Android SDK change log
+- v5.21.0
+  - Add an optional configuration to allow cancelling Install Referrer fetch.
+    - `setInstallReferrerTimeout(int timeoutInMilliseconds)`
+    - After the Branch singleton is initialized in Application onCreate
+      For example:
+        `Branch.getInstance().setInstallReferrerTimeout(250)`
+      Or use branch.json
+      ```
+      {
+         "installReferrerFetchTimeout": 250
+      }
+      ```
+    - Setting to 0 milliseconds will not impose a timeout (default behavior).
+
 - v5.20.3
 * _*Master Release*_ - Sep 24, 2025
   - Add some additional debug logging.

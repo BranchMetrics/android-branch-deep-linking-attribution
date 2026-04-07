@@ -267,6 +267,15 @@ public class BranchUtil {
         }
     }
 
+    public static void setInstallReferrerTimeoutFromConfig(Context context) {
+        BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
+        Integer timeout = jsonConfig.getInstallReferrerFetchTimeout();
+
+        if (timeout != null && timeout >= 0) {
+            PrefHelper.getInstance(context).setInstallReferrerTimeout(timeout);
+        }
+    }
+
     /**
      * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
      * This value can be overridden via. {@link Branch#enableTestMode()}

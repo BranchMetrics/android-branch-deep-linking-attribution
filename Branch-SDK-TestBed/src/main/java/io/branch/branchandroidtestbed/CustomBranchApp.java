@@ -30,7 +30,7 @@ public final class CustomBranchApp extends Application {
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
-        branch.setCustomTabsIntent(customTabsIntent);
+        Branch.getInstance().setCustomTabsIntent(customTabsIntent);
 
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
