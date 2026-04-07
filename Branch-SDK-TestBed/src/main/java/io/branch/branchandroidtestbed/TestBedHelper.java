@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
+
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchError;
@@ -43,11 +45,11 @@ public class TestBedHelper {
      * Handler for Branch session initialization with event creation capability.
      */
     static class SessionInitHandler implements Branch.BranchUniversalReferralInitListener {
-        private final Activity activity;
+        private final WeakReference<Activity> activityRef;
         private final int eventCount;
 
         SessionInitHandler(Activity activity, int eventCount) {
-            this.activity = activity;
+            this.activityRef = new WeakReference<>(activity);
             this.eventCount = eventCount;
         }
 
@@ -71,8 +73,11 @@ public class TestBedHelper {
             }
 
             BranchLogger.d("Creating " + eventCount + " test events after session initialization");
-            for (int i = 0; i < eventCount; i++) {
-                new BranchEvent("Event " + i).logEvent(activity);
+            Activity activity = activityRef.get();
+            if (activity != null && !activity.isFinishing()) {
+                for (int i = 0; i < eventCount; i++) {
+                    new BranchEvent("Event " + i).logEvent(activity);
+                }
             }
         }
     }

@@ -45,15 +45,19 @@ public class LogOutputActivity extends Activity {
 
     private void displayLogs() {
         if (logFile.exists()) {
-            StringBuilder logContent = new StringBuilder();
+            List<String> lines = new ArrayList<>();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile)))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    logContent.insert(0, line + "\n");
+                    lines.add(line);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                logContent.append("Error reading log file.");
+                lines.add("Error reading log file.");
+            }
+            StringBuilder logContent = new StringBuilder();
+            for (int i = lines.size() - 1; i >= 0; i--) {
+                logContent.append(lines.get(i)).append("\n");
             }
             logOutputTextView.setText(logContent.toString());
         } else {
