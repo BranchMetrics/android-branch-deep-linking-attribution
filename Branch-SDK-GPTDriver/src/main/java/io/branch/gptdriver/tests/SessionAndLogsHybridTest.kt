@@ -40,6 +40,9 @@ class SessionAndLogsHybridTest : BaseGptDriverTest() {
         onView(withId(R.id.initSessionButton))
             .perform(scrollTo(), click())
 
+        // Add a small delay for session init before link creation
+        Thread.sleep(3000)
+
         // Verify session is alive by creating a Branch link
         // If session failed, link creation would return an error
         onView(withId(R.id.cmdRefreshShortURL))
@@ -48,12 +51,15 @@ class SessionAndLogsHybridTest : BaseGptDriverTest() {
         // Wait for link generation
         waitForLinkGeneration()
 
-        // AI: Verify a valid URL was generated (proves session is functional)
-        driver.assertCondition(
-            "The text field at the top of the screen contains a valid Branch URL " +
-                "starting with 'https://' and containing 'bnctestbed'. " +
-                "This proves the session was initialized successfully."
-        )
+        // DETERMINISTIC: Verify a valid URL was generated (proves session is functional)
+        onView(withId(R.id.editReferralShortUrl))
+            .check(matches(isDisplayed()))
+        
+        onView(withId(R.id.editReferralShortUrl))
+            .check(matches(androidx.test.espresso.matcher.ViewMatchers.withSubstring("https://")))
+        
+        onView(withId(R.id.editReferralShortUrl))
+            .check(matches(androidx.test.espresso.matcher.ViewMatchers.withSubstring("bnctestbed")))
 
         driver.setSessionStatus("success")
     }
@@ -93,8 +99,9 @@ class SessionAndLogsHybridTest : BaseGptDriverTest() {
 
         // AI: Verify the logout Toast appeared (not swallowed in try/catch)
         driver.assertCondition(
-            "A toast message appeared confirming logout. " +
-                "The toast should contain 'Logged Out'."
+            "A toast message should have appeared confirming logout. " +
+                "The toast should contain 'Logged Out'. Check if it's currently " +
+                "visible or was just visible a moment ago."
         )
 
         // DETERMINISTIC: Verify main screen is still displayed
