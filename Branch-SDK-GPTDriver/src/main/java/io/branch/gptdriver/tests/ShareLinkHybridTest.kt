@@ -23,19 +23,20 @@ class ShareLinkHybridTest : BaseGptDriverTest() {
         // DETERMINISTIC: Click "Share Branch Link"
         onView(withId(R.id.share_btn)).perform(click())
 
-        // AI: Validate the share sheet appeared with sharing options
+        // AI: Validate the custom share dialog appeared
         driver.assertBulk(
             listOf(
-                "A share sheet or sharing dialog is visible on screen",
-                "The share sheet shows sharing options or app icons for sharing"
+                "A share dialog or list of apps is visible on screen",
+                "The dialog contains a list of sharing options or app icons"
             )
         )
 
-        // AI: Dismiss the share sheet to return to the main screen
-        driver.execute(
-            "Dismiss the share sheet by pressing the back button or tapping outside it. " +
-                "Return to the main screen of the Branch TestBed app."
-        )
+        // AI: Dismiss the custom dialog to return to the main screen
+        val device = androidx.test.uiautomator.UiDevice.getInstance(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation())
+        device.pressBack()
+        
+        // Wait for transition
+        Thread.sleep(3000)
 
         // DETERMINISTIC: Verify we're back on the main screen
         onView(withId(R.id.share_btn))
@@ -51,15 +52,16 @@ class ShareLinkHybridTest : BaseGptDriverTest() {
 
         // AI: Validate the native Android share chooser appeared
         driver.assertCondition(
-            "A native Android share chooser or 'Share with' dialog is visible. " +
-                "It should show a list of apps or sharing options available on the device."
+            "A native Android system share chooser or 'Share with' dialog is visible. " +
+                "It should show a list of apps or sharing options provided by the system."
         )
 
         // AI: Dismiss and return to main screen
-        driver.execute(
-            "Dismiss the share chooser by pressing the back button or tapping outside. " +
-                "Return to the main screen."
-        )
+        val device = androidx.test.uiautomator.UiDevice.getInstance(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation())
+        device.pressBack()
+
+        // Wait for system transition back to the app
+        Thread.sleep(4000)
 
         // DETERMINISTIC: Verify we're back
         onView(withId(R.id.native_share_btn))
@@ -74,7 +76,7 @@ class ShareLinkHybridTest : BaseGptDriverTest() {
         onView(withId(R.id.share_btn)).perform(click())
 
         // AI: Extract visible sharing details from the share sheet
-        val shareInfo = driver.extract(
+        driver.extract(
             listOf("share_title_or_subject", "share_message_or_content")
         )
 

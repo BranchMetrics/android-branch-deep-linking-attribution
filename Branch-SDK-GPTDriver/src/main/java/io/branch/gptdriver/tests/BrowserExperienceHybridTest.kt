@@ -36,10 +36,9 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
         )
 
         // AI: Navigate back to the main screen
-        driver.execute(
-            "Press the back button or close the in-app browser to return to the " +
-                "main screen of the Branch TestBed app."
-        )
+        val device = androidx.test.uiautomator.UiDevice.getInstance(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation())
+        device.pressBack()
+        Thread.sleep(3000)
 
         // DETERMINISTIC: Verify we're back on the main screen
         onView(withId(R.id.openInAppBrowser))
@@ -64,7 +63,9 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
         )
 
         // AI: Go back
-        driver.execute("Press back to return to the main TestBed screen")
+        val device = androidx.test.uiautomator.UiDevice.getInstance(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation())
+        device.pressBack()
+        Thread.sleep(3000)
 
         driver.setSessionStatus("success")
     }
