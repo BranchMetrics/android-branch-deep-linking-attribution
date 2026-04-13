@@ -125,13 +125,14 @@ class DeepLinkWarmOpenHybridTest {
         // Wait for Branch reInit to resolve the deep link.
         // Note: Thread.sleep is used because after startActivity with a new intent,
         // the SDK reInit happens internally with no observable UI change to wait on.
-        Thread.sleep(5000)
+        Thread.sleep(8000)
 
         // PHASE 3: Verify deep link data via "Latest Referring Params"
         // Use AI for post-intent interactions (avoids Espresso focus issues)
         driver.execute(
             "The Branch TestBed app should be on the main screen. " +
-                "Tap the button that says 'View Latest Referring Params'."
+                "Wait a moment for the SDK to finish initializing, then tap the button " +
+                "that says 'View Latest Referring Params'."
         )
 
         // AI: Validate the dialog shows JSON with Branch session data
