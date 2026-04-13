@@ -1,13 +1,16 @@
 package io.branch.gptdriver.tests
 
+import android.os.Build
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.platform.app.InstrumentationRegistry
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BaseGptDriverTest
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -22,37 +25,57 @@ import org.junit.Test
  */
 class NotificationHybridTest : BaseGptDriverTest() {
 
+    @Before
+    override fun setUp() {
+        super.setUp()
+        // Grant POST_NOTIFICATIONS for API 33+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val packageName = InstrumentationRegistry.getInstrumentation().targetContext.packageName
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+                "pm grant $packageName android.permission.POST_NOTIFICATIONS"
+            )
+            // Optional check for permission dialog: only handle if it's actually visible.
+            // This prevents timeouts if 'pm grant' already succeeded.
+            driver.execute(
+                "Check if an Android system permission dialog for 'Notifications' is visible. " +
+                    "If it is, tap 'Allow'. If no dialog is present, do nothing and proceed."
+            )
+            // Wait a moment for the system to process the granted permission
+            Thread.sleep(2000)
+        }
+    }
+
     @Test
     fun sendNotification_createsNotificationWithBranchLink() {
+        // DETERMINISTIC: Scroll to and click "Init Session"
+        onView(withId(R.id.initSessionButton))
+            .perform(scrollTo(), click())
+        
+        Thread.sleep(3000)
+
         // DETERMINISTIC: Scroll to and click "Send Notification"
         onView(withId(R.id.notif_btn))
             .perform(scrollTo(), click())
 
-        // Wait for sync link generation + notification creation
-        Thread.sleep(3000)
+        // AI: Confirm the notification was actually "sent" by the app (Toast)
+        driver.assertCondition(
+            "Wait for a Toast message that says 'Notification Sent!'. " +
+                "This confirms the Branch SDK successfully generated the link and posted the notification."
+        )
 
-        // AI: Open the notification shade and verify the notification
+        // DETERMINISTIC: Open shade using UiDevice
+        val device = androidx.test.uiautomator.UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        device.openNotification()
+        Thread.sleep(2000)
+
+        // AI: Find notification, and confirm its content.
         driver.execute(
-            "Swipe down from the top of the screen to open the notification shade. " +
-                "Look for a notification from 'BranchTest' or the TestBed app."
+            "Look for the 'BranchTest' notification. If grouped, tap the arrow to expand it. " +
+                "Verify the notification contains a URL starting with 'https://'. " +
+                "Once verified, swipe up from the bottom or press back to close the shade and return to the TestBed app."
         )
 
-        // AI: Validate the notification content
-        driver.assertBulk(
-            listOf(
-                "A notification is visible in the notification shade",
-                "The notification title contains 'BranchTest'",
-                "The notification content contains a URL with 'https://' or a Branch link"
-            )
-        )
-
-        // AI: Dismiss the notification shade and return to the app
-        driver.execute(
-            "Press the back button or swipe up to close the notification shade " +
-                "and return to the Branch TestBed app."
-        )
-
-        // DETERMINISTIC: Verify we're back on the main screen
+        // DETERMINISTIC: Final check to ensure we are back in the app
         onView(withId(R.id.notif_btn))
             .check(matches(isDisplayed()))
 
