@@ -404,31 +404,35 @@ public class MainActivity extends Activity {
         findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                BranchLogger.d("MODERNIZATION_DEBUG: Starting getShortUrl (SYNC) - should trigger ModernLinkGenerator");
-                String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
-                if (shortURL == null) {
-                    BranchLogger.d("MODERNIZATION_DEBUG: branchUniversalObject.getShortUrl returned null - check ModernLinkGenerator logs");
-                    BranchLogger.d("branchUniversalObject.getShortUrl = null");
-                    return;
-                } else {
-                    BranchLogger.d("MODERNIZATION_DEBUG: getShortUrl successful: " + shortURL);
-                }
+                BranchLogger.d("MODERNIZATION_DEBUG: Starting generateShortUrl (ASYNC)");
+                branchUniversalObject.generateShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"), new Branch.BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        if (error != null || url == null) {
+                            BranchLogger.d("MODERNIZATION_DEBUG: generateShortUrl failed: " + (error != null ? error.getMessage() : "null url"));
+                            Toast.makeText(MainActivity.this, "Notification failed: " + (error != null ? error.getMessage() : "null url"), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
-                intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
-                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                        BranchLogger.d("MODERNIZATION_DEBUG: generateShortUrl successful: " + url);
+                        Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                        intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), url);
+                        intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
-                        .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("BranchTest")
-                        .setContentText(shortURL)
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                notificationManager.notify(1, builder.build());
-                BranchLogger.d("Sent notification");
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
+                                .setSmallIcon(R.drawable.ic_launcher)
+                                .setContentTitle("BranchTest")
+                                .setContentText(url)
+                                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                .setContentIntent(pendingIntent)
+                                .setAutoCancel(true);
+                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                        notificationManager.notify(1, builder.build());
+                        BranchLogger.d("Sent notification");
+                        Toast.makeText(MainActivity.this, "Notification Sent!", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
