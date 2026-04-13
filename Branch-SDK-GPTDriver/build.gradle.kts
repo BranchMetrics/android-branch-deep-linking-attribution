@@ -30,6 +30,7 @@ android {
         minSdk = 24
         targetSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
         multiDexEnabled = true
 
         buildConfigField(
@@ -37,6 +38,10 @@ android {
             "MOBILEBOOST_API_KEY",
             "\"$mobileboostApiKey\""
         )
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
 
     buildFeatures {
@@ -86,4 +91,6 @@ dependencies {
     implementation("androidx.test:runner:1.5.2")
     implementation("androidx.test:rules:1.5.0")
     implementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    androidTestUtil("androidx.test:orchestrator:1.5.0")
 }
