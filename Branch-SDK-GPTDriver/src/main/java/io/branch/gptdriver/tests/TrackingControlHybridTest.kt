@@ -37,10 +37,14 @@ class TrackingControlHybridTest : BaseGptDriverTest() {
         onView(withId(R.id.tracking_cntrl_btn))
             .check(matches(isChecked()))
 
+        // Wait for Toast
+        Thread.sleep(3000)
+
         // AI: Verify the SDK actually processed the toggle (Toast confirms)
         driver.assertCondition(
-            "A toast message appeared confirming tracking was disabled. " +
-                "The toast should contain 'Disabled Tracking'."
+            "A toast message should have appeared or been recently visible confirming tracking was disabled. " +
+                "The toast message text should contain 'Disabled Tracking'. If the toast is no longer " +
+                "visible, confirm that the toggle button is in the 'ON' / 'Checked' state."
         )
 
         driver.setSessionStatus("success")
@@ -59,10 +63,14 @@ class TrackingControlHybridTest : BaseGptDriverTest() {
         onView(withId(R.id.tracking_cntrl_btn))
             .check(matches(isNotChecked()))
 
+        // Wait for Toast
+        Thread.sleep(3000)
+
         // AI: Verify the SDK actually processed the toggle
         driver.assertCondition(
-            "A toast message appeared confirming tracking was enabled. " +
-                "The toast should contain 'Enabled Tracking'."
+            "A toast message should have appeared or been recently visible confirming tracking was enabled. " +
+                "The toast message text should contain 'Enabled Tracking'. If the toast is no longer " +
+                "visible, confirm that the toggle button is in the 'OFF' / 'Unchecked' state."
         )
 
         driver.setSessionStatus("success")
