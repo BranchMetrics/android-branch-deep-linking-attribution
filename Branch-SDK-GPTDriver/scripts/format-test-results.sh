@@ -41,12 +41,14 @@ fi
 #   io.branch.gptdriver.tests.LinkCreationHybridTest > createBranchLink_generatesValidUrl[Pixel_5_API_34(AVD) - 14] PASSED
 #   io.branch.gptdriver.tests.LinkCreationHybridTest > createBranchLink_generatesValidUrl[Pixel_5_API_34(AVD) - 14] FAILED
 #   io.branch.gptdriver.tests.LinkCreationHybridTest > createBranchLink_generatesValidUrl[Pixel_5_API_34(AVD) - 14] SKIPPED
-# `grep -c` always outputs a number on its own; the `|| true` swallows the
-# non-zero exit code that grep returns when there are zero matches, so this
-# never triggers `set -e` style behaviour from a calling script.
-PASSED=$(grep -cE " PASSED( |$)" "$LOG_FILE" 2>/dev/null || true)
-FAILED=$(grep -cE " FAILED( |$)" "$LOG_FILE" 2>/dev/null || true)
-SKIPPED=$(grep -cE " SKIPPED( |$)" "$LOG_FILE" 2>/dev/null || true)
+# The closing bracket anchor is required to avoid false positives from
+# "BUILD FAILED in 3m 42s" and "> Task :... FAILED" lines. `grep -c` always
+# outputs a number on its own; the `|| true` swallows the non-zero exit code
+# that grep returns when there are zero matches, so this never triggers
+# `set -e` style behaviour from a calling script.
+PASSED=$(grep -cE "\] PASSED$" "$LOG_FILE" 2>/dev/null || true)
+FAILED=$(grep -cE "\] FAILED$" "$LOG_FILE" 2>/dev/null || true)
+SKIPPED=$(grep -cE "\] SKIPPED$" "$LOG_FILE" 2>/dev/null || true)
 PASSED=${PASSED:-0}
 FAILED=${FAILED:-0}
 SKIPPED=${SKIPPED:-0}
@@ -100,13 +102,14 @@ fi
 if [[ -z "${DESTINATION:-}" ]]; then
   # Gradle per-test lines include the device descriptor in square brackets:
   #   [Pixel_5_API_34(AVD) - 14]
-  # where the trailing number is the Android API level. Pick the first match.
+  # where the trailing number is the Android OS version (e.g. 14 for
+  # Android 14 / API 34). Pick the first match.
   DEST_LINE=$(grep -oE "\[[A-Za-z0-9_]+\([A-Z]+\) - [0-9]+\]" "$LOG_FILE" 2>/dev/null | head -1 || true)
   if [[ -n "$DEST_LINE" ]]; then
     DEVICE_RAW=$(echo "$DEST_LINE" | sed -E 's/^\[([A-Za-z0-9_]+)\([A-Z]+\) - ([0-9]+)\]$/\1|\2/')
     DEVICE_NAME=$(echo "$DEVICE_RAW" | cut -d'|' -f1 | tr '_' ' ')
-    API_LEVEL=$(echo "$DEVICE_RAW" | cut -d'|' -f2)
-    DESTINATION="${DEVICE_NAME} / API ${API_LEVEL}"
+    OS_VERSION=$(echo "$DEVICE_RAW" | cut -d'|' -f2)
+    DESTINATION="${DEVICE_NAME} / Android ${OS_VERSION}"
   else
     DESTINATION="<unknown>"
   fi
