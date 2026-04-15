@@ -1,0 +1,14 @@
+## Committed template for local.properties.
+## Copy this file to `local.properties` (gitignored) and fill in real values.
+##
+## `local.properties` is read by Gradle at build time. The Android SDK location
+## is added automatically by Android Studio on first open; the MobileBoost key
+## is only needed if you run the Branch-SDK-GPTDriver hybrid test module.
+
+# Location of the Android SDK on your machine. Android Studio writes this
+# automatically the first time you sync. Example:
+# sdk.dir=/Users/you/Library/Android/sdk
+
+# MobileBoost / GPTDriver API key used by the Branch-SDK-GPTDriver module.
+# See Branch-SDK-GPTDriver/README.md for how this value is resolved.
+MOBILEBOOST_API_KEY=your_key_here
