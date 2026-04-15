@@ -217,8 +217,13 @@ class DeviceInfo {
             setPostUserAgent(userDataObj);
 
             if (serverRequest instanceof ServerRequestGetLATD) {
-                userDataObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(),
-                        ((ServerRequestGetLATD) serverRequest).getAttributionWindow());
+                // If window is not set by the sdk, do not send `attribution_window`
+                // Server will return configured default
+                // Server will enforce window cap
+                int attribution_window = ((ServerRequestGetLATD) serverRequest).getAttributionWindow();
+                if (attribution_window > 0) {
+                    userDataObj.put(Defines.Jsonkey.LATDAttributionWindow.getKey(), attribution_window);
+                }
             }
 
             if (serverRequest.isInitializationOrEventRequest()) {
