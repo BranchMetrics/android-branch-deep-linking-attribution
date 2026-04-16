@@ -125,15 +125,28 @@ fi
 
 # ---- destination (parse from log if not provided) ----
 if [[ -z "${DESTINATION:-}" ]]; then
-  # Gradle per-test lines include the device descriptor in square brackets:
+  # Preferred format: per-test bracket descriptor
   #   [Pixel_5_API_34(AVD) - 14]
-  # where the trailing number is the Android OS version (e.g. 14 for
-  # Android 14 / API 34). Pick the first match.
-  DEST_LINE=$(grep -oE "\[[A-Za-z0-9_]+\([A-Z]+\) - [0-9]+\]" "$STRIPPED_LOG" 2>/dev/null | head -1 || true)
-  if [[ -n "$DEST_LINE" ]]; then
-    DEVICE_RAW=$(echo "$DEST_LINE" | sed -E 's/^\[([A-Za-z0-9_]+)\([A-Z]+\) - ([0-9]+)\]$/\1|\2/')
-    DEVICE_NAME=$(echo "$DEVICE_RAW" | cut -d'|' -f1 | tr '_' ' ')
-    OS_VERSION=$(echo "$DEVICE_RAW" | cut -d'|' -f2)
+  # Fallback format: gradle progress / banner lines
+  #   Starting 38 tests on Pixel_8_34(AVD) - 14
+  #   Pixel_8_34(AVD) - 14 Tests 0/38 completed. ...
+  # The trailing number is the Android OS version. On an all-pass run the
+  # Test Orchestrator suppresses per-test `[...]` lines so only the
+  # progress form remains.
+  DEST_RAW=""
+  BRACKETED=$(grep -oE "\[[A-Za-z0-9_]+\([A-Z]+\) - [0-9]+\]" "$STRIPPED_LOG" 2>/dev/null | head -1 || true)
+  if [[ -n "$BRACKETED" ]]; then
+    DEST_RAW=$(echo "$BRACKETED" | sed -E 's/^\[([A-Za-z0-9_]+)\([A-Z]+\) - ([0-9]+)\]$/\1|\2/')
+  else
+    BARE=$(grep -oE "[A-Za-z0-9_]+\([A-Z]+\) - [0-9]+" "$STRIPPED_LOG" 2>/dev/null | head -1 || true)
+    if [[ -n "$BARE" ]]; then
+      DEST_RAW=$(echo "$BARE" | sed -E 's/^([A-Za-z0-9_]+)\([A-Z]+\) - ([0-9]+)$/\1|\2/')
+    fi
+  fi
+
+  if [[ -n "$DEST_RAW" ]]; then
+    DEVICE_NAME=$(echo "$DEST_RAW" | cut -d'|' -f1 | tr '_' ' ')
+    OS_VERSION=$(echo "$DEST_RAW" | cut -d'|' -f2)
     DESTINATION="${DEVICE_NAME} / Android ${OS_VERSION}"
   else
     DESTINATION="<unknown>"
