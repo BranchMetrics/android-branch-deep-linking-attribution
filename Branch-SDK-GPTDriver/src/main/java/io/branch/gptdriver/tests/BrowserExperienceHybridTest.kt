@@ -6,6 +6,7 @@ import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.lifecycle.Lifecycle
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -13,6 +14,7 @@ import androidx.test.uiautomator.Until
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BaseGptDriverTest
 import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -34,6 +36,26 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
     private companion object {
         const val WEBVIEW_CLASS = "android.webkit.WebView"
         const val WEBVIEW_APPEAR_TIMEOUT_MS = 15_000L
+    }
+
+    /**
+     * When the previous test in this class opened an in-app WebView and
+     * pressed back, the system can still be transitioning MainActivity
+     * back to RESUMED at the moment the next test starts. Espresso's
+     * first `onView()` then throws `NoActivityResumedException` because
+     * no activity is in stage RESUMED yet.
+     *
+     * We explicitly move the scenario to RESUMED here so the test body
+     * only starts once MainActivity owns the window again. This is a
+     * no-op for a fresh launch (already RESUMED) and a true recovery
+     * when we are second in the class.
+     */
+    @Before
+    fun ensureActivityResumed() {
+        activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        // Small paint buffer so the first onView() below does not race
+        // the Choreographer pipeline.
+        Thread.sleep(500)
     }
 
     @Test
