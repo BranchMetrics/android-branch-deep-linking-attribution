@@ -89,5 +89,6 @@ public class BranchCPIDTest extends BranchTest {
         Assert.assertNotNull(postBody);
         JSONObject userData = postBody.optJSONObject(Defines.Jsonkey.UserData.getKey());
         Assert.assertNotNull(userData);
-        Assert.assertFalse(userData.has(Defines.Jsonkey.LATDAttributionWindow.getKey()));    }
+        Assert.assertFalse(userData.has(Defines.Jsonkey.LATDAttributionWindow.getKey()));
+    }
 }
