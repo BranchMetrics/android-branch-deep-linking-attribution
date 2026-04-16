@@ -9,6 +9,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BaseGptDriverTest
+import io.branch.gptdriver.withRetry
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -38,16 +39,24 @@ class UserIdentityHybridTest : BaseGptDriverTest() {
 
         // DETERMINISTIC: Type a test user ID into the dialog's EditText and confirm
         onView(androidx.test.espresso.matcher.ViewMatchers.withHint("Your_user_id"))
-            .perform(androidx.test.espresso.action.ViewActions.typeText("test_user_e2e"), 
-                     androidx.test.espresso.action.ViewActions.closeSoftKeyboard())
-        
+            .perform(
+                androidx.test.espresso.action.ViewActions.typeText("test_user_e2e"),
+                androidx.test.espresso.action.ViewActions.closeSoftKeyboard()
+            )
+
         onView(withText("Set")).perform(click())
 
-        // AI: Verify the confirmation Toast appeared (optional check)
-        driver.assertCondition(
-            "Ideally, a Toast message confirms the identity was set with 'Set Identity' and 'test_user_e2e'. " +
-                "Even if the Toast is gone, confirm that we are back on the main screen."
-        )
+        // SOFT AI PROBE: the confirmation Toast is ephemeral (2-3s visible);
+        // don't gate the test on AI catching that screenshot window. The
+        // Espresso check below proves we are back on the main screen.
+        runCatching {
+            driver.checkBulk(
+                listOf(
+                    "A Toast message confirming the identity was set with 'test_user_e2e' " +
+                        "is currently visible or was recently visible"
+                )
+            )
+        }
 
         // DETERMINISTIC: Verify we're back on the main screen
         onView(withId(R.id.cmdIdentifyUser))
@@ -67,16 +76,30 @@ class UserIdentityHybridTest : BaseGptDriverTest() {
 
         // DETERMINISTIC: Type user ID and submit
         onView(androidx.test.espresso.matcher.ViewMatchers.withHint("Your_user_id"))
-            .perform(androidx.test.espresso.action.ViewActions.typeText("e2e_extract_test"), 
-                     androidx.test.espresso.action.ViewActions.closeSoftKeyboard())
-        
+            .perform(
+                androidx.test.espresso.action.ViewActions.typeText("e2e_extract_test"),
+                androidx.test.espresso.action.ViewActions.closeSoftKeyboard()
+            )
+
         onView(withText("Set")).perform(click())
 
-        // Wait for potential Toast
+        // Wait for potential Toast and dialog-dismissal animations to settle
+        // before handing off to the AI. Without this buffer Espresso has
+        // reported AppNotIdleException after the extract returns because the
+        // main looper was still processing Choreographer frames from the
+        // animation.
         Thread.sleep(2000)
 
-        // AI: Extract any confirmation or toast message text (best effort)
-        val extracted = driver.extract(listOf("confirmation_message", "toast_text"))
+        // AI: Extract any confirmation or toast message text (best effort).
+        // Wrapped in withRetry so DNS or socket timeout flakes on the
+        // MobileBoost backend trigger a retry instead of failing the test.
+        // runCatching on the outside so that any residual extract failure
+        // (e.g. AI couldn't see the Toast in any of the retries) stays
+        // best-effort — the deterministic Espresso assertion below is the
+        // real proof of success.
+        val extracted = runCatching {
+            withRetry { driver.extract(listOf("confirmation_message", "toast_text")) }
+        }.getOrElse { emptyMap() }
         val toastText = (extracted["toast_text"] ?: extracted["confirmation_message"])?.toString() ?: ""
         Log.i(TAG, "Extracted text: $toastText")
 

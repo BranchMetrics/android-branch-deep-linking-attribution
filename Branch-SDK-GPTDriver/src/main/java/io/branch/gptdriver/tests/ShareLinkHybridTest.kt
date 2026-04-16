@@ -7,6 +7,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BaseGptDriverTest
+import io.branch.gptdriver.withRetry
 import org.junit.Test
 
 /**
@@ -23,18 +24,26 @@ class ShareLinkHybridTest : BaseGptDriverTest() {
         // DETERMINISTIC: Click "Share Branch Link"
         onView(withId(R.id.share_btn)).perform(click())
 
-        // AI: Validate the custom share dialog appeared
-        driver.assertBulk(
-            listOf(
-                "A share dialog or list of apps is visible on screen",
-                "The dialog contains a list of sharing options or app icons"
-            )
-        )
+        // Let the share dialog animate in before probing.
+        Thread.sleep(2000)
 
-        // AI: Dismiss the custom dialog to return to the main screen
+        // AI: Validate the custom share dialog appeared. Wrapped in withRetry
+        // because this assertion has previously failed with
+        // UnknownHostException / SocketTimeoutException when the emulator
+        // DNS flaked at the moment the AI call went out.
+        withRetry {
+            driver.assertBulk(
+                listOf(
+                    "A share dialog or list of apps is visible on screen",
+                    "The dialog contains a list of sharing options or app icons"
+                )
+            )
+        }
+
+        // Dismiss the custom dialog to return to the main screen.
         val device = androidx.test.uiautomator.UiDevice.getInstance(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation())
         device.pressBack()
-        
+
         // Wait for transition
         Thread.sleep(3000)
 
@@ -84,19 +93,40 @@ class ShareLinkHybridTest : BaseGptDriverTest() {
         // DETERMINISTIC: Click "Share Branch Link"
         onView(withId(R.id.share_btn)).perform(click())
 
-        // AI: Extract visible sharing details from the share sheet
-        driver.extract(
-            listOf("share_title_or_subject", "share_message_or_content")
-        )
+        // Let the share dialog animate in before probing.
+        Thread.sleep(2000)
 
-        // AI: Verify share content is not empty
-        driver.assertCondition(
-            "The share sheet is visible and contains sharing content — " +
-                "either a message, subject, or Branch link URL is displayed."
-        )
+        // AI: Extract visible sharing details. Best-effort — if the extract
+        // flakes the test still has the deterministic main-screen assertion
+        // below. withRetry inside runCatching so transient network errors
+        // retry cleanly.
+        runCatching {
+            withRetry {
+                driver.extract(listOf("share_title_or_subject", "share_message_or_content"))
+            }
+        }
 
-        // AI: Dismiss
-        driver.execute("Press back to dismiss the share sheet and return to main screen")
+        // AI: Verify share content is not empty. Wrapped in withRetry so
+        // network flakes on the MobileBoost backend don't fail the test.
+        withRetry {
+            driver.assertCondition(
+                "The share sheet is visible and contains sharing content — " +
+                    "either a message, subject, or Branch link URL is displayed."
+            )
+        }
+
+        // Dismiss. Use UiDevice.pressBack() directly — driver.execute here
+        // is a best-effort cleanup and an extra AI round-trip just to press
+        // back is unnecessary latency.
+        val device = androidx.test.uiautomator.UiDevice.getInstance(
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+        )
+        device.pressBack()
+        Thread.sleep(2000)
+
+        // DETERMINISTIC: Verify we're back on the main screen.
+        onView(withId(R.id.share_btn))
+            .check(matches(isDisplayed()))
 
         driver.setSessionStatus("success")
     }

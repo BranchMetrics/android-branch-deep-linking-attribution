@@ -1,11 +1,13 @@
 package io.branch.gptdriver
 
 import android.util.Log
+import androidx.test.espresso.IdlingPolicies
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import io.branch.branchandroidtestbed.MainActivity
 import io.mobileboost.gptdriver_lib.GptDriver
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -32,6 +34,18 @@ abstract class BaseGptDriverTest {
 
     @Before
     open fun setUp() {
+        // Espresso's default 60s master-policy and idling-resource timeouts
+        // are too aggressive for this suite:
+        //   - LinkGenerationIdlingResource waits for the Branch backend to
+        //     round-trip a link, which is slower on emulators with flaky
+        //     network.
+        //   - `driver.extract` and other AI calls can take 20-40s each; if
+        //     two fire back-to-back, the main looper may not idle within 60s.
+        // Bumping both to 2 minutes gives the real work room to finish
+        // without masking genuine hangs.
+        IdlingPolicies.setMasterPolicyTimeout(2, TimeUnit.MINUTES)
+        IdlingPolicies.setIdlingResourceTimeout(2, TimeUnit.MINUTES)
+
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
             key.ifEmpty {
                 androidx.test.platform.app.InstrumentationRegistry.getArguments()

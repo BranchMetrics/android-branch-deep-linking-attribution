@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.EditText
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
@@ -19,7 +20,9 @@ import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BuildConfig
 import io.branch.gptdriver.LinkGenerationIdlingResource
+import io.branch.gptdriver.withRetry
 import io.mobileboost.gptdriver_lib.GptDriver
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -49,6 +52,13 @@ class DeepLinkWarmOpenHybridTest {
 
     @Before
     fun setUp() {
+        // This class does not extend BaseGptDriverTest (it manages its own
+        // ActivityScenario), so we apply the same Espresso timeout bump here
+        // to match: LinkGenerationIdlingResource can legitimately wait 60s+
+        // for the Branch backend on a flaky emulator network.
+        IdlingPolicies.setMasterPolicyTimeout(2, TimeUnit.MINUTES)
+        IdlingPolicies.setIdlingResourceTimeout(2, TimeUnit.MINUTES)
+
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
             key.ifEmpty {
                 androidx.test.platform.app.InstrumentationRegistry.getArguments()
@@ -95,8 +105,8 @@ class DeepLinkWarmOpenHybridTest {
         onView(withId(R.id.editReferralShortUrl))
             .check(matches(withSubstring("https://")))
 
-        // AI: Extract the generated URL
-        val extracted = driver.extract(listOf("url_in_text_field"))
+        // AI: Extract the generated URL (retry transient network flakes)
+        val extracted = withRetry { driver.extract(listOf("url_in_text_field")) }
         val generatedUrl = extracted["url_in_text_field"]?.toString()
             ?.trim()?.trim('"') ?: ""
         Log.i(TAG, "Generated Branch link for warm open: $generatedUrl")
@@ -128,27 +138,34 @@ class DeepLinkWarmOpenHybridTest {
         Thread.sleep(8000)
 
         // PHASE 3: Verify deep link data via "Latest Referring Params"
-        // Use AI for post-intent interactions (avoids Espresso focus issues)
-        driver.execute(
-            "The Branch TestBed app should be on the main screen. " +
-                "Wait a moment for the SDK to finish initializing, then tap the button " +
-                "that says 'View Latest Referring Params'."
-        )
-
-        // AI: Validate the dialog shows JSON with Branch session data
-        // After warm open via startActivity, the SDK processes the intent data.
-        // The JSON will contain at minimum '+clicked_branch_link' or '+is_first_session'
-        // keys, proving the SDK re-initialized with the new intent.
-        driver.assertBulk(
-            listOf(
-                "An alert dialog titled 'Latest Referring Params' is visible showing JSON text",
-                "The JSON content starts with '{' and contains at least one key " +
-                    "(the dialog is not empty and shows valid JSON data)"
+        // Use AI for post-intent interactions (avoids Espresso focus issues).
+        // The navigation step is wrapped in withRetry because a DNS or
+        // timeout flake here has previously failed the whole test.
+        withRetry {
+            driver.execute(
+                "The Branch TestBed app should be on the main screen. " +
+                    "Wait a moment for the SDK to finish initializing, then tap the button " +
+                    "that says 'View Latest Referring Params'."
             )
-        )
+        }
+
+        // AI: Validate the dialog shows JSON with Branch session data.
+        // After warm open via startActivity, the SDK processes the intent data.
+        // The JSON will contain at minimum '+clicked_branch_link' or
+        // '+is_first_session' keys, proving the SDK re-initialized with the
+        // new intent. Retry transient network flakes on this assertion.
+        withRetry {
+            driver.assertBulk(
+                listOf(
+                    "An alert dialog titled 'Latest Referring Params' is visible showing JSON text",
+                    "The JSON content starts with '{' and contains at least one key " +
+                        "(the dialog is not empty and shows valid JSON data)"
+                )
+            )
+        }
 
         // AI: Dismiss dialog
-        driver.execute("Tap the 'OK' button to dismiss the dialog")
+        runCatching { driver.execute("Tap the 'OK' button to dismiss the dialog") }
 
         driver.setSessionStatus("success")
     }

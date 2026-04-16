@@ -41,22 +41,47 @@ fi
 #   io.branch.gptdriver.tests.LinkCreationHybridTest > createBranchLink_generatesValidUrl[Pixel_5_API_34(AVD) - 14] PASSED
 #   io.branch.gptdriver.tests.LinkCreationHybridTest > createBranchLink_generatesValidUrl[Pixel_5_API_34(AVD) - 14] FAILED
 #   io.branch.gptdriver.tests.LinkCreationHybridTest > createBranchLink_generatesValidUrl[Pixel_5_API_34(AVD) - 14] SKIPPED
-# The closing bracket anchor is required to avoid false positives from
-# "BUILD FAILED in 3m 42s" and "> Task :... FAILED" lines. `grep -c` always
-# outputs a number on its own; the `|| true` swallows the non-zero exit code
-# that grep returns when there are zero matches, so this never triggers
-# `set -e` style behaviour from a calling script.
-PASSED=$(grep -cE "\] PASSED$" "$LOG_FILE" 2>/dev/null || true)
-FAILED=$(grep -cE "\] FAILED$" "$LOG_FILE" 2>/dev/null || true)
-SKIPPED=$(grep -cE "\] SKIPPED$" "$LOG_FILE" 2>/dev/null || true)
+# In Test Orchestrator mode the FAILED token is wrapped in ANSI colour codes:
+#   ] <ESC>[31mFAILED <ESC>[0m
+# We strip ANSI escape sequences first so both plain and coloured outputs match.
+# The closing bracket anchor avoids counting "BUILD FAILED" or "> Task :... FAILED"
+# as per-test failures.
+
+# Strip ANSI escape sequences into a temp copy that all counts below share.
+STRIPPED_LOG=$(mktemp -t mb-format-results.XXXXXX)
+trap 'rm -f "$STRIPPED_LOG"' EXIT
+# shellcheck disable=SC2016
+# Drop CSI sequences (ESC [ ... final-byte). BSD sed on macOS interprets
+# \x1B / $'\e' as the ESC literal; Linux sed via GNU coreutils works the same.
+sed -E $'s/\x1B\\[[0-9;]*[A-Za-z]//g' "$LOG_FILE" > "$STRIPPED_LOG"
+
+# `grep -c` always outputs a number on its own; the `|| true` swallows the
+# non-zero exit code that grep returns when there are zero matches, so this
+# never triggers `set -e` style behaviour from a calling script. The trailing
+# match allows an optional space after the status token (gradle adds one
+# before the ANSI reset).
+PASSED=$(grep -cE "\] PASSED ?$" "$STRIPPED_LOG" 2>/dev/null || true)
+FAILED=$(grep -cE "\] FAILED ?$" "$STRIPPED_LOG" 2>/dev/null || true)
+SKIPPED=$(grep -cE "\] SKIPPED ?$" "$STRIPPED_LOG" 2>/dev/null || true)
 PASSED=${PASSED:-0}
 FAILED=${FAILED:-0}
 SKIPPED=${SKIPPED:-0}
 
-# If the log uses the test summary format instead of per-test lines, fall back:
+# ---- fallback / authoritative counts from gradle summary ----
+# Test Orchestrator prints per-failure lines but NOT per-pass lines, so the
+# counts above can undercount passes. The gradle progress line is the
+# authoritative source when present:
+#   Pixel_8_34(AVD) - 14 Tests 38/38 completed. (0 skipped) (6 failed)
+# If we can find it, it always wins. Also fall back to the older summary:
 #   16 tests completed, 0 failed, 0 skipped
-if [[ "$PASSED" -eq 0 ]] && [[ "$FAILED" -eq 0 ]]; then
-  SUMMARY_LINE=$(grep -E "[0-9]+ tests? completed" "$LOG_FILE" 2>/dev/null | tail -1 || true)
+PROGRESS_LINE=$(grep -E "Tests [0-9]+/[0-9]+ completed\. \([0-9]+ skipped\) \([0-9]+ failed\)" "$STRIPPED_LOG" 2>/dev/null | tail -1 || true)
+if [[ -n "$PROGRESS_LINE" ]]; then
+  TOTAL=$(echo "$PROGRESS_LINE" | sed -E 's/.*Tests [0-9]+\/([0-9]+) completed.*/\1/')
+  SKIPPED=$(echo "$PROGRESS_LINE" | sed -E 's/.*\(([0-9]+) skipped\).*/\1/')
+  FAILED=$(echo "$PROGRESS_LINE" | sed -E 's/.*\(([0-9]+) failed\).*/\1/')
+  PASSED=$((TOTAL - FAILED - SKIPPED))
+elif [[ "$PASSED" -eq 0 ]] && [[ "$FAILED" -eq 0 ]]; then
+  SUMMARY_LINE=$(grep -E "[0-9]+ tests? completed" "$STRIPPED_LOG" 2>/dev/null | tail -1 || true)
   if [[ -n "$SUMMARY_LINE" ]]; then
     TOTAL=$(echo "$SUMMARY_LINE" | sed -E 's/^([0-9]+) tests? completed.*/\1/')
     FAILED=$(echo "$SUMMARY_LINE" | sed -nE 's/.*, ([0-9]+) failed.*/\1/p')
@@ -71,7 +96,7 @@ fi
 # Gradle prints either:
 #   BUILD SUCCESSFUL in 12m 7s
 #   BUILD FAILED in 12m 7s
-BUILD_LINE=$(grep -E "^BUILD (SUCCESSFUL|FAILED) in " "$LOG_FILE" 2>/dev/null | tail -1 || true)
+BUILD_LINE=$(grep -E "^BUILD (SUCCESSFUL|FAILED) in " "$STRIPPED_LOG" 2>/dev/null | tail -1 || true)
 if [[ -n "$BUILD_LINE" ]]; then
   RUNTIME_STR=$(echo "$BUILD_LINE" | sed -E 's/^BUILD (SUCCESSFUL|FAILED) in (.+)$/\2/' | xargs)
 else
@@ -79,7 +104,7 @@ else
 fi
 
 # ---- result emoji ----
-EXIT_LINE=$(grep -E "^gradle exit=" "$LOG_FILE" 2>/dev/null | tail -1)
+EXIT_LINE=$(grep -E "^gradle exit=" "$STRIPPED_LOG" 2>/dev/null | tail -1)
 if [[ -n "$EXIT_LINE" ]]; then
   EXIT_CODE=$(echo "$EXIT_LINE" | sed -E 's/^gradle exit=([0-9]+).*/\1/')
 elif echo "$BUILD_LINE" | grep -q "BUILD SUCCESSFUL"; then
@@ -104,7 +129,7 @@ if [[ -z "${DESTINATION:-}" ]]; then
   #   [Pixel_5_API_34(AVD) - 14]
   # where the trailing number is the Android OS version (e.g. 14 for
   # Android 14 / API 34). Pick the first match.
-  DEST_LINE=$(grep -oE "\[[A-Za-z0-9_]+\([A-Z]+\) - [0-9]+\]" "$LOG_FILE" 2>/dev/null | head -1 || true)
+  DEST_LINE=$(grep -oE "\[[A-Za-z0-9_]+\([A-Z]+\) - [0-9]+\]" "$STRIPPED_LOG" 2>/dev/null | head -1 || true)
   if [[ -n "$DEST_LINE" ]]; then
     DEVICE_RAW=$(echo "$DEST_LINE" | sed -E 's/^\[([A-Za-z0-9_]+)\([A-Z]+\) - ([0-9]+)\]$/\1|\2/')
     DEVICE_NAME=$(echo "$DEVICE_RAW" | cut -d'|' -f1 | tr '_' ' ')
@@ -118,7 +143,7 @@ fi
 # ---- variant (parse from log if not provided) ----
 if [[ -z "${VARIANT:-}" ]]; then
   # Look for a task name like :Branch-SDK-GPTDriver:connectedDebugAndroidTest
-  VARIANT_LINE=$(grep -oE ":Branch-SDK-GPTDriver:connected[A-Z][a-zA-Z]*AndroidTest" "$LOG_FILE" 2>/dev/null | head -1 || true)
+  VARIANT_LINE=$(grep -oE ":Branch-SDK-GPTDriver:connected[A-Z][a-zA-Z]*AndroidTest" "$STRIPPED_LOG" 2>/dev/null | head -1 || true)
   if [[ -n "$VARIANT_LINE" ]]; then
     VARIANT=$(echo "$VARIANT_LINE" | sed -E 's/.*:connected([A-Z][a-zA-Z]*)AndroidTest/\1/' | tr '[:upper:]' '[:lower:]')
   else
