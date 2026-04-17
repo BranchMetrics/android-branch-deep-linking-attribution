@@ -73,4 +73,22 @@ public class BranchCPIDTest extends BranchTest {
         int atrWind = userData.optInt(Defines.Jsonkey.LATDAttributionWindow.getKey());
         Assert.assertEquals(10, atrWind);
     }
+
+    @Test
+    public void testDefaultAttributionWindowValueNotPresent() {
+        //setup
+        initBranchInstance();
+        branch.getLastAttributedTouchData(null);
+        ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
+        Assert.assertEquals(1, queue.getSize());
+
+        ServerRequest latdRequest = queue.peekAt(0);
+        Assert.assertTrue(latdRequest instanceof ServerRequestGetLATD);
+
+        JSONObject postBody = latdRequest.getPost();
+        Assert.assertNotNull(postBody);
+        JSONObject userData = postBody.optJSONObject(Defines.Jsonkey.UserData.getKey());
+        Assert.assertNotNull(userData);
+        Assert.assertFalse(userData.has(Defines.Jsonkey.LATDAttributionWindow.getKey()));
+    }
 }

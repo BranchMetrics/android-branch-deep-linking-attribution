@@ -8,7 +8,6 @@ import org.json.JSONObject;
 public class ServerRequestGetLATD extends ServerRequest {
 
     private BranchLastAttributedTouchDataListener callback;
-    // defaultAttributionWindow is the "default" for the SDK's side, server interprets it as 30 days
     protected static final int defaultAttributionWindow = -1;
     private int attributionWindow;
 

@@ -1,4 +1,7 @@
 # Branch Android SDK change log
+- v5.21.1
+  - Fix for `getLastAttributedTouchData(BranchLastAttributedTouchDataListener())` with no `attributionWindow` parameter, now correctly uses attribution window value configured in app dashboard.
+
 - v5.21.0
   - Add an optional configuration to allow cancelling Install Referrer fetch.
     - `setInstallReferrerTimeout(int timeoutInMilliseconds)`

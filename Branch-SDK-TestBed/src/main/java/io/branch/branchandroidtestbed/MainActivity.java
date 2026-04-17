@@ -49,6 +49,7 @@ import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
+import io.branch.referral.ServerRequestGetLATD;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -701,6 +702,22 @@ public class MainActivity extends Activity {
                     Branch.getInstance().openBrowserExperience(invokeFeatures);
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
+                }
+            }
+        });
+
+        findViewById(R.id.getLatdButton).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
+                        @Override
+                        public void onDataFetched(JSONObject jsonObject, BranchError error) {
+                            Log.i("BranchSDK_Tester", "Result: " + String.valueOf(jsonObject) + "\nError: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e("BranchSDK_Tester", e.getMessage());
                 }
             }
         });
