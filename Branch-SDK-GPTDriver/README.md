@@ -77,6 +77,10 @@ Branch-SDK-GPTDriver/
 │   ├── dependencies/*.json
 │   └── suites/*.json
 └── scripts/
+    ├── capture-test-logs.sh              — run the suite with logcat capture,
+    │                                        then print paths to the HTML
+    │                                        report, JUnit XMLs, and the
+    │                                        MobileBoost session URLs.
     └── format-test-results.sh            — parse connectedAndroidTest log into a
                                              markdown summary row
 ```
@@ -112,6 +116,73 @@ All hybrid test classes inherit `@LargeTest` from `BaseGptDriverTest.kt` so they
 ```
 
 Individual `@SmallTest` / `@MediumTest` tags can be added per method if a faster dev-loop smoke subset is needed later; nothing about the current structure blocks that.
+
+## Inspecting test behavior
+
+Once a run has finished (or crashed mid-run), four artifacts give you a complete picture of what happened. The first three are produced by Gradle on every run; the fourth requires a logcat capture and is the richest source of per-test behavior.
+
+### 1. Gradle HTML report
+
+```
+Branch-SDK-GPTDriver/build/reports/androidTests/connected/debug/index.html
+```
+
+The canonical summary: counts, failed-tests table, per-class breakdown, stack traces for failures. Open `index.html` in any browser — it is self-contained (CSS/JS alongside).
+
+### 2. JUnit XML (per-device, per-class)
+
+```
+Branch-SDK-GPTDriver/build/outputs/androidTest-results/connected/
+```
+
+One XML file per device + class, e.g. `TEST-Pixel_9a(AVD) - 16_BrowserExperienceHybridTest.xml`. These include `<system-out>` and `<system-err>` blocks that carry stdout/stderr from *successful* tests as well — including the MobileBoost session URL that the gptdriver-lib SDK prints on initialization. Grep for `sessionURL=` or `app.mobileboost.io/` inside the XML for a quick lookup.
+
+### 3. Markdown summary row
+
+```bash
+./Branch-SDK-GPTDriver/scripts/format-test-results.sh <path-to-gradle-log>
+```
+
+Emits a single markdown table row (date, SDK version, destination, pass/fail/skip, runtime) — useful for pasting into PR descriptions or release notes. See the header of the script for the exact output format.
+
+### 4. Logcat + MobileBoost session URLs
+
+The richest per-test source. Every call into the gptdriver-lib SDK (`driver.execute`, `driver.assertBulk`, `driver.assertCondition`, …) prints a `https://app.mobileboost.io/...` session URL to logcat. Opening that URL replays the AI's execution with video, step-by-step reasoning, and the screenshots the model evaluated — this is what you want for understanding how a test behaved, even if it passed.
+
+To capture logcat alongside a Gradle run, use the helper script:
+
+```bash
+./Branch-SDK-GPTDriver/scripts/capture-test-logs.sh
+```
+
+On exit it prints the paths of:
+- the captured logcat file (`Branch-SDK-GPTDriver/build/test-logs/logcat-<timestamp>.log`)
+- the Gradle log
+- the HTML report
+- the JUnit XML directory
+- every unique MobileBoost session URL it found in the logcat
+- a startup-crash sanity check (`NoClassDefFoundError.*CollectionsKt`, `StartupException`) — expect 0
+
+You can pass Gradle arguments through the wrapper, e.g. to run a single class:
+
+```bash
+./Branch-SDK-GPTDriver/scripts/capture-test-logs.sh \
+  -Pandroid.testInstrumentationRunnerArguments.class=io.branch.gptdriver.tests.LinkCreationHybridTest
+```
+
+To capture logcat without going through the wrapper (for example, when running Gradle manually or from an IDE):
+
+```bash
+adb logcat -c
+adb logcat -v threadtime > run.log &
+./gradlew :Branch-SDK-GPTDriver:connectedDebugAndroidTest
+kill %1
+grep -oE "https://app.mobileboost.io/[A-Za-z0-9/_-]+" run.log | sort -u
+```
+
+### Flaky hybrid tests
+
+A handful of hybrid tests rely on AI visual assertions and native UI timing that can flake on a cold emulator. The base class (`BaseGptDriverTest.kt`) and `GptDriverRetry.withRetry` already add per-step retries with exponential backoff, and each retry attempt is logged. When a test fails, the fastest path to a diagnosis is the MobileBoost session URL for that specific attempt — it shows exactly which screenshot the AI evaluated and what it decided.
 
 ## See also
 
