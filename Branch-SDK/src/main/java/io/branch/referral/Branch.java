@@ -278,6 +278,13 @@ public class Branch {
 
     private final TrackingController trackingController;
 
+    /**
+     * Optional fraud defense provider for device integrity checks.
+     * If set, fraud defense fields are added to v1/install requests.
+     * If null, SDK functions normally without fraud defense (graceful degradation).
+     */
+    private BranchFraudDefenseProvider fraudDefenseProvider = null;
+
     // Variables for reporting plugin type and version, plus helps us make data driven decisions.
     private static String pluginVersion = null;
     private static String pluginName = null;
@@ -748,6 +755,40 @@ public class Branch {
         if(prefHelper_ != null && retryMax > 0){
             prefHelper_.setNoConnectionRetryMax(retryMax);
         }
+    }
+
+    /**
+     * Sets the fraud defense provider for device integrity checks.
+     *
+     * <p>When set, the provider is called during v1/install requests to add fraud defense fields.
+     * The provider must implement {@link BranchFraudDefenseProvider} interface.</p>
+     *
+     * <p>Fraud defense includes multiple layers: device attestation, Play Integrity,
+     * and other security checks.</p>
+     *
+     * <p><strong>Optional:</strong> If not set, SDK functions normally without fraud defense.</p>
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * // In Application.onCreate()
+     * BranchFraudDefenseProvider fraudDefense = BranchFraudDefense.getInstance(this);
+     * Branch.getInstance().setFraudDefenseProvider(fraudDefense);
+     * }</pre>
+     *
+     * @param provider Fraud defense provider implementing {@link BranchFraudDefenseProvider}, or null to disable
+     */
+    public void setFraudDefenseProvider(BranchFraudDefenseProvider provider) {
+        this.fraudDefenseProvider = provider;
+        BranchLogger.v("Fraud defense provider " + (provider != null ? "set" : "cleared"));
+    }
+
+    /**
+     * Gets the current fraud defense provider.
+     *
+     * @return Current fraud defense provider, or null if not set
+     */
+    public BranchFraudDefenseProvider getFraudDefenseProvider() {
+        return this.fraudDefenseProvider;
     }
 
     /**

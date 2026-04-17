@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":Branch-SDK"))
+    implementation(project(":BranchFraudDefense"))
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     implementation("com.huawei.hms:ads-identifier:3.4.62.300")
 
@@ -33,7 +34,7 @@ android {
     defaultConfig {
         applicationId = "io.branch.branchandroidtestbed"
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
-        targetSdk = 34
+        targetSdk = 35
         versionName = VERSION_NAME
         versionCode = VERSION_CODE.toInt()
 

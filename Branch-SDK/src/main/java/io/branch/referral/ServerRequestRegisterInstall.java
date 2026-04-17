@@ -3,8 +3,11 @@ package io.branch.referral;
 import android.app.Application;
 import android.content.Context;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Iterator;
 
 /**
  * * <p>
@@ -63,6 +66,29 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             if (Branch.getInstance() != null) {
                 JSONObject configurations = Branch.getInstance().getConfigurationController().serializeConfiguration();
                 getPost().put(Defines.Jsonkey.OperationalMetrics.getKey(), configurations);
+            }
+
+            // Try fraud defense if provider is set (optional BranchFraudDefense module)
+            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
+                try {
+                    BranchFraudDefenseProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject fraudDefenseFields = provider.performAttestationCheck(getPost());
+
+                    if (fraudDefenseFields != null) {
+                        // Merge fraud defense fields into request
+                        Iterator<String> keys = fraudDefenseFields.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            getPost().put(key, fraudDefenseFields.get(key));
+                        }
+                        BranchLogger.v("Fraud defense fields added to request");
+                    } else {
+                        BranchLogger.v("Fraud defense unavailable - continuing without it");
+                    }
+                } catch (Exception e) {
+                    // Graceful degradation - continue without fraud defense if provider fails
+                    BranchLogger.w("Fraud defense failed: " + e.getMessage());
+                }
             }
 
         } catch (JSONException e) {

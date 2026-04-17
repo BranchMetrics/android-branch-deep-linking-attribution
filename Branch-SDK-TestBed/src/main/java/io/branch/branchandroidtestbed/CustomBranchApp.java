@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 
+import io.branch.frauddefense.BranchFraudDefense;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.IBranchRequestTracingCallback;
@@ -26,8 +27,16 @@ public final class CustomBranchApp extends Application {
 //            Log.d("BranchTestbed", message);
 //            saveLogToFile(message);
 //        };
+        // Initialize fraud defense (optional)
+        BranchFraudDefense fraudDefense = BranchFraudDefense.getInstance(this);
+        fraudDefense.startFraudDefenseSystem();
+
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
         Branch branch = Branch.getAutoInstance(this);
+
+        // Set fraud defense provider
+        branch.setFraudDefenseProvider(fraudDefense);
+
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();

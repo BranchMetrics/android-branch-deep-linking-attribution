@@ -45,6 +45,12 @@ dependencies {
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
 
+    // Google Play Integrity API (fallback when hardware attestation is unavailable).
+    // Marked optional in the POM so apps only pull it in if they explicitly declare it.
+    // compileOnly does not work with AAR artifacts — implementation is required for
+    // compile-time method resolution.
+    implementation("com.google.android.play:integrity:1.4.0")
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")
@@ -125,6 +131,13 @@ android {
             enableAndroidTestCoverage = true
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
             buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
+            // POC only — set in local.properties (never commit this key).
+            // Steps: Google Cloud Console → APIs & Services → Credentials → Create API Key
+            //        → restrict to "Google Play Integrity API"
+            //        Then add to local.properties:  PLAY_INTEGRITY_CLOUD_API_KEY=AIzaSy...
+            val playIntegrityApiKey =
+                project.findProperty("PLAY_INTEGRITY_CLOUD_API_KEY") as? String ?: ""
+            buildConfigField("String", "PLAY_INTEGRITY_CLOUD_API_KEY", playIntegrityApiKey.wrapInQuotes())
         }
         release {
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
