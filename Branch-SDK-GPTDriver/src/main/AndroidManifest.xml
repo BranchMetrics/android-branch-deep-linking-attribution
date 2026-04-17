@@ -1,8 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <application android:usesCleartextTraffic="true" />
+    <application android:usesCleartextTraffic="true">
+
+        <!--
+            The test APK does not need `androidx.startup.InitializationProvider`.
+            Disabling it prevents `ProcessLifecycleInitializer` (and any other
+            Kotlin-based initializer pulled in transitively by gptdriver-lib)
+            from running before `Application.onCreate` in the test process.
+
+            Without this, a cold-boot of the test APK can crash with:
+              java.lang.NoClassDefFoundError: Failed resolution of:
+                Lkotlin/collections/CollectionsKt;
+            when the initializer runs before the classloader has indexed the
+            Kotlin stdlib dex. The target APK (`Branch-SDK-TestBed`) keeps its
+            own Startup chain — this removal is scoped to the test APK only.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
+
+    </application>
 
 </manifest>

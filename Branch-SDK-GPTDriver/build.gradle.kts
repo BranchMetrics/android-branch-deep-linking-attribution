@@ -76,6 +76,14 @@ android {
 }
 
 dependencies {
+    // Kotlin stdlib must be declared explicitly on `com.android.test` modules.
+    // Without this, the test APK can ship without `kotlin.collections.CollectionsKt`,
+    // which causes `androidx.startup.InitializationProvider` to crash the process
+    // before `Application.onCreate` when the gptdriver-lib transitively pulls
+    // `androidx.lifecycle:lifecycle-process` (Kotlin).
+    implementation(kotlin("stdlib"))
+    implementation(kotlin("stdlib-jdk8"))
+
     // GPTDriver for View/XML-based apps
     // Docs: https://docs.mobileboost.io/gpt-driver-sdk/espresso/view-xml-based-apps/setup
     implementation("io.mobileboost.gptdriver:gptdriver-lib:1.3.2") {
