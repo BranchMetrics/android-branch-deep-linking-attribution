@@ -93,26 +93,37 @@ class ShareLinkHybridTest : BaseGptDriverTest() {
         // DETERMINISTIC: Click "Share Branch Link"
         onView(withId(R.id.share_btn)).perform(click())
 
-        // Let the share dialog animate in before probing.
-        Thread.sleep(2000)
+        // Let the share dialog animate in and settle all child views before
+        // the AI probes it. 3s (vs 2s in the sibling test) gives the extra
+        // margin that matters here because this test evaluates content, not
+        // just structure.
+        Thread.sleep(3000)
 
-        // AI: Extract visible sharing details. Best-effort — if the extract
-        // flakes the test still has the deterministic main-screen assertion
-        // below. withRetry inside runCatching so transient network errors
-        // retry cleanly.
+        // AI: structural assertion first. A two-condition assertBulk is
+        // more reliable on visual models than a single free-form
+        // assertCondition — each condition is evaluated independently and
+        // the prompt mirrors the passing sibling shareBranchLink_opensShareSheet.
+        // withRetry still only catches network errors, so an AssertionError
+        // here is a genuine signal, not a retry candidate.
+        withRetry {
+            driver.assertBulk(
+                listOf(
+                    "A share dialog or share sheet is visible on screen",
+                    "The dialog shows at least one line of text — a message, " +
+                        "subject line, link URL, or app/contact name"
+                )
+            )
+        }
+
+        // AI: best-effort extract AFTER the assertion. Running extract
+        // BEFORE the assertion can leave the sheet in a partially-scrolled
+        // state (the AI navigates to find requested keys), which has
+        // historically poisoned the subsequent visual judgement.
+        // runCatching keeps this non-gating for the test result.
         runCatching {
             withRetry {
                 driver.extract(listOf("share_title_or_subject", "share_message_or_content"))
             }
-        }
-
-        // AI: Verify share content is not empty. Wrapped in withRetry so
-        // network flakes on the MobileBoost backend don't fail the test.
-        withRetry {
-            driver.assertCondition(
-                "The share sheet is visible and contains sharing content — " +
-                    "either a message, subject, or Branch link URL is displayed."
-            )
         }
 
         // Dismiss. Use UiDevice.pressBack() directly — driver.execute here

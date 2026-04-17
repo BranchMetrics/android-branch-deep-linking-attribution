@@ -91,7 +91,15 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
 
         // Navigate back to the main screen.
         device.pressBack()
-        Thread.sleep(3000)
+
+        // Wait for MainActivity to actually re-reach RESUMED before the
+        // Espresso check. A fixed Thread.sleep here is not safe after a
+        // long-running AI call: teardown of the Branch browser activity
+        // can outlast the sleep on slow emulators, and Espresso would then
+        // throw NoActivityResumedException even though we are only moments
+        // from being back on the main screen.
+        activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        device.waitForIdle(3_000)
 
         // DETERMINISTIC: Verify we're back on the main screen
         onView(withId(R.id.openInAppBrowser))
@@ -136,7 +144,14 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
 
         // Navigate back.
         device.pressBack()
-        Thread.sleep(3000)
+
+        // Wait for MainActivity to actually re-reach RESUMED before the
+        // Espresso check. See the sibling test for the full rationale —
+        // this test is especially exposed because the preceding
+        // driver.checkBulk call can run for 20-40s while MainActivity is
+        // PAUSED, making a fixed sleep unsafe for reliable recovery.
+        activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        device.waitForIdle(3_000)
 
         // DETERMINISTIC: Verify we're back on the main screen
         onView(withId(R.id.openInAppBrowser))
