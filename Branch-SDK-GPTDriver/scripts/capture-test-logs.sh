@@ -82,9 +82,9 @@ SESSION_URLS=$(grep -oE "https://app\.mobileboost\.io/[A-Za-z0-9/_-]+" "$LOG_FIL
   echo ""
   echo "Startup crash check (expect 0):"
   printf "  NoClassDefFoundError.*CollectionsKt : %s\n" \
-    "$(grep -c "NoClassDefFoundError.*CollectionsKt" "$LOG_FILE" 2>/dev/null || echo 0)"
+    "$(grep -c "NoClassDefFoundError.*CollectionsKt" "$LOG_FILE" 2>/dev/null)"
   printf "  androidx.startup.StartupException   : %s\n" \
-    "$(grep -c "androidx.startup.StartupException" "$LOG_FILE" 2>/dev/null || echo 0)"
+    "$(grep -c "androidx.startup.StartupException" "$LOG_FILE" 2>/dev/null)"
 } >&2
 
 exit "$GRADLE_EXIT"
