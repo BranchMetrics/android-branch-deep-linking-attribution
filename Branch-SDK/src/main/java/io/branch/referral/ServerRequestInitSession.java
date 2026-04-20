@@ -62,8 +62,13 @@ abstract class ServerRequestInitSession extends ServerRequest {
 
         String identity = Branch.installDeveloperId;
 
+        //This checks if the identity has been set during the app open
         if(!TextUtils.isEmpty(identity) && !identity.equals(NO_STRING_VALUE)){
             post.put(Defines.Jsonkey.Identity.getKey(), identity);
+        }
+        // Check for any stored identity otherwise, this will be cleared on logout()
+        else if(!TextUtils.isEmpty(prefHelper_.getIdentity()) && !prefHelper_.getIdentity().equals(NO_STRING_VALUE)){
+            post.put(Defines.Jsonkey.Identity.getKey(), prefHelper_.getIdentity());
         }
     }
 

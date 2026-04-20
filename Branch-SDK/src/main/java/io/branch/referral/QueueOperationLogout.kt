@@ -30,6 +30,7 @@ class QueueOperationLogout(
             v("doFinalUpdateOnMainThread $this")
             val prefHelper_ = PrefHelper.getInstance(context_)
             prefHelper_.identity = PrefHelper.NO_STRING_VALUE
+            Branch.installDeveloperId = prefHelper_.identity
             v("Identity set to: " + prefHelper_.identity)
             prefHelper_.clearUserValues()
         } catch (e: Exception) {
