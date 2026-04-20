@@ -11,6 +11,7 @@ import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -56,8 +57,8 @@ class DeepLinkWarmOpenHybridTest {
         // ActivityScenario), so we apply the same Espresso timeout bump here
         // to match: LinkGenerationIdlingResource can legitimately wait 60s+
         // for the Branch backend on a flaky emulator network.
-        IdlingPolicies.setMasterPolicyTimeout(2, TimeUnit.MINUTES)
-        IdlingPolicies.setIdlingResourceTimeout(2, TimeUnit.MINUTES)
+        IdlingPolicies.setMasterPolicyTimeout(5, TimeUnit.MINUTES)
+        IdlingPolicies.setIdlingResourceTimeout(5, TimeUnit.MINUTES)
 
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
             key.ifEmpty {
@@ -89,8 +90,14 @@ class DeepLinkWarmOpenHybridTest {
     fun warmOpen_receivesDeepLinkViaNewIntent() {
         // PHASE 1: Launch app and generate a real Branch link
         scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario!!.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
 
-        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
+        // Give the system a moment to focus the window before Espresso starts
+        Thread.sleep(2000)
+
+        onView(withId(R.id.cmdRefreshShortURL))
+            .check(matches(ViewMatchers.isDisplayed()))
+            .perform(click())
 
         // Wait for link generation
         scenario!!.onActivity { activity ->
