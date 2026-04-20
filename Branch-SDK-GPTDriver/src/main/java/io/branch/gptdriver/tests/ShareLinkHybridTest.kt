@@ -97,7 +97,7 @@ class ShareLinkHybridTest : BaseGptDriverTest() {
         // the AI probes it. 3s (vs 2s in the sibling test) gives the extra
         // margin that matters here because this test evaluates content, not
         // just structure.
-        Thread.sleep(3000)
+        device.waitForIdle(3_000)
 
         // AI: structural assertion first. A two-condition assertBulk is
         // more reliable on visual models than a single free-form
