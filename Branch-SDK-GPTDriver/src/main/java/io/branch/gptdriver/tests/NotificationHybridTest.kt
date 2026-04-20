@@ -47,6 +47,22 @@ class NotificationHybridTest : BaseGptDriverTest() {
 
     @Test
     fun sendNotification_createsNotificationWithBranchLink() {
+        // CLEAN STATE: Clear existing notifications to avoid stacking issues
+        val device = androidx.test.uiautomator.UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        device.openNotification()
+        Thread.sleep(2000)
+        
+        // Use runCatching to ensure the test continues even if clearing fails
+        runCatching {
+            driver.execute(
+                "If there are any notifications visible, scroll to the bottom and tap 'Clear all' or 'Clear'. " +
+                    "Then, swipe up from the bottom of the screen to return to the Branch TestBed app."
+            )
+        }
+        
+        // Give the system time to resume the activity after closing the shade
+        Thread.sleep(3000)
+
         // DETERMINISTIC: Scroll to and click "Init Session"
         onView(withId(R.id.initSessionButton))
             .perform(scrollTo(), click())
@@ -71,19 +87,23 @@ class NotificationHybridTest : BaseGptDriverTest() {
         }
 
         // Small settle so the notification is posted before we pull the shade.
-        Thread.sleep(1500)
+        Thread.sleep(2000)
 
         // DETERMINISTIC: Open shade using UiDevice
-        val device = androidx.test.uiautomator.UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         device.openNotification()
         Thread.sleep(2000)
 
         // AI: Find notification, and confirm its content.
+        // Even if clearing failed, we now instruct the AI to scroll and search.
         driver.execute(
-            "Look for the 'BranchTest' notification. If grouped, tap the arrow to expand it. " +
-                "Verify the notification contains a URL starting with 'https://'. " +
-                "Once verified, swipe up from the bottom or press back to close the shade and return to the TestBed app."
+            "Find the notification from 'BranchTest'. It might be buried under other notifications, so scroll down the list if needed. " +
+                "If it's grouped, expand it to see the content. " +
+                "Verify that it contains a URL starting with 'https://'. " +
+                "Once verified, swipe up from the bottom to close the shade and return to the app."
         )
+
+        // Give the system time to resume the activity before the final check
+        Thread.sleep(2000)
 
         // DETERMINISTIC: Final check to ensure we are back in the app
         onView(withId(R.id.notif_btn))
