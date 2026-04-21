@@ -5,6 +5,7 @@ import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withSubstring
@@ -37,7 +38,7 @@ class LinkCreationHybridTest : BaseGptDriverTest() {
     @Test
     fun createBranchLink_fullValidation() {
         // DETERMINISTIC: tap by resource ID (fast, reliable)
-        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
+        onView(withId(R.id.cmdRefreshShortURL)).perform(scrollTo(), click())
 
         // Wait for async link generation using IdlingResource
         waitForLinkGeneration()
@@ -65,7 +66,7 @@ class LinkCreationHybridTest : BaseGptDriverTest() {
     @Test
     fun createBranchLink_extractAndValidateUrl() {
         // DETERMINISTIC: tap button
-        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
+        onView(withId(R.id.cmdRefreshShortURL)).perform(scrollTo(), click())
 
         // Wait for async link generation using IdlingResource
         waitForLinkGeneration()

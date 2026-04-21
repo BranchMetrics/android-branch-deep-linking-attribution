@@ -3,6 +3,7 @@ package io.branch.gptdriver.tests
 import android.widget.ToggleButton
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
@@ -31,7 +32,7 @@ class TrackingControlHybridTest : BaseGptDriverTest() {
         Thread.sleep(1500) // Wait for any setup SDK callback to settle
 
         // DETERMINISTIC: Tap to disable tracking
-        onView(withId(R.id.tracking_cntrl_btn)).perform(click())
+        onView(withId(R.id.tracking_cntrl_btn)).perform(scrollTo(), click())
 
         // DETERMINISTIC: Verify toggle is now checked (tracking disabled)
         onView(withId(R.id.tracking_cntrl_btn))
@@ -62,7 +63,7 @@ class TrackingControlHybridTest : BaseGptDriverTest() {
         Thread.sleep(1500) // Wait for any setup SDK callback to settle
 
         // DETERMINISTIC: Tap to enable tracking
-        onView(withId(R.id.tracking_cntrl_btn)).perform(click())
+        onView(withId(R.id.tracking_cntrl_btn)).perform(scrollTo(), click())
 
         // DETERMINISTIC: Verify toggle is now unchecked (tracking enabled)
         onView(withId(R.id.tracking_cntrl_btn))

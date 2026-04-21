@@ -3,6 +3,7 @@ package io.branch.gptdriver.tests
 import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -30,7 +31,7 @@ class ReferringParamsHybridTest : BaseGptDriverTest() {
     @Test
     fun viewFirstReferringParams_showsJsonDialog() {
         // DETERMINISTIC: Click "View First Referring Params"
-        onView(withId(R.id.cmdPrintInstallParam)).perform(click())
+        onView(withId(R.id.cmdPrintInstallParam)).perform(scrollTo(), click())
 
         // DETERMINISTIC: Verify AlertDialog appeared with title
         onView(withText("First Referring Params"))
@@ -58,7 +59,7 @@ class ReferringParamsHybridTest : BaseGptDriverTest() {
     @Test
     fun viewLatestReferringParams_showsJsonDialog() {
         // DETERMINISTIC: Click "View Latest Referring Params"
-        onView(withId(R.id.cmdPrintLatestParam)).perform(click())
+        onView(withId(R.id.cmdPrintLatestParam)).perform(scrollTo(), click())
 
         // DETERMINISTIC: Verify AlertDialog appeared with title
         onView(withText("Latest Referring Params"))
@@ -86,7 +87,7 @@ class ReferringParamsHybridTest : BaseGptDriverTest() {
     @Test
     fun viewLatestReferringParams_extractAndValidateJson() {
         // DETERMINISTIC: Click "View Latest Referring Params"
-        onView(withId(R.id.cmdPrintLatestParam)).perform(click())
+        onView(withId(R.id.cmdPrintLatestParam)).perform(scrollTo(), click())
 
         // DETERMINISTIC: Verify dialog appeared
         onView(withText("Latest Referring Params"))

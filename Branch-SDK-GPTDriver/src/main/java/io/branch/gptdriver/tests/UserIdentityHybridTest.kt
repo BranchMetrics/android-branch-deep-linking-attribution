@@ -3,6 +3,7 @@ package io.branch.gptdriver.tests
 import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -31,7 +32,7 @@ class UserIdentityHybridTest : BaseGptDriverTest() {
     @Test
     fun setUserIdentity_showsConfirmation() {
         // DETERMINISTIC: Click "Set User ID" button
-        onView(withId(R.id.cmdIdentifyUser)).perform(click())
+        onView(withId(R.id.cmdIdentifyUser)).perform(scrollTo(), click())
 
         // DETERMINISTIC: Verify the AlertDialog appeared with title
         onView(withText("Set User ID"))
@@ -68,7 +69,7 @@ class UserIdentityHybridTest : BaseGptDriverTest() {
     @Test
     fun setUserIdentity_extractConfirmation() {
         // DETERMINISTIC: Click "Set User ID"
-        onView(withId(R.id.cmdIdentifyUser)).perform(click())
+        onView(withId(R.id.cmdIdentifyUser)).perform(scrollTo(), click())
 
         // DETERMINISTIC: Verify dialog appeared
         onView(withText("Set User ID"))
@@ -113,7 +114,7 @@ class UserIdentityHybridTest : BaseGptDriverTest() {
     @Test
     fun clearUserIdentity_showsConfirmation() {
         // DETERMINISTIC: Click "Clear User ID"
-        onView(withId(R.id.cmdClearUser)).perform(click())
+        onView(withId(R.id.cmdClearUser)).perform(scrollTo(), click())
 
         // Wait for potential Toast
         Thread.sleep(2000)
@@ -128,7 +129,7 @@ class UserIdentityHybridTest : BaseGptDriverTest() {
     @Test
     fun setUserIdentity_dialogHasCorrectElements() {
         // DETERMINISTIC: Click "Set User ID"
-        onView(withId(R.id.cmdIdentifyUser)).perform(click())
+        onView(withId(R.id.cmdIdentifyUser)).perform(scrollTo(), click())
 
         // AI: Check all expected dialog elements at once (non-throwing)
         val checks = driver.checkBulk(
