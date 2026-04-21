@@ -171,8 +171,12 @@ class DeepLinkWarmOpenHybridTest {
             )
         }
 
-        // AI: Dismiss dialog
-        runCatching { driver.execute("Tap the 'OK' button to dismiss the dialog") }
+        // DETERMINISTIC: Dismiss dialog via UiDevice back press.
+        // Using back press is more robust post-relaunch than AI or Espresso.
+        val device = androidx.test.uiautomator.UiDevice.getInstance(
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+        )
+        device.pressBack()
 
         driver.setSessionStatus("success")
     }
