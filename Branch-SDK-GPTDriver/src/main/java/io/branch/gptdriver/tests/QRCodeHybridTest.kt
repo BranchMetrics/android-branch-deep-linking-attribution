@@ -4,6 +4,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.BaseGptDriverTest
 import org.junit.Test
@@ -35,8 +36,8 @@ class QRCodeHybridTest : BaseGptDriverTest() {
             )
         )
 
-        // AI: Dismiss the dialog
-        driver.execute("Tap the 'Dismiss' button to close the QR code dialog")
+        // DETERMINISTIC: Dismiss the dialog
+        onView(withText("Dismiss")).perform(click())
 
         // AI: Verify we returned to the main screen
         driver.assertCondition(
@@ -60,8 +61,8 @@ class QRCodeHybridTest : BaseGptDriverTest() {
                 "indicating a real QR code was generated — not a blank, solid, or error image."
         )
 
-        // AI: Dismiss dialog
-        driver.execute("Tap 'Dismiss' to close the dialog")
+        // DETERMINISTIC: Dismiss dialog
+        onView(withText("Dismiss")).perform(click())
 
         driver.setSessionStatus("success")
     }

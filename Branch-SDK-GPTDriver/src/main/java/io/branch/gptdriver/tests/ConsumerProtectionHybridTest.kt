@@ -97,8 +97,9 @@ class ConsumerProtectionHybridTest : BaseGptDriverTest() {
             )
         )
 
-        // Dismiss by pressing back
-        driver.execute("Press the back button or tap outside the dialog to dismiss it")
+        // DETERMINISTIC: Dismiss by pressing back.
+        // Using Espresso's pressBack() directly is more robust than AI for system-level actions.
+        androidx.test.espresso.Espresso.pressBack()
 
         driver.setSessionStatus("success")
     }
