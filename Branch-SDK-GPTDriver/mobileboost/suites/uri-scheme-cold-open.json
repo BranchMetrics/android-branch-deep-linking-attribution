@@ -1,0 +1,56 @@
+{
+  "name": "[Android] URI Scheme - Cold Open",
+  "tags": [
+    "Android",
+    "Flaky"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "open Chrome"
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "dismiss all pop ups until you can focus on the address bar"
+    },
+    {
+      "id": 3,
+      "type": "type",
+      "text": "branchlinksimulator://open/OpenedWithUriScheme"
+    },
+    {
+      "id": 4,
+      "type": "tap",
+      "text": "com.android.chrome:id/tile_view_icon"
+    },
+    {
+      "id": 5,
+      "type": "tap",
+      "text": "Continue"
+    },
+    {
+      "id": 6,
+      "type": "scrollUntil",
+      "direction": "up",
+      "text": "See Requests"
+    },
+    {
+      "id": 7,
+      "type": "tap",
+      "text": "See Requests"
+    },
+    {
+      "id": 8,
+      "type": "ai",
+      "instruction": "Tap on top most text with https://"
+    },
+    {
+      "id": 9,
+      "type": "ai",
+      "instruction": "Check if you see \"external_intent_uri\": \"branchlinksimulator://open/OpenedWithUriScheme\", if so succeed the test"
+    }
+  ],
+  "params": {}
+}

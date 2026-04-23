@@ -28,3 +28,7 @@ Branch-SDK-TestBed/gradlew.bat
 Branch-SDK-TestBed/gradle/wrapper/gradle-wrapper.properties
 
 .direnv
+
+# MobileBoost
+mobileboost.config.json
+.claude

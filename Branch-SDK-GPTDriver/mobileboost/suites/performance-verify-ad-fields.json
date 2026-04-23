@@ -1,0 +1,62 @@
+{
+  "name": "[Android] Performance - Verify Ad Fields",
+  "tags": [],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Click \"See Requests\""
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Scroll down until you see the listing \"https://api2.branch.io/v1/install\""
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "Click on the listing \"https://api2.branch.io/v1/install\""
+    },
+    {
+      "id": 4,
+      "type": "ai",
+      "instruction": "Check if you see \"hardware_id\", if so continue with next step, else fail the test."
+    },
+    {
+      "id": 5,
+      "type": "ai",
+      "instruction": "Check if you see \"is_hardware_id_real\", if so continue with next step, else fail the test."
+    },
+    {
+      "id": 6,
+      "type": "ai",
+      "instruction": "Check if you see \"initial_referrer\", if so continue with next step, else fail the test."
+    },
+    {
+      "id": 7,
+      "type": "ai",
+      "instruction": "scroll: down"
+    },
+    {
+      "id": 8,
+      "type": "ai",
+      "instruction": "Check if you see \"install_referrer_extras\", if so continue with next step, else fail the test."
+    },
+    {
+      "id": 9,
+      "type": "ai",
+      "instruction": "Check if you see \"advertising_ids\", if so continue with next step, else fail the test."
+    },
+    {
+      "id": 10,
+      "type": "ai",
+      "instruction": "Check if you see \"lat_val\", if so continue with next step, else fail the test."
+    },
+    {
+      "id": 11,
+      "type": "ai",
+      "instruction": "Succeed the test."
+    }
+  ],
+  "params": {}
+}
