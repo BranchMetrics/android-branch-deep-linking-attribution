@@ -63,14 +63,14 @@ class DeepLinkWarmOpenHybridTest {
         val apiKey = BuildConfig.MOBILEBOOST_API_KEY.let { key ->
             key.ifEmpty {
                 androidx.test.platform.app.InstrumentationRegistry.getArguments()
-                    .getString("GPTDRIVER_API_KEY") ?: ""
+                    .getString("MOBILEBOOST_API_KEY") ?: ""
             }
         }
         if (apiKey.isEmpty()) {
             throw IllegalStateException(
                 "MOBILEBOOST_API_KEY must be set in local.properties, " +
                     "gradle property (-PMOBILEBOOST_API_KEY=xxx), " +
-                    "or instrumentation arg GPTDRIVER_API_KEY"
+                    "or instrumentation arg MOBILEBOOST_API_KEY"
             )
         }
         driver = GptDriver(apiKey)
