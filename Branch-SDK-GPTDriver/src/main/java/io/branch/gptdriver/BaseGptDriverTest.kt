@@ -1,11 +1,16 @@
 package io.branch.gptdriver
 
 import android.util.Log
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import io.branch.branchandroidtestbed.MainActivity
+import io.branch.branchandroidtestbed.R
 import io.mobileboost.gptdriver_lib.GptDriver
 import java.util.concurrent.TimeUnit
 import org.junit.After
@@ -69,5 +74,15 @@ abstract class BaseGptDriverTest {
     open fun tearDown() {
         // Session status should be set by the individual tests upon successful completion.
         // Setting it here would mark failed tests as "success" — a false positive.
+    }
+
+    /**
+     * Assert the test is back on the TestBed MainActivity. Anchors on a
+     * stable button visible on the main layout so individual tests don't
+     * hardcode view IDs that may change. If the anchor moves, update only
+     * this method.
+     */
+    protected fun assertOnMainScreen() {
+        onView(withId(R.id.openInAppBrowser)).check(matches(isDisplayed()))
     }
 }

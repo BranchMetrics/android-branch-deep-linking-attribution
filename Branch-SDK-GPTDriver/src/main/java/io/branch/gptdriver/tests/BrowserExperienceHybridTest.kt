@@ -3,8 +3,6 @@ package io.branch.gptdriver.tests
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.lifecycle.Lifecycle
 import androidx.test.platform.app.InstrumentationRegistry
@@ -102,8 +100,7 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
         device.waitForIdle(3_000)
 
         // DETERMINISTIC: Verify we're back on the main screen
-        onView(withId(R.id.openInAppBrowser))
-            .check(matches(isDisplayed()))
+        assertOnMainScreen()
 
         driver.setSessionStatus("success")
     }
@@ -154,8 +151,7 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
         device.waitForIdle(3_000)
 
         // DETERMINISTIC: Verify we're back on the main screen
-        onView(withId(R.id.openInAppBrowser))
-            .check(matches(isDisplayed()))
+        assertOnMainScreen()
 
         driver.setSessionStatus("success")
     }
