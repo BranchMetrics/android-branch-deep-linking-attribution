@@ -28,6 +28,25 @@ import org.junit.Test
  * the window hierarchy. The AI call is kept as a soft probe so the
  * dashboard still records a semantic judgment ("content loaded, not blank
  * or error"), but it can no longer fail the test on its own.
+ *
+ * Two complementary tests intentionally share the same click:
+ *   - [browserTest_webViewAppears]           → structural probe only. A
+ *                                              WebView node must appear in
+ *                                              the window hierarchy. Passes
+ *                                              even if the page is blank
+ *                                              or shows a connection error;
+ *                                              we only prove the SDK opened
+ *                                              a WebView.
+ *   - [browserTest_webViewRendersContent]    → structural probe PLUS an AI
+ *                                              content check asserting the
+ *                                              page has visible, non-error
+ *                                              content. Catches regressions
+ *                                              where the WebView opens but
+ *                                              navigation to branch.io
+ *                                              silently fails.
+ *
+ * Keeping them separate lets CI distinguish "SDK regression" from
+ * "network / content regression" on a failure.
  */
 class BrowserExperienceHybridTest : BaseGptDriverTest() {
 
@@ -56,8 +75,13 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
         Thread.sleep(500)
     }
 
+    /**
+     * Structural probe: a WebView node appears in the window hierarchy
+     * after Branch.openBrowserExperience(). The page content is not
+     * validated here — see [browserTest_webViewRendersContent] for that.
+     */
     @Test
-    fun browserTest_opensInAppWebView() {
+    fun browserTest_webViewAppears() {
         // DETERMINISTIC: Scroll to and click "Browser Test"
         onView(withId(R.id.openInAppBrowser))
             .perform(scrollTo(), click())
@@ -105,8 +129,13 @@ class BrowserExperienceHybridTest : BaseGptDriverTest() {
         driver.setSessionStatus("success")
     }
 
+    /**
+     * Content probe: the WebView not only appears, but also renders real
+     * page content (not blank, not an error page). Runs a slower AI
+     * assertion after a paint-buffer sleep so visible content has settled.
+     */
     @Test
-    fun browserTest_loadsWebContent() {
+    fun browserTest_webViewRendersContent() {
         // DETERMINISTIC: Scroll to and click "Browser Test"
         onView(withId(R.id.openInAppBrowser))
             .perform(scrollTo(), click())
