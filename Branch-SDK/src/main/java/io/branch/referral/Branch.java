@@ -2402,6 +2402,14 @@ public class Branch {
      */
     public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
         setConsumerProtectionAttributionLevel(level, null);
+        if(level != Defines.BranchAttributionLevel.NONE){
+            Branch.getInstance().trackOpen();
+        }
+    }
+
+    private void trackOpen() {
+        RequestOpen requestOpen = new RequestOpen(context_, null, false);
+        branchReferral_.requestQueue_.handleNewRequest(requestOpen);
     }
 
     /**

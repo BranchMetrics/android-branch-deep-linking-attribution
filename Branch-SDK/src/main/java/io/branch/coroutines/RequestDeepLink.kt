@@ -39,7 +39,7 @@ internal class RequestDeepLink(
     }
 
     override fun getRequestUrl(): String {
-        return "https://rlogan-go-gateway.eks-stage-puffin-usw2.branch.io/v1/deeplink"
+        return "https://api-open.stage.branch.io/v3/deeplink"
     }
 
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
