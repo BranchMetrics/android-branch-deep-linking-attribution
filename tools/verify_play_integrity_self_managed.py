@@ -226,27 +226,40 @@ def decrypt_key_bundle(encrypted_bundle: bytes, private_key: rsa.RSAPrivateKey) 
     Decrypt the key bundle using RSA-OAEP.
 
     The key bundle from Play Console is encrypted with your RSA public key.
-    This function decrypts it to get the actual AES-256 key used for token decryption.
+    Google Play Console uses RSA-OAEP with SHA1 (not SHA256).
+    The decrypted payload is a text key-value format:
+      DECRYPTION_KEY=<base64>
+      VERIFICATION_KEY=<base64>
     """
-    print(f"  🔓 Decrypting key bundle with RSA-OAEP...")
+    print(f"  🔓 Decrypting key bundle with RSA-OAEP (SHA1)...")
 
     try:
-        decrypted_key = private_key.decrypt(
+        decrypted_bytes = private_key.decrypt(
             encrypted_bundle,
             padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
+                mgf=padding.MGF1(algorithm=hashes.SHA1()),
+                algorithm=hashes.SHA1(),
                 label=None
             )
         )
-        print(f"  ✅ Key bundle decrypted successfully ({len(decrypted_key)} bytes)")
-        return decrypted_key
+        print(f"  ✅ Key bundle decrypted successfully ({len(decrypted_bytes)} bytes)")
     except Exception as e:
         print(f"\n❌ Failed to decrypt key bundle: {e}")
         print(f"   This usually means:")
         print(f"   1. The private key doesn't match the public key uploaded to Play Console")
         print(f"   2. The key bundle file is corrupted or incorrect")
         raise
+
+    # Parse the key-value text format produced by Play Console
+    decrypted_text = decrypted_bytes.decode("utf-8")
+    for line in decrypted_text.splitlines():
+        if line.startswith("DECRYPTION_KEY="):
+            key_b64 = line.split("=", 1)[1].strip()
+            aes_key = base64.b64decode(key_b64)
+            print(f"  ✅ AES-256 decryption key extracted ({len(aes_key)} bytes)")
+            return aes_key
+
+    raise ValueError("DECRYPTION_KEY not found in decrypted key bundle")
 
 
 def decrypt_token_locally(
@@ -352,9 +365,16 @@ def decrypt_token_locally(
         aesgcm = AESGCM(cek)
         plaintext = aesgcm.decrypt(iv, ciphertext_with_tag, aad)
 
-        # Parse JSON payload
-        payload = json.loads(plaintext.decode('utf-8'))
-        print(f"  ✅ Token decrypted successfully!")
+        # The decrypted plaintext is a JWS (signed JWT): header.payload.signature
+        # Extract and decode the payload (second part)
+        jws_parts = plaintext.split(b'.')
+        if len(jws_parts) == 3:
+            jws_payload_b64 = jws_parts[1].decode('ascii')
+            payload = json.loads(b64url_decode(jws_payload_b64))
+            print(f"  ✅ Token decrypted successfully (inner JWS payload decoded)!")
+        else:
+            payload = json.loads(plaintext.decode('utf-8'))
+            print(f"  ✅ Token decrypted successfully!")
 
         return payload
 
@@ -376,7 +396,9 @@ PI_FIELDS = {"play_integrity_token", "nonce", "ecdh_public_key"}  # strip before
 
 def verify(decoded: dict, package_name: str, expected_nonce_b64url: str) -> dict:
     """Verify the decrypted token payload."""
-    payload = decoded.get("tokenPayloadExternal", {})
+    # Google's server-side decryptIntegrityToken API wraps in "tokenPayloadExternal";
+    # local self-managed decryption returns the payload directly.
+    payload = decoded.get("tokenPayloadExternal", decoded)
     request_details  = payload.get("requestDetails", {})
     app_integrity    = payload.get("appIntegrity", {})
     device_integrity = payload.get("deviceIntegrity", {})
