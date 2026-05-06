@@ -276,12 +276,6 @@ public class Branch {
 
     public static String installDeveloperId = null;
 
-
-
-
-    private BranchActivityLifecycleObserver activityLifeCycleObserver;
-    /* Flag to turn on or off instant deeplinking feature. IDL is disabled by default */
-    private static boolean enableInstantDeepLinking = false;
     private final TrackingController trackingController;
 
     // Variables for reporting plugin type and version, plus helps us make data driven decisions.
@@ -294,6 +288,7 @@ public class Branch {
 
     private int networkCount_ = 0;
     private ServerResponse serverResponse_;
+    private BranchOpenObserver openObserver;
 
     /**
      * Enum to track the state of the intent processing
@@ -411,9 +406,11 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
-        /* If {@link Application} is instantiated register for activity life cycle events. */
         if (context instanceof Application) {
             branchReferral_.setActivityLifeCycleObserver((Application) context);
+        } else if (context.getApplicationContext() instanceof Application) {
+            // Backup: Use the application context if the passed context wasn't the App itself
+            branchReferral_.setActivityLifeCycleObserver((Application) context.getApplicationContext());
         }
 
         return branchReferral_;
@@ -586,11 +583,6 @@ public class Branch {
 
         // Reset all of the statics.
         branchReferral_ = null;
-
-        enableInstantDeepLinking = false;
-        isActivityLifeCycleCallbackRegistered_ = false;
-
-
     }
 
 
@@ -869,24 +861,6 @@ public class Branch {
 
     private void readAndStripParam(Uri data, Activity activity) {
         BranchLogger.v("Read params uri: " + data + " intent state: " + intentState_);
-        if (branchConfigurationController_.isInstantDeepLinkingEnabled()) {
-
-            // If activity is launched anew (i.e. not from stack), then its intent can be readily consumed.
-            // Otherwise, we have to wait for onResume, which ensures that we will have the latest intent.
-
-            // In the latter case, IDL works only partially because the callback is delayed until onResume.
-            boolean activityHasValidIntent = intentState_ == INTENT_STATE.READY ||
-                    !activityLifeCycleObserver.isCurrentActivityLaunchedFromStack();
-
-            BranchLogger.v("activityHasValidIntent: " + activityHasValidIntent);
-
-            // Skip IDL if intent contains an unused Branch link.
-            boolean noUnusedBranchLinkInIntent = !isRestartSessionRequested(activity != null ? activity.getIntent() : null);
-
-            if (activityHasValidIntent && noUnusedBranchLinkInIntent) {
-                extractSessionParamsForIDL(data, activity);
-            }
-        }
 
         if (intentState_ == INTENT_STATE.READY) {
 
@@ -1507,7 +1481,7 @@ public class Branch {
 
         ServerRequestInitSession request;
         if (hasUser) {
-            request = new io.branch.referral.RequestOpen(context_, callback, isAutoInitialization);
+            request = new io.branch.referral.RequestOpen(context_, callback, isAutoInitialization, null);
         } else {
             request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
         }
@@ -1543,22 +1517,13 @@ public class Branch {
 
 
     private void setActivityLifeCycleObserver(Application application) {
-        BranchLogger.v("setActivityLifeCycleObserver activityLifeCycleObserver: " + activityLifeCycleObserver
-                + " application: " + application);
-        try {
-            activityLifeCycleObserver = new BranchActivityLifecycleObserver();
-            BranchLogger.v("setActivityLifeCycleObserver set new activityLifeCycleObserver: " + activityLifeCycleObserver
-                    + " application: " + application);
-            /* Set an observer for activity life cycle events. */
-            application.unregisterActivityLifecycleCallbacks(activityLifeCycleObserver);
-            application.registerActivityLifecycleCallbacks(activityLifeCycleObserver);
-            isActivityLifeCycleCallbackRegistered_ = true;
-            
-        } catch (NoSuchMethodError | NoClassDefFoundError Ex) {
-            isActivityLifeCycleCallbackRegistered_ = false;
-            /* LifeCycleEvents are  available only from API level 14. */
-            BranchLogger.v(new BranchError("", BranchError.ERR_API_LVL_14_NEEDED).getMessage());
+        if (openObserver != null) {
+            application.unregisterActivityLifecycleCallbacks(openObserver);
         }
+
+        openObserver = new BranchOpenObserver(this);
+
+        application.registerActivityLifecycleCallbacks(openObserver);
     }
 
     /*
@@ -2403,13 +2368,36 @@ public class Branch {
     public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
         setConsumerProtectionAttributionLevel(level, null);
         if(level != Defines.BranchAttributionLevel.NONE){
-            Branch.getInstance().trackOpen();
+            Branch.getInstance().sendOpen();
         }
     }
 
-    private void trackOpen() {
-        RequestOpen requestOpen = new RequestOpen(context_, null, false);
-        branchReferral_.requestQueue_.handleNewRequest(requestOpen);
+    void sendOpen() {
+        PrefHelper prefHelper = PrefHelper.getInstance(context_);
+
+        if(prefHelper != null) {
+            Defines.BranchAttributionLevel branchAttributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
+
+            BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
+            if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
+                RequestOpen requestOpen = new RequestOpen(context_, null, false, null);
+                branchReferral_.requestQueue_.handleNewRequest(requestOpen);
+            }
+        }
+    }
+
+    public void sendOpen(JSONObject responseData) {
+        PrefHelper prefHelper = PrefHelper.getInstance(context_);
+
+        if(prefHelper != null) {
+            Defines.BranchAttributionLevel branchAttributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
+
+            BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
+            if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
+                RequestOpen requestOpen = new RequestOpen(context_, null, false, responseData);
+                branchReferral_.requestQueue_.handleNewRequest(requestOpen);
+            }
+        }
     }
 
     /**
@@ -2697,8 +2685,7 @@ public class Branch {
      * @param callback A {@link BranchReferralInitListener} to receive the params.
      */
     public void requestDeepLinkData(@NonNull Uri uri, @Nullable BranchReferralInitListener callback) {
-        BranchLogger.d("Public API: requestDeepLinkData called for URI: " + uri);
-
+        BranchLogger.d("requestDeepLinkData called for URI: " + uri);
         // We use the context directly from the Branch instance (context_)
         // instead of trying to pull it from prefHelper_.
         RequestDeepLink request = new RequestDeepLink(

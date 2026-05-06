@@ -7,15 +7,34 @@ import org.json.JSONObject
 internal class RequestOpen(
     context: Context,
     callback: Branch.BranchReferralInitListener?,
-    isAutoInitialization: Boolean
+    isAutoInitialization: Boolean,
+    responseData: JSONObject?
 ) : ServerRequestInitSession(context, Defines.RequestPath.RegisterOpen, isAutoInitialization) {
 
     init {
         callback_ = callback
         try {
             val openPost = JSONObject()
-            openPost.put(Defines.Jsonkey.RandomizedDeviceToken.key, prefHelper_.randomizedDeviceToken)
-            openPost.put(Defines.Jsonkey.RandomizedBundleToken.key, prefHelper_.randomizedBundleToken)
+            val rdt = prefHelper_.randomizedDeviceToken
+            if(rdt != PrefHelper.NO_STRING_VALUE) {
+                openPost.put(
+                    Defines.Jsonkey.RandomizedDeviceToken.key,
+                    rdt
+                )
+            }
+
+            val rbt = prefHelper_.randomizedBundleToken
+            if(rbt != PrefHelper.NO_STRING_VALUE) {
+                openPost.put(
+                    Defines.Jsonkey.RandomizedBundleToken.key,
+                    rbt)
+            }
+            // TODO: Move registerAppInit tasks here
+            if(responseData != null && responseData.has("data")){
+                val dataString = responseData.getString("data")
+                val dataJSON = JSONObject(dataString)
+                openPost.put("link_data", dataJSON)
+            }
             setPost(openPost)
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")
@@ -24,7 +43,7 @@ internal class RequestOpen(
     }
 
     override fun getRequestUrl(): String {
-        return "https://api-open.stage.branch.io/v3/events/open"
+        return "https://api.stage.branch.io/v3/events/open"
     }
 
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
@@ -34,12 +53,7 @@ internal class RequestOpen(
         try {
             val responseJson = response.`object`
 
-            if (responseJson.has(Defines.Jsonkey.LinkClickID.key)) {
-                prefHelper_.linkClickID = responseJson.getString(Defines.Jsonkey.LinkClickID.key)
-            } else {
-                prefHelper_.linkClickID = PrefHelper.NO_STRING_VALUE
-            }
-
+            // TODO: Should be put under v3/deeplink
             // Check for enhanced web link UX override
             if (responseJson.has(Defines.Jsonkey.Invoke_Features.key) &&
                 responseJson.getJSONObject(Defines.Jsonkey.Invoke_Features.key).has("enhanced_web_link_ux")) {
@@ -57,6 +71,7 @@ internal class RequestOpen(
                 }
 
                 if (callback_ != null) {
+                    //TODO: This will not have any link data
                     callback_!!.onInitFinished(branch.latestReferringParams, null)
                 }
             }

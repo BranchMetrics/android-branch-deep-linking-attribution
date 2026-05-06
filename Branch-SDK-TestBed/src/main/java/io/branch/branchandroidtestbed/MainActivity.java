@@ -52,6 +52,7 @@ import io.branch.referral.QRCode.BranchQRCode;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchShareSheetBuilder;
+import io.branch.referral.modernization.core.ModernBranchCore;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.BranchEvent;
@@ -698,32 +699,6 @@ public class MainActivity extends Activity {
                 }
             }
         });
-
-        findViewById(R.id.btn_request_deeplink).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Uri testUri = null;
-
-                Log.d("BranchTestbed", "Triggering requestDeepLinkData: " + testUri);
-
-                Branch.getInstance().requestDeepLinkData(testUri, new Branch.BranchReferralInitListener() {
-                    @Override
-                    public void onInitFinished(JSONObject params, BranchError error) {
-                        if (error == null) {
-                            if (params != null) {
-                                try {
-                                    Log.d("BranchTestbed", "Deep Link Params: " + params.toString(2));
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        } else {
-                            Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
-                        }
-                    }
-                });
-            }
-        });
     }
 
     private void createNotificationChannel() {
@@ -770,38 +745,25 @@ public class MainActivity extends Activity {
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        BranchLogger.d("initSession");
+        BranchLogger.d("onStart initSession " + this.getIntent().toString());
 
         //Branch.getInstance().setIdentity("Identity1");
-
-        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+        Branch.getInstance().requestDeepLinkData(this.getIntent().getData(), new Branch.BranchReferralInitListener() {
             @Override
-            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
-                if (error != null) {
-                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
-                    Log.d("BranchSDK_Tester", "Session state should be not be INITIALISED, actual: " + Branch.getInstance().getInitState());
+            public void onInitFinished(JSONObject params, BranchError error) {
+                if (error == null) {
+                    if (params != null) {
+                        try {
+                            Log.d("BranchTestbed", "Deep Link Params: " + params.toString(2));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 } else {
-                    Log.d("BranchSDK_Tester", "branch init complete!");
-                    Log.d("BranchSDK_Tester", "Session state should be INITIALISED, actual: " + Branch.getInstance().getInitState());
-                    if (branchUniversalObject != null) {
-                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-                    }
-
-                    if (linkProperties != null) {
-                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
-                    }
+                    Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
                 }
-
-
-                // QA purpose only
-                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
             }
-        }).withData(this.getIntent().getData()).init();
-
+        });
         //initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app

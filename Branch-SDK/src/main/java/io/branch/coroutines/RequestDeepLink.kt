@@ -14,7 +14,7 @@ import org.json.JSONObject
 
 internal class RequestDeepLink(
     context: Context,
-    private val uri: Uri?,
+    uri: Uri?,
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean
 ) : ServerRequestInitSession(context, Defines.RequestPath.RegisterOpen, isAutoInitialization) {
@@ -22,16 +22,29 @@ internal class RequestDeepLink(
     init {
         callback_ = callback
         try {
-            val openPost = JSONObject()
+            val deepLinkPost = JSONObject()
 
             // Adding the URI to the payload as the server expects
             uri?.let {
-                openPost.put(Defines.Jsonkey.AndroidAppLinkURL.key, it.toString())
+                deepLinkPost.put(Defines.Jsonkey.AndroidAppLinkURL.key, it.toString())
             }
 
-            openPost.put(Defines.Jsonkey.RandomizedDeviceToken.key, prefHelper_.randomizedDeviceToken)
-            openPost.put(Defines.Jsonkey.RandomizedBundleToken.key, prefHelper_.randomizedBundleToken)
-            setPost(openPost)
+            val rdt = prefHelper_.randomizedDeviceToken
+            if(rdt != PrefHelper.NO_STRING_VALUE) {
+                deepLinkPost.put(
+                    Defines.Jsonkey.RandomizedDeviceToken.key,
+                    rdt
+                )
+            }
+
+            val rbt = prefHelper_.randomizedBundleToken
+            if(rbt != PrefHelper.NO_STRING_VALUE) {
+                deepLinkPost.put(
+                    Defines.Jsonkey.RandomizedBundleToken.key,
+                    rbt
+                )
+            }
+            setPost(deepLinkPost)
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")
             constructError_ = true
@@ -39,12 +52,12 @@ internal class RequestDeepLink(
     }
 
     override fun getRequestUrl(): String {
-        return "https://api-open.stage.branch.io/v3/deeplink"
+        return "https://api.stage.branch.io/v3/deeplink"
     }
 
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
         super.onRequestSucceeded(response, branch)
-        BranchLogger.v("RequestDeepLink Succeeded. Response: ${response.`object`}")
+        BranchLogger.v("RequestDeepLink Succeeded. Response: ${response.`object`.toString(2)}")
 
         try {
             val responseJson = response.`object`
@@ -73,6 +86,10 @@ internal class RequestDeepLink(
         }
 
         onInitSessionCompleted(response, branch)
+
+        if(prefHelper_.consumerProtectionAttributionLevel != Defines.BranchAttributionLevel.NONE){
+            Branch.getInstance().sendOpen(response.`object`)
+        }
     }
 
     override fun handleFailure(statusCode: Int, causeMsg: String) {

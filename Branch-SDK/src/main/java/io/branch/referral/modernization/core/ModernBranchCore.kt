@@ -1,14 +1,12 @@
 package io.branch.referral.modernization.core
 
 import android.content.Context
-import androidx.annotation.NonNull
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
 import io.branch.referral.Branch
 import io.branch.referral.RequestOpen
 import io.branch.referral.Defines
-import io.branch.referral.network.BranchAsyncNetworkLayer
 
 /**
  * Modern Branch SDK core implementation using reactive architecture.
@@ -264,11 +262,11 @@ private class SessionManagerImpl(private val scope: CoroutineScope) : SessionMan
         return try {
             _sessionState.value = SessionState.INITIALIZING
 
-            // FIX: Use the standard constructor (Context, Callback, isAutoInit)
             val openRequest = RequestOpen(
                 activity.applicationContext,
                 null,
-                false
+                false,
+                null
             )
 
             // FIX: Use the queue instead of calling executeAsync
