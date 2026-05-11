@@ -1,0 +1,57 @@
+name: Layer 1 - SDK Wire Validation (PR Gate)
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  validate-wire-logs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build TestBed APK
+        run: ./gradlew :Branch-SDK-TestBed:assembleDebug
+
+      - name: Run Instrumented Tests (Generate Activity)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu libguestfs -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            # Run a small subset of tests that trigger network requests
+            ./gradlew :Branch-SDK-GPTDriver:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.branch.gptdriver.tests.LinkCreationDeterministicTest
+            
+            # Pull the log file from the app's internal storage
+            # Note: requires the app to be debuggable or use run-as
+            adb shell "run-as io.branch.branchandroidtestbed cat /data/user/0/io.branch.branchandroidtestbed/files/branchlogs.txt" > branchlogs.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run L1 Validation Script
+        run: python scripts/validate_l1_logs.py branchlogs.txt
+
+      - name: Upload Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-wire-logs
+          path: branchlogs.txt
