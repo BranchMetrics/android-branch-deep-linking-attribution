@@ -7,8 +7,8 @@ on:
 
 jobs:
   validate-wire-logs:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: macos-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout Repository
@@ -27,18 +27,17 @@ jobs:
       - name: Run Instrumented Tests (Generate Activity)
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 30
           target: google_apis
           arch: x86_64
           force-avd-creation: false
-          emulator-options: -no-window -gpu libguestfs -no-snapshot -noaudio -no-boot-anim
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
             # Run a small subset of tests that trigger network requests
             ./gradlew :Branch-SDK-GPTDriver:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.branch.gptdriver.tests.LinkCreationDeterministicTest
             
-            # Pull the log file from the app's internal storage
-            # Note: requires the app to be debuggable or use run-as
+            # Pull logs (macOS runner has better adb stability)
             adb shell "run-as io.branch.branchandroidtestbed cat /data/user/0/io.branch.branchandroidtestbed/files/branchlogs.txt" > branchlogs.txt
 
       - name: Set up Python
