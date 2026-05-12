@@ -65,6 +65,13 @@ def validate_entries(entries):
         errors.append("No Branch SDK requests were captured in the logs.")
         return errors
 
+    # Check for mandatory events in the capture session
+    found_uris = [e.get('uri') for e in entries]
+    mandatory_events = ['/v1/install'] # Or /v1/open depending on the test
+    for me in mandatory_events:
+        if me not in found_uris:
+            errors.append(f"Mandatory event '{me}' was not captured during the session.")
+
     print(f"Captured {len(entries)} Branch requests. Starting validation...")
 
     for i, entry in enumerate(entries):
