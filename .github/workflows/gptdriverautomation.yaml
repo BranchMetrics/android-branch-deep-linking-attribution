@@ -27,6 +27,6 @@ jobs:
           chmod +x .github/gptdriverrunscript.sh
           bash .github/gptdriverrunscript.sh Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk android
         env:
-          API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
-          API_KEY: ${{ secrets.MOBILEBOOST_API_ORG_KEY }}
+          API_ORG_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
+          API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
           TEST_TAGS: Release
