@@ -2,7 +2,7 @@ name: Layer 1 - SDK Wire Validation (PR Gate)
 
 on:
   pull_request:
-    branches: [ master, main ]
+    branches: [ master, main, feature/mobileboost-e2e-tests ]
   workflow_dispatch:
 
 jobs:
