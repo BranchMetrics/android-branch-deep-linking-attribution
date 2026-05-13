@@ -65,8 +65,7 @@ def parse_branch_logs(file_path):
                     payload = json.loads(payload_str)
                 except json.JSONDecodeError as e:
                     print(
-                        f"Warning: line {line_no}: failed to parse JSON after "
-                        f"'Post value = ': {e}. Raw: {payload_str[:200]}..."
+                        f"Warning: line {line_no}: failed to parse JSON after 'Post value = ': {e}"
                     )
                     pending_url = None
                     continue
