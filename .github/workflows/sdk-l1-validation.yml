@@ -38,7 +38,8 @@ jobs:
           ./gradlew \
             :Branch-SDK-TestBed:assembleDebug \
             :Branch-SDK-GPTDriver:assembleDebug \
-            -PMOBILEBOOST_API_KEY=${{ secrets.MOBILEBOOST_API_KEY }}
+            -PMOBILEBOOST_API_KEY=${{ secrets.MOBILEBOOST_API_KEY }} \
+            -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
