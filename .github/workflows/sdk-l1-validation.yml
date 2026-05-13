@@ -41,7 +41,7 @@ jobs:
           disable-animations: true
           script: |
             # Run a small subset of tests that trigger network requests
-            ./gradlew :Branch-SDK-GPTDriver:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.branch.gptdriver.tests.LinkCreationDeterministicTest
+            ./gradlew :Branch-SDK-GPTDriver:connectedDebugAndroidTest -PMOBILEBOOST_API_KEY=${{ secrets.MOBILEBOOST_API_KEY }} -Pandroid.testInstrumentationRunnerArguments.class=io.branch.gptdriver.tests.LinkCreationDeterministicTest
 
             # Pull logs from emulator
             adb shell "run-as io.branch.branchandroidtestbed cat /data/user/0/io.branch.branchandroidtestbed/files/branchlogs.txt" > branchlogs.txt
