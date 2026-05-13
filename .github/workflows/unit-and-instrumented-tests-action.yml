@@ -5,12 +5,12 @@ on:
 env:
   API_MIN: 21
   API_CURRENT: 34
-  JAVA_DISTRIBUTION: 'corretto'
-  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: "corretto"
+  JAVA_VERSION: "17"
 jobs:
   unit-test-api-level-min:
     name: unit-test-api-level-$API_MIN
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -22,7 +22,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Run unit tests
         run: |
-          ./gradlew :Branch-SDK:testDebugUnitTest 
+          ./gradlew :Branch-SDK:testDebugUnitTest
       # contains the reports and apk
       - name: Save test artifacts
         if: success() || failure()
@@ -33,34 +33,33 @@ jobs:
 
   instrumented-test-api-level-min:
     name: instrumented-test-api-level-$API_MIN
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      # create an emulator with google apis, runs on java 8
-      - name: Create Android emulator
+      - name: Enable KVM
         run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
-      # boots and waits for the emulator to be ready
-      - name: Launch Emulator
-        timeout-minutes: 30
-        run: |
-          echo "Starting emulator and waiting for boot to complete."
-          nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
-          echo "Emulator has finished booting"
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v5
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
-      # gradlew will automatically connect to booted emulator
+      # Boots an emulator on KVM-accelerated Ubuntu and runs instrumented tests
       - name: Run instrumented tests
-        run: |
-          ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --info
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 21
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          script: |
+            ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --info
       # contains the reports and apk
       - name: Save test artifacts
         if: success() || failure()
@@ -70,46 +69,45 @@ jobs:
           path: ./Branch-SDK/build/
 
   jacoco-test-coverage-api-level-min:
-            name: jacoco-test-coverage-api-level-$API_MIN
-            if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
-            needs: [unit-test-api-level-min, instrumented-test-api-level-min]
-            runs-on: macos-latest
-            steps:
-              - name: Checkout
-                uses: actions/checkout@v5
-              # create an emulator with google apis, runs on java 8
-              - name: Create Android emulator
-                run: |
-                  echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-                  echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_MIN";google_apis;x86_64"
-                  echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_MIN";google_apis;x86_64"
-              # boots and waits for the emulator to be ready
-              - name: Launch Emulator
-                timeout-minutes: 30
-                run: |
-                  echo "Starting emulator and waiting for boot to complete."
-                  nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-                  $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
-                  echo "Emulator has finished booting"
-              # repo's gradle is configured to run on java 17
-              - name: Setup java 17 for gradle
-                uses: actions/setup-java@v5
-                with:
-                  distribution: ${{ env.JAVA_DISTRIBUTION }}
-                  java-version: ${{ env.JAVA_VERSION }}
-              - name: Run Coverage
-                run: |
-                      ./gradlew :Branch-SDK:jacocoTestReport --info
-              - name: Upload Coverage Test Report
-                if: success()
-                uses: codecov/codecov-action@v5
-                with:
-                      file: ./Branch-SDK/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
-                      fail_ci_if_error: true
+    name: jacoco-test-coverage-api-level-$API_MIN
+    if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
+    needs: [unit-test-api-level-min, instrumented-test-api-level-min]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # repo's gradle is configured to run on java 17
+      - name: Setup java 17 for gradle
+        uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Run Coverage
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 21
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          script: |
+            ./gradlew :Branch-SDK:jacocoTestReport --info
+      - name: Upload Coverage Test Report
+        if: success()
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./Branch-SDK/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+          fail_ci_if_error: true
 
   unit-test-api-level-current:
     name: unit-test-api-level-$API_CURRENT
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -121,7 +119,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Run unit tests
         run: |
-          ./gradlew :Branch-SDK:testDebugUnitTest 
+          ./gradlew :Branch-SDK:testDebugUnitTest
       # contains the reports and apk
       - name: Save test artifacts
         if: success() || failure()
@@ -131,35 +129,33 @@ jobs:
           path: ./Branch-SDK/build/
   instrumented-test-api-level-current:
     name: instrumented-test-api-level-$API_CURRENT
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      # create an emulator with google apis, runs on java 8
-      - name: Create Android emulator
+      - name: Enable KVM
         run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager list device
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name test --package "system-images;android-"$API_CURRENT";google_apis_playstore;x86_64"
-      # boots and waits for the emulator to be ready
-      - name: Launch Emulator
-        timeout-minutes: 30
-        run: |
-          echo "Starting emulator and waiting for boot to complete."
-          nohup $ANDROID_HOME/tools/emulator -avd test -no-audio -no-boot-anim -camera-back none -camera-front none -qemu -m 2048 2>&1 &
-          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do echo "waiting..."; sleep 1; done; input keyevent 82'
-          echo "Emulator has finished booting"
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       # repo's gradle is configured to run on java 17
       - name: Setup java 17 for gradle
         uses: actions/setup-java@v5
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
-      # gradlew will automatically connect to booted emulator
+      # Boots an emulator on KVM-accelerated Ubuntu and runs instrumented tests
       - name: Run instrumented tests
-        run: |
-          ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --info
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis_playstore
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          script: |
+            ./gradlew :Branch-SDK:connectedDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\"" --info
       # contains the reports and apk
       - name: Save test artifacts
         if: success() || failure()
