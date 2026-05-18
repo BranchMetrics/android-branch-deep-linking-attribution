@@ -191,16 +191,10 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         newQueue.updateAllRequestsInQueue()
         BranchLogger.d("DEBUG: BranchRequestQueueAdapter.updateAllRequestsInQueue completed")
     }
-    fun canClearInitData(): Boolean {
-        BranchLogger.d("DEBUG: BranchRequestQueueAdapter.canClearInitData called")
-        val result = newQueue.canClearInitData()
-        BranchLogger.d("DEBUG: BranchRequestQueueAdapter.canClearInitData result: $result")
-        return result
-    }
     fun postInitClear() {
         BranchLogger.d("DEBUG: BranchRequestQueueAdapter.postInitClear called")
         adapterScope.launch {
-            newQueue.postInitClear()
+            newQueue.clearDeepLinkStorage()
             BranchLogger.d("DEBUG: BranchRequestQueueAdapter.postInitClear completed")
         }
     }

@@ -61,17 +61,6 @@ class BranchActivityLifecycleObserver implements Application.ActivityLifecycleCa
             branch.onIntentReady(activity);
         }
 
-        if (branch.getInitState() instanceof BranchSessionState.Uninitialized && !Branch.disableAutoSessionInitialization) {
-            if (Branch.getPluginName() == null) {
-                // this is the only place where we self-initialize in case user opens the app from 'recent apps tray'
-                // and the entry Activity is not the launcher Activity where user placed initSession themselves.
-                BranchLogger.v("initializing session on user's behalf (onActivityResumed called but SESSION_STATE = UNINITIALISED)");
-                Branch.sessionBuilder(activity).isAutoInitialization(true).init();
-            } else {
-                BranchLogger.v("onActivityResumed called and SESSION_STATE = UNINITIALISED, however this is a " + Branch.getPluginName() + " plugin, so we are NOT initializing session on user's behalf");
-            }
-        }
-
         // must be called after session initialization, which relies on checking whether activity
         // that is initializing the session is being launched from stack or anew
         activitiesOnStack_.add(activity.toString());

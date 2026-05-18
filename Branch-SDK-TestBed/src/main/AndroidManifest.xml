@@ -83,6 +83,16 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="https" />
+                <data android:host="qa.bnc.lt" />
+                <data android:pathPrefix="/Ojqd" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
                 <data android:host="bnctestbed.app.link" />
             </intent-filter>
             <intent-filter>
@@ -138,7 +148,7 @@
             android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
         <meta-data
             android:name="io.branch.sdk.BranchKey"
-            android:value="key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB" />
+            android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
         <meta-data
             android:name="io.branch.sdk.BranchKey.test"
             android:value="key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc" />
