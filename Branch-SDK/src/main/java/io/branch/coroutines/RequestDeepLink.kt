@@ -24,9 +24,21 @@ internal class RequestDeepLink(
         try {
             val deepLinkPost = JSONObject()
 
-            // Adding the URI to the payload as the server expects
             uri?.let {
-                deepLinkPost.put(Defines.Jsonkey.AndroidAppLinkURL.key, it.toString())
+                // Extract link_click_id from URI if present and set as link_identifier
+                val linkClickId = it.getQueryParameter("link_click_id")
+                if (linkClickId != null) {
+                    deepLinkPost.put(Defines.Jsonkey.LinkIdentifier.key, linkClickId)
+                }
+
+                // Set the appropriate URI field based on scheme
+                if (it.scheme == "https" || it.scheme == "http") {
+                    // App links use android_app_link_url
+                    deepLinkPost.put(Defines.Jsonkey.AndroidAppLinkURL.key, it.toString())
+                } else {
+                    // URI schemes (like branchtest://) use external_intent_uri
+                    deepLinkPost.put(Defines.Jsonkey.External_Intent_URI.key, it.toString())
+                }
             }
 
             val rdt = prefHelper_.randomizedDeviceToken
