@@ -32,7 +32,7 @@ internal class RequestDeepLink(
                 }
 
                 // Set the appropriate URI field based on scheme
-                if (it.scheme == "https" || it.scheme == "http") {
+                if (it.scheme?.equals("https", ignoreCase = true) == true || it.scheme?.equals("http", ignoreCase = true) == true) {
                     // App links use android_app_link_url
                     deepLinkPost.put(Defines.Jsonkey.AndroidAppLinkURL.key, it.toString())
                 } else {
