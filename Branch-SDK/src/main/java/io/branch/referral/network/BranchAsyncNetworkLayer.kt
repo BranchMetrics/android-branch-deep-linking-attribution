@@ -98,10 +98,6 @@ class BranchAsyncNetworkLayer(
             BranchLogger.w("BranchAsyncNetworkLayer: Failed to add common params: ${e.message}")
         }
 
-        BranchLogger.v("posting to $url")
-        BranchLogger.v("Post value = $payload")
-        // ------------------------------------------------
-
         BranchLogger.d("BranchAsyncNetworkLayer: Starting POST request to $url with payload size ${payload.toString().length} chars")
         return withContext(Dispatchers.IO) {
             val startTime = System.currentTimeMillis()

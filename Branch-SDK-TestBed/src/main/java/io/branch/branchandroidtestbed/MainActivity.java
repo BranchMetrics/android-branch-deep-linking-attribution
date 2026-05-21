@@ -74,22 +74,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
-        Branch.getInstance().requestDeepLinkData(this.getIntent().getData(), new Branch.BranchReferralInitListener() {
-            @Override
-            public void onInitFinished(JSONObject params, BranchError error) {
-                if (error == null) {
-                    if (params != null) {
-                        try {
-                            Log.d("BranchTestbed", "OnCreate: Deep Link Params: " + params.toString(2));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else {
-                    Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
-                }
-            }
-        });
+        handleDeepLink(this.getIntent().getData());
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
 
@@ -718,6 +703,25 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void handleDeepLink(Uri data) {
+        Branch.getInstance().requestDeepLinkData(data, new Branch.BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject params, BranchError error) {
+                if (error == null) {
+                    if (params != null) {
+                        try {
+                            Log.d("BranchSDK_Testbed", "Deep Link Params: " + params.toString(2));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    Log.e("BranchSDK_Testbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
+                }
+            }
+        });
+    }
+
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
@@ -762,7 +766,6 @@ public class MainActivity extends Activity {
 
 //        Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
 //        Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        BranchLogger.d("onStart initSession " + this.getIntent().toString());
 
         //Branch.getInstance().setIdentity("Identity1");
 
@@ -894,23 +897,7 @@ public class MainActivity extends Activity {
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         this.setIntent(intent);
-
-        Branch.getInstance().requestDeepLinkData(this.getIntent().getData(), new Branch.BranchReferralInitListener() {
-            @Override
-            public void onInitFinished(JSONObject params, BranchError error) {
-                if (error == null) {
-                    if (params != null) {
-                        try {
-                            Log.d("BranchTestbed", "OnNewIntent: Deep Link Params: " + params.toString(2));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else {
-                    Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
-                }
-            }
-        });
+        handleDeepLink(intent.getData());
     }
 
     @Override

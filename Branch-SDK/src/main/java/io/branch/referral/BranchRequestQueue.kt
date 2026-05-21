@@ -1,7 +1,6 @@
 package io.branch.referral
 
 import android.content.Context
-import io.branch.referral.BranchLogger.v
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -143,13 +142,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Check if the queue is ready to process requests
-     */
-    fun isReady(): Boolean {
-        return _queueState.value == QueueState.PROCESSING
-    }
-    
-    /**
      * Enqueue a new request - SYNCHRONOUS method for compatibility
      * Follows SRP - single responsibility for adding requests to queue
      */
@@ -233,16 +225,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
         
         BranchLogger.d("DEBUG: BranchRequestQueue.processNextRequest called for: ${request::class.simpleName}")
-        
-        // Enhanced debugging for init session requests
-        if (request is ServerRequestInitSession) {
-            val requestType = when (request) {
-                is ServerRequestRegisterInstall -> "RegisterInstall"
-                is ServerRequestRegisterOpen -> "RegisterOpen"
-                else -> "InitSession"
-            }
-            BranchLogger.d("DEBUG: Processing $requestType request - this is a session initialization request")
-        }
         
         val requestId = generateRequestId(request)
         
