@@ -74,6 +74,23 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
+        Branch.getInstance().requestDeepLinkData(this.getIntent().getData(), new Branch.BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject params, BranchError error) {
+                if (error == null) {
+                    if (params != null) {
+                        try {
+                            Log.d("BranchTestbed", "OnCreate: Deep Link Params: " + params.toString(2));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
+                }
+            }
+        });
+
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
 
         ((ToggleButton) findViewById(R.id.tracking_cntrl_btn)).setChecked(Branch.getInstance().isTrackingDisabled());
@@ -743,27 +760,12 @@ public class MainActivity extends Activity {
         super.onStart();
 
 
-        Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
-        Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
+//        Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
+//        Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         BranchLogger.d("onStart initSession " + this.getIntent().toString());
 
         //Branch.getInstance().setIdentity("Identity1");
-        Branch.getInstance().requestDeepLinkData(this.getIntent().getData(), new Branch.BranchReferralInitListener() {
-            @Override
-            public void onInitFinished(JSONObject params, BranchError error) {
-                if (error == null) {
-                    if (params != null) {
-                        try {
-                            Log.d("BranchTestbed", "Deep Link Params: " + params.toString(2));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else {
-                    Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
-                }
-            }
-        });
+
         //initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
@@ -892,16 +894,23 @@ public class MainActivity extends Activity {
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         this.setIntent(intent);
-        Branch.sessionBuilder(this).withCallback(new BranchReferralInitListener() {
+
+        Branch.getInstance().requestDeepLinkData(this.getIntent().getData(), new Branch.BranchReferralInitListener() {
             @Override
-            public void onInitFinished(JSONObject referringParams, BranchError error) {
-                if (error != null) {
-                    BranchLogger.d(error.getMessage());
-                } else if (referringParams != null) {
-                    BranchLogger.d(referringParams.toString());
+            public void onInitFinished(JSONObject params, BranchError error) {
+                if (error == null) {
+                    if (params != null) {
+                        try {
+                            Log.d("BranchTestbed", "OnNewIntent: Deep Link Params: " + params.toString(2));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    Log.e("BranchTestbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
                 }
             }
-        }).reInit();
+        });
     }
 
     @Override

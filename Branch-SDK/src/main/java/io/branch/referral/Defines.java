@@ -272,7 +272,10 @@ public class Defines {
         GetLATD("v1/cpid/latd"),
         QRCode("v1/qr-code"),
         Logout("local/logout"),
-        SetIdentity("local/setIdentity");
+        SetIdentity("local/setIdentity"),
+        Deeplink("v3/deeplink"),
+        EventsOpen("v3/events/open");
+
 
         private final String key;
         

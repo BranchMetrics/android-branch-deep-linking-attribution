@@ -17,7 +17,7 @@ internal class RequestDeepLink(
     uri: Uri?,
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean
-) : ServerRequestInitSession(context, Defines.RequestPath.RegisterOpen, isAutoInitialization) {
+) : ServerRequestInitSession(context, Defines.RequestPath.Deeplink, isAutoInitialization) {
 
     init {
         callback_ = callback
@@ -61,10 +61,6 @@ internal class RequestDeepLink(
             BranchLogger.w("Caught JSONException ${ex.message}")
             constructError_ = true
         }
-    }
-
-    override fun getRequestUrl(): String {
-        return "https://api.stage.branch.io/v3/deeplink"
     }
 
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
