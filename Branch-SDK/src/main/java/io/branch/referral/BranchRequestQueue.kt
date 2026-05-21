@@ -142,13 +142,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Check if the queue is ready to process requests
-     */
-    fun isReady(): Boolean {
-        return _queueState.value == QueueState.PROCESSING
-    }
-    
-    /**
      * Enqueue a new request - SYNCHRONOUS method for compatibility
      * Follows SRP - single responsibility for adding requests to queue
      */
@@ -232,16 +225,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
         
         BranchLogger.d("DEBUG: BranchRequestQueue.processNextRequest called for: ${request::class.simpleName}")
-        
-        // Enhanced debugging for init session requests
-        if (request is ServerRequestInitSession) {
-            val requestType = when (request) {
-                is ServerRequestRegisterInstall -> "RegisterInstall"
-                is ServerRequestRegisterOpen -> "RegisterOpen"
-                else -> "InitSession"
-            }
-            BranchLogger.d("DEBUG: Processing $requestType request - this is a session initialization request")
-        }
         
         val requestId = generateRequestId(request)
         
@@ -964,23 +947,32 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Check if init data can be cleared
-     */
-    fun canClearInitData(): Boolean {
-        val result = synchronized(queueList) {
-            queueList.none { it is ServerRequestInitSession }
-        }
-        BranchLogger.d("DEBUG: BranchRequestQueue.canClearInitData called - result: $result")
-        return result
-    }
-    
-    /**
      * Clear init data after initialization
      */
-    suspend fun postInitClear() {
-        BranchLogger.d("DEBUG: BranchRequestQueue.postInitClear called")
+    suspend fun clearDeepLinkStorage() {
+        BranchLogger.d("DEBUG: BranchRequestQueue.clearDeepLinkStorage called")
         synchronized(queueList) {
-            queueList.removeAll { it is ServerRequestInitSession }
+            val prefHelper_ = Branch.getInstance().prefHelper
+
+            if (prefHelper_ != null) {
+                prefHelper_.setLinkClickIdentifier(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setGoogleSearchInstallIdentifier(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setAppStoreReferrer(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setExternalIntentUri(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setAppLink(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setPushIdentifier(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setInstallReferrerParams(PrefHelper.NO_STRING_VALUE)
+                prefHelper_.setIsFullAppConversion(false)
+                prefHelper_.setInitialReferrer(PrefHelper.NO_STRING_VALUE)
+
+                if (prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME) == 0L) {
+                    prefHelper_.setLong(
+                        PrefHelper.KEY_PREVIOUS_UPDATE_TIME,
+                        prefHelper_.getLong(PrefHelper.KEY_LAST_KNOWN_UPDATE_TIME)
+                    )
+                }
+            }
         }
         BranchLogger.d("DEBUG: BranchRequestQueue.postInitClear completed")
     }

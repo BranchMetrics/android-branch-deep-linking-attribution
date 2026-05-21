@@ -1,18 +1,18 @@
 package io.branch.referral.modernization.core
 
 import android.content.Context
-import androidx.annotation.NonNull
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
+import io.branch.referral.Branch
+import io.branch.referral.RequestOpen
+import io.branch.referral.Defines
 
 /**
  * Modern Branch SDK core implementation using reactive architecture.
- * 
- * This new architecture replaces the legacy Branch class with a clean,
+ * * This new architecture replaces the legacy Branch class with a clean,
  * testable, and maintainable design based on SOLID principles.
- * 
- * Key improvements:
+ * * Key improvements:
  * - Reactive patterns with StateFlow for state management
  * - Coroutines for asynchronous operations
  * - Dependency injection for all components
@@ -20,7 +20,7 @@ import org.json.JSONObject
  * - Enhanced error handling and logging
  */
 interface ModernBranchCore {
-    
+
     // Core Managers
     val sessionManager: SessionManager
     val identityManager: IdentityManager
@@ -28,17 +28,17 @@ interface ModernBranchCore {
     val eventManager: EventManager
     val dataManager: DataManager
     val configurationManager: ConfigurationManager
-    
+
     // State Management
     val isInitialized: StateFlow<Boolean>
     val currentSession: StateFlow<BranchSession?>
     val currentUser: StateFlow<BranchUser?>
-    
+
     /**
      * Initialize the modern Branch core with application context.
      */
     suspend fun initialize(context: Context): Result<Unit>
-    
+
     /**
      * Check if the core is ready for operations.
      */
@@ -51,9 +51,9 @@ interface ModernBranchCore {
 class ModernBranchCoreImpl private constructor(
     dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate
 ) : ModernBranchCore {
-    
+
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
-    
+
     // Manager implementations
     override val sessionManager: SessionManager = SessionManagerImpl(scope)
     override val identityManager: IdentityManager = IdentityManagerImpl(scope)
@@ -61,31 +61,31 @@ class ModernBranchCoreImpl private constructor(
     override val eventManager: EventManager = EventManagerImpl(scope)
     override val dataManager: DataManager = DataManagerImpl(scope)
     override val configurationManager: ConfigurationManager = ConfigurationManagerImpl(scope)
-    
+
     // State flows
     private val _isInitialized = kotlinx.coroutines.flow.MutableStateFlow(false)
     override val isInitialized: StateFlow<Boolean> = _isInitialized
-    
+
     private val _currentSession = kotlinx.coroutines.flow.MutableStateFlow<BranchSession?>(null)
     override val currentSession: StateFlow<BranchSession?> = _currentSession
-    
+
     private val _currentUser = kotlinx.coroutines.flow.MutableStateFlow<BranchUser?>(null)
     override val currentUser: StateFlow<BranchUser?> = _currentUser
-    
+
     companion object {
         @Volatile
         private var instance: ModernBranchCore? = null
-        
+
         fun getInstance(): ModernBranchCore {
             return instance ?: synchronized(this) {
                 instance ?: ModernBranchCoreImpl().also { instance = it }
             }
         }
-        
+
         // For testing: allow custom dispatcher
         fun newTestInstance(dispatcher: CoroutineDispatcher): ModernBranchCore = ModernBranchCoreImpl(dispatcher)
     }
-    
+
     override suspend fun initialize(context: Context): Result<Unit> {
         return try {
             // Initialize all managers in sequence
@@ -95,15 +95,15 @@ class ModernBranchCoreImpl private constructor(
             linkManager.initialize(context)
             eventManager.initialize(context)
             dataManager.initialize(context)
-            
+
             _isInitialized.value = true
             Result.success(Unit)
-            
+
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     override fun isInitialized(): Boolean = _isInitialized.value
 }
 
@@ -113,7 +113,7 @@ class ModernBranchCoreImpl private constructor(
 interface SessionManager {
     val currentSession: StateFlow<BranchSession?>
     val sessionState: StateFlow<SessionState>
-    
+
     suspend fun initialize(context: Context)
     suspend fun initSession(activity: android.app.Activity): Result<BranchSession>
     suspend fun resetSession(): Result<Unit>
@@ -126,7 +126,7 @@ interface SessionManager {
 interface IdentityManager {
     val currentUser: StateFlow<BranchUser?>
     val identityState: StateFlow<IdentityState>
-    
+
     suspend fun initialize(context: Context)
     suspend fun setIdentity(userId: String): Result<BranchUser>
     suspend fun logout(): Result<Unit>
@@ -243,86 +243,106 @@ enum class IdentityState {
     ERROR
 }
 
-// Implementation Classes (Simplified for brevity)
+// Implementation Classes
 
 private class SessionManagerImpl(private val scope: CoroutineScope) : SessionManager {
     private val _currentSession = kotlinx.coroutines.flow.MutableStateFlow<BranchSession?>(null)
     override val currentSession: StateFlow<BranchSession?> = _currentSession
-    
+
     private val _sessionState = kotlinx.coroutines.flow.MutableStateFlow(SessionState.UNINITIALIZED)
     override val sessionState: StateFlow<SessionState> = _sessionState
-    
+
     override suspend fun initialize(context: Context) {
         _sessionState.value = SessionState.INITIALIZING
         // Implementation details...
         _sessionState.value = SessionState.ACTIVE
     }
-    
+
     override suspend fun initSession(activity: android.app.Activity): Result<BranchSession> {
         return try {
-            val session = BranchSession(
-                sessionId = generateSessionId(),
-                userId = null,
-                referringParams = null,
-                startTime = System.currentTimeMillis(),
-                isNew = true
+            _sessionState.value = SessionState.INITIALIZING
+
+            val openRequest = RequestOpen(
+                activity.applicationContext,
+                null,
+                false,
+                null
             )
+
+            // FIX: Use the queue instead of calling executeAsync
+            val branch = Branch.getInstance()
+            branch?.requestQueue_?.handleNewRequest(openRequest)
+
+            val responseJson = branch?.latestReferringParams ?: JSONObject()
+
+            // Map the JSON response to your new BranchSession data class
+            val session = BranchSession(
+                sessionId = responseJson.optString(Defines.Jsonkey.SessionID.key, generateSessionId()),
+                userId = responseJson.optString(Defines.Jsonkey.Identity.key),
+                referringParams = responseJson,
+                startTime = System.currentTimeMillis(),
+                isNew = false
+            )
+
             _currentSession.value = session
+            _sessionState.value = SessionState.ACTIVE
             Result.success(session)
+
         } catch (e: Exception) {
+            _sessionState.value = SessionState.ERROR
             Result.failure(e)
         }
     }
-    
+
     override suspend fun resetSession(): Result<Unit> {
         _currentSession.value = null
         return Result.success(Unit)
     }
-    
+
     override fun isSessionActive(): Boolean = _currentSession.value != null
-    
+
     private fun generateSessionId(): String = "session_${System.currentTimeMillis()}"
 }
 
 private class IdentityManagerImpl(private val scope: CoroutineScope) : IdentityManager {
     private val _currentUser = kotlinx.coroutines.flow.MutableStateFlow<BranchUser?>(null)
     override val currentUser: StateFlow<BranchUser?> = _currentUser
-    
+
     private val _identityState = kotlinx.coroutines.flow.MutableStateFlow(IdentityState.ANONYMOUS)
     override val identityState: StateFlow<IdentityState> = _identityState
-    
+
     override suspend fun initialize(context: Context) {
         // Implementation details...
     }
-    
+
     override suspend fun setIdentity(userId: String): Result<BranchUser> {
         return try {
             _identityState.value = IdentityState.IDENTIFYING
-            
+
             val user = BranchUser(
                 userId = userId,
                 createdAt = System.currentTimeMillis(),
                 lastSeen = System.currentTimeMillis(),
                 attributes = emptyMap()
             )
-            
+
             _currentUser.value = user
             _identityState.value = IdentityState.IDENTIFIED
-            
+
             Result.success(user)
         } catch (e: Exception) {
             _identityState.value = IdentityState.ERROR
             Result.failure(e)
         }
     }
-    
+
     override suspend fun logout(): Result<Unit> {
         _identityState.value = IdentityState.LOGGING_OUT
         _currentUser.value = null
         _identityState.value = IdentityState.ANONYMOUS
         return Result.success(Unit)
     }
-    
+
     override fun getCurrentUserId(): String? = _currentUser.value?.userId
 }
 
@@ -330,7 +350,7 @@ private class LinkManagerImpl(private val scope: CoroutineScope) : LinkManager {
     override suspend fun initialize(context: Context) {
         // Implementation details...
     }
-    
+
     override suspend fun createShortLink(linkData: LinkData): Result<String> {
         return try {
             // Implementation details...
@@ -339,7 +359,7 @@ private class LinkManagerImpl(private val scope: CoroutineScope) : LinkManager {
             Result.failure(e)
         }
     }
-    
+
     override suspend fun createQRCode(linkData: LinkData): Result<ByteArray> {
         return try {
             // Implementation details...
@@ -348,7 +368,7 @@ private class LinkManagerImpl(private val scope: CoroutineScope) : LinkManager {
             Result.failure(e)
         }
     }
-    
+
     override fun getLastGeneratedLink(): String? = null
 }
 
@@ -356,7 +376,7 @@ private class EventManagerImpl(private val scope: CoroutineScope) : EventManager
     override suspend fun initialize(context: Context) {
         // Implementation details...
     }
-    
+
     override suspend fun logEvent(event: BranchEventData): Result<Unit> {
         return try {
             // Implementation details...
@@ -365,11 +385,11 @@ private class EventManagerImpl(private val scope: CoroutineScope) : EventManager
             Result.failure(e)
         }
     }
-    
+
     override suspend fun logCustomEvent(eventName: String, properties: Map<String, Any>): Result<Unit> {
         return logEvent(BranchEventData(eventName, properties))
     }
-    
+
     override fun getEventHistory(): List<BranchEventData> = emptyList()
 }
 
@@ -377,7 +397,7 @@ private class DataManagerImpl(private val scope: CoroutineScope) : DataManager {
     override suspend fun initialize(context: Context) {
         // Implementation details...
     }
-    
+
     override suspend fun getFirstReferringParamsAsync(): Result<JSONObject> {
         return try {
             Result.success(JSONObject())
@@ -385,7 +405,7 @@ private class DataManagerImpl(private val scope: CoroutineScope) : DataManager {
             Result.failure(e)
         }
     }
-    
+
     override suspend fun getLatestReferringParamsAsync(): Result<JSONObject> {
         return try {
             Result.success(JSONObject())
@@ -393,30 +413,30 @@ private class DataManagerImpl(private val scope: CoroutineScope) : DataManager {
             Result.failure(e)
         }
     }
-    
+
     override fun getInstallReferringParams(): JSONObject? = null
     override fun getSessionReferringParams(): JSONObject? = null
 }
 
 private class ConfigurationManagerImpl(private val scope: CoroutineScope) : ConfigurationManager {
     private var testModeEnabled = false
-    
+
     override suspend fun initialize(context: Context) {
         // Implementation details...
     }
-    
+
     override fun enableTestMode(): Result<Unit> {
         testModeEnabled = true
         return Result.success(Unit)
     }
-    
+
     override fun setDebugMode(enabled: Boolean): Result<Unit> {
         return Result.success(Unit)
     }
-    
+
     override fun setTimeout(timeoutMs: Long): Result<Unit> {
         return Result.success(Unit)
     }
-    
+
     override fun isTestModeEnabled(): Boolean = testModeEnabled
-} 
+}

@@ -67,8 +67,6 @@ class BranchRequestQueueTest : BranchTest() {
         adapter.printQueue()
         adapter.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK)
         adapter.postInitClear()
-        
-        Assert.assertTrue(adapter.canClearInitData())
     }
 
     @Test

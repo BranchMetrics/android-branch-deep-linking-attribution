@@ -641,6 +641,7 @@ public class PrefHelper {
      * @param uri A {@link String} value containing intent URI to set
      */
     public void setExternalIntentUri(String uri) {
+        BranchLogger.v("setExternalIntentUri: " + uri);
         setString(KEY_EXTERNAL_INTENT_URI, uri);
     }
     
@@ -650,7 +651,9 @@ public class PrefHelper {
      * @return A {@link String} value containing external URI set.
      */
     public String getExternalIntentUri() {
-        return getString(KEY_EXTERNAL_INTENT_URI);
+        String result = getString(KEY_EXTERNAL_INTENT_URI);
+        BranchLogger.v("getExternalIntentUri " + result);
+        return result;
     }
     
     
@@ -860,8 +863,9 @@ public class PrefHelper {
      *
      * @param appLinkUrl The App link which started this application
      */
-    public void setAppLink(String appLinkUrl) {
-        setString(KEY_APP_LINK, appLinkUrl);
+    public void setAppLink(String setAppLink) {
+        BranchLogger.v("setAppLink: " + setAppLink);
+        setString(KEY_APP_LINK, setAppLink);
     }
     
     /**
@@ -870,7 +874,9 @@ public class PrefHelper {
      * @return A {@link String} value of App link url
      */
     public String getAppLink() {
-        return getString(KEY_APP_LINK);
+        String result = getString(KEY_APP_LINK);
+        BranchLogger.v("getAppLink: " + result);
+        return result;
     }
     
     /**
