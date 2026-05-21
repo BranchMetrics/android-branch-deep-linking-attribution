@@ -22,7 +22,7 @@ internal class BranchOpenObserver(private val branchInstance: Branch) : Applicat
 
     override fun onActivityStopped(activity: Activity) {
         activityCount--
-        BranchLogger.v("BranchOpenObserver onActivityStarted: $activity activityCount decremented to: $activityCount")
+        BranchLogger.v("BranchOpenObserver onActivityStopped: $activity activityCount decremented to: $activityCount")
 
         if (activityCount <= 0) {
             activityCount = 0
