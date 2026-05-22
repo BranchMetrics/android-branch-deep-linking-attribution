@@ -30,9 +30,6 @@ POST_VALUE_PREFIX = "Post value = "
 # nesting (Android emits device fields top-level on v1, nested under
 # user_data on /v2/event/*; only /v1/* is in L1 scope today).
 REQUIRED_COMMON = [
-    # TEMPORARY: synthetic break to demonstrate the gate catches missing
-    # required fields against a real CI capture. Removed in the next commit.
-    "INTENTIONAL_CI_RED_TEST_remove_after_verification",
     "branch_key",
     "sdk",
     "branch_sdk_request_timestamp",
