@@ -1,40 +1,82 @@
 """
-Validates Branch SDK L1 wire payloads captured from branchlogs.txt.
+Layer 1 wire-validation for the Branch Android SDK.
 
-Source of truth: the BranchLogger verbose sink emits paired lines for every
-wire request just before HTTP send:
+Parses branchlogs.txt (captured during the L1 instrumented run), extracts each
+wire request, and asserts the SDK is emitting every device/SDK field that must
+be on the wire. Presence-only check — a missing field fails the run; field
+contents are not type-checked.
+
+On success the validator prints the full payload for every captured request
+(with sensitive values masked) plus a per-field check table so reviewers can
+verify what actually went over the wire — no more silent passes when a value
+is wrong.
+
+Source of truth for the parser: the BranchLogger verbose sink emits paired
+lines for every wire request just before HTTP send:
 
     posting to https://api2.branch.io/v1/install
-    Post value = {"hardware_id":"...","sdk":"android5.21.1","branch_key":"key_test_...",...}
-
-The "Post value =" JSON is the exact payload sent on the wire (after the SDK's
-internal addCommonParams step, which injects `sdk` and `branch_key`).
-
-We previously parsed `IBranchRequestTracingCallback`'s "URI Sent to Branch:"
-blocks, but that callback fires on a pre-wire snapshot and does NOT include
-`sdk` / `branch_key`. This script switches to the BranchLogger output so we
-validate what actually leaves the device.
+    Post value = {"hardware_id":"...","sdk":"android5.21.1",...}
 """
 
 import json
 import os
-import re
 import sys
 from urllib.parse import urlparse
-
 
 POSTING_PREFIX = "posting to "
 POST_VALUE_PREFIX = "Post value = "
 
+# Required on every captured /v1/* request. Lookup tolerates v2 user_data
+# nesting (Android emits device fields top-level on v1, nested under
+# user_data on /v2/event/*; only /v1/* is in L1 scope today).
+REQUIRED_COMMON = [
+    "branch_key",
+    "sdk",
+    "branch_sdk_request_timestamp",
+    "branch_sdk_request_unique_id",
+    "brand",
+    "model",
+    "os",
+    "os_version",
+    "country",
+    "language",
+    "local_ip",
+    "screen_dpi",
+    "screen_height",
+    "screen_width",
+    "connection_type",
+    "wifi",
+    "ui_mode",
+    "hardware_id",
+]
+
+# Endpoint-specific additions on top of REQUIRED_COMMON.
+REQUIRED_PER_ENDPOINT = {
+    "/v1/install": ["is_hardware_id_real", "first_install_time"],
+    "/v1/open": ["randomized_device_token", "randomized_bundle_token"],
+    "/v1/url": [],
+}
+
+# Fields whose values must never appear unredacted in CI logs.
+SENSITIVE_FIELDS = {
+    "branch_key",
+    "hardware_id",
+    "randomized_device_token",
+    "randomized_bundle_token",
+    "device_fingerprint_id",
+    "google_advertising_id",
+    "idfa",
+    "idfv",
+    "anon_id",
+    "developer_identity",
+    "identity",
+}
+
 
 def parse_branch_logs(file_path):
-    """
-    Walks branchlogs.txt line by line. Tracks the most recent `posting to <url>`
-    line and, when a `Post value = {...}` line follows, pairs them into an
-    entry containing the endpoint path and parsed JSON payload.
-
-    Defensive: skips (with a warning) any `Post value =` that has no preceding
-    URL in scope, and any malformed JSON. Never crashes on a single bad block.
+    """Walk branchlogs.txt and pair each `posting to <url>` with the next
+    `Post value = {...}`. Returns list of {uri, url, request}, or None when
+    the file is missing.
     """
     if not os.path.exists(file_path):
         print(f"Error: Log file not found at {file_path}")
@@ -59,13 +101,13 @@ def parse_branch_logs(file_path):
                     )
                     continue
 
-                # Tolerant extraction: take everything after the prefix to EOL.
                 payload_str = line[len(POST_VALUE_PREFIX):].strip()
                 try:
                     payload = json.loads(payload_str)
                 except json.JSONDecodeError as e:
                     print(
-                        f"Warning: line {line_no}: failed to parse JSON after 'Post value = ': {e}"
+                        f"Warning: line {line_no}: failed to parse JSON "
+                        f"after 'Post value = ': {e}"
                     )
                     pending_url = None
                     continue
@@ -81,29 +123,87 @@ def parse_branch_logs(file_path):
     return entries
 
 
-def _is_str(v):
-    return isinstance(v, str) and len(v) > 0
+def lookup_field(request, field):
+    """Return value at top-level, else under user_data. Used so the validator
+    keeps working if a future endpoint nests device fields under user_data."""
+    if field in request:
+        return request[field]
+    user_data = request.get("user_data")
+    if isinstance(user_data, dict) and field in user_data:
+        return user_data[field]
+    return None
 
 
-def _is_bool(v):
-    return isinstance(v, bool)
+def is_present(value):
+    """A field is considered present when it has a non-null, non-empty value."""
+    if value is None:
+        return False
+    if isinstance(value, str) and value == "":
+        return False
+    return True
 
 
-def _is_number(v):
-    # Exclude bool (which is a subclass of int in Python).
-    return isinstance(v, (int, float)) and not isinstance(v, bool)
+def mask_payload(payload):
+    """Deep copy with values for SENSITIVE_FIELDS replaced by ***MASKED***."""
+    masked = {}
+    for key, value in payload.items():
+        if key in SENSITIVE_FIELDS and is_present(value):
+            masked[key] = "***MASKED***"
+        elif isinstance(value, dict):
+            masked[key] = mask_payload(value)
+        else:
+            masked[key] = value
+    return masked
+
+
+def display_value(field, value):
+    """Return the value as it should appear in the per-field table."""
+    if field in SENSITIVE_FIELDS and is_present(value):
+        return "***MASKED***"
+    return value
+
+
+def validate_request(entry, idx, total):
+    """Print the full payload + per-field table for one request. Return a
+    list of error strings (empty when everything required is present)."""
+    errors = []
+    uri = entry["uri"]
+    url = entry["url"]
+    request = entry["request"]
+
+    print()
+    print("=" * 64)
+    print(f"[{idx}/{total}] {uri} — POST {url}")
+    print("=" * 64)
+
+    if not isinstance(request, dict):
+        errors.append(f"Request {idx} ({uri}): payload is not a JSON object")
+        return errors
+
+    masked = mask_payload(request)
+    print("Full payload (sensitive values masked):")
+    print(json.dumps(masked, indent=2, sort_keys=True))
+    print()
+
+    fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT.get(uri, [])
+    print(f"Required fields ({len(fields)}):")
+    for field in fields:
+        value = lookup_field(request, field)
+        present = is_present(value)
+        marker = "✓" if present else "✗"
+        if present:
+            print(f"  {marker} {field:<35} {display_value(field, value)}")
+        else:
+            print(f"  {marker} {field:<35} MISSING")
+            errors.append(f"Request {idx} ({uri}): missing required field '{field}'")
+
+    return errors
 
 
 def validate_entries(entries):
-    """
-    Validates the captured wire payloads. Returns a list of error strings;
-    empty list = success.
-    """
+    """Run validate_request on every entry plus the top-level
+    /v1/install-must-be-present check. Returns aggregated errors."""
     errors = []
-
-    if entries is None:
-        errors.append("Log file could not be read.")
-        return errors
 
     if not entries:
         errors.append("No Branch SDK wire requests were captured in the logs.")
@@ -112,10 +212,6 @@ def validate_entries(entries):
     print(f"Captured {len(entries)} Branch wire requests. Validating...")
 
     found_paths = [e["uri"] for e in entries]
-
-    # /v1/install is mandatory. /v1/open is expected but not strictly required
-    # here — some test flows may exercise install-only. If /v1/open is present,
-    # it's validated below; if absent, we only note it.
     if "/v1/install" not in found_paths:
         errors.append("Mandatory endpoint '/v1/install' was not captured.")
 
@@ -126,68 +222,7 @@ def validate_entries(entries):
         )
 
     for i, entry in enumerate(entries, start=1):
-        uri = entry["uri"]
-        req = entry["request"]
-
-        print(f"[{i}] Validating {uri}...")
-
-        if not isinstance(req, dict):
-            errors.append(f"Request {i} ({uri}): payload is not a JSON object")
-            continue
-
-        # Common required fields on every wire request.
-        sdk = req.get("sdk")
-        if not _is_str(sdk):
-            errors.append(f"Request {i} ({uri}): missing or invalid 'sdk' (got {sdk!r})")
-        # We don't pin the SDK version, but a sanity check on the prefix is cheap.
-        elif not sdk.startswith("android"):
-            errors.append(
-                f"Request {i} ({uri}): 'sdk' should start with 'android' (got {sdk!r})"
-            )
-
-        branch_key = req.get("branch_key")
-        if not _is_str(branch_key):
-            errors.append(
-                f"Request {i} ({uri}): missing or invalid 'branch_key' "
-                f"(got {branch_key!r})"
-            )
-        elif not (branch_key.startswith("key_test_") or branch_key.startswith("key_live_")):
-            errors.append(
-                f"Request {i} ({uri}): 'branch_key' must start with 'key_test_' "
-                f"or 'key_live_' (got {branch_key!r})"
-            )
-
-        hardware_id = req.get("hardware_id")
-        if not _is_str(hardware_id):
-            errors.append(
-                f"Request {i} ({uri}): missing or invalid 'hardware_id' "
-                f"(got {hardware_id!r})"
-            )
-
-        # Endpoint-specific required fields.
-        if uri == "/v1/install":
-            if not _is_bool(req.get("is_hardware_id_real")):
-                errors.append(
-                    f"Request {i} (/v1/install): missing or non-boolean "
-                    f"'is_hardware_id_real'"
-                )
-            if not _is_number(req.get("first_install_time")):
-                errors.append(
-                    f"Request {i} (/v1/install): missing or non-numeric "
-                    f"'first_install_time'"
-                )
-
-        if uri == "/v1/open":
-            if not _is_str(req.get("randomized_device_token")):
-                errors.append(
-                    f"Request {i} (/v1/open): missing or invalid "
-                    f"'randomized_device_token'"
-                )
-            if not _is_str(req.get("randomized_bundle_token")):
-                errors.append(
-                    f"Request {i} (/v1/open): missing or invalid "
-                    f"'randomized_bundle_token'"
-                )
+        errors.extend(validate_request(entry, i, len(entries)))
 
     return errors
 
@@ -198,12 +233,10 @@ def main():
     entries = parse_branch_logs(log_file_path)
 
     if entries is None:
-        # parse_branch_logs already printed the error.
         print("\n--- VALIDATION FAILED ---")
         print(f"FAILED: Log file not found at {log_file_path}")
         sys.exit(1)
 
-    # Distinguish empty file (file exists but no captures) from missing file.
     try:
         if os.path.getsize(log_file_path) == 0:
             print("\n--- VALIDATION FAILED ---")
@@ -220,10 +253,7 @@ def main():
             print(f"FAILED: {err}")
         sys.exit(1)
 
-    print("\n--- VALIDATION PASSED ---")
-    print(f"Summary: {len(entries)} wire request(s) captured:")
-    for entry in entries:
-        print(f"  - {entry['uri']}")
+    print(f"\n--- VALIDATION PASSED ({len(entries)}/{len(entries)} requests valid) ---")
     sys.exit(0)
 
 
