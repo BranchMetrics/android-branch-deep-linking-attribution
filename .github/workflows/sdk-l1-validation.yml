@@ -67,8 +67,37 @@ jobs:
         with:
           python-version: "3.x"
 
+      # Self-test the validator first. A regression in validate_l1_logs.py
+      # itself (wrong required field, bad masking, broken parser) would
+      # otherwise surface as a false PASS or a confusing failure on the
+      # real branchlogs.txt step. Unit tests run from the repo root so
+      # the `scripts.test_validate_l1_logs` module path resolves cleanly.
+      - name: Run L1 Validator Unit Tests
+        run: python -m unittest scripts.test_validate_l1_logs -v
+
       - name: Run L1 Validation Script
         run: python scripts/validate_l1_logs.py branchlogs.txt
+
+      # Sanitize the raw log before any artifact upload so branch_key,
+      # hardware_id, randomized tokens, and advertising IDs do not appear
+      # in a public CI artifact even on failure.
+      - name: Sanitize branchlogs.txt before artifact upload
+        if: failure()
+        run: |
+          if [ -f branchlogs.txt ]; then
+            sed -E -i.bak \
+              -e 's/"branch_key"[[:space:]]*:[[:space:]]*"[^"]*"/"branch_key": "***"/g' \
+              -e 's/"hardware_id"[[:space:]]*:[[:space:]]*"[^"]*"/"hardware_id": "***"/g' \
+              -e 's/"randomized_device_token"[[:space:]]*:[[:space:]]*"[^"]*"/"randomized_device_token": "***"/g' \
+              -e 's/"randomized_bundle_token"[[:space:]]*:[[:space:]]*"[^"]*"/"randomized_bundle_token": "***"/g' \
+              -e 's/"device_fingerprint_id"[[:space:]]*:[[:space:]]*"[^"]*"/"device_fingerprint_id": "***"/g' \
+              -e 's/"google_advertising_id"[[:space:]]*:[[:space:]]*"[^"]*"/"google_advertising_id": "***"/g' \
+              -e 's/"anon_id"[[:space:]]*:[[:space:]]*"[^"]*"/"anon_id": "***"/g' \
+              -e 's/"identity"[[:space:]]*:[[:space:]]*"[^"]*"/"identity": "***"/g' \
+              -e 's/"developer_identity"[[:space:]]*:[[:space:]]*"[^"]*"/"developer_identity": "***"/g' \
+              branchlogs.txt
+            rm -f branchlogs.txt.bak
+          fi
 
       - name: Upload Logs on Failure
         if: failure()
