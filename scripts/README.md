@@ -32,9 +32,17 @@ backend ingestion gate.
 
 The required field list lives at the top of `validate_l1_logs.py`:
 
-- `REQUIRED_COMMON` — fields the SDK must put on every `/v1/*` request.
-- `REQUIRED_PER_ENDPOINT` — additional fields per endpoint (e.g.
-  `is_hardware_id_real` and `first_install_time` on `/v1/install`).
+- `REQUIRED_COMMON` — fields the SDK puts on every `/v1/*` request.
+- `REQUIRED_PER_ENDPOINT` — additional fields per endpoint. Today this
+  covers `is_hardware_id_real` and `first_install_time` on
+  `/v1/install`; `randomized_device_token` and `randomized_bundle_token`
+  on `/v1/open`; and `connection_type` on both `/v1/install` and
+  `/v1/open` because `DeviceInfo.java:115` only emits it on init/event
+  requests (so `/v1/url` legitimately lacks it).
+
+Required-field checks are scoped to `/v1/*` only. Captured non-v1
+endpoints (e.g. `/v2/event/*`) get their payload printed for visibility
+but do not fail the run — the L1 contract covers v1 only.
 
 Lookups tolerate `user_data` nesting so a future move from top-level to
 nested placement does not break the gate.
