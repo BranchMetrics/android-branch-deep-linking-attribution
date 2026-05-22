@@ -106,6 +106,21 @@ class InstallRequiredTests(unittest.TestCase):
         )
 
 
+class NonV1EndpointScopeTests(unittest.TestCase):
+    """L1's contract covers /v1/* only. /v2/event/* uses a different schema
+    (device fields under user_data, no top-level hardware_id) and must not
+    fail the run when captured alongside a valid /v1/install."""
+
+    def test_v2_event_does_not_trigger_field_failures(self):
+        errors, output = _run_validation("v2_event_out_of_scope.txt")
+        self.assertEqual(
+            errors, [],
+            f"Mixed v1+v2 capture should not produce errors; got: {errors}",
+        )
+        self.assertIn("Non-v1 endpoint", output)
+        self.assertIn("required-field checks skipped per L1 scope", output)
+
+
 class MaskingHelperTests(unittest.TestCase):
     def test_mask_payload_replaces_branch_key(self):
         payload = {"branch_key": "key_live_abc", "brand": "Google"}

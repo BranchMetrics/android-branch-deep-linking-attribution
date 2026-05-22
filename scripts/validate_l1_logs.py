@@ -165,7 +165,13 @@ def display_value(field, value):
 
 def validate_request(entry, idx, total):
     """Print the full payload + per-field table for one request. Return a
-    list of error strings (empty when everything required is present)."""
+    list of error strings (empty when everything required is present).
+
+    Required-field checks are scoped to `/v1/*` endpoints — that's the L1
+    contract. Non-v1 endpoints (e.g. `/v2/event/*`) use a different schema
+    (device fields under `user_data`, different identity fields) and are
+    out of L1's enforcement scope; the validator still dumps their payload
+    for visibility but does not fail the run."""
     errors = []
     uri = entry["uri"]
     url = entry["url"]
@@ -184,6 +190,10 @@ def validate_request(entry, idx, total):
     print("Full payload (sensitive values masked):")
     print(json.dumps(masked, indent=2, sort_keys=True))
     print()
+
+    if not uri.startswith("/v1/"):
+        print(f"(Non-v1 endpoint; required-field checks skipped per L1 scope)")
+        return errors
 
     fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT.get(uri, [])
     print(f"Required fields ({len(fields)}):")
