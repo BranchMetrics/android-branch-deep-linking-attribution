@@ -44,16 +44,21 @@ REQUIRED_COMMON = [
     "screen_dpi",
     "screen_height",
     "screen_width",
-    "connection_type",
     "wifi",
     "ui_mode",
     "hardware_id",
 ]
 
 # Endpoint-specific additions on top of REQUIRED_COMMON.
+#
+# connection_type lives in /v1/install + /v1/open only — Android's
+# `DeviceInfo.java:115` adds it inside `if (serverRequest.isInitializationOrEventRequest())`
+# so the field is intentionally absent from `/v1/url` (a CreateUrl request,
+# not an init/event one). Validating it on /v1/url would surface as a false
+# positive against a real CI capture.
 REQUIRED_PER_ENDPOINT = {
-    "/v1/install": ["is_hardware_id_real", "first_install_time"],
-    "/v1/open": ["randomized_device_token", "randomized_bundle_token"],
+    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time"],
+    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token"],
     "/v1/url": [],
 }
 
