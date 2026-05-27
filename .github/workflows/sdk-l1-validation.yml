@@ -5,6 +5,9 @@ on:
     branches: [master, main, feature/mobileboost-e2e-tests]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   validate-wire-logs:
     runs-on: ubuntu-latest
