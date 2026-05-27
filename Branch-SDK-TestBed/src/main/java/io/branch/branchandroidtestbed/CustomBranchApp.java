@@ -46,7 +46,7 @@ public final class CustomBranchApp extends Application {
         });
     }
 
-    private void saveLogToFile(String logMessage) {
+    private synchronized void saveLogToFile(String logMessage) {
         File logFile = new File(getFilesDir(), "branchlogs.txt");
 
         try {
