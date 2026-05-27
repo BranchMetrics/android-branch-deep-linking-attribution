@@ -35,13 +35,13 @@ public final class CustomBranchApp extends Application {
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
             public void onRequestCompleted(String uri, JSONObject request, JSONObject response, String error, String requestUrl) {
-                Log.d("Shortlink_Session_Test",
-                        "URI Sent to Branch: " + uri
+                String entry = "URI Sent to Branch: " + uri
                         + "\nRequest: " + request
                         + "\nResponse: " + response
                         + "\nError Message: " + error
-                        + "\nRequest Url: " + requestUrl
-                );
+                        + "\nRequest Url: " + requestUrl;
+                Log.d("Shortlink_Session_Test", entry);
+                saveLogToFile(entry);
             }
         });
     }
