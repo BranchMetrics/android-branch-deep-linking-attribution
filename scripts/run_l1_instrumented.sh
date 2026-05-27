@@ -18,6 +18,10 @@
 set -euo pipefail
 
 MOBILEBOOST_API_KEY="${1:-${MOBILEBOOST_API_KEY:-}}"
+if [[ -z "$MOBILEBOOST_API_KEY" ]]; then
+  echo "Error: MOBILEBOOST_API_KEY is required (provide as positional arg or env var)" >&2
+  exit 1
+fi
 
 TARGET_APK="Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk"
 TEST_APK="Branch-SDK-GPTDriver/build/outputs/apk/debug/Branch-SDK-GPTDriver-debug.apk"
