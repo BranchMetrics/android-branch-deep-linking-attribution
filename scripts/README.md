@@ -20,10 +20,6 @@ To run the validator's own test suite:
 python3 -m unittest scripts.test_validate_l1_logs -v
 ```
 
-The tests use fixtures in `scripts/fixtures/` and exercise: the happy path,
-a missing-field failure, the v2-`user_data` nested shape, and the
-install-must-be-captured guard.
-
 ## What gets validated
 
 Presence-only. A required field is either there (pass) or absent (fail). No
@@ -34,11 +30,10 @@ The required field list lives at the top of `validate_l1_logs.py`:
 
 - `REQUIRED_COMMON` — fields the SDK puts on every `/v1/*` request.
 - `REQUIRED_PER_ENDPOINT` — additional fields per endpoint. Today this
-  covers `is_hardware_id_real` and `first_install_time` on
-  `/v1/install`; `randomized_device_token` and `randomized_bundle_token`
-  on `/v1/open`; and `connection_type` on both `/v1/install` and
-  `/v1/open` because `DeviceInfo.java:115` only emits it on init/event
-  requests (so `/v1/url` legitimately lacks it).
+  covers `is_hardware_id_real` and `first_install_time` on `/v1/install`;
+  `randomized_device_token` and `randomized_bundle_token` on `/v1/open`;
+  and `connection_type` on both `/v1/install` and `/v1/open` (only emitted
+  on init/event requests, so `/v1/url` legitimately lacks it).
 
 Required-field checks are scoped to `/v1/*` only. Captured non-v1
 endpoints (e.g. `/v2/event/*`) get their payload printed for visibility
@@ -49,22 +44,9 @@ nested placement does not break the gate.
 
 ## What gets printed on success
 
-For every captured request: the full payload (with sensitive values masked)
-plus a per-field check table showing the actual value that went over the
-wire. This is the answer to the reviewer feedback on PR #1349 — silent
-passes are no longer possible because every field's value is visible in the
-CI log.
-
-## Adding a new required field
-
-1. Add the field name to `REQUIRED_COMMON` (every request) or
-   `REQUIRED_PER_ENDPOINT[<path>]` (endpoint-scoped).
-2. If the field carries a secret/PII, add it to `SENSITIVE_FIELDS` so the
-   value is masked in both the per-field table and the full-payload dump.
-3. Add a fixture to `scripts/fixtures/` and a test in
-   `scripts/test_validate_l1_logs.py` covering the missing-field case.
-4. Update the sanitization step in `.github/workflows/sdk-l1-validation.yml`
-   so the value is also stripped from any uploaded artifact.
+For every captured request: the full payload plus a per-field check table
+showing the actual value that went over the wire. Silent passes are not
+possible because every field's value is visible in the CI log.
 
 ## Platform parity
 
