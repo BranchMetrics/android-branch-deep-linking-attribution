@@ -1,0 +1,16 @@
+{
+  "name": "[Android] Reactive Session State Observation (removal of expectDelayedSessionInitialization)",
+  "tags": [
+    "Android",
+    "SDK Rewrite",
+    "Breaking Change"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Execute the test: [Android] Reactive Session State Observation (removal of expectDelayedSessionInitialization). Follow all steps as defined in MobileBoost Studio."
+    }
+  ],
+  "params": {}
+}

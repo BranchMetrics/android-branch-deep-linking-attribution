@@ -3,8 +3,6 @@ package io.branch.branchandroidtestbed;
 import android.app.Activity;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -126,11 +124,5 @@ public class SettingsActivity extends Activity {
             }
         });
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d("BranchSDK_Tester", "Branch initialization status:" + Branch.getInstance().getInitState());
     }
 }

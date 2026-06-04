@@ -1,0 +1,17 @@
+{
+  "enable-app-link": "gMTZpITvB9ejIJTtbZPd",
+  "force-close-app-and-enable-app-link": "bbZzyJWXDMT9WQUVpFMT",
+  "force-close-app": "b86SEJYY8io8sNbkbAnR",
+  "async-identity-management": "1esSo4Nd29pYdrEykd5j",
+  "branch-link-cold-open": "zEEAFq54CSn5wi3a5wEp",
+  "branch-link-warm-open": "zrOC8morEgX0jzLEGMdd",
+  "event-tracking-post-sdk-rewrite": "37oD8BqkAEInKrXnUTPr",
+  "log-event-custom": "VhY0ZlKiIIHPlOs9Ql87",
+  "log-event-standard": "C34I7gpuPhg4Z1mLAFD3",
+  "performance-verify-ad-fields": "kAdwWjzdT5TV93m24mFi",
+  "reactive-session-state-observation-removal-of-expectdelayedsessioninitialization": "r50p5oTR3ppoJ4k90HjI",
+  "set-customer-event-alias": "Fv7Yl2Fb6zVuNypF0Q3Q",
+  "set-session-id": "jEHKVaiT8ci9cYRM0rdl",
+  "uri-scheme-cold-open": "vyTzci1niNmvAf8vRxp7",
+  "uri-scheme-warm-open": "tjzKXu9T6pTMPoOUkC64"
+}

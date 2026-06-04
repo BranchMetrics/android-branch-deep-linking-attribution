@@ -22,33 +22,31 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-//        IBranchLoggingCallbacks loggingCallbacks = (message, tag) -> {
-//            Log.d("BranchTestbed", message);
-//            saveLogToFile(message);
-//        };
-        Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
-        Branch.getAutoInstance(this);
-        Branch.expectDelayedSessionInitialization(true);
+        Branch.enableLogging((message, tag) -> {
+            Log.d("BranchTestbed", message);
+            saveLogToFile(message);
+        }, BranchLogger.BranchLogLevel.VERBOSE);
+        Branch branch = Branch.getAutoInstance(this);
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
         Branch.getInstance().setCustomTabsIntent(customTabsIntent);
-        //Branch.getInstance().setInstallReferrerTimeout(250);
+
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
             public void onRequestCompleted(String uri, JSONObject request, JSONObject response, String error, String requestUrl) {
-                Log.d("Shortlink_Session_Test",
-                        "URI Sent to Branch: " + uri
+                String entry = "URI Sent to Branch: " + uri
                         + "\nRequest: " + request
                         + "\nResponse: " + response
                         + "\nError Message: " + error
-                        + "\nRequest Url: " + requestUrl
-                );
+                        + "\nRequest Url: " + requestUrl;
+                Log.d("Shortlink_Session_Test", entry);
+                saveLogToFile(entry);
             }
         });
     }
 
-    private void saveLogToFile(String logMessage) {
+    private synchronized void saveLogToFile(String logMessage) {
         File logFile = new File(getFilesDir(), "branchlogs.txt");
 
         try {
