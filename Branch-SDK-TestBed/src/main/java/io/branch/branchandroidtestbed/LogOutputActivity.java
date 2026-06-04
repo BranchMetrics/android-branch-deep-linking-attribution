@@ -11,6 +11,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LogOutputActivity extends Activity {
     private TextView logOutputTextView;
@@ -43,18 +45,20 @@ public class LogOutputActivity extends Activity {
 
     private void displayLogs() {
         if (logFile.exists()) {
-            StringBuilder logContent = new StringBuilder();
-
+            List<String> lines = new ArrayList<>();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile)))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    logContent.append(line).append("\n");
+                    lines.add(line);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                logContent.append("Error reading log file.");
+                lines.add("Error reading log file.");
             }
-
+            StringBuilder logContent = new StringBuilder();
+            for (int i = lines.size() - 1; i >= 0; i--) {
+                logContent.append(lines.get(i)).append("\n");
+            }
             logOutputTextView.setText(logContent.toString());
         } else {
             logOutputTextView.setText("Log file not found.");

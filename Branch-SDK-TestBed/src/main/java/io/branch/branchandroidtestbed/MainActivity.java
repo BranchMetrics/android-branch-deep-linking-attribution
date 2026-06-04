@@ -8,7 +8,6 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,13 +45,12 @@ import io.branch.referral.Branch;
 import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchLogger;
+import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
+import io.branch.referral.ServerRequestGetLATD;
 import io.branch.referral.SharingHelper;
-import io.branch.referral.BranchLogger;
-import io.branch.referral.BranchShareSheetBuilder;
-import io.branch.referral.modernization.core.ModernBranchCore;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
 import io.branch.referral.util.BranchEvent;
@@ -69,12 +67,14 @@ public class MainActivity extends Activity {
 
     private final static String branchChannelID = "BranchChannelID";
 
+    private void showLongToast(String message) {
+        TestBedHelper.showLongToast(this, message);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
-
-        handleDeepLink(this.getIntent().getData());
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
 
@@ -250,7 +250,7 @@ public class MainActivity extends Activity {
                 BranchEvent viewItemEvent = new BranchEvent(BRANCH_STANDARD_EVENT.VIEW_ITEM);
                 viewItemEvent.logEvent(MainActivity.this);
                 
-                Toast.makeText(MainActivity.this, "VIEW_ITEM event logged", Toast.LENGTH_SHORT).show();
+                showLongToast("VIEW_ITEM event logged");
             }
         });
 
@@ -405,31 +405,35 @@ public class MainActivity extends Activity {
         findViewById(R.id.notif_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                BranchLogger.d("MODERNIZATION_DEBUG: Starting getShortUrl (SYNC) - should trigger ModernLinkGenerator");
-                String shortURL = branchUniversalObject.getShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"));
-                if (shortURL == null) {
-                    BranchLogger.d("MODERNIZATION_DEBUG: branchUniversalObject.getShortUrl returned null - check ModernLinkGenerator logs");
-                    BranchLogger.d("branchUniversalObject.getShortUrl = null");
-                    return;
-                } else {
-                    BranchLogger.d("MODERNIZATION_DEBUG: getShortUrl successful: " + shortURL);
-                }
+                BranchLogger.d("MODERNIZATION_DEBUG: Starting generateShortUrl (ASYNC)");
+                branchUniversalObject.generateShortUrl(MainActivity.this, new LinkProperties().addControlParameter("key11", "value11"), new Branch.BranchLinkCreateListener() {
+                    @Override
+                    public void onLinkCreate(String url, BranchError error) {
+                        if (error != null || url == null) {
+                            BranchLogger.d("MODERNIZATION_DEBUG: generateShortUrl failed: " + (error != null ? error.getMessage() : "null url"));
+                            Toast.makeText(MainActivity.this, "Notification failed: " + (error != null ? error.getMessage() : "null url"), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), shortURL);
-                intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
-                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                        BranchLogger.d("MODERNIZATION_DEBUG: generateShortUrl successful: " + url);
+                        Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                        intent.putExtra(Defines.IntentKeys.BranchURI.getKey(), url);
+                        intent.putExtra(Defines.IntentKeys.ForceNewBranchSession.getKey(), true);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
-                        .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("BranchTest")
-                        .setContentText(shortURL)
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                notificationManager.notify(1, builder.build());
-                BranchLogger.d("Sent notification");
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, branchChannelID)
+                                .setSmallIcon(R.drawable.ic_launcher)
+                                .setContentTitle("BranchTest")
+                                .setContentText(url)
+                                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                .setContentIntent(pendingIntent)
+                                .setAutoCancel(true);
+                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                        notificationManager.notify(1, builder.build());
+                        BranchLogger.d("Sent notification");
+                        Toast.makeText(MainActivity.this, "Notification Sent!", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
@@ -563,7 +567,7 @@ public class MainActivity extends Activity {
                             @Override
                             public void onSuccess(int responseCode) {
                                 BranchLogger.d("MODERNIZATION_DEBUG: Commerce Event SUCCESS: " + responseCode);
-                                Toast.makeText(getApplicationContext(), "✅ Commerce Event Sent: " + responseCode, Toast.LENGTH_LONG).show();
+                                showLongToast("✅ Commerce Event Sent: " + responseCode);
                             }
 
                             @Override
@@ -593,7 +597,7 @@ public class MainActivity extends Activity {
                             @Override
                             public void onSuccess(int responseCode) {
                                 BranchLogger.d("MODERNIZATION_DEBUG: Content Event sent successfully: " + responseCode);
-                                Toast.makeText(getApplicationContext(), "Sent Branch Content Event: " + responseCode, Toast.LENGTH_LONG).show();
+                                showLongToast("Sent Branch Content Event: " + responseCode);
                             }
 
                             @Override
@@ -621,7 +625,7 @@ public class MainActivity extends Activity {
                             @Override
                             public void onSuccess(int responseCode) {
                                 BranchLogger.d("MODERNIZATION_DEBUG: Lifecycle Event sent successfully: " + responseCode);
-                                Toast.makeText(getApplicationContext(), "Sent Branch Lifecycle Event: " + responseCode, Toast.LENGTH_LONG).show();
+                                showLongToast("Sent Branch Lifecycle Event: " + responseCode);
                             }
 
                             @Override
@@ -701,22 +705,19 @@ public class MainActivity extends Activity {
                 }
             }
         });
-    }
 
-    private void handleDeepLink(Uri data) {
-        Branch.getInstance().requestDeepLinkData(data, new Branch.BranchReferralInitListener() {
+        findViewById(R.id.getLatdButton).setOnClickListener(new OnClickListener() {
             @Override
-            public void onInitFinished(JSONObject params, BranchError error) {
-                if (error == null) {
-                    if (params != null) {
-                        try {
-                            Log.d("BranchSDK_Testbed", "Deep Link Params: " + params.toString(2));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+            public void onClick(View v) {
+                try {
+                    Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
+                        @Override
+                        public void onDataFetched(JSONObject jsonObject, BranchError error) {
+                            Log.i("BranchSDK_Tester", "Result: " + String.valueOf(jsonObject) + "\nError: " + error);
                         }
-                    }
-                } else {
-                    Log.e("BranchSDK_Testbed", "Deep Link Error: " + error.getMessage() + " (Code: " + error.getErrorCode() + ")");
+                    });
+                } catch (Exception e) {
+                    Log.e("BranchSDK_Tester", e.getMessage());
                 }
             }
         });
@@ -764,12 +765,41 @@ public class MainActivity extends Activity {
         super.onStart();
 
 
-//        Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
-//        Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
+        Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
+        Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
+        BranchLogger.d("initSession");
 
-        //Branch.getInstance().setIdentity("Identity1");
+        Branch.getInstance().setIdentity("Identity1");
 
-        //initSessionsWithTests();
+        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+            @Override
+            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                if (error != null) {
+                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
+                    Log.d("BranchSDK_Tester", "Session state should be not be INITIALISED, actual: " + Branch.getInstance().getInitState());
+                } else {
+                    Log.d("BranchSDK_Tester", "branch init complete!");
+                    Log.d("BranchSDK_Tester", "Session state should be INITIALISED, actual: " + Branch.getInstance().getInitState());
+                    if (branchUniversalObject != null) {
+                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                    }
+
+                    if (linkProperties != null) {
+                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
+                    }
+                }
+
+
+                // QA purpose only
+                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
+                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
+            }
+        }).withData(this.getIntent().getData()).init();
+
+        initSessionsWithTests();
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -796,108 +826,24 @@ public class MainActivity extends Activity {
         initializeSessionWithEventTests(n);
     }
 
-    /**
-     * Initializes Branch session and creates test events after successful initialization.
-     * Follows SRP - single responsibility for session initialization with event creation.
-     * 
-     * @param eventCount Number of test events to create after session initialization
-     */
     private void initializeSessionWithEventTests(int eventCount) {
-        Branch.sessionBuilder(this).withCallback(new BranchSessionInitializationHandler(eventCount))
-                .withData(this.getIntent().getData())
-                .init();
-    }
-    
-    /**
-     * Handler for Branch session initialization with event creation capability.
-     * Follows SRP and DIP principles - separated concerns and depends on abstractions.
-     */
-    private class BranchSessionInitializationHandler implements Branch.BranchUniversalReferralInitListener {
-        private final int eventCount;
-        
-        public BranchSessionInitializationHandler(int eventCount) {
-            this.eventCount = eventCount;
-        }
-        
-        @Override
-        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
-            if (error != null) {
-                handleSessionInitializationError(error);
-                return;
-            }
-            
-            handleSessionInitializationSuccess(branchUniversalObject, linkProperties);
-            //createTestEvents();
-        }
-        
-        /**
-         * Handles successful session initialization.
-         * Follows SRP - single responsibility for handling success scenario.
-         */
-        private void handleSessionInitializationSuccess(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties) {
-            BranchLogger.d("branch init complete!");
-            if (branchUniversalObject != null) {
-                logBranchUniversalObjectDetails(branchUniversalObject);
-            }
-            
-            if (linkProperties != null) {
-                logLinkPropertiesDetails(linkProperties);
-            }
-        }
-        
-        /**
-         * Handles session initialization errors.
-         * Follows SRP - single responsibility for error handling.
-         */
-        private void handleSessionInitializationError(BranchError error) {
-            BranchLogger.d("branch init failed. Caused by -" + error.getMessage());
-        }
-        
-        /**
-         * Creates and logs test events after session is successfully initialized.
-         * Follows SRP - single responsibility for event creation.
-         */
-        private void createTestEvents() {
-            BranchLogger.d("Creating " + eventCount + " test events after session initialization");
-            for (int i = 0; i < eventCount; i++) {
-                createAndLogTestEvent(i);
-            }
-        }
-        
-        /**
-         * Creates and logs a single test event.
-         * Follows SRP - single responsibility for individual event creation.
-         */
-        private void createAndLogTestEvent(int eventIndex) {
-            BranchEvent event = new BranchEvent("Event " + eventIndex);
-            event.logEvent(MainActivity.this);
-        }
-        
-        /**
-         * Logs BranchUniversalObject details.
-         * Follows SRP - single responsibility for logging object details.
-         */
-        private void logBranchUniversalObjectDetails(BranchUniversalObject branchUniversalObject) {
-            BranchLogger.d("title " + branchUniversalObject.getTitle());
-            BranchLogger.d("CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-            BranchLogger.d("metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-        }
-        
-        /**
-         * Logs LinkProperties details.
-         * Follows SRP - single responsibility for logging link properties.
-         */
-        private void logLinkPropertiesDetails(LinkProperties linkProperties) {
-            BranchLogger.d("Channel " + linkProperties.getChannel());
-            BranchLogger.d("control params " + linkProperties.getControlParams());
-        }
+        TestBedHelper.initializeSessionWithEventTests(this, eventCount);
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         this.setIntent(intent);
-        handleDeepLink(intent.getData());
+        Branch.sessionBuilder(this).withCallback(new BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject referringParams, BranchError error) {
+                if (error != null) {
+                    BranchLogger.d(error.getMessage());
+                } else if (referringParams != null) {
+                    BranchLogger.d(referringParams.toString());
+                }
+            }
+        }).reInit();
     }
 
     @Override
