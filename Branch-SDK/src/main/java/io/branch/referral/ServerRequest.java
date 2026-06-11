@@ -199,6 +199,7 @@ public abstract class ServerRequest {
     void addDMAParams() {
         if (prefHelper_.isDMAParamsInitialized()) {
             try {
+                // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
                 BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
                 if (version == BRANCH_API_VERSION.V1) {
                     params_.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
@@ -221,6 +222,7 @@ public abstract class ServerRequest {
     private void addConsumerProtectionAttributionLevel() {
         if (prefHelper_.isAttributionLevelInitialized()) {
             try {
+                // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
                 if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
                     params_.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
                 } else {
@@ -265,6 +267,7 @@ public abstract class ServerRequest {
         BranchLogger.v("setPost " + post);
         params_ = post;
 
+        // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
         }
@@ -465,6 +468,7 @@ public abstract class ServerRequest {
      * Otherwise we're good to send the generated UUID
      */
     void updateGAdsParams() {
+        // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         int LATVal = DeviceInfo.getInstance().getSystemObserver().getLATVal();
         String gaid = DeviceInfo.getInstance().getSystemObserver().getAID();
@@ -566,6 +570,7 @@ public abstract class ServerRequest {
     }
     
     private void updateDeviceInfo() {
+        // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
         BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
         if (version == BRANCH_API_VERSION.V2) {
             JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
@@ -622,6 +627,7 @@ public abstract class ServerRequest {
      * Update the the limit app tracking value to the request
      */
     private void updateLimitFacebookTracking() {
+        // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
         JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
         if (updateJson != null) {
             boolean isLimitFacebookTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
@@ -636,6 +642,7 @@ public abstract class ServerRequest {
     }
 
     private void updateDisableAdNetworkCallouts() {
+        // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
         JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
         if (updateJson != null) {
             boolean disableAdNetworkCallouts = prefHelper_.getAdNetworkCalloutsDisabled();
@@ -818,6 +825,7 @@ public abstract class ServerRequest {
 
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
+            // TODO: V2/V3 payload format - if v3/events changes format, add V3 case here
             String environment = DeviceInfo.getInstance().isPackageInstalled() ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
             if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
                 JSONObject userData = post.optJSONObject(Defines.Jsonkey.UserData.getKey());

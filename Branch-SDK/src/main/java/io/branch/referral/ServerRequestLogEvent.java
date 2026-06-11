@@ -84,6 +84,9 @@ public class ServerRequestLogEvent extends ServerRequest {
 
     @Override
     public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
+        // TODO: Currently v3/events endpoints proxy to v2 backend with same payload format.
+        // If backend changes v3/events to use a new payload structure, add BRANCH_API_VERSION.V3
+        // and update all conditional logic in ServerRequest.java to handle V3 formatting.
         return BRANCH_API_VERSION.V2; //This is a v2 event
     }
 
