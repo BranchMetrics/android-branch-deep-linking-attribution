@@ -25,12 +25,36 @@ import org.json.JSONObject;
  */
 public interface BranchFraudDefenseProvider {
     /**
-     * Perform fraud defense checks and return fields to add to request.
+     * Bootstraps the secure SDK (key generation, attestation pre-warming, challenge prefetch).
      *
-     * <p>Called by {@link ServerRequestRegisterInstall} before sending v1/install request.</p>
+     * <p>Called automatically by {@link Branch#setFraudDefenseProvider(BranchFraudDefenseProvider)}
+     * when a provider is registered, so the host app does not need to start it separately.
+     * Mirrors iOS, where {@code setFraudDefenseHandler:} invokes
+     * {@code initializeBranchSecureSDKWithBranchKey:}.</p>
+     *
+     * @param branchKey The Branch key for this app, or null if not yet configured
+     */
+    void initializeBranchSecureSDK(String branchKey);
+
+    /**
+     * Layer 1: performs device attestation and returns fields to add to request.
+     *
+     * <p>Called for v1/install and v1/open requests.</p>
      *
      * @param requestBody Current request body (before fraud defense fields)
      * @return JSONObject with fraud defense fields to merge, or null if unavailable
      */
     JSONObject performAttestationCheck(JSONObject requestBody);
+
+    /**
+     * Layer 2 + 3: generates HMAC-SHA256 signature and smart nonce for the request.
+     *
+     * <p>Called for v2/event requests. Returns a branch_sdk_secure_context envelope
+     * with an activity_context block containing request_signature and nonce,
+     * or null if the HMAC secret is not yet available.</p>
+     *
+     * @param requestBody Current request body (before signature fields)
+     * @return JSONObject with signature fields to merge, or null if unavailable
+     */
+    JSONObject addSignatureAndNonceForParams(JSONObject requestBody);
 }

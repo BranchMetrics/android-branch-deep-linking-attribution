@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +49,24 @@ public class ServerRequestLogEvent extends ServerRequest {
                 }
             }
             setPost(reqBody);
+
+            // Layer 2 + 3: HMAC signature + smart nonce for event requests
+            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
+                try {
+                    BranchFraudDefenseProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
+                    if (signatureFields != null) {
+                        Iterator<String> keys = signatureFields.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            getPost().put(key, signatureFields.get(key));
+                        }
+                        BranchLogger.v("Fraud defense signature fields added to event request");
+                    }
+                } catch (Exception e) {
+                    BranchLogger.w("Fraud defense signature failed: " + e.getMessage());
+                }
+            }
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }

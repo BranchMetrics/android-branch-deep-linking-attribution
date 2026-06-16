@@ -32,6 +32,7 @@ internal object PlayIntegrityWrapper {
      */
     fun requestToken(context: Context, nonceBase64url: String): String {
         val startTime = System.currentTimeMillis()
+        FraudDefenseLogger.v("Play Integrity requestToken start=${startTime}ms")
 
         try {
             val manager = IntegrityManagerFactory.create(context)
@@ -41,13 +42,13 @@ internal object PlayIntegrityWrapper {
 
             val token = Tasks.await(manager.requestIntegrityToken(request)).token()
 
-            val duration = System.currentTimeMillis() - startTime
-            FraudDefenseLogger.v("Play Integrity Classic API token generated in ${duration}ms")
+            val endTime = System.currentTimeMillis()
+            FraudDefenseLogger.v("Play Integrity requestToken end=${endTime}ms total=${endTime - startTime}ms")
 
             return token
         } catch (e: Exception) {
-            val duration = System.currentTimeMillis() - startTime
-            FraudDefenseLogger.w("Play Integrity Classic API failed after ${duration}ms: ${e.message}")
+            val endTime = System.currentTimeMillis()
+            FraudDefenseLogger.w("Play Integrity requestToken failed: end=${endTime}ms total=${endTime - startTime}ms: ${e.message}")
             throw e
         }
     }

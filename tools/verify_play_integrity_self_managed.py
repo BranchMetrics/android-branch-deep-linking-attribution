@@ -528,6 +528,8 @@ Examples:
     parser.add_argument("--body",            default="{}",  help="JSON request body")
     args = parser.parse_args()
 
+    script_start_ms = int(time.time() * 1000)
+
     print("\n" + "="*70)
     print("  Play Integrity Verification - Self-Managed Keys Mode")
     print("  (No Google API calls - local decryption only)")
@@ -581,11 +583,15 @@ Examples:
     body_clean = {k: v for k, v in body.items() if k not in PI_FIELDS}
 
     print("\n── Step 1: Re-derive expected nonce ─────────────────────────────")
+    step1_start_ms = int(time.time() * 1000)
     expected_nonce = derive_expected_nonce(body_clean, ecdh, nonce)
+    step1_end_ms = int(time.time() * 1000)
     print(f"  Canonical string: {canonical_query_string(body_clean)[:120]}...")
     print(f"  Expected nonce (base64url): {expected_nonce}")
+    print(f"  ⏱  start={step1_start_ms} ms  end={step1_end_ms} ms  total={step1_end_ms - step1_start_ms} ms")
 
     print("\n── Step 2: Load and decrypt encryption keys ────────────────────")
+    step2_start_ms = int(time.time() * 1000)
     private_key = load_private_key(args.private_key, args.password)
 
     # Load and decrypt the key bundle to get the AES-256 key
@@ -617,16 +623,28 @@ Examples:
         print(f"   Expected: 256 bytes (encrypted) or 32 bytes (decrypted AES-256)")
         sys.exit(1)
 
+    step2_end_ms = int(time.time() * 1000)
+    print(f"  ⏱  start={step2_start_ms} ms  end={step2_end_ms} ms  total={step2_end_ms - step2_start_ms} ms")
+
     print("\n── Step 3: Decrypt token locally ────────────────────────────────")
     print("  ℹ️  Token format: JWE (JSON Web Encryption)")
     print("      Key encryption: A256KW (AES-256 Key Wrap)")
     print("      Content encryption: AES-256-GCM")
 
+    token_start_ms = int(time.time() * 1000)
+    print(f"  ⏱  requestToken start: {token_start_ms} ms")
+
     try:
         decoded = decrypt_token_locally(token, private_key, decryption_key)
+        token_end_ms = int(time.time() * 1000)
+        print(f"  ⏱  requestToken end:   {token_end_ms} ms")
+        print(f"  ⏱  requestToken total: {token_end_ms - token_start_ms} ms")
         print("\n  📋 Decrypted payload:")
         print(json.dumps(decoded, indent=4))
     except Exception as e:
+        token_end_ms = int(time.time() * 1000)
+        print(f"  ⏱  requestToken end:   {token_end_ms} ms (failed)")
+        print(f"  ⏱  requestToken total: {token_end_ms - token_start_ms} ms")
         print(f"\n❌ Failed to decrypt token: {e}")
         print("\n💡 Common issues:")
         print("   1. Wrong private key - must match the public key uploaded to Play Console")
@@ -640,11 +658,15 @@ Examples:
         sys.exit(1)
 
     print("\n── Step 4: Verify payload ───────────────────────────────────────")
+    step4_start_ms = int(time.time() * 1000)
     result = verify(decoded, args.package, expected_nonce)
+    step4_end_ms = int(time.time() * 1000)
 
     for check, detail in result["checks"].items():
         status = "✅" if detail["ok"] else "❌"
         print(f"  {status} {check}: {detail}")
+
+    print(f"  ⏱  start={step4_start_ms} ms  end={step4_end_ms} ms  total={step4_end_ms - step4_start_ms} ms")
 
     print("\n── Info fields ──────────────────────────────────────────────────")
     for k, v in result["info"].items():
@@ -669,6 +691,16 @@ Examples:
     print("   • Key wrap: A256KW (AES-256 Key Wrap)")
     print("   • Content encryption: AES-256-GCM")
     print("   • RSA key: Used to decrypt the key bundle, not the token directly")
+
+    script_end_ms = int(time.time() * 1000)
+    print("\n── Timing summary ───────────────────────────────────────────────")
+    print(f"  Script start:  {script_start_ms} ms")
+    print(f"  Script end:    {script_end_ms} ms")
+    print(f"  Step 1 (nonce derivation):    {step1_end_ms  - step1_start_ms} ms")
+    print(f"  Step 2 (key load/decrypt):    {step2_end_ms  - step2_start_ms} ms")
+    print(f"  Step 3 (token decryption):    {token_end_ms  - token_start_ms} ms")
+    print(f"  Step 4 (payload verify):      {step4_end_ms  - step4_start_ms} ms")
+    print(f"  Total:                        {script_end_ms - script_start_ms} ms")
     print("="*70 + "\n")
 
     sys.exit(0 if result["passed"] else 1)

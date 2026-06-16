@@ -34,6 +34,10 @@ class BranchFraudDefense private constructor(
         }
     }
 
+    override fun initializeBranchSecureSDK(branchKey: String?) {
+        startFraudDefenseSystem()
+    }
+
     /**
      * Initialize the fraud defense system.
      *
@@ -120,6 +124,14 @@ class BranchFraudDefense private constructor(
             put(AttestationFields.NONCE, data.nonce)
             put(AttestationFields.ECDH_PUBLIC_KEY, data.ecdhPublicKey)
         }
+    }
+
+    /**
+     * Layer 2 + 3: HMAC signature + smart nonce for event requests.
+     * Not yet implemented in this module — returns null (graceful degradation).
+     */
+    override fun addSignatureAndNonceForParams(requestBody: JSONObject): JSONObject? {
+        return null
     }
 
     /**

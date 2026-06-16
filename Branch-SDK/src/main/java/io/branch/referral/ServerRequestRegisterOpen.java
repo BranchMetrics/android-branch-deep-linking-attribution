@@ -6,6 +6,8 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Iterator;
+
 /**
  * * <p>
  * The server request for registering an app open event to Branch API. Handles request creation and execution.
@@ -28,6 +30,24 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
             openPost.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
             setPost(openPost);
+
+            // Layer 1: device attestation for open requests (mirrors install)
+            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
+                try {
+                    BranchFraudDefenseProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject fraudDefenseFields = provider.performAttestationCheck(getPost());
+                    if (fraudDefenseFields != null) {
+                        Iterator<String> keys = fraudDefenseFields.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            getPost().put(key, fraudDefenseFields.get(key));
+                        }
+                        BranchLogger.v("Fraud defense fields added to open request");
+                    }
+                } catch (Exception e) {
+                    BranchLogger.w("Fraud defense failed for open: " + e.getMessage());
+                }
+            }
         } catch (JSONException ex) {
             BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;

@@ -780,6 +780,10 @@ public class Branch {
     public void setFraudDefenseProvider(BranchFraudDefenseProvider provider) {
         this.fraudDefenseProvider = provider;
         BranchLogger.v("Fraud defense provider " + (provider != null ? "set" : "cleared"));
+        // Registering the provider starts the secure SDK (mirrors iOS setFraudDefenseHandler:).
+        if (provider != null) {
+            provider.initializeBranchSecureSDK(prefHelper_.getBranchKey());
+        }
     }
 
     /**
