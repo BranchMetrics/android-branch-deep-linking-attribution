@@ -1432,7 +1432,10 @@ public class Branch {
 
         // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
         // In this case need to wait till onResume to get the latest intent.
-        if (false) {
+        // EMT-3860: hold the init request until the launch intent has been parsed (onIntentReady
+        // sets INTENT_STATE.READY), so the install/open POST carries external_intent_uri /
+        // link_identifier on a cold start instead of firing before the intent is read.
+        if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
@@ -1489,16 +1492,21 @@ public class Branch {
     }
     
     void onIntentReady(@NonNull Activity activity) {
-        BranchLogger.v("onIntentReady " + activity + " removing INTENT_PENDING_WAIT_LOCK");
+        BranchLogger.v("onIntentReady " + activity);
         setIntentState(Branch.INTENT_STATE.READY);
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
+        // EMT-3860: read and persist the launch-intent params (external_intent_uri /
+        // link_identifier) BEFORE releasing the wait lock, so the queued init request sends with
+        // the link data instead of racing the unlock and going out empty.
         boolean grabIntentParams = activity.getIntent() != null && !(getInitState() instanceof BranchSessionState.Initialized);
 
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
+
+        BranchLogger.v("onIntentReady removing INTENT_PENDING_WAIT_LOCK");
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
     }
 
     /**
