@@ -84,11 +84,10 @@ abstract public class BranchTest extends BranchTestRequestUtil {
 
         Branch.enableLogging();
 
-        if (branchKey == null) {
-            branch = Branch.getInstance();
-        } else {
-            branch = Branch.getInstance();
-        }
+        // Harness rehab: Branch.getInstance() (no context) returns null against the modern Branch
+        // singleton, leaving every test with a null `branch` (and NPEs in tearDown). getAutoInstance
+        // creates the singleton from the manifest test BranchKey, the documented init entry point.
+        branch = Branch.getAutoInstance(getTestContext());
         Assert.assertEquals(branch, Branch.getInstance());
 
         activityScenario = ActivityScenario.launch(MockActivity.class);
