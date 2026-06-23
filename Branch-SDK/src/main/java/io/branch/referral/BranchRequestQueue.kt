@@ -252,18 +252,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
             BranchLogger.d("DEBUG: Processing request: ${request::class.simpleName}, network count: ${networkCount.get()}")
             
             when {
-                request.isWaitingOnProcessToFinish -> {
-                    val waitLocks = request.printWaitLocks()
-                    BranchLogger.v("Request $request is waiting on processes to finish")
-                    BranchLogger.d("DEBUG: Request is waiting on processes to finish, active locks: $waitLocks, re-queuing")
-                    BranchLogger.w("WAIT_LOCK_DEBUG: Request ${request::class.simpleName} stuck with locks: $waitLocks")
-                    // Re-queue after delay - add back to front of queue
-                    delay(50)
-                    synchronized(queueList) {
-                        queueList.add(0, request)
-                    }
-                    processingTrigger.send(Unit)
-                }
+                // NOTE (EMT-3859): a request that isWaitingOnProcessToFinish never reaches here,
+                // because canProcessRequest() returns false for any waiting request and routes it
+                // to handleRequestCannotBeProcessed() above. The former re-queue arm at this point
+                // was dead code and was removed; lock-waiting is handled entirely by the retry path.
                 !hasValidSession(request) -> {
                     BranchLogger.v("Request $request has no valid session")
                     BranchLogger.d("DEBUG: Request has no valid session")
@@ -319,13 +311,16 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for retry logic
      */
     private suspend fun handleRequestCannotBeProcessed(request: ServerRequest, requestId: String) {
-        val retryInfo = requestRetryInfo.getOrPut(requestId) { 
-            RequestRetryInfo(requestId) 
+        val retryInfo = requestRetryInfo.getOrPut(requestId) {
+            RequestRetryInfo(requestId)
         }
-        
+
+        // EMT-3859: lock-waiting requests are bounded only by the 30s timeout, not the retry count.
+        val isWaitingOnLock = request.isWaitingOnProcessToFinish
+
         // Check if request has exceeded limits
-        if (shouldFailRequest(retryInfo)) {
-            handleRequestFailureWithCleanup(request, requestId, retryInfo)
+        if (shouldFailRequest(retryInfo, isWaitingOnLock)) {
+            handleRequestFailureWithCleanup(request, requestId, retryInfo, isWaitingOnLock)
             // Remove from queue since it failed
             synchronized(queueList) {
                 queueList.remove(request)
@@ -373,8 +368,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Determine if request should fail based on retry limits and timeout
      * Follows SRP - single responsibility for failure criteria evaluation
      */
-    private fun shouldFailRequest(retryInfo: RequestRetryInfo): Boolean {
-        return retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS) || 
+    private fun shouldFailRequest(retryInfo: RequestRetryInfo, isWaitingOnLock: Boolean): Boolean {
+        // EMT-3859: a request that is purely waiting on a process-wait-lock must not be bounded
+        // by the retry counter (MAX_RETRY_ATTEMPTS * RETRY_DELAY_MS ~= 500ms, ~60x smaller than
+        // the advertised 30s timeout). The counter keeps incrementing so the stuck-lock
+        // heuristics still fire, but only the real REQUEST_TIMEOUT_MS (or the stuck-lock
+        // resolver) may force-fail a lock-waiting request.
+        val retryLimitApplies = !isWaitingOnLock
+        return (retryLimitApplies && retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS)) ||
                retryInfo.hasExceededTimeout(REQUEST_TIMEOUT_MS)
     }
     
@@ -383,14 +384,17 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for failure handling and cleanup
      */
     private fun handleRequestFailureWithCleanup(
-        request: ServerRequest, 
-        requestId: String, 
-        retryInfo: RequestRetryInfo
+        request: ServerRequest,
+        requestId: String,
+        retryInfo: RequestRetryInfo,
+        isWaitingOnLock: Boolean
     ) {
+        // EMT-3859: a lock-waiting request can only reach failure through the timeout arm, so
+        // never attribute its failure to the retry limit.
         val errorMessage = when {
-            retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS) -> 
+            !isWaitingOnLock && retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS) ->
                 "Request exceeded maximum retry attempts (${MAX_RETRY_ATTEMPTS})"
-            retryInfo.hasExceededTimeout(REQUEST_TIMEOUT_MS) -> 
+            retryInfo.hasExceededTimeout(REQUEST_TIMEOUT_MS) ->
                 "Request exceeded timeout (${REQUEST_TIMEOUT_MS}ms)"
             else -> "Request failed unknown reason"
         }
