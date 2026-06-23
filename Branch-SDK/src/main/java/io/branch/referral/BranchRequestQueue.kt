@@ -919,6 +919,17 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
+     * Whether the queue can clear init data: true when at most one init request remains
+     * (the one currently being removed). Mirrors ServerRequestQueue.canClearInitData() so the
+     * modern adapter keeps API parity with the legacy queue.
+     */
+    fun canClearInitData(): Boolean {
+        synchronized(queueList) {
+            return queueList.count { it is ServerRequestInitSession } <= 1
+        }
+    }
+
+    /**
      * Unlock process wait (matches original API)
      */
     fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) {
