@@ -1,6 +1,7 @@
 package io.branch.referral
 
 import android.content.Context
+import android.os.SystemClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,30 +22,34 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Request retry tracking information
  * Follows SRP - single responsibility for tracking retry data
+ *
+ * EMT-3870: elapsed time is measured with SystemClock.elapsedRealtime() (monotonic) rather than
+ * System.currentTimeMillis() (wall clock), so a device clock change can never make a request that
+ * hasn't really been waiting look timed out, nor mask one that has.
  */
 private data class RequestRetryInfo(
     val requestId: String,
-    val firstAttemptTime: Long = System.currentTimeMillis(),
+    val firstAttemptTime: Long = SystemClock.elapsedRealtime(),
     var retryCount: Int = 0,
-    var lastAttemptTime: Long = System.currentTimeMillis(),
+    var lastAttemptTime: Long = SystemClock.elapsedRealtime(),
     var firstWaitLockTime: Long = 0L
 ) {
     fun hasExceededRetryLimit(maxRetries: Int): Boolean = retryCount >= maxRetries
-    
-    fun hasExceededTimeout(timeoutMs: Long): Boolean = 
-        (System.currentTimeMillis() - firstAttemptTime) > timeoutMs
-        
-    fun hasExceededWaitLockTimeout(timeoutMs: Long): Boolean = 
-        firstWaitLockTime > 0 && (System.currentTimeMillis() - firstWaitLockTime) > timeoutMs
-    
+
+    fun hasExceededTimeout(timeoutMs: Long): Boolean =
+        (SystemClock.elapsedRealtime() - firstAttemptTime) > timeoutMs
+
+    fun hasExceededWaitLockTimeout(timeoutMs: Long): Boolean =
+        firstWaitLockTime > 0 && (SystemClock.elapsedRealtime() - firstWaitLockTime) > timeoutMs
+
     fun incrementRetry() {
         retryCount++
-        lastAttemptTime = System.currentTimeMillis()
+        lastAttemptTime = SystemClock.elapsedRealtime()
     }
-    
+
     fun markFirstWaitLock() {
         if (firstWaitLockTime == 0L) {
-            firstWaitLockTime = System.currentTimeMillis()
+            firstWaitLockTime = SystemClock.elapsedRealtime()
         }
     }
 }
