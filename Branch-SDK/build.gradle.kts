@@ -1,4 +1,14 @@
 import org.gradle.api.tasks.testing.logging.*
+import java.io.OutputStream
+
+// EMT-3877 — tees an OutputStream to two sinks (console + report file) so the
+// japicmp diff is both printed and persisted. Used by `apiCompatibilityReport`.
+class TeeOutputStream(private val a: OutputStream, private val b: OutputStream) : OutputStream() {
+    override fun write(byte: Int) { a.write(byte); b.write(byte) }
+    override fun write(bytes: ByteArray, off: Int, len: Int) { a.write(bytes, off, len); b.write(bytes, off, len) }
+    override fun flush() { a.flush(); b.flush() }
+    override fun close() { b.close() } // never close System.out
+}
 
 plugins {
     id("com.android.library")
@@ -331,4 +341,129 @@ tasks.create<JacocoReport>("jacocoTestReport") {
             )
         }
     )
+}
+
+// ---------------------------------------------------------------------------
+// EMT-3877 — Public API diff gate ("accidental API removal" report)
+//
+// Compares the PUBLIC API of the current 6.0 SDK build against the last stable
+// 5.x release and REPORTS removed / binary-incompatible public API so a human
+// can review intentional vs. accidental breaks. The 6.0 line intentionally
+// changes some APIs, so this runs in REPORT mode by default and does NOT fail
+// the build. Pass `-PapiDiffStrict` to make it fail on binary-incompatible
+// changes (e.g. to wire a blocking CI check once the API is frozen).
+//
+// Mechanism: resolve the baseline AAR from Maven Central into a detached
+// configuration, build the current AAR, extract `classes.jar` from both
+// (AARs are zips), then run the self-contained japicmp CLI fat jar via
+// JavaExec. The CLI runs in its own JVM and needs no plugin classpath
+// injection, which keeps it robust on AGP 8.12.2 / Gradle 8.13.
+// ---------------------------------------------------------------------------
+run {
+    // Last stable 5.x release on Maven Central used as the compatibility baseline.
+    val apiBaselineCoordinates = "io.branch.sdk.android:library:5.21.1"
+    val japicmpVersion = "0.23.1"
+    val apiDiffReportDir = layout.buildDirectory.dir("reports/api-diff")
+
+    // Detached, non-transitive configuration: we only want the baseline AAR
+    // itself (its classes.jar), not its dependency graph.
+    val apiBaseline = configurations.create("apiBaseline") {
+        isCanBeConsumed = false
+        isCanBeResolved = true
+        isTransitive = false
+    }
+    // Detached configuration holding the japicmp CLI fat jar.
+    val japicmpCli = configurations.create("japicmpCli") {
+        isCanBeConsumed = false
+        isCanBeResolved = true
+        isTransitive = false
+    }
+    dependencies {
+        add(apiBaseline.name, "$apiBaselineCoordinates@aar")
+        add(japicmpCli.name, "com.github.siom79.japicmp:japicmp:$japicmpVersion:jar-with-dependencies")
+    }
+
+    // Extract classes.jar from the resolved baseline AAR -> build/api-diff/baseline-classes.jar
+    val extractBaselineApiJar = tasks.register<Copy>("extractBaselineApiJar") {
+        group = "verification"
+        description = "Extracts classes.jar from the baseline ($apiBaselineCoordinates) AAR."
+        from({ zipTree(apiBaseline.singleFile) }) { include("classes.jar") }
+        into(apiDiffReportDir.map { it.dir("baseline") })
+        rename { "baseline-classes.jar" }
+    }
+
+    // Extract classes.jar from the freshly built current AAR -> build/api-diff/current-classes.jar
+    val extractCurrentApiJar = tasks.register<Copy>("extractCurrentApiJar") {
+        group = "verification"
+        description = "Extracts classes.jar from the current build's release AAR."
+        dependsOn("bundleReleaseAar")
+        // The release AAR is the single output of bundleReleaseAar.
+        from({ zipTree(tasks.named("bundleReleaseAar").get().outputs.files.singleFile) }) {
+            include("classes.jar")
+        }
+        into(apiDiffReportDir.map { it.dir("current") })
+        rename { "current-classes.jar" }
+    }
+
+    tasks.register<JavaExec>("apiCompatibilityReport") {
+        group = "verification"
+        description =
+            "EMT-3877: reports removed / binary-incompatible PUBLIC API vs the last stable 5.x release " +
+                "($apiBaselineCoordinates). Report mode by default; pass -PapiDiffStrict to fail on breaks."
+        dependsOn(extractBaselineApiJar, extractCurrentApiJar)
+
+        val baselineJar = apiDiffReportDir.map { it.file("baseline/baseline-classes.jar") }
+        val currentJar = apiDiffReportDir.map { it.file("current/current-classes.jar") }
+        val textReport = apiDiffReportDir.map { it.file("api-diff.txt") }
+        val htmlReport = apiDiffReportDir.map { it.file("api-diff.html") }
+        val strict = project.hasProperty("apiDiffStrict")
+
+        inputs.files(baselineJar, currentJar)
+        outputs.files(textReport, htmlReport)
+
+        classpath = japicmpCli
+        mainClass.set("japicmp.JApiCmp")
+
+        // The library's public classes live under io.branch; restrict the diff to
+        // those (drops noise from bundled/optional deps). --ignore-missing-classes
+        // is required because the AAR's classes.jar does not carry its transitive
+        // dependencies, so referenced superclasses/interfaces are absent.
+        argumentProviders.add(CommandLineArgumentProvider {
+            listOf(
+                "-o", baselineJar.get().asFile.absolutePath,
+                "-n", currentJar.get().asFile.absolutePath,
+                "-a", "public",                 // only public/protected API surface
+                "--only-incompatible",          // only binary-incompatible changes (removals, signature breaks)
+                "--include", "io.branch",        // restrict to the SDK's own packages
+                "--ignore-missing-classes",      // transitive deps are not on the classpath
+                "--html-file", htmlReport.get().asFile.absolutePath,
+            )
+        })
+
+        // Capture japicmp's stdout to the text report while still printing it
+        // to the console (tee).
+        doFirst {
+            apiDiffReportDir.get().asFile.mkdirs()
+            standardOutput = TeeOutputStream(System.out, textReport.get().asFile.outputStream())
+        }
+
+        // Strict mode (opt-in): make japicmp exit non-zero on binary breaks so the
+        // build fails. Default (report mode) ignores the exit code and only reports.
+        if (strict) {
+            args("--error-on-binary-incompatibility")
+            isIgnoreExitValue = false
+        } else {
+            isIgnoreExitValue = true
+        }
+
+        doLast {
+            logger.lifecycle("")
+            logger.lifecycle("[EMT-3877] Public API diff vs $apiBaselineCoordinates")
+            logger.lifecycle("  text report: ${textReport.get().asFile}")
+            logger.lifecycle("  html report: ${htmlReport.get().asFile}")
+            if (!strict) {
+                logger.lifecycle("  mode: REPORT (build not failed). Re-run with -PapiDiffStrict to fail on breaks.")
+            }
+        }
+    }
 }
