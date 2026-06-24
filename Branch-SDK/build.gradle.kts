@@ -101,7 +101,9 @@ android {
         // puts it on the legacy permission model, so on install the system shows the
         // ReviewPermissionsActivity, which blocks ActivityScenario (and on some images kills the
         // instrumentation process) and prevents any session-init instrumented test from running.
-        targetSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
+        // Capped at 33 (not compileSdk 34) so Robolectric 4.10.3 (max SDK 33) can still run the
+        // unit tests; 33 is >= 23, which is all the instrumented permission-model fix needs.
+        targetSdk = 33
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("proguard-consumer.txt")
     }
