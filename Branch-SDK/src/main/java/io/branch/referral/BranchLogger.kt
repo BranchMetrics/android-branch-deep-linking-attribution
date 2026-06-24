@@ -19,7 +19,16 @@ object BranchLogger {
 
     @JvmStatic
     var loggingEnabled = false
-    
+
+    /**
+     * Opt-in gate for internal queue/lock trace output, independent of [loggingLevel]. Off by
+     * default so enabled logging shows only request/response traffic; turn it on via
+     * Branch.setTraceLogging(true) when diagnosing a stuck request. Requires [loggingEnabled].
+     */
+    @JvmStatic
+    @Volatile
+    var traceLoggingEnabled = false
+
     @JvmStatic
     var loggerCallback: IBranchLoggingCallbacks? = null
 
@@ -81,6 +90,24 @@ object BranchLogger {
     @JvmStatic
     fun d(message: String?) {
         if (loggingEnabled && shouldLog(BranchLogLevel.DEBUG) && message?.isNotEmpty() == true) {
+            if (useCustomLogger()) {
+                loggerCallback?.onBranchLog(message, "DEBUG")
+            } else {
+                Log.d(TAG, message)
+            }
+        }
+    }
+
+    /**
+     * <p>Creates an internal <b>Trace</b> message (request queue / lock diagnostics). Gated by
+     * [traceLoggingEnabled] independently of [loggingLevel], so it stays out of normal logging
+     * until a developer opts in via Branch.setTraceLogging(true). Requires logging to be enabled.</p>
+     *
+     * @param message A {@link String} value containing the trace message to record.
+     */
+    @JvmStatic
+    fun t(message: String?) {
+        if (loggingEnabled && traceLoggingEnabled && message?.isNotEmpty() == true) {
             if (useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "DEBUG")
             } else {

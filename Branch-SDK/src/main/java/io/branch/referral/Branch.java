@@ -326,9 +326,9 @@ public class Branch {
         branchQRCodeCache_ = new BranchQRCodeCache(context);
         branchConfigurationController_ = new BranchConfigurationController();
         requestQueue_ = BranchRequestQueueAdapter.getInstance(context);
-        BranchLogger.d("DEBUG: Branch constructor - initializing request queue");
+        BranchLogger.t("Branch constructor - initializing request queue");
         requestQueue_.initialize();
-        BranchLogger.d("DEBUG: Branch constructor - request queue initialized");
+        BranchLogger.t("Branch constructor - request queue initialized");
 
         // Initialize modern link generator with default parameters
         modernLinkGenerator_ = new ModernLinkGenerator(
@@ -336,11 +336,11 @@ public class Branch {
             branchRemoteInterface_,
             prefHelper_
         );
-        BranchLogger.d("DEBUG: Branch constructor - modern link generator initialized");
+        BranchLogger.t("Branch constructor - modern link generator initialized");
 
         // Initialize legacy link generator for fallback compatibility
         legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, branchRemoteInterface_);
-        BranchLogger.d("DEBUG: Branch constructor - legacy link generator initialized");
+        BranchLogger.t("Branch constructor - legacy link generator initialized");
     }
 
     /**
@@ -835,7 +835,7 @@ public class Branch {
      * closed application event to the Branch API.</p>
      */
     private void executeClose() {
-        BranchLogger.d("DEBUG: executeClose called - resetting session state");
+        BranchLogger.t("executeClose called - resetting session state");
 
         // Reset legacy session state first to ensure consistency
         setInitState(BranchSessionState.Uninitialized.INSTANCE);
@@ -843,7 +843,7 @@ public class Branch {
         // Reset session state via StateFlow system
         sessionStateManager.reset();
 
-        BranchLogger.d("DEBUG: executeClose completed - session state reset to Uninitialized");
+        BranchLogger.t("executeClose completed - session state reset to Uninitialized");
     }
 
     public static void registerPlugin(String name, String version) {
@@ -883,12 +883,12 @@ public class Branch {
     }
 
     void unlockSDKInitWaitLock() {
-        BranchLogger.d("DEBUG: unlockSDKInitWaitLock called");
+        BranchLogger.t("unlockSDKInitWaitLock called");
         if (requestQueue_ == null) {
-            BranchLogger.d("DEBUG: requestQueue_ is null, cannot unlock");
+            BranchLogger.t("requestQueue_ is null, cannot unlock");
             return;
         }
-        BranchLogger.d("DEBUG: Clearing init data and unlocking SDK_INIT_WAIT_LOCK");
+        BranchLogger.t("Clearing init data and unlocking SDK_INIT_WAIT_LOCK");
         requestQueue_.postInitClear();
         requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK);
     }
@@ -1148,11 +1148,11 @@ public class Branch {
             if (req.isAsync()) {
                 // Use modern link generator for async requests when available
                 if (modernLinkGenerator_ != null) {
-                    BranchLogger.d("MODERNIZATION_TRACE: Using ModernLinkGenerator for async link creation");
+                    BranchLogger.t("MODERNIZATION_TRACE: Using ModernLinkGenerator for async link creation");
                     modernLinkGenerator_.generateShortLinkAsyncFromJava(req.getLinkPost(), req.getCallback());
                 } else {
                     // Fallback to request queue for backward compatibility
-                    BranchLogger.d("MODERNIZATION_TRACE: Falling back to legacy requestQueue for async link creation");
+                    BranchLogger.t("MODERNIZATION_TRACE: Falling back to legacy requestQueue for async link creation");
                     requestQueue_.handleNewRequest(req);
                 }
             } else {
@@ -1312,7 +1312,7 @@ public class Branch {
 
     private void initializeSession(ServerRequestInitSession initRequest, int delay) {
         BranchLogger.v("initializeSession " + initRequest + " delay " + delay);
-        BranchLogger.d("DEBUG: Starting session initialization with delay: " + delay);
+        BranchLogger.t("Starting session initialization with delay: " + delay);
 
         // Validate Branch key first
         if ((prefHelper_.getBranchKey() == null || prefHelper_.getBranchKey().equalsIgnoreCase(PrefHelper.NO_STRING_VALUE))) {
@@ -1329,14 +1329,14 @@ public class Branch {
 
         // Set initializing state immediately
         setInitState(BranchSessionState.Initializing.INSTANCE);
-        BranchLogger.d("DEBUG: Session state set to INITIALISING");
+        BranchLogger.t("Session state set to INITIALISING");
 
         if (delay > 0) {
             initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-            BranchLogger.d("DEBUG: Adding USER_SET_WAIT_LOCK with delay: " + delay);
+            BranchLogger.t("Adding USER_SET_WAIT_LOCK with delay: " + delay);
             getStaticHandler().postDelayed(new SessionInitRunnable(initRequest), delay);
         } else {
-            BranchLogger.d("DEBUG: No delay, processing session initialization immediately");
+            BranchLogger.t("No delay, processing session initialization immediately");
             processSessionInitialization(initRequest);
         }
     }
@@ -1347,7 +1347,7 @@ public class Branch {
 
         BranchSessionState sessionState = getCurrentSessionState();
         BranchLogger.v("Intent: " + intent + " forceBranchSession: " + forceBranchSession + " initState: " + sessionState);
-        BranchLogger.d("DEBUG: Processing session initialization - forceBranchSession: " + forceBranchSession + " sessionState: " + sessionState);
+        BranchLogger.t("Processing session initialization - forceBranchSession: " + forceBranchSession + " sessionState: " + sessionState);
 
         // Enhanced session state validation with fallback to legacy system
         // Check if we have a valid active session
@@ -1360,7 +1360,7 @@ public class Branch {
                                   // Allow re-initialization if session is in Initializing state but no valid session exists
                                   (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession);
 
-        BranchLogger.d("DEBUG: Should initialize session: " + shouldInitialize +
+        BranchLogger.t("Should initialize session: " + shouldInitialize +
                       " (hasValidActiveSession: " + hasValidActiveSession +
                       ", sessionState: " + sessionState +
                       ", legacyState: " + getInitState() + ")");
@@ -1368,19 +1368,19 @@ public class Branch {
         if (shouldInitialize) {
             if (forceBranchSession && intent != null) {
                 intent.removeExtra(Defines.IntentKeys.ForceNewBranchSession.getKey());
-                BranchLogger.d("DEBUG: Removed ForceNewBranchSession extra from intent");
+                BranchLogger.t("Removed ForceNewBranchSession extra from intent");
             }
 
             // If we're in an incomplete Initializing state, reset to allow proper initialization
             if (sessionState instanceof BranchSessionState.Initializing && !hasValidActiveSession) {
-                BranchLogger.d("DEBUG: Resetting incomplete Initializing state to allow re-initialization");
+                BranchLogger.t("Resetting incomplete Initializing state to allow re-initialization");
                 setInitState(BranchSessionState.Uninitialized.INSTANCE);
             }
 
-            BranchLogger.d("DEBUG: Calling registerAppInit for request: " + initRequest);
+            BranchLogger.t("Calling registerAppInit for request: " + initRequest);
             registerAppInit(initRequest, forceBranchSession);
         } else if (initRequest.callback_ != null) {
-            BranchLogger.d("DEBUG: Session already initialized, calling callback with latest params");
+            BranchLogger.t("Session already initialized, calling callback with latest params");
             // If session is truly initialized, return the latest referring params instead of error
             if (hasValidActiveSession) {
                 initRequest.callback_.onInitFinished(getLatestReferringParams(), null);
@@ -1396,21 +1396,21 @@ public class Branch {
      */
      void registerAppInit(@NonNull ServerRequestInitSession request, boolean forceBranchSession) {
          BranchLogger.v("registerAppInit " + request + " forceBranchSession: " + forceBranchSession);
-         BranchLogger.d("DEBUG: Registering app init - forceBranchSession: " + forceBranchSession);
+         BranchLogger.t("Registering app init - forceBranchSession: " + forceBranchSession);
          setInitState(BranchSessionState.Initializing.INSTANCE);
 
          ServerRequest req = ((BranchRequestQueueAdapter)requestQueue_).getSelfInitRequest();
          ServerRequestInitSession r = (req instanceof ServerRequestInitSession) ? (ServerRequestInitSession) req : null;
          BranchLogger.v("Ordering init calls");
          BranchLogger.v("Self init request: " + r);
-         BranchLogger.d("DEBUG: Self init request in queue: " + r);
+         BranchLogger.t("Self init request in queue: " + r);
          requestQueue_.printQueue();
 
          // if forceBranchSession aka reInit is true, we want to preserve the callback order in case
          // there is one still in flight
          if (r == null || forceBranchSession) {
              BranchLogger.v("Moving " + request + " " + "to front of the queue or behind network-in-progress request");
-             BranchLogger.d("DEBUG: Inserting request at front of queue");
+             BranchLogger.t("Inserting request at front of queue");
              requestQueue_.insertRequestAtFront(request);
          }
          else {
@@ -1418,17 +1418,17 @@ public class Branch {
              BranchLogger.v("Retrieved " + r + " with callback " + r.callback_ + " in queue currently");
              r.callback_ = request.callback_;
              BranchLogger.v(r + " now has callback " + request.callback_);
-             BranchLogger.d("DEBUG: Updated existing request callback");
+             BranchLogger.t("Updated existing request callback");
          }
          BranchLogger.v("Finished ordering init calls");
          requestQueue_.printQueue();
-         BranchLogger.d("DEBUG: Calling initTasks for request: " + request);
+         BranchLogger.t("Calling initTasks for request: " + request);
          initTasks(request);
      }
 
     private void initTasks(ServerRequest request) {
         BranchLogger.v("initTasks " + request);
-        BranchLogger.d("DEBUG: Starting initTasks for request: " + request.getClass().getSimpleName());
+        BranchLogger.t("Starting initTasks for request: " + request.getClass().getSimpleName());
 
         // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
         // In this case need to wait till onResume to get the latest intent.
@@ -1440,31 +1440,31 @@ public class Branch {
         if (request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
-            BranchLogger.d("DEBUG: Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
+            BranchLogger.t("Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
 
             deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
                 @Override
                 public void onInstallReferrersFinished() {
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                     BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
-                    BranchLogger.d("DEBUG: Install referrer fetch completed, lock removed");
+                    BranchLogger.t("Install referrer fetch completed, lock removed");
                 }
             });
         }
 
         request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
         BranchLogger.v("Added GAID_FETCH_WAIT_LOCK");
-        BranchLogger.d("DEBUG: Added GAID_FETCH_WAIT_LOCK for request");
+        BranchLogger.t("Added GAID_FETCH_WAIT_LOCK for request");
 
         deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
             @Override
             public void onAdsParamsFetchFinished() {
                 requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-                BranchLogger.d("DEBUG: GAID fetch completed, unlocking wait lock");
+                BranchLogger.t("GAID fetch completed, unlocking wait lock");
             }
         });
 
-        BranchLogger.d("DEBUG: Calling handleNewRequest for request: " + request);
+        BranchLogger.t("Calling handleNewRequest for request: " + request);
         requestQueue_.handleNewRequest(request);
     }
 
@@ -1885,6 +1885,23 @@ public class Branch {
     public static void enableLogging(BranchLogger.BranchLogLevel level) {
         enableLogging(null, level);
 
+    }
+
+    /**
+     * Enable or disable verbose trace logging of the internal request queue and lock state.
+     *
+     * <p>This output is independent of the log level set via {@link #enableLogging()}. It is off by
+     * default, so enabled logging shows only network request/response traffic rather than the
+     * queue/lock internals. Turn it on when diagnosing a stuck request or a queue/lock issue.
+     * Logging must also be enabled (via {@code enableLogging()}) for trace output to appear.</p>
+     *
+     * @param enabled true to emit queue/lock trace diagnostics, false (default) to suppress them.
+     */
+    public static void setTraceLogging(boolean enabled) {
+        BranchLogger.setTraceLoggingEnabled(enabled);
+        if (enabled && !BranchLogger.getLoggingEnabled()) {
+            BranchLogger.logAlways("Branch trace logging is on, but logging is disabled; call Branch.enableLogging() to see trace output.");
+        }
     }
 
     /**
@@ -2656,7 +2673,7 @@ public class Branch {
         @Override
         public void run() {
             try {
-                BranchLogger.d("DEBUG: Delay completed, processing session initialization");
+                BranchLogger.t("Delay completed, processing session initialization");
                 // Check if Branch instance is still valid before proceeding
                 if (branchReferral_ != null) {
                     branchReferral_.processSessionInitialization(initRequest);

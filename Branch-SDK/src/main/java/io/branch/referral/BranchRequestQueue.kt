@@ -80,7 +80,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 INSTANCE?.get() ?: run {
                     val newInstance = BranchRequestQueue(context.applicationContext)
                     INSTANCE = WeakReference(newInstance)
-                    BranchLogger.d("DEBUG: BranchRequestQueue instance created")
+                    BranchLogger.t("BranchRequestQueue instance created")
                     newInstance
                 }
             }
@@ -88,12 +88,12 @@ class BranchRequestQueue private constructor(private val context: Context) {
         
         @JvmStatic
         fun shutDown() {
-            BranchLogger.d("DEBUG: BranchRequestQueue.shutDown called")
+            BranchLogger.t("BranchRequestQueue.shutDown called")
             INSTANCE?.get()?.let { instance ->
                 instance.shutdown()
                 INSTANCE = null
             }
-            BranchLogger.d("DEBUG: BranchRequestQueue.shutDown completed")
+            BranchLogger.t("BranchRequestQueue.shutDown completed")
         }
     }
     
@@ -128,8 +128,8 @@ class BranchRequestQueue private constructor(private val context: Context) {
     init {
         // Initialize the queue but don't start processing yet
         // Processing will be started explicitly when the SDK is ready
-        BranchLogger.d("DEBUG: BranchRequestQueue constructor called")
-        BranchLogger.d("DEBUG: BranchRequestQueue constructor completed")
+        BranchLogger.t("BranchRequestQueue constructor called")
+        BranchLogger.t("BranchRequestQueue constructor completed")
     }
     
     /**
@@ -137,7 +137,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     fun initialize() {
         BranchLogger.v("Initializing BranchRequestQueue with coroutines")
-        BranchLogger.d("DEBUG: BranchRequestQueue.initialize called")
+        BranchLogger.t("BranchRequestQueue.initialize called")
         startProcessing()
     }
     
@@ -146,7 +146,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for adding requests to queue
      */
     fun enqueue(request: ServerRequest) {
-        BranchLogger.d("DEBUG: BranchRequestQueue.enqueue called for: ${request::class.simpleName}")
+        BranchLogger.t("BranchRequestQueue.enqueue called for: ${request::class.simpleName}")
         
         if (_queueState.value == QueueState.SHUTDOWN) {
             BranchLogger.w("Cannot enqueue request - queue is shutdown")
@@ -156,12 +156,12 @@ class BranchRequestQueue private constructor(private val context: Context) {
         // Ensure queue is ready to process requests
         if (_queueState.value == QueueState.IDLE) {
             BranchLogger.v("Queue not initialized, initializing now")
-            BranchLogger.d("DEBUG: Queue was IDLE during enqueue, initializing")
+            BranchLogger.t("Queue was IDLE during enqueue, initializing")
             initialize()
         }
         
         BranchLogger.v("Enqueuing request: $request")
-        BranchLogger.d("DEBUG: Adding request to queue list")
+        BranchLogger.t("Adding request to queue list")
         
         synchronized(queueList) {
             // Apply MAX_ITEMS limit like original ServerRequestQueue
@@ -179,7 +179,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         // Trigger processing without blocking
         queueScope.launch {
             try {
-                BranchLogger.d("DEBUG: Triggering processing for: ${request::class.simpleName}")
+                BranchLogger.t("Triggering processing for: ${request::class.simpleName}")
                 processingTrigger.send(Unit)
             } catch (e: Exception) {
                 BranchLogger.e("Failed to trigger processing: ${e.message}")
@@ -193,10 +193,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for queue processing coordination
      */
     private fun startProcessing() {
-        BranchLogger.d("DEBUG: BranchRequestQueue.startProcessing called")
+        BranchLogger.t("BranchRequestQueue.startProcessing called")
         queueScope.launch {
             _queueState.value = QueueState.PROCESSING
-            BranchLogger.d("DEBUG: Queue state set to PROCESSING")
+            BranchLogger.t("Queue state set to PROCESSING")
             
             try {
                 for (trigger in processingTrigger) {
@@ -220,18 +220,18 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
         
         if (request == null) {
-            BranchLogger.d("DEBUG: No requests in queue to process")
+            BranchLogger.t("No requests in queue to process")
             return
         }
         
-        BranchLogger.d("DEBUG: BranchRequestQueue.processNextRequest called for: ${request::class.simpleName}")
+        BranchLogger.t("BranchRequestQueue.processNextRequest called for: ${request::class.simpleName}")
         
         val requestId = generateRequestId(request)
         
         if (!canProcessRequest(request)) {
             if (request.isWaitingOnProcessToFinish) {
                 val waitLocks = request.printWaitLocks()
-                BranchLogger.d("DEBUG: Request cannot be processed - waiting on locks: $waitLocks")
+                BranchLogger.t("Request cannot be processed - waiting on locks: $waitLocks")
             }
             handleRequestCannotBeProcessed(request, requestId)
             return
@@ -249,14 +249,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
         try {
             // Increment network count
             networkCount.incrementAndGet()
-            BranchLogger.d("DEBUG: Processing request: ${request::class.simpleName}, network count: ${networkCount.get()}")
+            BranchLogger.t("Processing request: ${request::class.simpleName}, network count: ${networkCount.get()}")
             
             when {
                 request.isWaitingOnProcessToFinish -> {
                     val waitLocks = request.printWaitLocks()
                     BranchLogger.v("Request $request is waiting on processes to finish")
-                    BranchLogger.d("DEBUG: Request is waiting on processes to finish, active locks: $waitLocks, re-queuing")
-                    BranchLogger.w("WAIT_LOCK_DEBUG: Request ${request::class.simpleName} stuck with locks: $waitLocks")
+                    BranchLogger.t("Request is waiting on processes to finish, active locks: $waitLocks, re-queuing")
+                    BranchLogger.t("WAIT_LOCK_DEBUG: Request ${request::class.simpleName} stuck with locks: $waitLocks")
                     // Re-queue after delay - add back to front of queue
                     delay(50)
                     synchronized(queueList) {
@@ -266,7 +266,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 }
                 !hasValidSession(request) -> {
                     BranchLogger.v("Request $request has no valid session")
-                    BranchLogger.d("DEBUG: Request has no valid session")
+                    BranchLogger.t("Request has no valid session")
                     
                     // Check if there are any initialization requests in the queue
                     val hasInitRequest = synchronized(queueList) {
@@ -274,7 +274,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     }
                     
                     if (!hasInitRequest && request !is ServerRequestInitSession) {
-                        BranchLogger.d("DEBUG: No init request in queue and no valid session - request will wait for session initialization")
+                        BranchLogger.t("No init request in queue and no valid session - request will wait for session initialization")
                         // Add back to queue with delay and trigger auto-initialization if needed
                         delay(100)
                         synchronized(queueList) {
@@ -282,14 +282,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
                         }
                         processingTrigger.send(Unit)
                     } else {
-                        BranchLogger.d("DEBUG: Handling failure for request without session")
+                        BranchLogger.t("Handling failure for request without session")
                         request.handleFailure(BranchError.ERR_NO_SESSION, "Request has no session")
                     }
                 }
                 else -> {
-                    BranchLogger.d("DEBUG: Executing request: ${request::class.simpleName}")
+                    BranchLogger.t("Executing request: ${request::class.simpleName}")
                     if (request is ServerRequestInitSession) {
-                        BranchLogger.d("DEBUG: *** EXECUTING SESSION INITIALIZATION REQUEST: ${request::class.simpleName} ***")
+                        BranchLogger.t("*** EXECUTING SESSION INITIALIZATION REQUEST: ${request::class.simpleName} ***")
                     }
                     executeRequest(request)
                 }
@@ -300,7 +300,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         } finally {
             activeRequests.remove(requestId)
             networkCount.decrementAndGet()
-            BranchLogger.d("DEBUG: Request processing completed, network count: ${networkCount.get()}")
+            BranchLogger.t("Request processing completed, network count: ${networkCount.get()}")
         }
     }
     
@@ -344,17 +344,17 @@ class BranchRequestQueue private constructor(private val context: Context) {
             
             // Check for timeout-based stuck locks (10 seconds)
             if (retryInfo.hasExceededWaitLockTimeout(10_000L)) {
-                BranchLogger.w("STUCK_LOCK_DETECTION: Locks have been active for >10s, attempting resolution: $waitLocks")
+                BranchLogger.t("STUCK_LOCK_DETECTION: Locks have been active for >10s, attempting resolution: $waitLocks")
                 tryResolveStuckLocks(request, waitLocks)
             }
             // Check for SDK_INIT_WAIT_LOCK when session is already valid (immediate resolution)
             else if (waitLocks.contains("SDK_INIT_WAIT_LOCK") && isSessionValidForRequest(request)) {
-                BranchLogger.w("STUCK_LOCK_DETECTION: SDK_INIT_WAIT_LOCK detected but session is valid, attempting immediate resolution")
+                BranchLogger.t("STUCK_LOCK_DETECTION: SDK_INIT_WAIT_LOCK detected but session is valid, attempting immediate resolution")
                 tryResolveStuckSdkInitLock(request)
             }
             // Check for retry-based stuck locks
             else if (retryInfo.retryCount >= 3 && waitLocks.contains("USER_AGENT_STRING_LOCK")) {
-                BranchLogger.w("STUCK_LOCK_DETECTION: USER_AGENT_STRING_LOCK detected as stuck after ${retryInfo.retryCount} retries, attempting to resolve")
+                BranchLogger.t("STUCK_LOCK_DETECTION: USER_AGENT_STRING_LOCK detected as stuck after ${retryInfo.retryCount} retries, attempting to resolve")
                 tryResolveStuckUserAgentLock(request)
             }
         }
@@ -362,7 +362,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         // Increment retry count and attempt requeue
         retryInfo.incrementRetry()
         
-        BranchLogger.d("DEBUG: Request cannot be processed yet, retry ${retryInfo.retryCount}/$MAX_RETRY_ATTEMPTS, re-queuing after delay")
+        BranchLogger.t("Request cannot be processed yet, retry ${retryInfo.retryCount}/$MAX_RETRY_ATTEMPTS, re-queuing after delay")
         delay(RETRY_DELAY_MS)
         
         // Request stays in queue (don't remove), just trigger processing again
@@ -395,7 +395,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             else -> "Request failed unknown reason"
         }
         
-        BranchLogger.d("DEBUG: $errorMessage for request: ${request::class.simpleName}")
+        BranchLogger.t("$errorMessage for request: ${request::class.simpleName}")
         
         // Clean up retry tracking
         requestRetryInfo.remove(requestId)
@@ -409,18 +409,18 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     private suspend fun executeRequest(request: ServerRequest) = withContext(Dispatchers.IO) {
         BranchLogger.v("Executing request: $request")
-        BranchLogger.d("DEBUG: BranchRequestQueue.executeRequest called for: ${request::class.simpleName}")
+        BranchLogger.t("BranchRequestQueue.executeRequest called for: ${request::class.simpleName}")
         
         try {
             // Pre-execution on Main thread for UI-related updates
             withContext(Dispatchers.Main) {
-                BranchLogger.d("DEBUG: Executing onPreExecute and doFinalUpdateOnMainThread")
+                BranchLogger.t("Executing onPreExecute and doFinalUpdateOnMainThread")
                 request.onPreExecute()
                 request.doFinalUpdateOnMainThread()
             }
             
             // Background processing
-            BranchLogger.d("DEBUG: Executing doFinalUpdateOnBackgroundThread")
+            BranchLogger.t("Executing doFinalUpdateOnBackgroundThread")
             request.doFinalUpdateOnBackgroundThread()
 
 
@@ -429,7 +429,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             val branch = Branch.getInstance()
             if (branch.trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
                 val response = ServerResponse(request.requestPath, BranchError.ERR_BRANCH_TRACKING_DISABLED, "", "Tracking is disabled")
-                BranchLogger.d("DEBUG: Tracking is disabled, handling response")
+                BranchLogger.t("Tracking is disabled, handling response")
                 handleResponse(request, response)
                 return@withContext
             }
@@ -438,14 +438,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
             if(request is QueueOperationSetIdentity || request is QueueOperationLogout) {
                 val response = ServerResponse("", 200, "", "")
                 withContext(Dispatchers.Main) {
-                    BranchLogger.d("DEBUG: Handling response on main thread")
+                    BranchLogger.t("Handling response on main thread")
                     handleResponse(request, response)
                 }
             }
             // Execute network call
             else {
                 val branchKey = branch.prefHelper_.branchKey
-                BranchLogger.d("DEBUG: Executing network call with branch key: $branchKey")
+                BranchLogger.t("Executing network call with branch key: $branchKey")
                 val response = if (request.isGetRequest) {
                     branch.branchRemoteInterface.make_restful_get(
                         request.requestUrl,
@@ -463,7 +463,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 }
                 // Handle response on Main thread
                 withContext(Dispatchers.Main) {
-                    BranchLogger.d("DEBUG: Handling response on main thread")
+                    BranchLogger.t("Handling response on main thread")
                     handleResponse(request, response)
                 }
             }
@@ -480,20 +480,20 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Handle network response
      */
     private fun handleResponse(request: ServerRequest, response: ServerResponse?) {
-        BranchLogger.d("DEBUG: BranchRequestQueue.handleResponse called for: ${request::class.simpleName}")
+        BranchLogger.t("BranchRequestQueue.handleResponse called for: ${request::class.simpleName}")
         
         if (response == null) {
-            BranchLogger.d("DEBUG: Response is null, handling failure")
+            BranchLogger.t("Response is null, handling failure")
             request.handleFailure(BranchError.ERR_OTHER, "Null response")
             return
         }
         
-        BranchLogger.d("DEBUG: Response status code: ${response.statusCode}")
+        BranchLogger.t("Response status code: ${response.statusCode}")
         
         when (response.statusCode) {
             200 -> {
                 try {
-                    BranchLogger.d("DEBUG: Response successful, calling onRequestSucceeded")
+                    BranchLogger.t("Response successful, calling onRequestSucceeded")
                     
                     // Enhanced debugging for init session requests
                     if (request is ServerRequestInitSession) {
@@ -502,7 +502,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                             is ServerRequestRegisterOpen -> "RegisterOpen"
                             else -> "InitSession"
                         }
-                        BranchLogger.d("DEBUG: *** SUCCESS: $requestType request completed successfully ***")
+                        BranchLogger.t("*** SUCCESS: $requestType request completed successfully ***")
                     }
                     
                     // Process ServerRequestInitSession response data before calling onRequestSucceeded
@@ -517,9 +517,9 @@ class BranchRequestQueue private constructor(private val context: Context) {
                         try {
                             val legacyState = Branch.getInstance().initState
                             val hasUser = Branch.getInstance().prefHelper_.getRandomizedBundleToken() != PrefHelper.NO_STRING_VALUE
-                            BranchLogger.d("DEBUG: After $request completion - LegacyState: $legacyState, hasUser: $hasUser")
+                            BranchLogger.t("After $request completion - LegacyState: $legacyState, hasUser: $hasUser")
                         } catch (e: Exception) {
-                            BranchLogger.d("DEBUG: Could not access session state after request completion: ${e.message}")
+                            BranchLogger.t("Could not access session state after request completion: ${e.message}")
                         }
                     }
                 } catch (e: Exception) {
@@ -528,7 +528,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 }
             }
             else -> {
-                BranchLogger.d("DEBUG: Response failed with status: ${response.statusCode}")
+                BranchLogger.t("Response failed with status: ${response.statusCode}")
                 request.handleFailure(response.statusCode, response.failReason ?: "Request failed")
             }
         }
@@ -553,7 +553,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Try to resolve multiple types of stuck locks
      */
     private fun tryResolveStuckLocks(request: ServerRequest, waitLocks: String) {
-        BranchLogger.w("STUCK_LOCK_RESOLUTION: Attempting to resolve stuck locks: $waitLocks")
+        BranchLogger.t("STUCK_LOCK_RESOLUTION: Attempting to resolve stuck locks: $waitLocks")
         
         if (waitLocks.contains("USER_AGENT_STRING_LOCK")) {
             tryResolveStuckUserAgentLock(request)
@@ -561,17 +561,17 @@ class BranchRequestQueue private constructor(private val context: Context) {
         
         // Add resolution for other common stuck locks
         if (waitLocks.contains("SDK_INIT_WAIT_LOCK")) {
-            BranchLogger.w("STUCK_LOCK_RESOLUTION: Attempting to resolve stuck SDK_INIT_WAIT_LOCK")
+            BranchLogger.t("STUCK_LOCK_RESOLUTION: Attempting to resolve stuck SDK_INIT_WAIT_LOCK")
             tryResolveStuckSdkInitLock(request)
         }
         
         if (waitLocks.contains("GAID_FETCH_WAIT_LOCK")) {
-            BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of stuck GAID_FETCH_WAIT_LOCK")
+            BranchLogger.t("STUCK_LOCK_RESOLUTION: Forcing removal of stuck GAID_FETCH_WAIT_LOCK")
             request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK)
         }
         
         if (waitLocks.contains("INSTALL_REFERRER_FETCH_WAIT_LOCK")) {
-            BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INSTALL_REFERRER_FETCH_WAIT_LOCK")
+            BranchLogger.t("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INSTALL_REFERRER_FETCH_WAIT_LOCK")
             request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK)
         }
     }
@@ -584,19 +584,19 @@ class BranchRequestQueue private constructor(private val context: Context) {
         try {
             // Check if user agent is now available
             if (!android.text.TextUtils.isEmpty(Branch._userAgentString)) {
-                BranchLogger.d("DEBUG: User agent is now available: ${Branch._userAgentString}, removing stuck lock")
+                BranchLogger.t("User agent is now available: ${Branch._userAgentString}, removing stuck lock")
                 request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK)
                 return
             }
             
             // If user agent is still empty after retries, force unlock to prevent infinite retry
-            BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of USER_AGENT_STRING_LOCK to unblock request processing")
+            BranchLogger.t("STUCK_LOCK_RESOLUTION: Forcing removal of USER_AGENT_STRING_LOCK to unblock request processing")
             request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_AGENT_STRING_LOCK)
             
             // Set a fallback user agent to prevent future issues
             if (android.text.TextUtils.isEmpty(Branch._userAgentString)) {
                 Branch._userAgentString = "Branch-Android-SDK-Fallback"
-                BranchLogger.d("DEBUG: Set fallback user agent to prevent future locks")
+                BranchLogger.t("Set fallback user agent to prevent future locks")
             }
             
         } catch (e: Exception) {
@@ -625,11 +625,11 @@ class BranchRequestQueue private constructor(private val context: Context) {
             val sessionInitialized = branch.initState is BranchSessionState.Initialized
             val canPerformOperations = branch.canPerformOperations()
             
-            BranchLogger.d("DEBUG: SDK_INIT_WAIT_LOCK resolution check - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, sessionInitialized: $sessionInitialized, canPerformOperations: $canPerformOperations")
+            BranchLogger.t("SDK_INIT_WAIT_LOCK resolution check - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, sessionInitialized: $sessionInitialized, canPerformOperations: $canPerformOperations")
             
             // If session is valid but lock is still present, remove it
             if ((sessionInitialized || canPerformOperations) && hasSession && hasDeviceToken) {
-                BranchLogger.w("STUCK_LOCK_RESOLUTION: Session is initialized but SDK_INIT_WAIT_LOCK is still present, removing lock")
+                BranchLogger.t("STUCK_LOCK_RESOLUTION: Session is initialized but SDK_INIT_WAIT_LOCK is still present, removing lock")
                 request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK)
                 
                 // Also call the official unlock method to ensure consistency
@@ -639,7 +639,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     BranchLogger.w("Failed to call unlockSDKInitWaitLock: ${e.message}")
                 }
             } else {
-                BranchLogger.d("DEBUG: Session not ready yet, keeping SDK_INIT_WAIT_LOCK")
+                BranchLogger.t("Session not ready yet, keeping SDK_INIT_WAIT_LOCK")
             }
             
         } catch (e: Exception) {
@@ -647,7 +647,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             // Force unlock if there's an error to prevent infinite retry
             try {
                 request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK)
-                BranchLogger.w("STUCK_LOCK_RESOLUTION: Force removed SDK_INIT_WAIT_LOCK due to error")
+                BranchLogger.t("STUCK_LOCK_RESOLUTION: Force removed SDK_INIT_WAIT_LOCK due to error")
             } catch (ex: Exception) {
                 BranchLogger.e("Failed to force unlock SDK_INIT_WAIT_LOCK: ${ex.message}")
             }
@@ -659,18 +659,18 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Matches the logic from ServerRequestQueue.java for compatibility
      */
     private fun processInitSessionResponse(request: ServerRequestInitSession, response: ServerResponse) {
-        BranchLogger.d("DEBUG: Processing init session response for: ${request::class.simpleName}")
+        BranchLogger.t("Processing init session response for: ${request::class.simpleName}")
         
         try {
             val branch = Branch.getInstance()
             if (branch.trackingController.isTrackingDisabled) {
-                BranchLogger.d("DEBUG: Tracking is disabled, skipping token processing")
+                BranchLogger.t("Tracking is disabled, skipping token processing")
                 return
             }
             
             val respJson = response.getObject()
             if (respJson == null) {
-                BranchLogger.d("DEBUG: Response JSON is null, skipping token processing")
+                BranchLogger.t("Response JSON is null, skipping token processing")
                 return
             }
             
@@ -681,7 +681,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 val sessionId = respJson.getString(Defines.Jsonkey.SessionID.key)
                 branch.prefHelper_.sessionID = sessionId
                 updateRequestsInQueue = true
-                BranchLogger.d("DEBUG: Set SessionID: $sessionId")
+                BranchLogger.t("Set SessionID: $sessionId")
             }
             
             // Process RandomizedBundleToken - this is what makes hasUser() return true
@@ -694,7 +694,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     branch.linkCache_.clear()
                     branch.prefHelper_.randomizedBundleToken = newRandomizedBundleToken
                     updateRequestsInQueue = true
-                    BranchLogger.d("DEBUG: Set RandomizedBundleToken: $newRandomizedBundleToken (was: $currentToken)")
+                    BranchLogger.t("Set RandomizedBundleToken: $newRandomizedBundleToken (was: $currentToken)")
                 }
             }
             
@@ -703,11 +703,11 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 val deviceToken = respJson.getString(Defines.Jsonkey.RandomizedDeviceToken.key)
                 branch.prefHelper_.randomizedDeviceToken = deviceToken
                 updateRequestsInQueue = true
-                BranchLogger.d("DEBUG: Set RandomizedDeviceToken: $deviceToken")
+                BranchLogger.t("Set RandomizedDeviceToken: $deviceToken")
             }
             
             if (updateRequestsInQueue) {
-                BranchLogger.d("DEBUG: Updating all requests in queue with new tokens")
+                BranchLogger.t("Updating all requests in queue with new tokens")
                 updateAllRequestsInQueue()
             }
             
@@ -733,30 +733,30 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 val canProceed = !isWaiting
                 if (isWaiting) {
                     val waitLocks = request.printWaitLocks()
-                    BranchLogger.d("DEBUG: ServerRequestInitSession waiting on locks: $waitLocks")
+                    BranchLogger.t("ServerRequestInitSession waiting on locks: $waitLocks")
                 }
-                BranchLogger.d("DEBUG: ServerRequestInitSession can proceed: $canProceed (isWaiting: $isWaiting)")
+                BranchLogger.t("ServerRequestInitSession can proceed: $canProceed (isWaiting: $isWaiting)")
                 canProceed
             }
             // Regular requests need to check wait locks first
             isWaiting -> {
                 val waitLocks = request.printWaitLocks()
-                BranchLogger.d("DEBUG: Request is waiting on process locks: $waitLocks")
+                BranchLogger.t("Request is waiting on process locks: $waitLocks")
                 false
             }
             // Then check session requirements
             needsSession && !hasValidSession -> {
-                BranchLogger.d("DEBUG: Request needs session but doesn't have valid session")
+                BranchLogger.t("Request needs session but doesn't have valid session")
                 false
             }
             // Default allow
             else -> {
-                BranchLogger.d("DEBUG: Request can proceed (default case)")
+                BranchLogger.t("Request can proceed (default case)")
                 true
             }
         }
         
-        BranchLogger.d("DEBUG: canProcessRequest - isWaiting: $isWaiting, needsSession: $needsSession, hasValidSession: $hasValidSession, isInitSession: ${request is ServerRequestInitSession}, result: $result")
+        BranchLogger.t("canProcessRequest - isWaiting: $isWaiting, needsSession: $needsSession, hasValidSession: $hasValidSession, isInitSession: ${request is ServerRequestInitSession}, result: $result")
         return result
     }
     
@@ -771,7 +771,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             is QueueOperationSetIdentity -> false
             else -> true
         }
-        BranchLogger.d("DEBUG: requestNeedsSession for ${request::class.simpleName} - result: $result")
+        BranchLogger.t("requestNeedsSession for ${request::class.simpleName} - result: $result")
         return result
     }
     
@@ -780,7 +780,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     private fun hasValidSession(request: ServerRequest): Boolean {
         if (!requestNeedsSession(request)) {
-            BranchLogger.d("DEBUG: Request does not need session, returning true")
+            BranchLogger.t("Request does not need session, returning true")
             return true
         }
         
@@ -794,7 +794,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             else -> hasSession && hasDeviceToken && hasUser
         }
         
-        BranchLogger.d("DEBUG: hasValidSession - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, result: $result")
+        BranchLogger.t("hasValidSession - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, result: $result")
         return result
     }
     
@@ -804,7 +804,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     fun getSize(): Int {
         synchronized(queueList) {
             val size = queueList.size
-            BranchLogger.d("DEBUG: BranchRequestQueue.getSize called - result: $size")
+            BranchLogger.t("BranchRequestQueue.getSize called - result: $size")
             return size
         }
     }
@@ -813,10 +813,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Peek at first request
      */
     fun peek(): ServerRequest? {
-        BranchLogger.d("DEBUG: BranchRequestQueue.peek called")
+        BranchLogger.t("BranchRequestQueue.peek called")
         synchronized(queueList) {
             val result = queueList.firstOrNull()
-            BranchLogger.d("DEBUG: Request peek result: ${result?.javaClass?.simpleName}")
+            BranchLogger.t("Request peek result: ${result?.javaClass?.simpleName}")
             return result
         }
     }
@@ -825,14 +825,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Peek at request at specific index
      */
     fun peekAt(index: Int): ServerRequest? {
-        BranchLogger.d("DEBUG: BranchRequestQueue.peekAt called for index: $index")
+        BranchLogger.t("BranchRequestQueue.peekAt called for index: $index")
         synchronized(queueList) {
             val result = if (index >= 0 && index < queueList.size) {
                 queueList[index]
             } else {
                 null
             }
-            BranchLogger.d("DEBUG: Request peek at index $index result: ${result?.javaClass?.simpleName}")
+            BranchLogger.t("Request peek at index $index result: ${result?.javaClass?.simpleName}")
             return result
         }
     }
@@ -844,10 +844,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
         synchronized(queueList) {
             try {
                 BranchLogger.v("Queue operation insert. Request: $request Size: ${queueList.size} Index: $index")
-                BranchLogger.d("DEBUG: BranchRequestQueue.insert called for: ${request::class.simpleName} at index: $index, current size: ${queueList.size}")
+                BranchLogger.t("BranchRequestQueue.insert called for: ${request::class.simpleName} at index: $index, current size: ${queueList.size}")
                 val actualIndex = if (queueList.size < index) queueList.size else index
                 queueList.add(actualIndex, request)
-                BranchLogger.d("DEBUG: Request inserted at actual index: $actualIndex, new size: ${queueList.size}")
+                BranchLogger.t("Request inserted at actual index: $actualIndex, new size: ${queueList.size}")
             } catch (e: Exception) {
                 BranchLogger.e("Caught IndexOutOfBoundsException ${e.message}")
             }
@@ -858,14 +858,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Remove request at specific index
      */
     fun removeAt(index: Int): ServerRequest? {
-        BranchLogger.d("DEBUG: BranchRequestQueue.removeAt called for index: $index")
+        BranchLogger.t("BranchRequestQueue.removeAt called for index: $index")
         synchronized(queueList) {
             val result = if (index >= 0 && index < queueList.size) {
                 queueList.removeAt(index)
             } else {
                 null
             }
-            BranchLogger.d("DEBUG: Request removal at index $index result: ${result?.javaClass?.simpleName}")
+            BranchLogger.t("Request removal at index $index result: ${result?.javaClass?.simpleName}")
             return result
         }
     }
@@ -874,10 +874,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Remove specific request from queue
      */
     fun remove(request: ServerRequest?): Boolean {
-        BranchLogger.d("DEBUG: BranchRequestQueue.remove called for: ${request?.javaClass?.simpleName}")
+        BranchLogger.t("BranchRequestQueue.remove called for: ${request?.javaClass?.simpleName}")
         synchronized(queueList) {
             val result = queueList.remove(request)
-            BranchLogger.d("DEBUG: Request removal result: $result")
+            BranchLogger.t("Request removal result: $result")
             return result
         }
     }
@@ -887,14 +887,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     fun insertRequestAtFront(request: ServerRequest) {
         BranchLogger.v("Queue operation insertRequestAtFront $request networkCount_: ${networkCount.get()}")
-        BranchLogger.d("DEBUG: BranchRequestQueue.insertRequestAtFront called for: ${request::class.simpleName}, network count: ${networkCount.get()}")
+        BranchLogger.t("BranchRequestQueue.insertRequestAtFront called for: ${request::class.simpleName}, network count: ${networkCount.get()}")
         
         if (networkCount.get() == 0) {
             insert(request, 0)
-            BranchLogger.d("DEBUG: Inserted request at index 0 (network count was 0)")
+            BranchLogger.t("Inserted request at index 0 (network count was 0)")
         } else {
             insert(request, 1)
-            BranchLogger.d("DEBUG: Inserted request at index 1 (network count was ${networkCount.get()})")
+            BranchLogger.t("Inserted request at index 1 (network count was ${networkCount.get()})")
         }
     }
     
@@ -908,13 +908,13 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 if (req is ServerRequestInitSession) {
                     BranchLogger.v("$req is initiated by client: ${req.initiatedByClient}")
                     if (req.initiatedByClient) {
-                        BranchLogger.d("DEBUG: Found self init request: ${req::class.simpleName}")
+                        BranchLogger.t("Found self init request: ${req::class.simpleName}")
                         return req
                     }
                 }
             }
         }
-        BranchLogger.d("DEBUG: No self init request found in queue")
+        BranchLogger.t("No self init request found in queue")
         return null
     }
     
@@ -923,34 +923,34 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) {
         BranchLogger.v("Queue operation unlockProcessWait $lock")
-        BranchLogger.d("DEBUG: BranchRequestQueue.unlockProcessWait called for lock: $lock")
+        BranchLogger.t("BranchRequestQueue.unlockProcessWait called for lock: $lock")
         
         synchronized(queueList) {
             for (req in queueList) {
                 req.removeProcessWaitLock(lock)
             }
         }
-        BranchLogger.d("DEBUG: Process wait lock $lock removed from all requests")
+        BranchLogger.t("Process wait lock $lock removed from all requests")
     }
     
     /**
      * Update all requests in queue
      */
     fun updateAllRequestsInQueue() {
-        BranchLogger.d("DEBUG: BranchRequestQueue.updateAllRequestsInQueue called")
+        BranchLogger.t("BranchRequestQueue.updateAllRequestsInQueue called")
         synchronized(queueList) {
             for (req in queueList) {
                 req.updateEnvironment(context, req.post)
             }
         }
-        BranchLogger.d("DEBUG: BranchRequestQueue.updateAllRequestsInQueue completed")
+        BranchLogger.t("BranchRequestQueue.updateAllRequestsInQueue completed")
     }
     
     /**
      * Clear init data after initialization
      */
     suspend fun clearDeepLinkStorage() {
-        BranchLogger.d("DEBUG: BranchRequestQueue.clearDeepLinkStorage called")
+        BranchLogger.t("BranchRequestQueue.clearDeepLinkStorage called")
         synchronized(queueList) {
             val prefHelper_ = Branch.getInstance().prefHelper
 
@@ -974,7 +974,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 }
             }
         }
-        BranchLogger.d("DEBUG: BranchRequestQueue.postInitClear completed")
+        BranchLogger.t("BranchRequestQueue.postInitClear completed")
     }
     
     /**
@@ -982,7 +982,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      */
     fun hasUser(): Boolean {
         val hasUser = !Branch.getInstance().prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
-        BranchLogger.d("DEBUG: BranchRequestQueue.hasUser called - result: $hasUser")
+        BranchLogger.t("BranchRequestQueue.hasUser called - result: $hasUser")
         return hasUser
     }
     
@@ -990,9 +990,9 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Add extra instrumentation data
      */
     fun addExtraInstrumentationData(key: String, value: String) {
-        BranchLogger.d("DEBUG: BranchRequestQueue.addExtraInstrumentationData called - key: $key, value: $value")
+        BranchLogger.t("BranchRequestQueue.addExtraInstrumentationData called - key: $key, value: $value")
         instrumentationExtraData[key] = value
-        BranchLogger.d("DEBUG: BranchRequestQueue.addExtraInstrumentationData completed")
+        BranchLogger.t("BranchRequestQueue.addExtraInstrumentationData completed")
     }
     
     /**
@@ -1000,13 +1000,13 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for clearing queue state
      */
     suspend fun clear() {
-        BranchLogger.d("DEBUG: BranchRequestQueue.clear called")
+        BranchLogger.t("BranchRequestQueue.clear called")
         synchronized(queueList) {
             queueList.clear()
         }
         activeRequests.clear()
         requestRetryInfo.clear()
-        BranchLogger.d("DEBUG: BranchRequestQueue.clear completed")
+        BranchLogger.t("BranchRequestQueue.clear completed")
     }
     
     /**
@@ -1030,14 +1030,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for clean shutdown with proper cleanup
      */
     fun shutdown() {
-        BranchLogger.d("DEBUG: BranchRequestQueue.shutdown called")
+        BranchLogger.t("BranchRequestQueue.shutdown called")
         _queueState.value = QueueState.SHUTDOWN
         queueScope.cancel()
         
         // Clean up retry tracking maps to prevent memory leaks
         cleanupRetryTrackingMaps()
         
-        BranchLogger.d("DEBUG: BranchRequestQueue.shutdown completed")
+        BranchLogger.t("BranchRequestQueue.shutdown completed")
     }
     
     /**
@@ -1048,7 +1048,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         try {
             requestRetryInfo.clear()
             activeRequests.clear()
-            BranchLogger.d("DEBUG: Retry tracking maps cleaned up")
+            BranchLogger.t("Retry tracking maps cleaned up")
         } catch (e: Exception) {
             BranchLogger.e("Error cleaning up retry tracking maps: ${e.message}")
         }
@@ -1062,6 +1062,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
             val activeCount = activeRequests.size
             BranchLogger.v("Queue state: ${_queueState.value}, Active requests: $activeCount, Network count: ${networkCount.get()}")
         }
-        BranchLogger.d("DEBUG: Queue state: ${_queueState.value}, Queue size: ${getSize()}, Active requests: ${activeRequests.size}, Network count: ${networkCount.get()}")
+        BranchLogger.t("Queue state: ${_queueState.value}, Queue size: ${getSize()}, Active requests: ${activeRequests.size}, Network count: ${networkCount.get()}")
     }
 } 
