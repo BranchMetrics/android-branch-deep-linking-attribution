@@ -97,6 +97,11 @@ android {
     compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
     defaultConfig {
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
+        // EMT-3875: without targetSdk the androidTest APK defaults to minSdk (21). Targeting < 23
+        // puts it on the legacy permission model, so on install the system shows the
+        // ReviewPermissionsActivity, which blocks ActivityScenario (and on some images kills the
+        // instrumentation process) and prevents any session-init instrumented test from running.
+        targetSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("proguard-consumer.txt")
     }
