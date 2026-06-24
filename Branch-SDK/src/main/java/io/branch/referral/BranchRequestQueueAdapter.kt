@@ -215,7 +215,6 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      */
     fun canClearInitData(): Boolean {
         val result = newQueue.canClearInitData()
-        BranchLogger.d("DEBUG: BranchRequestQueueAdapter.canClearInitData result: $result")
         return result
     }
 
