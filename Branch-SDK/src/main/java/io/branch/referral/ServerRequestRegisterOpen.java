@@ -34,8 +34,8 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             // Layer 1: device attestation for open requests (mirrors install)
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {
-                    BranchFraudDefenseProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject fraudDefenseFields = provider.performAttestationCheck(getPost());
+                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
                     if (fraudDefenseFields != null) {
                         Iterator<String> keys = fraudDefenseFields.keys();
                         while (keys.hasNext()) {

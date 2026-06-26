@@ -283,7 +283,7 @@ public class Branch {
      * If set, fraud defense fields are added to v1/install requests.
      * If null, SDK functions normally without fraud defense (graceful degradation).
      */
-    private BranchFraudDefenseProvider fraudDefenseProvider = null;
+    private BranchSecureSDKProvider fraudDefenseProvider = null;
 
     // Variables for reporting plugin type and version, plus helps us make data driven decisions.
     private static String pluginVersion = null;
@@ -761,7 +761,7 @@ public class Branch {
      * Sets the fraud defense provider for device integrity checks.
      *
      * <p>When set, the provider is called during v1/install requests to add fraud defense fields.
-     * The provider must implement {@link BranchFraudDefenseProvider} interface.</p>
+     * The provider must implement {@link BranchSecureSDKProvider} interface.</p>
      *
      * <p>Fraud defense includes multiple layers: device attestation, Play Integrity,
      * and other security checks.</p>
@@ -771,13 +771,13 @@ public class Branch {
      * <h3>Example:</h3>
      * <pre>{@code
      * // In Application.onCreate()
-     * BranchFraudDefenseProvider fraudDefense = BranchFraudDefense.getInstance(this);
+     * BranchSecureSDKProvider fraudDefense = BranchFraudDefense.getInstance(this);
      * Branch.getInstance().setFraudDefenseProvider(fraudDefense);
      * }</pre>
      *
-     * @param provider Fraud defense provider implementing {@link BranchFraudDefenseProvider}, or null to disable
+     * @param provider Fraud defense provider implementing {@link BranchSecureSDKProvider}, or null to disable
      */
-    public void setFraudDefenseProvider(BranchFraudDefenseProvider provider) {
+    public void setFraudDefenseProvider(BranchSecureSDKProvider provider) {
         this.fraudDefenseProvider = provider;
         BranchLogger.v("Fraud defense provider " + (provider != null ? "set" : "cleared"));
         // Registering the provider starts the secure SDK (mirrors iOS setFraudDefenseHandler:).
@@ -791,7 +791,7 @@ public class Branch {
      *
      * @return Current fraud defense provider, or null if not set
      */
-    public BranchFraudDefenseProvider getFraudDefenseProvider() {
+    public BranchSecureSDKProvider getFraudDefenseProvider() {
         return this.fraudDefenseProvider;
     }
 

@@ -17,17 +17,17 @@ import org.json.JSONObject;
  * <h3>Usage:</h3>
  * <pre>{@code
  * // Vendor integrates BranchFraudDefense module
- * BranchFraudDefenseProvider fraudDefense = BranchFraudDefense.getInstance(context);
+ * BranchSecureSDKProvider fraudDefense = BranchFraudDefense.getInstance(context);
  * Branch.getInstance().setFraudDefenseProvider(fraudDefense);
  * }</pre>
  *
  * <p>If no provider is set, SDK functions normally without fraud defense.</p>
  */
-public interface BranchFraudDefenseProvider {
+public interface BranchSecureSDKProvider {
     /**
      * Bootstraps the secure SDK (key generation, attestation pre-warming, challenge prefetch).
      *
-     * <p>Called automatically by {@link Branch#setFraudDefenseProvider(BranchFraudDefenseProvider)}
+     * <p>Called automatically by {@link Branch#setFraudDefenseProvider(BranchSecureSDKProvider)}
      * when a provider is registered, so the host app does not need to start it separately.
      * Mirrors iOS, where {@code setFraudDefenseHandler:} invokes
      * {@code initializeBranchSecureSDKWithBranchKey:}.</p>
@@ -37,14 +37,13 @@ public interface BranchFraudDefenseProvider {
     void initializeBranchSecureSDK(String branchKey);
 
     /**
-     * Layer 1: performs device attestation and returns fields to add to request.
+     * Layer 1: performs device attestation and returns device-trust fields to add to the request.
      *
-     * <p>Called for v1/install and v1/open requests.</p>
      *
      * @param requestBody Current request body (before fraud defense fields)
      * @return JSONObject with fraud defense fields to merge, or null if unavailable
      */
-    JSONObject performAttestationCheck(JSONObject requestBody);
+    JSONObject addDeviceTrustParams(JSONObject requestBody);
 
     /**
      * Layer 2 + 3: generates HMAC-SHA256 signature and smart nonce for the request.

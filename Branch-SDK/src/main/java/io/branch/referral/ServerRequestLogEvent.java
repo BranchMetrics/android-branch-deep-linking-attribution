@@ -53,7 +53,7 @@ public class ServerRequestLogEvent extends ServerRequest {
             // Layer 2 + 3: HMAC signature + smart nonce for event requests
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {
-                    BranchFraudDefenseProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
                     JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
                     if (signatureFields != null) {
                         Iterator<String> keys = signatureFields.keys();

@@ -3,7 +3,7 @@ package io.branch.frauddefense
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import io.branch.referral.BranchFraudDefenseProvider
+import io.branch.referral.BranchSecureSDKProvider
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -14,7 +14,7 @@ import org.json.JSONObject
 
 class BranchFraudDefense private constructor(
     private val context: Context
-) : BranchFraudDefenseProvider {
+) : BranchSecureSDKProvider {
 
     companion object {
         @Volatile
@@ -79,7 +79,7 @@ class BranchFraudDefense private constructor(
      * @param requestBody Current request body (before attestation fields)
      * @return JSONObject with attestation fields, or null if unavailable
      */
-    override fun performAttestationCheck(requestBody: JSONObject): JSONObject? {
+    override fun addDeviceTrustParams(requestBody: JSONObject): JSONObject? {
         FraudDefenseLogger.v("Performing attestation check")
 
         // Try hardware attestation first (API 24+)

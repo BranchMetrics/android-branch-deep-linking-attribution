@@ -71,8 +71,8 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             // Try fraud defense if provider is set (optional BranchFraudDefense module)
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {
-                    BranchFraudDefenseProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject fraudDefenseFields = provider.performAttestationCheck(getPost());
+                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
 
                     if (fraudDefenseFields != null) {
                         // Merge fraud defense fields into request
