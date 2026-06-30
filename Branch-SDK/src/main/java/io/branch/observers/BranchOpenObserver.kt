@@ -10,17 +10,23 @@ import android.os.Bundle
 internal class BranchOpenObserver(private val branchInstance: Branch) : Application.ActivityLifecycleCallbacks {
 
     private var activityCount = 0
+    private var isChangingConfiguration = false
 
     override fun onActivityStarted(activity: Activity) {
         activityCount++
         BranchLogger.v("BranchOpenObserver onActivityStarted: $activity activityCount incremented to: $activityCount")
 
-        if (activityCount == 1) {
+        if (activityCount == 1 && !isChangingConfiguration) {
             branchInstance.sendOpen()
         }
+        isChangingConfiguration = false
     }
 
     override fun onActivityStopped(activity: Activity) {
+        // A configuration change (e.g. folding/unfolding a foldable) destroys and recreates the
+        // foregrounded Activity. Remember it so the following onActivityStarted does not emit a
+        // duplicate OPEN for what is still the same session (SDK-2463).
+        isChangingConfiguration = activity.isChangingConfigurations
         activityCount--
         BranchLogger.v("BranchOpenObserver onActivityStopped: $activity activityCount decremented to: $activityCount")
 
