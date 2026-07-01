@@ -68,26 +68,29 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 getPost().put(Defines.Jsonkey.OperationalMetrics.getKey(), configurations);
             }
 
-            // Try fraud defense if provider is set (optional BranchFraudDefense module)
+            // Fraud defense: Layer 1 (attestation) + Layer 2+3 (signature)
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {
                     BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
-
-                    if (fraudDefenseFields != null) {
-                        // Merge fraud defense fields into request
-                        Iterator<String> keys = fraudDefenseFields.keys();
-                        while (keys.hasNext()) {
-                            String key = keys.next();
-                            getPost().put(key, fraudDefenseFields.get(key));
+                    if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+                        JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
+                        if (fraudDefenseFields != null) {
+                            prefHelper_.setBool("bnc_device_trust_checked", true);
+                            SecureContextMerger.merge(fraudDefenseFields, getPost());
+                            BranchLogger.v("Fraud defense fields added to install request");
                         }
-                        BranchLogger.v("Fraud defense fields added to request");
-                    } else {
-                        BranchLogger.v("Fraud defense unavailable - continuing without it");
                     }
                 } catch (Exception e) {
-                    // Graceful degradation - continue without fraud defense if provider fails
-                    BranchLogger.w("Fraud defense failed: " + e.getMessage());
+                    BranchLogger.w("Fraud defense failed for install: " + e.getMessage());
+                }
+                try {
+                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
+                    if (signatureFields != null) {
+                        SecureContextMerger.merge(signatureFields, getPost());
+                    }
+                } catch (Exception e) {
+                    BranchLogger.w("Fraud defense signature failed for install: " + e.getMessage());
                 }
             }
 

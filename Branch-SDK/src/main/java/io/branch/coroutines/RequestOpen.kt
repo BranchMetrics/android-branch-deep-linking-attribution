@@ -36,6 +36,24 @@ internal class RequestOpen(
                 openPost.put("link_data", dataJSON)
             }
             setPost(openPost)
+
+            // Fraud defense: Layer 1 (first open only) + Layer 2+3 (every open)
+            val provider = Branch.getInstance()?.fraudDefenseProvider
+            if (provider != null) {
+                // Layer 1: attestation — only if not already succeeded
+                if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+                    val trustFields = provider.addDeviceTrustParams(post)
+                    if (trustFields != null) {
+                        prefHelper_.setBool("bnc_device_trust_checked", true)
+                        SecureContextMerger.merge(trustFields, post)
+                    }
+                }
+                // Layer 2 + 3: HMAC + nonce
+                val sigFields = provider.addSignatureAndNonceForParams(post)
+                if (sigFields != null) {
+                    SecureContextMerger.merge(sigFields, post)
+                }
+            }
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")
             constructError_ = true

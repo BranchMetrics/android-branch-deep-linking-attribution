@@ -8,6 +8,7 @@ import io.branch.referral.BranchLogger
 import io.branch.referral.Defines
 import io.branch.referral.PrefHelper
 import io.branch.referral.ServerRequestInitSession
+import io.branch.referral.SecureContextMerger
 import io.branch.referral.ServerResponse
 import org.json.JSONException
 import org.json.JSONObject
@@ -57,6 +58,15 @@ internal class RequestDeepLink(
                 )
             }
             setPost(deepLinkPost)
+
+            // Layer 2 + 3: HMAC signature + nonce (no attestation on deeplink)
+            val provider = Branch.getInstance()?.fraudDefenseProvider
+            if (provider != null) {
+                val sigFields = provider.addSignatureAndNonceForParams(post)
+                if (sigFields != null) {
+                    SecureContextMerger.merge(sigFields, post)
+                }
+            }
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")
             constructError_ = true

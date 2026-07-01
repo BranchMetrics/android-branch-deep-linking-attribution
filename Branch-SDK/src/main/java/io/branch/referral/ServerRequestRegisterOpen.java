@@ -31,21 +31,31 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
             setPost(openPost);
 
-            // Layer 1: device attestation for open requests (mirrors install)
+            // Layer 1: device attestation — only on first open (retry if failed)
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {
-                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
-                    if (fraudDefenseFields != null) {
-                        Iterator<String> keys = fraudDefenseFields.keys();
-                        while (keys.hasNext()) {
-                            String key = keys.next();
-                            getPost().put(key, fraudDefenseFields.get(key));
+                    if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+                        BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                        JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
+                        if (fraudDefenseFields != null) {
+                            prefHelper_.setBool("bnc_device_trust_checked", true);
+                            SecureContextMerger.merge(fraudDefenseFields, getPost());
+                            BranchLogger.v("Fraud defense fields added to open request");
                         }
-                        BranchLogger.v("Fraud defense fields added to open request");
                     }
                 } catch (Exception e) {
                     BranchLogger.w("Fraud defense failed for open: " + e.getMessage());
+                }
+
+                // Layer 2 + 3: HMAC signature + nonce (every open)
+                try {
+                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
+                    if (signatureFields != null) {
+                        SecureContextMerger.merge(signatureFields, getPost());
+                    }
+                } catch (Exception e) {
+                    BranchLogger.w("Fraud defense signature failed for open: " + e.getMessage());
                 }
             }
         } catch (JSONException ex) {
