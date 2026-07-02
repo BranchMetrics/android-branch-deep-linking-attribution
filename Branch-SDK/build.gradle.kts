@@ -457,6 +457,11 @@ run {
         }
 
         doLast {
+            // Close the tee's file stream: Gradle's JavaExec does not close a
+            // user-provided standardOutput, so the FileOutputStream would leak a
+            // handle each run in the daemon. TeeOutputStream.close() closes only
+            // the file stream, never System.out.
+            (standardOutput as? TeeOutputStream)?.close()
             logger.lifecycle("")
             logger.lifecycle("[EMT-3877] Public API diff vs $apiBaselineCoordinates")
             logger.lifecycle("  text report: ${textReport.get().asFile}")
