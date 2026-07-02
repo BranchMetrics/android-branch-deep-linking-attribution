@@ -13,7 +13,7 @@ import java.util.Iterator;
  * (initialization_context, activity_context, context_key) accumulate rather than
  * overwrite each other.
  */
-class SecureContextMerger {
+public class SecureContextMerger {
 
     private static final String SECURE_CONTEXT = "branch_sdk_secure_context";
 
@@ -21,7 +21,7 @@ class SecureContextMerger {
      * Merges the fraud defense response into the target request JSON.
      * Deep-merges the branch_sdk_secure_context sub-object.
      */
-    static void merge(JSONObject fraudDefenseResponse, JSONObject target) throws JSONException {
+    public static void merge(JSONObject fraudDefenseResponse, JSONObject target) throws JSONException {
         if (!fraudDefenseResponse.has(SECURE_CONTEXT)) {
             // No secure context — shallow merge everything
             Iterator<String> keys = fraudDefenseResponse.keys();
