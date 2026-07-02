@@ -288,7 +288,6 @@ public class Branch {
 
     private int networkCount_ = 0;
     private ServerResponse serverResponse_;
-    private BranchOpenObserver openObserver;
 
     /**
      * Enum to track the state of the intent processing
@@ -1517,13 +1516,11 @@ public class Branch {
 
 
     private void setActivityLifeCycleObserver(Application application) {
-        if (openObserver != null) {
-            application.unregisterActivityLifecycleCallbacks(openObserver);
-        }
-
-        openObserver = new BranchOpenObserver(this);
-
-        application.registerActivityLifecycleCallbacks(openObserver);
+        // SDK-2463: detect app foreground/background at the process level via ProcessLifecycleOwner
+        // instead of counting Activity start/stop. A configuration-change recreation (fold/unfold,
+        // rotation) no longer fires a process ON_START, so it cannot emit a duplicate OPEN. A real
+        // background-to-foreground still does.
+        BranchProcessLifecycleObserver.register(this);
     }
 
     /*

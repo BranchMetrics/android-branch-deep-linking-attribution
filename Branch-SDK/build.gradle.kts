@@ -20,6 +20,8 @@ dependencies {
     implementation("androidx.annotation:annotation:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    // App foreground/background detection at the process level (SDK-2463): ProcessLifecycleOwner.
+    implementation("androidx.lifecycle:lifecycle-process:2.5.1")
 
     // --- optional dependencies -----
     // Please note that the Branch SDK does not require any of the below optional dependencies to operate.
