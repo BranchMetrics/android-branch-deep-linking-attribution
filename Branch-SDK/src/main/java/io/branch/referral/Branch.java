@@ -405,12 +405,8 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
-        if (context instanceof Application) {
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
-        } else if (context.getApplicationContext() instanceof Application) {
-            // Backup: Use the application context if the passed context wasn't the App itself
-            branchReferral_.setActivityLifeCycleObserver((Application) context.getApplicationContext());
-        }
+        // ProcessLifecycleOwner tracks the whole process, so no Application reference is required.
+        branchReferral_.setupProcessLifecycleObserver();
 
         return branchReferral_;
     }
@@ -1515,7 +1511,7 @@ public class Branch {
      */
 
 
-    private void setActivityLifeCycleObserver(Application application) {
+    private void setupProcessLifecycleObserver() {
         // SDK-2463: detect app foreground/background at the process level via ProcessLifecycleOwner
         // instead of counting Activity start/stop. A configuration-change recreation (fold/unfold,
         // rotation) no longer fires a process ON_START, so it cannot emit a duplicate OPEN. A real

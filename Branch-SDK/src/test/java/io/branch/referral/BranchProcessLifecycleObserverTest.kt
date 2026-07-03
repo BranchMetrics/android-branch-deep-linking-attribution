@@ -53,4 +53,19 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
 
         verify(branch, times(2)).sendOpen()
     }
+
+    @Test
+    fun repeatedForegrounds_neverSuppressAnOpen() {
+        // The activity-count guard (BranchOpenObserver) can leave a stale isChangingConfigurations
+        // flag that suppresses a legitimate OPEN after a config-change stop. This observer holds no
+        // per-Activity state: ProcessLifecycleOwner never dispatches ON_START for a config-change
+        // recreation, so every ON_START it receives is a real foreground and emits exactly one OPEN.
+        observer.onStart(owner)
+        observer.onStop(owner)
+        observer.onStart(owner)
+        observer.onStop(owner)
+        observer.onStart(owner)
+
+        verify(branch, times(3)).sendOpen()
+    }
 }
