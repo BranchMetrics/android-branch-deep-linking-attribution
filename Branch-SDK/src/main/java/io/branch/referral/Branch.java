@@ -2650,7 +2650,7 @@ public class Branch {
      * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
      * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
      *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     * @param callback An instance of {@link io.branch.referral.Branch.BranchLastAttributedTouchDataListener}
      *                 to callback with last attributed touch data
      *
      */
@@ -2663,7 +2663,7 @@ public class Branch {
     /**
      * Gets the available last attributed touch data with a custom set attribution window.
      *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     * @param callback An instance of {@link io.branch.referral.Branch.BranchLastAttributedTouchDataListener}
      *                to callback with last attributed touch data
      * @param attributionWindow An {@link int} to bound the the window of time in days during which
      *                          the attribution data is considered valid. Note that, server side, the
