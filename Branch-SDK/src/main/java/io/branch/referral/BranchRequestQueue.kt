@@ -574,6 +574,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
             BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INSTALL_REFERRER_FETCH_WAIT_LOCK")
             request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK)
         }
+
+        // EMT-3860: the intent-pending lock is live again. If onActivityResumed / onIntentReady
+        // never fires (e.g. a headless cold start), force-resolve it after the stuck window so the
+        // init request is not held for the full 30s timeout.
+        if (waitLocks.contains("INTENT_PENDING_WAIT_LOCK")) {
+            BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INTENT_PENDING_WAIT_LOCK")
+            request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK)
+        }
     }
     
     /**
