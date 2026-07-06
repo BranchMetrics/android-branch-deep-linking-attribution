@@ -391,21 +391,23 @@ class BranchRequestQueue private constructor(private val context: Context) {
     ) {
         // EMT-3859: a lock-waiting request can only reach failure through the timeout arm, so
         // never attribute its failure to the retry limit.
-        val errorMessage = when {
+        // EMT-3869: report a timeout-specific error for the timeout arm so callers can tell a
+        // process-lock-wait timeout apart from a genuinely missing session.
+        val (errorCode, errorMessage) = when {
             !isWaitingOnLock && retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS) ->
-                "Request exceeded maximum retry attempts (${MAX_RETRY_ATTEMPTS})"
+                BranchError.ERR_NO_SESSION to "Request exceeded maximum retry attempts (${MAX_RETRY_ATTEMPTS})"
             retryInfo.hasExceededTimeout(REQUEST_TIMEOUT_MS) ->
-                "Request exceeded timeout (${REQUEST_TIMEOUT_MS}ms)"
-            else -> "Request failed unknown reason"
+                BranchError.ERR_BRANCH_REQ_TIMED_OUT to "Request exceeded timeout (${REQUEST_TIMEOUT_MS}ms)"
+            else -> BranchError.ERR_NO_SESSION to "Request failed unknown reason"
         }
-        
+
         BranchLogger.d("DEBUG: $errorMessage for request: ${request::class.simpleName}")
-        
+
         // Clean up retry tracking
         requestRetryInfo.remove(requestId)
-        
+
         // Fail the request
-        request.handleFailure(BranchError.ERR_NO_SESSION, errorMessage)
+        request.handleFailure(errorCode, errorMessage)
     }
     
     /**
