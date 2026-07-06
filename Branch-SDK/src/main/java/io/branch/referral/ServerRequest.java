@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -91,7 +92,7 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-        locks_ = new HashSet<>();
+        locks_ = Collections.synchronizedSet(new HashSet<>());
 
         creation_ts = System.currentTimeMillis();
         String creation_ts_date_formatted = formatUnixEpochToDateFormat(creation_ts);
@@ -776,7 +777,9 @@ public abstract class ServerRequest {
     }
 
     public String printWaitLocks(){
-        return Arrays.toString(locks_.toArray());
+        synchronized(locks_){
+            return Arrays.toString(locks_.toArray());
+        }
     }
     
     
