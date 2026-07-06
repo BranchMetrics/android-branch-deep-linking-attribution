@@ -38,6 +38,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.branch.coroutines.RequestDeepLink;
 import io.branch.indexing.BranchUniversalObject;
@@ -1019,6 +1021,11 @@ public class Branch {
         requestQueue_.handleNewRequest(queueOperationLogout);
     }
 
+    private static final int LATCH_WAIT_UNTIL = 2500; // ms; the *Sync getters give up waiting after this.
+
+    CountDownLatch getFirstReferringParamsLatch = null;
+    CountDownLatch getLatestReferringParamsLatch = null;
+
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
@@ -1033,6 +1040,26 @@ public class Branch {
         String storedParam = prefHelper_.getInstallParams();
         JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
         firstReferringParams = appendDebugParams(firstReferringParams);
+        return firstReferringParams;
+    }
+
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has no install link data
+     * yet, it blocks until the data is available, or until {@link #LATCH_WAIT_UNTIL} milliseconds
+     * elapse. Returns the same install-time referring parameters as {@link #getFirstReferringParams()}.</p>
+     *
+     * @return A {@link JSONObject} containing the install-time parameters as configured locally.
+     */
+    public JSONObject getFirstReferringParamsSync() {
+        getFirstReferringParamsLatch = new CountDownLatch(1);
+        if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignored) {
+            }
+        }
+        JSONObject firstReferringParams = getFirstReferringParams();
+        getFirstReferringParamsLatch = null;
         return firstReferringParams;
     }
 
@@ -1066,6 +1093,27 @@ public class Branch {
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);
         latestParams = appendDebugParams(latestParams);
+        return latestParams;
+    }
+
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has not been initialized
+     * yet, it blocks until initialization completes, or until {@link #LATCH_WAIT_UNTIL}
+     * milliseconds elapse. Returns the same latest referring parameters as
+     * {@link #getLatestReferringParams()}.</p>
+     *
+     * @return A {@link JSONObject} containing the latest referring parameters as configured locally.
+     */
+    public JSONObject getLatestReferringParamsSync() {
+        getLatestReferringParamsLatch = new CountDownLatch(1);
+        try {
+            if (!(getInitState() instanceof BranchSessionState.Initialized)) {
+                getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            }
+        } catch (InterruptedException ignored) {
+        }
+        JSONObject latestParams = getLatestReferringParams();
+        getLatestReferringParamsLatch = null;
         return latestParams;
     }
     
