@@ -1032,8 +1032,8 @@ public class Branch {
 
     private static final int LATCH_WAIT_UNTIL = 2500; // ms; the *Sync getters give up waiting after this.
 
-    CountDownLatch getFirstReferringParamsLatch = null;
-    CountDownLatch getLatestReferringParamsLatch = null;
+    volatile CountDownLatch getFirstReferringParamsLatch = null;
+    volatile CountDownLatch getLatestReferringParamsLatch = null;
 
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
