@@ -25,6 +25,25 @@ object BranchLogger {
 
     private fun shouldLog(level: BranchLogLevel): Boolean = level.level <= loggingLevel.level
 
+    // android.util.Log truncates a single entry at ~4000 chars, which chops long messages
+    // (e.g. canonical strings carrying an attestation cert chain). Split into chunks so the
+    // full message is emitted across multiple logcat lines. Chunks are raw (no injected
+    // markers) so consecutive lines concatenate back to the exact original string.
+    private const val MAX_LOG_CHUNK = 3500
+
+    private fun platformLog(priority: Int, message: String) {
+        if (message.length <= MAX_LOG_CHUNK) {
+            Log.println(priority, TAG, message)
+            return
+        }
+        var start = 0
+        while (start < message.length) {
+            val end = minOf(start + MAX_LOG_CHUNK, message.length)
+            Log.println(priority, TAG, message.substring(start, end))
+            start = end
+        }
+    }
+
     /**
      * <p>Creates a <b>Error</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
@@ -36,7 +55,7 @@ object BranchLogger {
             if (useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "ERROR")
             } else {
-                Log.e(TAG, message)
+                platformLog(Log.ERROR, message)
             }
         }
     }
@@ -52,7 +71,7 @@ object BranchLogger {
             if (useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "WARN")
             } else {
-                Log.w(TAG, message)
+                platformLog(Log.WARN, message)
             }
         }
     }
@@ -68,7 +87,7 @@ object BranchLogger {
             if(useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "INFO")
             } else {
-                Log.i(TAG, message)
+                platformLog(Log.INFO, message)
             }
         }
     }
@@ -84,7 +103,7 @@ object BranchLogger {
             if (useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "DEBUG")
             } else {
-                Log.d(TAG, message)
+                platformLog(Log.DEBUG, message)
             }
         }
     }
@@ -100,7 +119,7 @@ object BranchLogger {
             if (useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "VERBOSE")
             } else {
-                Log.v(TAG, message)
+                platformLog(Log.VERBOSE, message)
             }
         }
     }
@@ -111,7 +130,7 @@ object BranchLogger {
             if (useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "INFO")
             } else {
-                Log.i(TAG, message)
+                platformLog(Log.INFO, message)
             }
         }
     }
