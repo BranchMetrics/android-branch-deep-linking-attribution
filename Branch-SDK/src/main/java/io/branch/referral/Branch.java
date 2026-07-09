@@ -562,6 +562,14 @@ public class Branch {
 
         // Legacy link generator doesn't need explicit shutdown (no coroutines)
 
+        // Unregister process lifecycle observer to prevent memory leak (SDK-2463)
+        // In test mode, use blocking unregister to ensure cleanup completes before next test
+        if (isTestModeEnabled()) {
+            BranchProcessLifecycleObserver.shutDownForTesting();
+        } else {
+            BranchProcessLifecycleObserver.unregister();
+        }
+
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();
         PrefHelper.shutDown();
