@@ -15,7 +15,6 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -92,7 +91,7 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-        locks_ = Collections.synchronizedSet(new HashSet<>());
+        locks_ = new HashSet<>();
 
         creation_ts = System.currentTimeMillis();
         String creation_ts_date_formatted = formatUnixEpochToDateFormat(creation_ts);
@@ -763,7 +762,9 @@ public abstract class ServerRequest {
      */
     public void addProcessWaitLock(PROCESS_WAIT_LOCK lock) {
         if (lock != null) {
-            locks_.add(lock);
+            synchronized (locks_) {
+                locks_.add(lock);
+            }
         }
     }
     
@@ -773,11 +774,13 @@ public abstract class ServerRequest {
      * @param lock {@link PROCESS_WAIT_LOCK} type of lock
      */
     public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
-        locks_.remove(lock);
+        synchronized (locks_) {
+            locks_.remove(lock);
+        }
     }
 
-    public String printWaitLocks(){
-        synchronized(locks_){
+    public String printWaitLocks() {
+        synchronized (locks_) {
             return Arrays.toString(locks_.toArray());
         }
     }
@@ -789,7 +792,9 @@ public abstract class ServerRequest {
      * @return True if this request if any pre processing operation pending
      */
     public boolean isWaitingOnProcessToFinish() {
-        return locks_.size() > 0;
+        synchronized (locks_) {
+            return locks_.size() > 0;
+        }
     }
     
     /**
