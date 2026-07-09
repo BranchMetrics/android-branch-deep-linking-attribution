@@ -24,9 +24,9 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
 
     override fun onStop(owner: LifecycleOwner) {
         BranchLogger.v("BranchProcessLifecycleObserver onStop: process backgrounded")
-        // Note: closeSessionInternal is still called by BranchActivityLifecycleObserver when the
-        // last activity stops. This observer intentionally doesn't duplicate that call to avoid
-        // race conditions between process-level and activity-level lifecycle callbacks.
+        // Session close on background is intentionally not triggered here. The pre-existing
+        // BranchOpenObserver also did not call closeSessionInternal on background — no regression.
+        // When the beta session model is finalized, session-close logic belongs here.
     }
 
     companion object {
@@ -56,11 +56,17 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
 
         @JvmStatic
         fun unregister() {
+            // Capture instance now, before posting, to avoid removing a concurrently registered
+            // new observer if register() races with this unregister() on a background thread.
+            val capturedInstance = instance
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 unregisterSync()
             } else {
                 Handler(Looper.getMainLooper()).post {
-                    unregisterSync()
+                    capturedInstance?.let { ProcessLifecycleOwner.get().lifecycle.removeObserver(it) }
+                    if (instance === capturedInstance) {
+                        instance = null
+                    }
                 }
             }
         }
@@ -93,7 +99,9 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
                     latch.countDown()
                 }
                 try {
-                    latch.await(1, java.util.concurrent.TimeUnit.SECONDS)
+                    if (!latch.await(1, java.util.concurrent.TimeUnit.SECONDS)) {
+                        BranchLogger.w("shutDownForTesting timed out — static instance may not be cleaned up")
+                    }
                 } catch (e: InterruptedException) {
                     BranchLogger.w("shutDownForTesting interrupted: ${e.message}")
                     Thread.currentThread().interrupt()

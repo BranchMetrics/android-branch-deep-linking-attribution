@@ -21,7 +21,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     // App foreground/background detection at the process level (SDK-2463): ProcessLifecycleOwner.
-    implementation("androidx.lifecycle:lifecycle-process:2.5.1")
+    // Floor is 2.4.1: DefaultLifecycleObserver available since 2.4.0, compatible with Kotlin 1.6.21.
+    implementation("androidx.lifecycle:lifecycle-process:2.4.1")
 
     // --- optional dependencies -----
     // Please note that the Branch SDK does not require any of the below optional dependencies to operate.
