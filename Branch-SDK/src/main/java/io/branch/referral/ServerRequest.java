@@ -762,9 +762,7 @@ public abstract class ServerRequest {
      */
     public void addProcessWaitLock(PROCESS_WAIT_LOCK lock) {
         if (lock != null) {
-            synchronized (locks_) {
-                locks_.add(lock);
-            }
+            locks_.add(lock);
         }
     }
     
@@ -774,14 +772,15 @@ public abstract class ServerRequest {
      * @param lock {@link PROCESS_WAIT_LOCK} type of lock
      */
     public void removeProcessWaitLock(PROCESS_WAIT_LOCK lock) {
-        synchronized (locks_) {
-            locks_.remove(lock);
-        }
+        locks_.remove(lock);
     }
 
     public String printWaitLocks() {
-        synchronized (locks_) {
+        try {
             return Arrays.toString(locks_.toArray());
+        } catch (ConcurrentModificationException e) {
+            BranchLogger.w("ConcurrentModificationException in printWaitLocks - queue modified during iteration.");
+            return "[concurrent-modification]";
         }
     }
     
@@ -792,9 +791,7 @@ public abstract class ServerRequest {
      * @return True if this request if any pre processing operation pending
      */
     public boolean isWaitingOnProcessToFinish() {
-        synchronized (locks_) {
-            return locks_.size() > 0;
-        }
+        return locks_.size() > 0;
     }
     
     /**
