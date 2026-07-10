@@ -31,6 +31,9 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
             setPost(openPost);
 
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters();
+
             // Layer 1: device attestation — only on first open (retry if failed)
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {

@@ -59,6 +59,9 @@ internal class RequestDeepLink(
             }
             setPost(deepLinkPost)
 
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters()
+
             // Layer 2 + 3: HMAC signature + nonce (no attestation on deeplink)
             val provider = Branch.getInstance()?.fraudDefenseProvider
             if (provider != null) {

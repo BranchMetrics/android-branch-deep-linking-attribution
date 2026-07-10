@@ -68,6 +68,9 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 getPost().put(Defines.Jsonkey.OperationalMetrics.getKey(), configurations);
             }
 
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters();
+
             // Fraud defense: Layer 1 (attestation) + Layer 2+3 (signature)
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {

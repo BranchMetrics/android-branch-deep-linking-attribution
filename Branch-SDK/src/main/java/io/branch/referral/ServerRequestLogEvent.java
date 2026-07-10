@@ -50,6 +50,9 @@ public class ServerRequestLogEvent extends ServerRequest {
             }
             setPost(reqBody);
 
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters();
+
             // Layer 2 + 3: HMAC signature + smart nonce for event requests
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
                 try {

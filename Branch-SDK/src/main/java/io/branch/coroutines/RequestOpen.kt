@@ -37,6 +37,9 @@ internal class RequestOpen(
             }
             setPost(openPost)
 
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters()
+
             // Fraud defense: Layer 1 (first open only) + Layer 2+3 (every open)
             val provider = Branch.getInstance()?.fraudDefenseProvider
             if (provider != null) {

@@ -680,13 +680,36 @@ public abstract class ServerRequest {
     }
 
     /**
-     * Put request time stamp and uuid at top level of POST body
+     * Put request time stamp and uuid at top level of POST body.
+     *
+     * <p>Must run <b>before</b> device-trust signing, so that these fields are covered by
+     * {@code clientDataHash} and {@code request_signature}. iOS already does this
+     * ({@code addDefaultRequestDataToJSON} runs ahead of {@code addSignatureAndNonceParams}).
+     * Requests that sign call this straight after {@code setPost(...)}; the late call in
+     * {@link #doFinalUpdateOnMainThread()} is idempotent — {@code creation_ts} and {@code uuid}
+     * are fixed at construction, so re-writing them yields the same values.</p>
      */
-    private void addClientRequestParameters() {
+    protected void addClientRequestParameters() {
         if(prefHelper_ != null){
             try {
                 params_.put(Defines.Jsonkey.Branch_Sdk_Request_Creation_Time_Stamp.getKey(), this.creation_ts);
                 params_.put(Defines.Jsonkey.Branch_Sdk_Request_Uuid.getKey(), this.uuid);
+
+                // branch_key and sdk are otherwise written by the network layer at send time
+                // (BranchRemoteInterface.addCommonParams), i.e. after signing. Add them here so
+                // they are covered by the signature — an unsigned branch_key would let a valid
+                // request be re-attributed to another app.
+                //
+                // The `user_data` guard mirrors addCommonParams exactly: for V2 requests setPost()
+                // has already created user_data, which carries the sdk version, so `sdk` is not
+                // added at top level. Re-adding these later is a no-op: the values are identical.
+                if (!params_.has(Defines.Jsonkey.UserData.getKey())) {
+                    params_.put(Defines.Jsonkey.SDK.getKey(), "android" + Branch.getSdkVersionNumber());
+                }
+                String branchKey = prefHelper_.getBranchKey();
+                if (branchKey != null && !branchKey.equals(PrefHelper.NO_STRING_VALUE)) {
+                    params_.put(Defines.Jsonkey.BranchKey.getKey(), branchKey);
+                }
             } catch (JSONException e) {
                 throw new RuntimeException(e);
             }
