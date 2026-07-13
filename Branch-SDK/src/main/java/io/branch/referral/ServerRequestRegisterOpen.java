@@ -34,31 +34,33 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
             addClientRequestParameters();
 
-            // Layer 1: device attestation — only on first open (retry if failed)
+            // First open carries initialization_context only; every later open carries
+            // activity_context only. The two are never sent together, so the attestation and the
+            // HMAC never have to agree on one canonical.
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
-                try {
-                    if (!prefHelper_.getBool("bnc_device_trust_checked")) {
-                        BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+                    // Layer 1: device attestation. Retried on the next open if it fails.
+                    try {
                         JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
                         if (fraudDefenseFields != null) {
                             prefHelper_.setBool("bnc_device_trust_checked", true);
                             SecureContextMerger.merge(fraudDefenseFields, getPost());
                             BranchLogger.v("Fraud defense fields added to open request");
                         }
+                    } catch (Exception e) {
+                        BranchLogger.w("Fraud defense failed for open: " + e.getMessage());
                     }
-                } catch (Exception e) {
-                    BranchLogger.w("Fraud defense failed for open: " + e.getMessage());
-                }
-
-                // Layer 2 + 3: HMAC signature + nonce (every open)
-                try {
-                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
-                    if (signatureFields != null) {
-                        SecureContextMerger.merge(signatureFields, getPost());
+                } else {
+                    // Layer 2 + 3: HMAC signature + nonce.
+                    try {
+                        JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
+                        if (signatureFields != null) {
+                            SecureContextMerger.merge(signatureFields, getPost());
+                        }
+                    } catch (Exception e) {
+                        BranchLogger.w("Fraud defense signature failed for open: " + e.getMessage());
                     }
-                } catch (Exception e) {
-                    BranchLogger.w("Fraud defense signature failed for open: " + e.getMessage());
                 }
             }
         } catch (JSONException ex) {

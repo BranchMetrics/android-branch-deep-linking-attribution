@@ -71,29 +71,32 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
             // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
             addClientRequestParameters();
 
-            // Fraud defense: Layer 1 (attestation) + Layer 2+3 (signature)
+            // First install carries initialization_context only; a later install (attestation
+            // already done) carries activity_context only. Never both.
             if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
-                try {
-                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+                BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+                    // Layer 1: device attestation. Retried on the next request if it fails.
+                    try {
                         JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
                         if (fraudDefenseFields != null) {
                             prefHelper_.setBool("bnc_device_trust_checked", true);
                             SecureContextMerger.merge(fraudDefenseFields, getPost());
                             BranchLogger.v("Fraud defense fields added to install request");
                         }
+                    } catch (Exception e) {
+                        BranchLogger.w("Fraud defense failed for install: " + e.getMessage());
                     }
-                } catch (Exception e) {
-                    BranchLogger.w("Fraud defense failed for install: " + e.getMessage());
-                }
-                try {
-                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
-                    if (signatureFields != null) {
-                        SecureContextMerger.merge(signatureFields, getPost());
+                } else {
+                    // Layer 2 + 3: HMAC signature + nonce.
+                    try {
+                        JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
+                        if (signatureFields != null) {
+                            SecureContextMerger.merge(signatureFields, getPost());
+                        }
+                    } catch (Exception e) {
+                        BranchLogger.w("Fraud defense signature failed for install: " + e.getMessage());
                     }
-                } catch (Exception e) {
-                    BranchLogger.w("Fraud defense signature failed for install: " + e.getMessage());
                 }
             }
 

@@ -40,21 +40,23 @@ internal class RequestOpen(
             // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
             addClientRequestParameters()
 
-            // Fraud defense: Layer 1 (first open only) + Layer 2+3 (every open)
+            // First open carries initialization_context only; every later open carries
+            // activity_context only. The two are never sent together.
             val provider = Branch.getInstance()?.fraudDefenseProvider
             if (provider != null) {
-                // Layer 1: attestation — only if not already succeeded
                 if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+                    // Layer 1: attestation. Retried on the next open if it fails.
                     val trustFields = provider.addDeviceTrustParams(post)
                     if (trustFields != null) {
                         prefHelper_.setBool("bnc_device_trust_checked", true)
                         SecureContextMerger.merge(trustFields, post)
                     }
-                }
-                // Layer 2 + 3: HMAC + nonce
-                val sigFields = provider.addSignatureAndNonceForParams(post)
-                if (sigFields != null) {
-                    SecureContextMerger.merge(sigFields, post)
+                } else {
+                    // Layer 2 + 3: HMAC + nonce
+                    val sigFields = provider.addSignatureAndNonceForParams(post)
+                    if (sigFields != null) {
+                        SecureContextMerger.merge(sigFields, post)
+                    }
                 }
             }
         } catch (ex: JSONException) {
