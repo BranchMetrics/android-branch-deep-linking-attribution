@@ -18,8 +18,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     val instrumentationExtraData_ = newQueue.instrumentationExtraData
     
     init {
-        BranchLogger.t("BranchRequestQueueAdapter constructor called")
-        BranchLogger.t("BranchRequestQueueAdapter constructor completed")
+        BranchLogger.v("BranchRequestQueueAdapter constructor called")
+        BranchLogger.v("BranchRequestQueueAdapter constructor completed")
     }
     
     companion object {
@@ -38,7 +38,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
                 INSTANCE?.get() ?: run {
                     val newInstance = BranchRequestQueueAdapter(context)
                     INSTANCE = WeakReference(newInstance)
-                    BranchLogger.t("BranchRequestQueueAdapter instance created")
+                    BranchLogger.v("BranchRequestQueueAdapter instance created")
                     newInstance
                 }
             }
@@ -46,12 +46,12 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         
         @JvmStatic
         fun shutDown() {
-            BranchLogger.t("BranchRequestQueueAdapter.shutDown called")
+            BranchLogger.v("BranchRequestQueueAdapter.shutDown called")
             INSTANCE?.get()?.let { instance ->
                 instance.shutdown()
                 INSTANCE = null
             }
-            BranchLogger.t("BranchRequestQueueAdapter.shutDown completed")
+            BranchLogger.v("BranchRequestQueueAdapter.shutDown completed")
         }
     }
     
@@ -60,7 +60,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      */
     fun initialize() {
         BranchLogger.v("Initializing BranchRequestQueueAdapter")
-        BranchLogger.t("BranchRequestQueueAdapter.initialize called")
+        BranchLogger.v("BranchRequestQueueAdapter.initialize called")
         newQueue.initialize()
     }
     
@@ -68,7 +68,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      * Handle new request - bridge between old callback API and new coroutines API
      */
     fun handleNewRequest(request: ServerRequest) {
-        BranchLogger.t("BranchRequestQueueAdapter.handleNewRequest called for: ${request::class.simpleName}")
+        BranchLogger.v("BranchRequestQueueAdapter.handleNewRequest called for: ${request::class.simpleName}")
         
         // Check if tracking is disabled first (same as original logic)
         if (Branch.getInstance().trackingController.isTrackingDisabled && !request.prepareExecuteWithoutTracking()) {
@@ -90,7 +90,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
             !Branch.getInstance().prefHelper_.getSessionID().equals(PrefHelper.NO_STRING_VALUE)
         }
         
-        BranchLogger.t("Request needs session: $needsSession, can perform operations: $canPerformOperations, legacy initialized: $legacyInitialized, hasValidSession: $hasValidSession")
+        BranchLogger.v("Request needs session: $needsSession, can perform operations: $canPerformOperations, legacy initialized: $legacyInitialized, hasValidSession: $hasValidSession")
         
         if (!canPerformOperations && !legacyInitialized && 
             request !is ServerRequestInitSession && needsSession) {
@@ -103,15 +103,15 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
                                    !deviceToken.equals(PrefHelper.NO_STRING_VALUE)
             
             if (actuallyHasSession) {
-                BranchLogger.t("Session data is actually valid, not adding SDK_INIT_WAIT_LOCK")
+                BranchLogger.v("Session data is actually valid, not adding SDK_INIT_WAIT_LOCK")
                 // Don't add wait lock since session is actually ready
             }
             // If session appears stuck without a valid session, try to allow it to proceed
             else if (!hasValidSession && !legacyInitialized) {
-                BranchLogger.t("Session appears stuck without valid session, attempting to reset")
+                BranchLogger.v("Session appears stuck without valid session, attempting to reset")
                 // Don't add wait lock, let the request proceed and it will trigger proper initialization
             } else {
-                BranchLogger.t("Adding SDK_INIT_WAIT_LOCK for request waiting on session")
+                BranchLogger.v("Adding SDK_INIT_WAIT_LOCK for request waiting on session")
                 request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.SDK_INIT_WAIT_LOCK)
             }
         }
@@ -119,13 +119,13 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         // Ensure queue is initialized before processing requests
         if (newQueue.queueState.value == BranchRequestQueue.QueueState.IDLE) {
             BranchLogger.v("Queue not initialized, initializing now")
-            BranchLogger.t("Queue was IDLE, initializing now")
+            BranchLogger.v("Queue was IDLE, initializing now")
             newQueue.initialize()
         }
         
         // Enqueue synchronously - BranchRequestQueue.enqueue is now synchronous
         try {
-            BranchLogger.t("Enqueuing request: ${request::class.simpleName}")
+            BranchLogger.v("Enqueuing request: ${request::class.simpleName}")
             newQueue.enqueue(request)
         } catch (e: Exception) {
             BranchLogger.e("Failed to enqueue request: ${e.message}")
@@ -137,65 +137,65 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      * Queue operations - delegating to new queue implementation
      */
     fun getSize(): Int {
-        BranchLogger.t("BranchRequestQueueAdapter.getSize called")
+        BranchLogger.v("BranchRequestQueueAdapter.getSize called")
         val result = newQueue.getSize()
-        BranchLogger.t("BranchRequestQueueAdapter.getSize result: $result")
+        BranchLogger.v("BranchRequestQueueAdapter.getSize result: $result")
         return result
     }
     fun hasUser(): Boolean {
-        BranchLogger.t("BranchRequestQueueAdapter.hasUser called")
+        BranchLogger.v("BranchRequestQueueAdapter.hasUser called")
         val result = newQueue.hasUser()
-        BranchLogger.t("BranchRequestQueueAdapter.hasUser result: $result")
+        BranchLogger.v("BranchRequestQueueAdapter.hasUser result: $result")
         return result
     }
     fun peek(): ServerRequest? {
-        BranchLogger.t("BranchRequestQueueAdapter.peek called")
+        BranchLogger.v("BranchRequestQueueAdapter.peek called")
         val result = newQueue.peek()
-        BranchLogger.t("BranchRequestQueueAdapter.peek result: ${result?.javaClass?.simpleName}")
+        BranchLogger.v("BranchRequestQueueAdapter.peek result: ${result?.javaClass?.simpleName}")
         return result
     }
     fun peekAt(index: Int): ServerRequest? {
-        BranchLogger.t("BranchRequestQueueAdapter.peekAt called for index: $index")
+        BranchLogger.v("BranchRequestQueueAdapter.peekAt called for index: $index")
         val result = newQueue.peekAt(index)
-        BranchLogger.t("BranchRequestQueueAdapter.peekAt result: ${result?.javaClass?.simpleName}")
+        BranchLogger.v("BranchRequestQueueAdapter.peekAt result: ${result?.javaClass?.simpleName}")
         return result
     }
     fun insert(request: ServerRequest, index: Int) {
-        BranchLogger.t("BranchRequestQueueAdapter.insert called for: ${request::class.simpleName} at index: $index")
+        BranchLogger.v("BranchRequestQueueAdapter.insert called for: ${request::class.simpleName} at index: $index")
         newQueue.insert(request, index)
-        BranchLogger.t("BranchRequestQueueAdapter.insert completed")
+        BranchLogger.v("BranchRequestQueueAdapter.insert completed")
     }
     fun removeAt(index: Int): ServerRequest? {
-        BranchLogger.t("BranchRequestQueueAdapter.removeAt called for index: $index")
+        BranchLogger.v("BranchRequestQueueAdapter.removeAt called for index: $index")
         val result = newQueue.removeAt(index)
-        BranchLogger.t("BranchRequestQueueAdapter.removeAt result: ${result?.javaClass?.simpleName}")
+        BranchLogger.v("BranchRequestQueueAdapter.removeAt result: ${result?.javaClass?.simpleName}")
         return result
     }
     fun remove(request: ServerRequest?): Boolean {
-        BranchLogger.t("BranchRequestQueueAdapter.remove called for: ${request?.javaClass?.simpleName}")
+        BranchLogger.v("BranchRequestQueueAdapter.remove called for: ${request?.javaClass?.simpleName}")
         val result = newQueue.remove(request)
-        BranchLogger.t("BranchRequestQueueAdapter.remove result: $result")
+        BranchLogger.v("BranchRequestQueueAdapter.remove result: $result")
         return result
     }
     fun insertRequestAtFront(request: ServerRequest) {
-        BranchLogger.t("BranchRequestQueueAdapter.insertRequestAtFront called for: ${request::class.simpleName}")
+        BranchLogger.v("BranchRequestQueueAdapter.insertRequestAtFront called for: ${request::class.simpleName}")
         newQueue.insertRequestAtFront(request)
-        BranchLogger.t("BranchRequestQueueAdapter.insertRequestAtFront completed")
+        BranchLogger.v("BranchRequestQueueAdapter.insertRequestAtFront completed")
     }
     fun unlockProcessWait(lock: ServerRequest.PROCESS_WAIT_LOCK) {
-        BranchLogger.t("BranchRequestQueueAdapter.unlockProcessWait called for lock: $lock")
+        BranchLogger.v("BranchRequestQueueAdapter.unlockProcessWait called for lock: $lock")
         newQueue.unlockProcessWait(lock)
     }
     fun updateAllRequestsInQueue() {
-        BranchLogger.t("BranchRequestQueueAdapter.updateAllRequestsInQueue called")
+        BranchLogger.v("BranchRequestQueueAdapter.updateAllRequestsInQueue called")
         newQueue.updateAllRequestsInQueue()
-        BranchLogger.t("BranchRequestQueueAdapter.updateAllRequestsInQueue completed")
+        BranchLogger.v("BranchRequestQueueAdapter.updateAllRequestsInQueue completed")
     }
     fun postInitClear() {
-        BranchLogger.t("BranchRequestQueueAdapter.postInitClear called")
+        BranchLogger.v("BranchRequestQueueAdapter.postInitClear called")
         adapterScope.launch {
             newQueue.clearDeepLinkStorage()
-            BranchLogger.t("BranchRequestQueueAdapter.postInitClear completed")
+            BranchLogger.v("BranchRequestQueueAdapter.postInitClear completed")
         }
     }
     
@@ -203,9 +203,9 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      * Get self init request (matches original API)
      */
     fun getSelfInitRequest(): ServerRequest? {
-        BranchLogger.t("BranchRequestQueueAdapter.getSelfInitRequest called")
+        BranchLogger.v("BranchRequestQueueAdapter.getSelfInitRequest called")
         val result = newQueue.getSelfInitRequest()
-        BranchLogger.t("BranchRequestQueueAdapter.getSelfInitRequest result: ${result?.javaClass?.simpleName}")
+        BranchLogger.v("BranchRequestQueueAdapter.getSelfInitRequest result: ${result?.javaClass?.simpleName}")
         return result
     }
     
@@ -213,19 +213,19 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      * Instrumentation and debugging
      */
     fun addExtraInstrumentationData(key: String, value: String) {
-        BranchLogger.t("BranchRequestQueueAdapter.addExtraInstrumentationData called - key: $key, value: $value")
+        BranchLogger.v("BranchRequestQueueAdapter.addExtraInstrumentationData called - key: $key, value: $value")
         newQueue.addExtraInstrumentationData(key, value)
-        BranchLogger.t("BranchRequestQueueAdapter.addExtraInstrumentationData completed")
+        BranchLogger.v("BranchRequestQueueAdapter.addExtraInstrumentationData completed")
     }
     fun printQueue() {
-        BranchLogger.t("BranchRequestQueueAdapter.printQueue called")
+        BranchLogger.v("BranchRequestQueueAdapter.printQueue called")
         newQueue.printQueue()
     }
     fun clear() {
-        BranchLogger.t("BranchRequestQueueAdapter.clear called")
+        BranchLogger.v("BranchRequestQueueAdapter.clear called")
         adapterScope.launch {
             newQueue.clear()
-            BranchLogger.t("BranchRequestQueueAdapter.clear completed")
+            BranchLogger.v("BranchRequestQueueAdapter.clear completed")
         }
     }
     
@@ -237,7 +237,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
             is QueueOperationSetIdentity -> false
             else -> true
         }
-        BranchLogger.t("BranchRequestQueueAdapter.requestNeedsSession for ${request::class.simpleName} - result: $result")
+        BranchLogger.v("BranchRequestQueueAdapter.requestNeedsSession for ${request::class.simpleName} - result: $result")
         return result
     }
     
@@ -245,9 +245,9 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
      * Shutdown the adapter and underlying queue
      */
     fun shutdown() {
-        BranchLogger.t("BranchRequestQueueAdapter.shutdown called")
+        BranchLogger.v("BranchRequestQueueAdapter.shutdown called")
         adapterScope.cancel()
         newQueue.shutdown()
-        BranchLogger.t("BranchRequestQueueAdapter.shutdown completed")
+        BranchLogger.v("BranchRequestQueueAdapter.shutdown completed")
     }
 } 
