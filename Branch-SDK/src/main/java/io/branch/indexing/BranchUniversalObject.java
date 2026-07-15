@@ -1,5 +1,6 @@
 package io.branch.indexing;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
@@ -27,6 +29,7 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ShareSheetStyle;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -374,8 +377,60 @@ public class BranchUniversalObject implements Parcelable {
     
     //------------------ Share sheet -------------------------------------//
 
+    /**
+     * <p>Shows a share sheet for this {@link BranchUniversalObject} so users can share a Branch link
+     * to other applications.</p>
+     *
+     * <p>Restored for source compatibility with 5.x integrations that shared directly from a
+     * {@link BranchUniversalObject}. It now delegates to the native Android share sheet via
+     * {@link Branch#share(Activity, BranchUniversalObject, LinkProperties, Branch.BranchNativeLinkShareListener, String, String)},
+     * which replaced the legacy in-SDK share dialog. The {@link ShareSheetStyle} title/body are
+     * forwarded as the chooser title and subject respectively; styling specific to the old custom
+     * dialog (copy-url icon, more-option icon, custom fonts) has no equivalent in the OS share sheet
+     * and is ignored. The old dialog-lifecycle callbacks
+     * {@link Branch.BranchLinkShareListener#onShareLinkDialogLaunched()} and
+     * {@link Branch.BranchLinkShareListener#onShareLinkDialogDismissed()} are not invoked, because the
+     * OS share sheet does not expose those events.</p>
+     *
+     * @param activity       The {@link Activity} to show the share sheet from.
+     * @param linkProperties An object of {@link LinkProperties} specifying the properties of the link to share.
+     * @param style          An object of {@link ShareSheetStyle} whose message title/body seed the chooser title and subject.
+     * @param callback       An optional {@link Branch.BranchLinkShareListener} adapted to the native share callbacks.
+     * @deprecated Please use {@link Branch#share(Activity, BranchUniversalObject, LinkProperties, Branch.BranchNativeLinkShareListener, String, String)} instead.
+     */
+    @Deprecated
+    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
+        Branch branch = Branch.getInstance();
+        if (branch == null) {  // Branch instance not created yet (missing initialisation).
+            if (callback != null) {
+                callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
+            } else {
+                BranchLogger.v("Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
+            }
+            return;
+        }
 
-    
+        Branch.BranchNativeLinkShareListener nativeCallback = null;
+        if (callback != null) {
+            nativeCallback = new Branch.BranchNativeLinkShareListener() {
+                @Override
+                public void onLinkShareResponse(String sharedLink, BranchError error) {
+                    // The native share sheet does not report which channel completed the share.
+                    callback.onLinkShareResponse(sharedLink, null, error);
+                }
+
+                @Override
+                public void onChannelSelected(String channelName) {
+                    callback.onChannelSelected(channelName);
+                }
+            };
+        }
+
+        branch.share(activity, this, linkProperties, nativeCallback, style.getMessageTitle(), style.getMessageBody());
+    }
+
+
+
     private BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         return getLinkBuilder(shortLinkBuilder, linkProperties);
