@@ -1,5 +1,6 @@
 package io.branch.referral;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -15,10 +16,12 @@ import java.util.List;
 import io.branch.interfaces.IBranchLoggingCallbacks;
 
 /**
- * EMT-3864: enableLogging() must show request/response traffic without the queue/lock trace flood.
- * The ~150 queue/lock lines now go through BranchLogger.t(), gated by an opt-in trace flag
- * independent of the log level. enableLogging() shows only real traffic; Branch.setTraceLogging(true)
- * brings the diagnostics back on demand.
+ * EMT-3864: enableLogging() must show request/response traffic without the internal queue/lock
+ * trace flood. Rather than a custom trace channel with its own gate, every statement is classified
+ * to a standard android.util.Log severity: network request/response traffic logs at DEBUG, the
+ * fine-grained queue/lock trace logs at VERBOSE. enableLogging() now defaults to DEBUG, so the
+ * common path shows clean traffic; a developer diagnosing a stuck request opts into the extra
+ * detail with enableLogging(BranchLogLevel.VERBOSE). One gate: the log level.
  *
  * Output is captured via the logger callback (BranchLogger routes to it when one is set), which is
  * deterministic in a JVM unit test.
@@ -38,60 +41,58 @@ public class TraceLoggingTest {
             }
         });
         BranchLogger.setLoggingEnabled(true);
-        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.VERBOSE);
-        BranchLogger.setTraceLoggingEnabled(false);
     }
 
     @After
     public void tearDown() {
         BranchLogger.setLoggerCallback(null);
-        BranchLogger.setTraceLoggingEnabled(false);
         BranchLogger.setLoggingEnabled(false);
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
     }
 
     @Test
-    public void enableLoggingDefault_hidesQueueTrace() {
-        BranchLogger.t("queue/lock internal trace");
-        assertFalse("trace must stay silent while tracing is off (the EMT-3864 fix)",
-                captured.contains("queue/lock internal trace"));
-    }
+    public void debugLevel_showsTraffic_hidesQueueTrace() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
 
-    @Test
-    public void realTraffic_visibleAtVerbose_regardlessOfTrace() {
-        BranchLogger.v("posting to https://api2.branch.io");
-        assertTrue("request/response traffic must show at VERBOSE even with tracing off",
+        BranchLogger.d("posting to https://api2.branch.io");
+        BranchLogger.v("BranchRequestQueue.enqueue called");
+
+        assertTrue("request/response traffic (DEBUG) must show at the default DEBUG level (the EMT-3864 fix)",
                 captured.contains("posting to https://api2.branch.io"));
+        assertFalse("queue/lock trace (VERBOSE) must stay out of the default DEBUG output",
+                captured.contains("BranchRequestQueue.enqueue called"));
     }
 
     @Test
-    public void setTraceLoggingTrue_revealsQueueTrace() {
-        Branch.setTraceLogging(true);
-        BranchLogger.t("STUCK_LOCK_RESOLUTION: resolving");
-        assertTrue("trace diagnostics must appear once setTraceLogging(true)",
-                captured.contains("STUCK_LOCK_RESOLUTION: resolving"));
+    public void verboseLevel_showsTrafficAndQueueTrace() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.VERBOSE);
+
+        BranchLogger.d("posting to https://api2.branch.io");
+        BranchLogger.v("WAIT_LOCK_DEBUG: request stuck with locks");
+
+        assertTrue("traffic must still show at VERBOSE",
+                captured.contains("posting to https://api2.branch.io"));
+        assertTrue("queue/lock trace must appear once the level is raised to VERBOSE",
+                captured.contains("WAIT_LOCK_DEBUG: request stuck with locks"));
     }
 
     @Test
-    public void trace_silentWhenLoggingDisabled_evenIfTraceOn() {
+    public void loggingDisabled_showsNothing() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.VERBOSE);
         BranchLogger.setLoggingEnabled(false);
-        Branch.setTraceLogging(true);
-        BranchLogger.t("should not appear");
-        assertFalse("trace requires logging to be enabled to have any effect",
-                captured.contains("should not appear"));
+
+        BranchLogger.d("posting to https://api2.branch.io");
+        BranchLogger.v("WAIT_LOCK_DEBUG: request stuck with locks");
+
+        assertTrue("no output may be emitted while logging is disabled", captured.isEmpty());
     }
 
     @Test
-    public void setTraceLogging_whileLoggingOff_hintsToEnableLogging() {
-        BranchLogger.setLoggingEnabled(false);
-        Branch.setTraceLogging(true);
-        boolean hinted = false;
-        for (String line : captured) {
-            if (line.contains("call Branch.enableLogging()")) {
-                hinted = true;
-                break;
-            }
-        }
-        assertTrue("setTraceLogging(true) with logging off must hint that logging is required",
-                hinted);
+    public void enableLoggingDefaultsToDebug() {
+        // enableLogging() clears the logger callback (routes to android.util.Log), so assert the
+        // resulting level directly rather than through the capture callback.
+        Branch.enableLogging();
+        assertEquals("enableLogging() must default to DEBUG so it shows traffic, not the VERBOSE queue trace",
+                BranchLogger.BranchLogLevel.DEBUG, BranchLogger.getLoggingLevel());
     }
 }
