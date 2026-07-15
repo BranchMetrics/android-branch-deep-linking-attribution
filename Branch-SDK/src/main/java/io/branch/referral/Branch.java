@@ -290,7 +290,6 @@ public class Branch {
 
     private int networkCount_ = 0;
     private ServerResponse serverResponse_;
-    private BranchOpenObserver openObserver;
 
     /**
      * Enum to track the state of the intent processing
@@ -408,12 +407,8 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
-        if (context instanceof Application) {
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
-        } else if (context.getApplicationContext() instanceof Application) {
-            // Backup: Use the application context if the passed context wasn't the App itself
-            branchReferral_.setActivityLifeCycleObserver((Application) context.getApplicationContext());
-        }
+        // ProcessLifecycleOwner tracks the whole process, so no Application reference is required.
+        branchReferral_.setupProcessLifecycleObserver();
 
         return branchReferral_;
     }
@@ -568,6 +563,14 @@ public class Branch {
         }
 
         // Legacy link generator doesn't need explicit shutdown (no coroutines)
+
+        // Unregister process lifecycle observer to prevent memory leak (SDK-2463)
+        // In test mode, use blocking unregister to ensure cleanup completes before next test
+        if (isTestModeEnabled()) {
+            BranchProcessLifecycleObserver.shutDownForTesting();
+        } else {
+            BranchProcessLifecycleObserver.unregister();
+        }
 
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();
@@ -1581,14 +1584,12 @@ public class Branch {
      */
 
 
-    private void setActivityLifeCycleObserver(Application application) {
-        if (openObserver != null) {
-            application.unregisterActivityLifecycleCallbacks(openObserver);
-        }
-
-        openObserver = new BranchOpenObserver(this);
-
-        application.registerActivityLifecycleCallbacks(openObserver);
+    private void setupProcessLifecycleObserver() {
+        // SDK-2463: detect app foreground/background at the process level via ProcessLifecycleOwner
+        // instead of counting Activity start/stop. A configuration-change recreation (fold/unfold,
+        // rotation) no longer fires a process ON_START, so it cannot emit a duplicate OPEN. A real
+        // background-to-foreground still does.
+        BranchProcessLifecycleObserver.register(this);
     }
 
     /*
