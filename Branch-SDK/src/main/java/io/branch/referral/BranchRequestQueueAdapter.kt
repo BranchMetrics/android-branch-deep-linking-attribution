@@ -210,6 +210,15 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     
     /**
+     * Whether init data can be cleared (delegates to the modern queue). Matches the legacy
+     * ServerRequestQueue API so callers and tests written against it keep compiling.
+     */
+    fun canClearInitData(): Boolean {
+        val result = newQueue.canClearInitData()
+        return result
+    }
+
+    /**
      * Instrumentation and debugging
      */
     fun addExtraInstrumentationData(key: String, value: String) {

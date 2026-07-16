@@ -67,7 +67,10 @@ internal class RequestOpen(
                 }
 
                 if (callback_ != null) {
-                    //TODO: This will not have any link data
+                    // EMT-3860: latestReferringParams now carries the resolved deep link data,
+                    // because the open POST includes external_intent_uri (via the inherited
+                    // ServerRequestInitSession.onPreExecute) so the server resolves the click and
+                    // returns link_data in the response.
                     callback_!!.onInitFinished(branch.latestReferringParams, null)
                 }
             }

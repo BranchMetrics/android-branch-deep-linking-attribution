@@ -252,18 +252,10 @@ class BranchRequestQueue private constructor(private val context: Context) {
             BranchLogger.v("Processing request: ${request::class.simpleName}, network count: ${networkCount.get()}")
             
             when {
-                request.isWaitingOnProcessToFinish -> {
-                    val waitLocks = request.printWaitLocks()
-                    BranchLogger.v("Request $request is waiting on processes to finish")
-                    BranchLogger.v("Request is waiting on processes to finish, active locks: $waitLocks, re-queuing")
-                    BranchLogger.v("WAIT_LOCK_DEBUG: Request ${request::class.simpleName} stuck with locks: $waitLocks")
-                    // Re-queue after delay - add back to front of queue
-                    delay(50)
-                    synchronized(queueList) {
-                        queueList.add(0, request)
-                    }
-                    processingTrigger.send(Unit)
-                }
+                // NOTE (EMT-3859): a request that isWaitingOnProcessToFinish never reaches here,
+                // because canProcessRequest() returns false for any waiting request and routes it
+                // to handleRequestCannotBeProcessed() above. The former re-queue arm at this point
+                // was dead code and was removed; lock-waiting is handled entirely by the retry path.
                 !hasValidSession(request) -> {
                     BranchLogger.v("Request $request has no valid session")
                     BranchLogger.v("Request has no valid session")
@@ -319,13 +311,16 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for retry logic
      */
     private suspend fun handleRequestCannotBeProcessed(request: ServerRequest, requestId: String) {
-        val retryInfo = requestRetryInfo.getOrPut(requestId) { 
-            RequestRetryInfo(requestId) 
+        val retryInfo = requestRetryInfo.getOrPut(requestId) {
+            RequestRetryInfo(requestId)
         }
-        
+
+        // EMT-3859: lock-waiting requests are bounded only by the 30s timeout, not the retry count.
+        val isWaitingOnLock = request.isWaitingOnProcessToFinish
+
         // Check if request has exceeded limits
-        if (shouldFailRequest(retryInfo)) {
-            handleRequestFailureWithCleanup(request, requestId, retryInfo)
+        if (shouldFailRequest(retryInfo, isWaitingOnLock)) {
+            handleRequestFailureWithCleanup(request, requestId, retryInfo, isWaitingOnLock)
             // Remove from queue since it failed
             synchronized(queueList) {
                 queueList.remove(request)
@@ -373,8 +368,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Determine if request should fail based on retry limits and timeout
      * Follows SRP - single responsibility for failure criteria evaluation
      */
-    private fun shouldFailRequest(retryInfo: RequestRetryInfo): Boolean {
-        return retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS) || 
+    private fun shouldFailRequest(retryInfo: RequestRetryInfo, isWaitingOnLock: Boolean): Boolean {
+        // EMT-3859: a request that is purely waiting on a process-wait-lock must not be bounded
+        // by the retry counter (MAX_RETRY_ATTEMPTS * RETRY_DELAY_MS ~= 500ms, ~60x smaller than
+        // the advertised 30s timeout). The counter keeps incrementing so the stuck-lock
+        // heuristics still fire, but only the real REQUEST_TIMEOUT_MS (or the stuck-lock
+        // resolver) may force-fail a lock-waiting request.
+        val retryLimitApplies = !isWaitingOnLock
+        return (retryLimitApplies && retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS)) ||
                retryInfo.hasExceededTimeout(REQUEST_TIMEOUT_MS)
     }
     
@@ -383,25 +384,30 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Follows SRP - single responsibility for failure handling and cleanup
      */
     private fun handleRequestFailureWithCleanup(
-        request: ServerRequest, 
-        requestId: String, 
-        retryInfo: RequestRetryInfo
+        request: ServerRequest,
+        requestId: String,
+        retryInfo: RequestRetryInfo,
+        isWaitingOnLock: Boolean
     ) {
-        val errorMessage = when {
-            retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS) -> 
-                "Request exceeded maximum retry attempts (${MAX_RETRY_ATTEMPTS})"
-            retryInfo.hasExceededTimeout(REQUEST_TIMEOUT_MS) -> 
-                "Request exceeded timeout (${REQUEST_TIMEOUT_MS}ms)"
-            else -> "Request failed unknown reason"
+        // EMT-3859: a lock-waiting request can only reach failure through the timeout arm, so
+        // never attribute its failure to the retry limit.
+        // EMT-3869: report a timeout-specific error for the timeout arm so callers can tell a
+        // process-lock-wait timeout apart from a genuinely missing session.
+        val (errorCode, errorMessage) = when {
+            !isWaitingOnLock && retryInfo.hasExceededRetryLimit(MAX_RETRY_ATTEMPTS) ->
+                BranchError.ERR_NO_SESSION to "Request exceeded maximum retry attempts (${MAX_RETRY_ATTEMPTS})"
+            retryInfo.hasExceededTimeout(REQUEST_TIMEOUT_MS) ->
+                BranchError.ERR_BRANCH_REQ_TIMED_OUT to "Request exceeded timeout (${REQUEST_TIMEOUT_MS}ms)"
+            else -> BranchError.ERR_NO_SESSION to "Request failed unknown reason"
         }
-        
+
         BranchLogger.v("$errorMessage for request: ${request::class.simpleName}")
-        
+
         // Clean up retry tracking
         requestRetryInfo.remove(requestId)
-        
+
         // Fail the request
-        request.handleFailure(BranchError.ERR_NO_SESSION, errorMessage)
+        request.handleFailure(errorCode, errorMessage)
     }
     
     /**
@@ -573,6 +579,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
         if (waitLocks.contains("INSTALL_REFERRER_FETCH_WAIT_LOCK")) {
             BranchLogger.v("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INSTALL_REFERRER_FETCH_WAIT_LOCK")
             request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK)
+        }
+
+        // EMT-3860: the intent-pending lock is live again. If onActivityResumed / onIntentReady
+        // never fires (e.g. a headless cold start), force-resolve it after the stuck window so the
+        // init request is not held for the full 30s timeout.
+        if (waitLocks.contains("INTENT_PENDING_WAIT_LOCK")) {
+            BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INTENT_PENDING_WAIT_LOCK")
+            request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK)
         }
     }
     
@@ -918,6 +932,17 @@ class BranchRequestQueue private constructor(private val context: Context) {
         return null
     }
     
+    /**
+     * Whether the queue can clear init data: true when at most one init request remains
+     * (the one currently being removed). Mirrors ServerRequestQueue.canClearInitData() so the
+     * modern adapter keeps API parity with the legacy queue.
+     */
+    fun canClearInitData(): Boolean {
+        synchronized(queueList) {
+            return queueList.count { it is ServerRequestInitSession } <= 1
+        }
+    }
+
     /**
      * Unlock process wait (matches original API)
      */

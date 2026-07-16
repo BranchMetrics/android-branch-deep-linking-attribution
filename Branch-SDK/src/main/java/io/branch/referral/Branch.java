@@ -38,6 +38,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.branch.coroutines.RequestDeepLink;
 import io.branch.indexing.BranchUniversalObject;
@@ -288,7 +290,6 @@ public class Branch {
 
     private int networkCount_ = 0;
     private ServerResponse serverResponse_;
-    private BranchOpenObserver openObserver;
 
     /**
      * Enum to track the state of the intent processing
@@ -406,12 +407,8 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
-        if (context instanceof Application) {
-            branchReferral_.setActivityLifeCycleObserver((Application) context);
-        } else if (context.getApplicationContext() instanceof Application) {
-            // Backup: Use the application context if the passed context wasn't the App itself
-            branchReferral_.setActivityLifeCycleObserver((Application) context.getApplicationContext());
-        }
+        // ProcessLifecycleOwner tracks the whole process, so no Application reference is required.
+        branchReferral_.setupProcessLifecycleObserver();
 
         return branchReferral_;
     }
@@ -566,6 +563,14 @@ public class Branch {
         }
 
         // Legacy link generator doesn't need explicit shutdown (no coroutines)
+
+        // Unregister process lifecycle observer to prevent memory leak (SDK-2463)
+        // In test mode, use blocking unregister to ensure cleanup completes before next test
+        if (isTestModeEnabled()) {
+            BranchProcessLifecycleObserver.shutDownForTesting();
+        } else {
+            BranchProcessLifecycleObserver.unregister();
+        }
 
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();
@@ -1011,6 +1016,15 @@ public class Branch {
      * <p>This method should be called if you know that a different person is about to use the app. For example,
      * if you allow users to log out and let their friend use the app, you should call this to notify Branch
      * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
+     */
+    public void logout() {
+        logout(null);
+    }
+
+    /**
+     * <p>This method should be called if you know that a different person is about to use the app. For example,
+     * if you allow users to log out and let their friend use the app, you should call this to notify Branch
+     * to create a new user for this device. This will clear the first and latest params, as a new session is created.</p>
      *
      * @param callback An instance of {@link io.branch.referral.Branch.LogoutStatusListener} to callback with the logout operation status.
      */
@@ -1018,6 +1032,11 @@ public class Branch {
         QueueOperationLogout queueOperationLogout = new QueueOperationLogout(context_, Defines.RequestPath.Logout, callback);
         requestQueue_.handleNewRequest(queueOperationLogout);
     }
+
+    private static final int LATCH_WAIT_UNTIL = 2500; // ms; the *Sync getters give up waiting after this.
+
+    CountDownLatch getFirstReferringParamsLatch = null;
+    CountDownLatch getLatestReferringParamsLatch = null;
 
     /**
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
@@ -1033,6 +1052,26 @@ public class Branch {
         String storedParam = prefHelper_.getInstallParams();
         JSONObject firstReferringParams = convertParamsStringToDictionary(storedParam);
         firstReferringParams = appendDebugParams(firstReferringParams);
+        return firstReferringParams;
+    }
+
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has no install link data
+     * yet, it blocks until the data is available, or until {@link #LATCH_WAIT_UNTIL} milliseconds
+     * elapse. Returns the same install-time referring parameters as {@link #getFirstReferringParams()}.</p>
+     *
+     * @return A {@link JSONObject} containing the install-time parameters as configured locally.
+     */
+    public JSONObject getFirstReferringParamsSync() {
+        getFirstReferringParamsLatch = new CountDownLatch(1);
+        if (prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+            try {
+                getFirstReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignored) {
+            }
+        }
+        JSONObject firstReferringParams = getFirstReferringParams();
+        getFirstReferringParamsLatch = null;
         return firstReferringParams;
     }
 
@@ -1066,6 +1105,27 @@ public class Branch {
         String storedParam = prefHelper_.getSessionParams();
         JSONObject latestParams = convertParamsStringToDictionary(storedParam);
         latestParams = appendDebugParams(latestParams);
+        return latestParams;
+    }
+
+    /**
+     * <p>This function must be called from a non-UI thread! If Branch has not been initialized
+     * yet, it blocks until initialization completes, or until {@link #LATCH_WAIT_UNTIL}
+     * milliseconds elapse. Returns the same latest referring parameters as
+     * {@link #getLatestReferringParams()}.</p>
+     *
+     * @return A {@link JSONObject} containing the latest referring parameters as configured locally.
+     */
+    public JSONObject getLatestReferringParamsSync() {
+        getLatestReferringParamsLatch = new CountDownLatch(1);
+        try {
+            if (!(getInitState() instanceof BranchSessionState.Initialized)) {
+                getLatestReferringParamsLatch.await(LATCH_WAIT_UNTIL, TimeUnit.MILLISECONDS);
+            }
+        } catch (InterruptedException ignored) {
+        }
+        JSONObject latestParams = getLatestReferringParams();
+        getLatestReferringParamsLatch = null;
         return latestParams;
     }
     
@@ -1432,7 +1492,10 @@ public class Branch {
 
         // Single top activities can be launched from stack and there may be a new intent provided with onNewIntent() call.
         // In this case need to wait till onResume to get the latest intent.
-        if (false) {
+        // EMT-3860: hold the init request until the launch intent has been parsed (onIntentReady
+        // sets INTENT_STATE.READY), so the install/open POST carries external_intent_uri /
+        // link_identifier on a cold start instead of firing before the intent is read.
+        if (intentState_ != INTENT_STATE.READY) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
@@ -1489,16 +1552,21 @@ public class Branch {
     }
     
     void onIntentReady(@NonNull Activity activity) {
-        BranchLogger.v("onIntentReady " + activity + " removing INTENT_PENDING_WAIT_LOCK");
+        BranchLogger.v("onIntentReady " + activity);
         setIntentState(Branch.INTENT_STATE.READY);
-        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
 
+        // EMT-3860: read and persist the launch-intent params (external_intent_uri /
+        // link_identifier) BEFORE releasing the wait lock, so the queued init request sends with
+        // the link data instead of racing the unlock and going out empty.
         boolean grabIntentParams = activity.getIntent() != null && !(getInitState() instanceof BranchSessionState.Initialized);
 
         if (grabIntentParams) {
             Uri intentData = activity.getIntent().getData();
             readAndStripParam(intentData, activity);
         }
+
+        BranchLogger.v("onIntentReady removing INTENT_PENDING_WAIT_LOCK");
+        requestQueue_.unlockProcessWait(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK);
     }
 
     /**
@@ -1516,14 +1584,12 @@ public class Branch {
      */
 
 
-    private void setActivityLifeCycleObserver(Application application) {
-        if (openObserver != null) {
-            application.unregisterActivityLifecycleCallbacks(openObserver);
-        }
-
-        openObserver = new BranchOpenObserver(this);
-
-        application.registerActivityLifecycleCallbacks(openObserver);
+    private void setupProcessLifecycleObserver() {
+        // SDK-2463: detect app foreground/background at the process level via ProcessLifecycleOwner
+        // instead of counting Activity start/stop. A configuration-change recreation (fold/unfold,
+        // rotation) no longer fires a process ON_START, so it cannot emit a duplicate OPEN. A real
+        // background-to-foreground still does.
+        BranchProcessLifecycleObserver.register(this);
     }
 
     /*
@@ -2590,7 +2656,7 @@ public class Branch {
      * saved via PreferenceHelper.setLATDAttributionWindow(). If no value has been saved, Branch
      * defaults to a 30 day attribution window (SDK sends -1 to request the default from the server).
      *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     * @param callback An instance of {@link io.branch.referral.Branch.BranchLastAttributedTouchDataListener}
      *                 to callback with last attributed touch data
      *
      */
@@ -2603,7 +2669,7 @@ public class Branch {
     /**
      * Gets the available last attributed touch data with a custom set attribution window.
      *
-     * @param callback An instance of {@link io.branch.referral.ServerRequestGetLATD.BranchLastAttributedTouchDataListener}
+     * @param callback An instance of {@link io.branch.referral.Branch.BranchLastAttributedTouchDataListener}
      *                to callback with last attributed touch data
      * @param attributionWindow An {@link int} to bound the the window of time in days during which
      *                          the attribution data is considered valid. Note that, server side, the

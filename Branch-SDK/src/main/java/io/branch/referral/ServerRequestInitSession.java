@@ -87,7 +87,15 @@ public abstract class ServerRequestInitSession extends ServerRequest {
     protected void onInitSessionCompleted(ServerResponse response, Branch branch) {
         // Set the session state to INITIALISED after successful initialization
         branch.setInitState(BranchSessionState.Initialized.INSTANCE);
-        
+
+        // Release any callers blocked in getLatestReferringParamsSync / getFirstReferringParamsSync (EMT-3882).
+        if (branch.getLatestReferringParamsLatch != null) {
+            branch.getLatestReferringParamsLatch.countDown();
+        }
+        if (branch.getFirstReferringParamsLatch != null) {
+            branch.getFirstReferringParamsLatch.countDown();
+        }
+
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
         BranchLogger.v("onInitSessionCompleted on thread " + Thread.currentThread().getName());
