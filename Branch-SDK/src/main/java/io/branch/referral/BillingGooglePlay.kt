@@ -164,7 +164,7 @@ class BillingGooglePlay private constructor() {
                 }
             }
             else {
-                BranchLogger.e("Failed to query subscriptions. Error: " + billingResult.debugMessage)
+                BranchLogger.e("Failed to query in-app products. Error: " + billingResult.debugMessage)
             }
         }
     }
@@ -246,13 +246,19 @@ class BillingGooglePlay private constructor() {
         revenue: Double,
         productType: String
     ) {
+        // As of Google Play Billing v7, pending purchases are not assigned an order ID
+        // until they reach the PURCHASED state, so purchase.orderId may be null here.
+        if (purchase.orderId == null) {
+            BranchLogger.v("Purchase has no order ID (likely a pending purchase); logging event with empty order_id")
+        }
+
         BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE)
             .setCurrency(currency)
-            .setDescription(purchase.orderId)
+            .setDescription(purchase.orderId ?: "")
             .setCustomerEventAlias(productType)
             .setRevenue(revenue)
             .addCustomDataProperty("package_name", purchase.packageName)
-            .addCustomDataProperty("order_id", purchase.orderId)
+            .addCustomDataProperty("order_id", purchase.orderId ?: "")
             .addCustomDataProperty("logged_from_IAP", "true")
             .addCustomDataProperty("is_auto_renewing", purchase.isAutoRenewing.toString())
             .addCustomDataProperty("purchase_token", purchase.purchaseToken)
