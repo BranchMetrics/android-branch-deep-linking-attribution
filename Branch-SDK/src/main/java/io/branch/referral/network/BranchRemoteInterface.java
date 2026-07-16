@@ -96,7 +96,7 @@ public abstract class BranchRemoteInterface {
         }
 
         long reqStartTime = System.currentTimeMillis();
-        BranchLogger.v("getting " + modifiedUrl);
+        BranchLogger.d("getting " + modifiedUrl);
 
         try {
             BranchResponse response = doRestfulGet(modifiedUrl);
@@ -128,7 +128,7 @@ public abstract class BranchRemoteInterface {
         if (!addCommonParams(body, branchKey)) {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "Failed to set common parameters, body: " + body + " key: " + branchKey);
         }
-        BranchLogger.v("posting to " + url);
+        BranchLogger.d("posting to " + url);
         BranchLogger.v("Post value = " + body.toString());
 
         try {
@@ -167,7 +167,7 @@ public abstract class BranchRemoteInterface {
 
         ServerResponse result = new ServerResponse(tag, statusCode, requestId, "");
         if(!TextUtils.isEmpty(requestId)){
-            BranchLogger.v(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
+            BranchLogger.d(String.format(Locale.getDefault(), "Server returned: [%s] Status: [%d]; Data: %s", requestId, statusCode, responseString));
         } else {
             BranchLogger.v(String.format("returned %s", responseString));
         }
