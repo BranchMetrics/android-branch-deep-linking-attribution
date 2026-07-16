@@ -106,7 +106,7 @@ public abstract class ServerRequestInitSession extends ServerRequest {
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
         branch.updateSkipURLFormats();
         BranchLogger.v("onInitSessionCompleted on thread " + Thread.currentThread().getName());
-        BranchLogger.d("DEBUG: Session initialization completed successfully, state set to INITIALISED");
+        BranchLogger.v("Session initialization completed successfully, state set to INITIALISED");
     }
 
     /**
