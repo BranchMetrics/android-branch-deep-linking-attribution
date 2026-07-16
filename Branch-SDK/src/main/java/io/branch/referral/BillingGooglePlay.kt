@@ -22,7 +22,11 @@ class BillingGooglePlay private constructor() {
                     instance.billingClient =
                         BillingClient.newBuilder(Branch.getInstance().applicationContext)
                             .setListener(instance.purchasesUpdatedListener)
-                            .enablePendingPurchases()
+                            .enablePendingPurchases(
+                                PendingPurchasesParams.newBuilder()
+                                    .enableOneTimeProducts()
+                                    .build()
+                            )
                             .build()
                 }
                 return instance
@@ -93,7 +97,8 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             querySubsProductDetailsParams
-        ) { billingResult: BillingResult, subsProductDetailsList: List<ProductDetails?> ->
+        ) { billingResult: BillingResult, queryProductDetailsResult: QueryProductDetailsResult ->
+            val subsProductDetailsList = queryProductDetailsResult.productDetailsList
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 val contentItemBUOs: MutableList<BranchUniversalObject> =
                     ArrayList()
@@ -126,7 +131,8 @@ class BillingGooglePlay private constructor() {
 
         billingClient.queryProductDetailsAsync(
             queryProductDetailsParams
-        ) { billingResult: BillingResult, productDetailsList: List<ProductDetails?> ->
+        ) { billingResult: BillingResult, queryProductDetailsResult: QueryProductDetailsResult ->
+            val productDetailsList = queryProductDetailsResult.productDetailsList
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 
                 val contentItemBUOs: MutableList<BranchUniversalObject> =
