@@ -1,11 +1,14 @@
 package io.branch.referral
 
+import android.os.SystemClock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadows.ShadowSystemClock
+import java.time.Duration
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 
@@ -33,6 +36,14 @@ class TriageRetryCeilingTest : BranchTestBase() {
     @Before
     fun setUp() {
         super.setUpBase()
+
+        // EMT-3870: RequestRetryInfo timestamps are monotonic (SystemClock.elapsedRealtime()).
+        // Robolectric starts that clock at 100ms, so injecting an 11s-old lock would produce a
+        // negative firstWaitLockTime and silently trip the `firstWaitLockTime > 0` guard rather
+        // than the window under test. Advance past the longest age these tests inject, which is
+        // what a real device's uptime always is.
+        ShadowSystemClock.advanceBy(Duration.ofMinutes(1))
+
         queue = BranchRequestQueue.getInstance(RuntimeEnvironment.getApplication())
 
         // The real production RequestRetryInfo data class (file-private in BranchRequestQueue.kt).
@@ -55,7 +66,7 @@ class TriageRetryCeilingTest : BranchTestBase() {
 
     /** Build a production RequestRetryInfo with a given retry count and "first attempt" age. */
     private fun retryInfo(retryCount: Int, firstAttemptAgeMs: Long): Any {
-        val now = System.currentTimeMillis()
+        val now = SystemClock.elapsedRealtime()
         return retryInfoCtor.newInstance(
             "test-req",
             now - firstAttemptAgeMs, // firstAttemptTime
@@ -143,7 +154,7 @@ class TriageRetryCeilingTest : BranchTestBase() {
      */
     @Test
     fun waitLockTimeout_firesOffFirstWaitLockTime() {
-        val now = System.currentTimeMillis()
+        val now = SystemClock.elapsedRealtime()
         val info = retryInfoCtor.newInstance(
             "test-req",
             now,             // firstAttemptTime
