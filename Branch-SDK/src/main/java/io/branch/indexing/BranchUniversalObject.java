@@ -392,6 +392,24 @@ public class BranchUniversalObject implements Parcelable {
      * {@link Branch.BranchLinkShareListener#onShareLinkDialogDismissed()} are not invoked, because the
      * OS share sheet does not expose those events.</p>
      *
+     * <p><b>Channel reporting differs from the 5.x custom sheet.</b> The old dialog picked the app
+     * itself, so it knew the channel before building the link. The OS sheet only reveals the choice
+     * after the link already exists, which changes three things:</p>
+     * <ul>
+     *     <li>{@link Branch.BranchLinkShareListener#onChannelSelected(String)} still fires, but
+     *     receives the flattened {@link android.content.ComponentName} of the chosen app
+     *     (for example {@code ComponentName{com.whatsapp/com.whatsapp.ContactPicker}}) rather than
+     *     the display label the old sheet passed (for example {@code WhatsApp}). Code that compares
+     *     the channel against a literal name must be updated.</li>
+     *     <li>{@link Branch.BranchLinkShareListener#onLinkShareResponse(String, String, BranchError)}
+     *     receives a {@code null} channel. The OS reports the app that was chosen, not whether the
+     *     share completed, so no channel is known at completion time.</li>
+     *     <li>The {@code ~channel} link parameter is <b>not</b> set from the user's choice. The link
+     *     is generated before the sheet opens, so the chosen app cannot be baked into it. Set
+     *     {@link LinkProperties#setChannel(String)} up front if the link needs a channel for
+     *     attribution.</li>
+     * </ul>
+     *
      * @param activity       The {@link Activity} to show the share sheet from.
      * @param linkProperties An object of {@link LinkProperties} specifying the properties of the link to share.
      * @param style          An object of {@link ShareSheetStyle} whose message title/body seed the chooser title and subject.
@@ -415,7 +433,10 @@ public class BranchUniversalObject implements Parcelable {
             nativeCallback = new Branch.BranchNativeLinkShareListener() {
                 @Override
                 public void onLinkShareResponse(String sharedLink, BranchError error) {
-                    // The native share sheet does not report which channel completed the share.
+                    // Channel is null here by necessity. The OS reports which app the user
+                    // *chose* (EXTRA_CHOSEN_COMPONENT, surfaced through onChannelSelected below),
+                    // but never whether the share then completed, so nothing can be attached to
+                    // the completion callback. Read the channel from onChannelSelected instead.
                     callback.onLinkShareResponse(sharedLink, null, error);
                 }
 
