@@ -21,7 +21,7 @@ import java.lang.reflect.Method
  * Exercises the production failure-decision logic directly via reflection, with no Android
  * framework or network involved, so the result is deterministic.
  */
-class BetaTriageRetryCeilingTest : BranchTestBase() {
+class TriageRetryCeilingTest : BranchTestBase() {
 
     private lateinit var queue: BranchRequestQueue
     private lateinit var retryInfoClass: Class<*>
