@@ -1,5 +1,6 @@
 package io.branch.referral
 
+import android.os.SystemClock
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
@@ -51,7 +52,7 @@ class RequestTimeoutErrorTest : BranchTestBase() {
     }
 
     private fun retryInfo(retryCount: Int, firstAttemptAgeMs: Long): Any {
-        val now = System.currentTimeMillis()
+        val now = SystemClock.elapsedRealtime()
         return retryInfoCtor.newInstance("test-req", now - firstAttemptAgeMs, retryCount, now, 0L)
     }
 
