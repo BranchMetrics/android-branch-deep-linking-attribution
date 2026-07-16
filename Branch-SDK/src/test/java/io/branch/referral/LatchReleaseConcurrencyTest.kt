@@ -5,6 +5,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -35,7 +36,7 @@ class LatchReleaseConcurrencyTest : BranchTestBase() {
 
     @Before
     fun setUp() {
-        super.setUpBase()
+        // BranchTestBase.setUpBase() is itself @Before, so JUnit already runs it before this.
         // Obtain a real Branch singleton via the standard factory — no mocking of Branch itself.
         // With Config.NONE the manifest is absent; getAutoInstance handles that gracefully (logs a
         // warning and sets NO_STRING_VALUE for the key).
@@ -87,8 +88,10 @@ class LatchReleaseConcurrencyTest : BranchTestBase() {
      * return a non-null JSONObject — it must never block indefinitely.
      *
      * Note: this test intentionally takes ~2.5 s because it exercises the real timeout path.
+     * Hence @Category(SlowTest) — run `-PexcludeSlowTests` to skip it in a fast loop.
      */
     @Test
+    @Category(SlowTest::class)
     fun getFirstReferringParamsSync_returns_after_timeout_without_init() {
         // PrefHelper returns NO_STRING_VALUE ("bnc_no_value") for installParams on a fresh context,
         // so getFirstReferringParamsSync will enter the await block and block for LATCH_WAIT_UNTIL.
