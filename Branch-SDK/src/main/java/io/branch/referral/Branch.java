@@ -1,6 +1,5 @@
 package io.branch.referral;
 
-import static io.branch.referral.BranchError.ERR_IMPROPER_REINITIALIZATION;
 import static io.branch.referral.BranchUtil.isTestModeEnabled;
 import static io.branch.referral.Defines.Jsonkey.EXTERNAL_BROWSER;
 import static io.branch.referral.Defines.Jsonkey.IN_APP_WEBVIEW;
@@ -2142,7 +2141,6 @@ public class Branch {
         private int delay;
         private Uri uri;
         private Boolean ignoreIntent;
-        private boolean isReInitializing;
 
         private InitSessionBuilder(Activity activity) {
             Branch branch = Branch.getInstance();
@@ -2239,7 +2237,6 @@ public class Branch {
             BranchLogger.v("Callback is " + callback);
             BranchLogger.v("Is auto init " + isAutoInitialization);
             BranchLogger.v("Will ignore intent " + ignoreIntent);
-            BranchLogger.v("Is reinitializing " + isReInitializing);
 
             if(deferInitForPluginRuntime){
                 BranchLogger.v("Session init is deferred until signaled by plugin.");
@@ -2272,17 +2269,6 @@ public class Branch {
             if (uri != null) {
                 branch.readAndStripParam(uri, activity);
             }
-            else if (isReInitializing && branch.isRestartSessionRequested(intent)) {
-                branch.readAndStripParam(intent != null ? intent.getData() : null, activity);
-            }
-            else if (isReInitializing) {
-                // User called reInit but isRestartSessionRequested = false, meaning the new intent was
-                // not initiated by Branch and should not be considered a "new session", return early
-                if (callback != null) {
-                    callback.onInitFinished(null, new BranchError("", ERR_IMPROPER_REINITIALIZATION));
-                }
-                return;
-            }
 
             // Check if we have referring params from either intent extra "branch_data", or as parameters attached to the referring app link
             JSONObject referringParams = branch.getLatestReferringParams();
@@ -2305,35 +2291,17 @@ public class Branch {
                     "\nCaching Session Builder " + Branch.getInstance().deferredSessionBuilder +
                     "\nuri: " + Branch.getInstance().deferredSessionBuilder.uri +
                     "\ncallback: " + Branch.getInstance().deferredSessionBuilder.callback +
-                    "\nisReInitializing: " + Branch.getInstance().deferredSessionBuilder.isReInitializing +
                     "\ndelay: " + Branch.getInstance().deferredSessionBuilder.delay +
                     "\nisAutoInitialization: " + Branch.getInstance().deferredSessionBuilder.isAutoInitialization +
                     "\nignoreIntent: " + Branch.getInstance().deferredSessionBuilder.ignoreIntent
             );
         }
 
-        /**
-         * <p> Re-Initialize a session. Call from Activity.onNewIntent().
-         * This solves a very specific use case, whereas the app is already in the foreground and a new
-         * intent with a Uri is delivered to the foregrounded activity.
-         *
-         * Note that the Uri can also be stored as an extra in the field under the key `IntentKeys.BranchURI.getKey()` (i.e. "branch").
-         *
-         * Note also, that the since the method is expected to be called from Activity.onNewIntent(),
-         * the implementation assumes the intent will be non-null and will contain a Branch link in
-         * either the URI or in the the extra.</p>
-         *
-         */
-        @SuppressWarnings("WeakerAccess")
-        public void reInit() {
-            isReInitializing = true;
-            init();
-        }
     }
 
     /**
      * <p> Create Branch session builder. Add configuration variables with the available methods
-     * in the returned {@link InitSessionBuilder} class. Must be finished with init() or reInit(),
+     * in the returned {@link InitSessionBuilder} class. Must be finished with init(),
      * otherwise takes no effect.</p>
      *
      * @param activity     The calling {@link Activity} for context.
