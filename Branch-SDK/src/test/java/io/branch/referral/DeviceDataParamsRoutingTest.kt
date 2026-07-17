@@ -267,6 +267,7 @@ class DeviceDataParamsRoutingTest : BranchTestBase() {
         assertTrue(userData.getBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey()))
         assertFalse(v2Request.getPost().has(Defines.Jsonkey.UnidentifiedDevice.getKey()))
     }
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -339,3 +340,4 @@ private class StubServerRequestV2(
 
     override fun getBranchRemoteAPIVersion() = BRANCH_API_VERSION.V2
 }
+
