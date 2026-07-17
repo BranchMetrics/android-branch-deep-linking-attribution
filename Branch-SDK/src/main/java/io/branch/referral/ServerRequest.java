@@ -787,7 +787,7 @@ public abstract class ServerRequest {
         }
     }
 
-    protected void updateEnvironment(Context context, JSONObject post) {
+    protected void updateEnvironment() {
         try {
             String environment = DeviceInfo.getInstance().isPackageInstalled() ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
             JSONObject userDataObj = userDataObject();

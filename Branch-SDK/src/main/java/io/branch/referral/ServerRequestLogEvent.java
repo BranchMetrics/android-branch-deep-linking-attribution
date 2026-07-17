@@ -51,7 +51,7 @@ public class ServerRequestLogEvent extends ServerRequest {
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
-        updateEnvironment(context, reqBody);
+        updateEnvironment();
     }
 
     @Override

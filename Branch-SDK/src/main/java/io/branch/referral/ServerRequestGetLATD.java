@@ -37,7 +37,7 @@ public class ServerRequestGetLATD extends ServerRequest {
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
-        updateEnvironment(context, reqBody);
+        updateEnvironment();
     }
 
     ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, Branch.BranchLastAttributedTouchDataListener callback) {
