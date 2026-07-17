@@ -402,8 +402,9 @@ public class BranchUniversalObject implements Parcelable {
      *     the display label the old sheet passed (for example {@code WhatsApp}). Code that compares
      *     the channel against a literal name must be updated.</li>
      *     <li>{@link Branch.BranchLinkShareListener#onLinkShareResponse(String, String, BranchError)}
-     *     receives a {@code null} channel. The OS reports the app that was chosen, not whether the
-     *     share completed, so no channel is known at completion time.</li>
+     *     receives that same flattened {@link android.content.ComponentName}, not the display label
+     *     the old sheet passed. It is {@code null} when the share fails before the sheet opens, since
+     *     no app was ever chosen.</li>
      *     <li>The {@code ~channel} link parameter is <b>not</b> set from the user's choice. The link
      *     is generated before the sheet opens, so the chosen app cannot be baked into it. Set
      *     {@link LinkProperties#setChannel(String)} up front if the link needs a channel for
@@ -442,6 +443,7 @@ public class BranchUniversalObject implements Parcelable {
      */
     /* package */ static class NativeShareListenerAdapter implements Branch.BranchNativeLinkShareListener {
         private final Branch.BranchLinkShareListener delegate_;
+        private String channelSelected_;
 
         NativeShareListenerAdapter(@NonNull Branch.BranchLinkShareListener delegate) {
             delegate_ = delegate;
@@ -449,15 +451,15 @@ public class BranchUniversalObject implements Parcelable {
 
         @Override
         public void onLinkShareResponse(String sharedLink, BranchError error) {
-            // Channel is null here by necessity. The OS reports which app the user
-            // *chose* (EXTRA_CHOSEN_COMPONENT, surfaced through onChannelSelected below),
-            // but never whether the share then completed, so nothing can be attached to
-            // the completion callback. Read the channel from onChannelSelected instead.
-            delegate_.onLinkShareResponse(sharedLink, null, error);
+            delegate_.onLinkShareResponse(sharedLink, channelSelected_, error);
         }
 
         @Override
         public void onChannelSelected(String channelName) {
+            // SharingBroadcastReceiver reports the chosen app before it reports completion, so
+            // holding the value here is what lets onLinkShareResponse pass a channel at all.
+            // Stays null when the share fails before the sheet opens and no app is ever chosen.
+            channelSelected_ = channelName;
             delegate_.onChannelSelected(channelName);
         }
     }
