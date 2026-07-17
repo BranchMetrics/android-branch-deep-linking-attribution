@@ -199,19 +199,10 @@ public abstract class ServerRequest {
     void addDMAParams() {
         if (prefHelper_.isDMAParamsInitialized()) {
             try {
-                BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
-                if (version == BRANCH_API_VERSION.V1) {
-                    params_.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
-                    params_.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
-                    params_.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
-                } else {
-                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-                    if (userDataObj != null) {
-                        userDataObj.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
-                        userDataObj.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
-                        userDataObj.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
-                    }
-                }
+                JSONObject target = deviceDataParamsObject();
+                target.put(Defines.Jsonkey.DMA_EEA.getKey(), prefHelper_.getEEARegion());
+                target.put(Defines.Jsonkey.DMA_Ad_Personalization.getKey(), prefHelper_.getAdPersonalizationConsent());
+                target.put(Defines.Jsonkey.DMA_Ad_User_Data.getKey(), prefHelper_.getAdUserDataUsageConsent());
             } catch (JSONException e) {
                 BranchLogger.d(e.getMessage());
             }
@@ -221,14 +212,7 @@ public abstract class ServerRequest {
     private void addConsumerProtectionAttributionLevel() {
         if (prefHelper_.isAttributionLevelInitialized()) {
             try {
-                if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
-                    params_.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
-                } else {
-                    JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-                    if (userDataObj != null) {
-                        userDataObj.put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
-                    }
-                }
+                deviceDataParamsObject().put(Defines.Jsonkey.Consumer_Protection_Attribution_Level.getKey(), prefHelper_.getConsumerProtectionAttributionLevel().toString());
             } catch (JSONException e) {
                 BranchLogger.d(e.getMessage());
             }
@@ -267,14 +251,11 @@ public abstract class ServerRequest {
 
         if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
             DeviceInfo.getInstance().updateRequestWithV1Params(this, params_);
-        }
-        else {
+        } else {
             JSONObject userDataObj = new JSONObject();
             params_.put(Defines.Jsonkey.UserData.getKey(), userDataObj);
             DeviceInfo.getInstance().updateRequestWithV2Params(this, prefHelper_, userDataObj);
         }
-
-
     }
     
     /**
@@ -476,38 +457,36 @@ public abstract class ServerRequest {
             }
         }
         try {
+            JSONObject target = deviceDataParamsObject();
             if (version == BRANCH_API_VERSION.V1) {
-                params_.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
+                target.put(Defines.Jsonkey.LATVal.getKey(), LATVal);
                 if (!TextUtils.isEmpty(gaid)) {
                     if (!SystemObserver.isHuaweiMobileServicesAvailable(context_)) {
                         // Fire OS overloads ad id (representing it as Google ad id at the top level),
                         // HUAWEI only reports ad id in the advertising_ids object
                         if (prefHelper_.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.FULL || !prefHelper_.isAttributionLevelInitialized()) {
-                            params_.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
+                            target.put(Defines.Jsonkey.GoogleAdvertisingID.getKey(), gaid);
                         }
                     }
-                    params_.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
-                } else if (!payloadContainsDeviceIdentifiers(params_) &&
-                        !params_.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
-                    params_.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
+                    target.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
+                } else if (!payloadContainsDeviceIdentifiers(target) &&
+                        !target.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
+                    target.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                 }
             } else {
-                JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-                if (userDataObj != null) {
-                    userDataObj.put(Defines.Jsonkey.LimitedAdTracking.getKey(), LATVal);
-                    if (!TextUtils.isEmpty(gaid)) {
-                        if (!SystemObserver.isHuaweiMobileServicesAvailable(context_)) {
-                            // Fire OS overloads ad id (representing it as Google ad id at the top level),
-                            // HUAWEI only reports ad id in the advertising_ids object
-                            if (prefHelper_.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.FULL || !prefHelper_.isAttributionLevelInitialized()) {
-                                userDataObj.put(Defines.Jsonkey.AAID.getKey(), gaid);
-                            }
+                target.put(Defines.Jsonkey.LimitedAdTracking.getKey(), LATVal);
+                if (!TextUtils.isEmpty(gaid)) {
+                    if (!SystemObserver.isHuaweiMobileServicesAvailable(context_)) {
+                        // Fire OS overloads ad id (representing it as Google ad id at the top level),
+                        // HUAWEI only reports ad id in the advertising_ids object
+                        if (prefHelper_.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.FULL || !prefHelper_.isAttributionLevelInitialized()) {
+                            target.put(Defines.Jsonkey.AAID.getKey(), gaid);
                         }
-                        userDataObj.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
-                    } else if (!payloadContainsDeviceIdentifiers(userDataObj) &&
-                            !userDataObj.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
-                        userDataObj.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                     }
+                    target.remove(Defines.Jsonkey.UnidentifiedDevice.getKey());
+                } else if (!payloadContainsDeviceIdentifiers(target) &&
+                        !target.optBoolean(Defines.Jsonkey.UnidentifiedDevice.getKey())) {
+                    target.put(Defines.Jsonkey.UnidentifiedDevice.getKey(), true);
                 }
             }
         } catch (JSONException e) {
@@ -566,16 +545,13 @@ public abstract class ServerRequest {
     }
     
     private void updateDeviceInfo() {
-        BRANCH_API_VERSION version = getBranchRemoteAPIVersion();
-        if (version == BRANCH_API_VERSION.V2) {
-            JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-            if (userDataObj != null) {
-                try {
-                    userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
-                    userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
-                } catch (JSONException e) {
-                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                }
+        if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
+            try {
+                JSONObject target = deviceDataParamsObject();
+                target.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
+                target.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
+            } catch (JSONException e) {
+                BranchLogger.w("Caught JSONException " + e.getMessage());
             }
         }
     }
@@ -622,29 +598,23 @@ public abstract class ServerRequest {
      * Update the the limit app tracking value to the request
      */
     private void updateLimitFacebookTracking() {
-        JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-        if (updateJson != null) {
-            boolean isLimitFacebookTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
-            if (isLimitFacebookTracking) {
-                try {
-                    updateJson.putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
-                } catch (JSONException e) {
-                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                }
+        boolean isLimitFacebookTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
+        if (isLimitFacebookTracking) {
+            try {
+                deviceDataParamsObject().putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
+            } catch (JSONException e) {
+                BranchLogger.w("Caught JSONException " + e.getMessage());
             }
         }
     }
 
     private void updateDisableAdNetworkCallouts() {
-        JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-        if (updateJson != null) {
-            boolean disableAdNetworkCallouts = prefHelper_.getAdNetworkCalloutsDisabled();
-            if (disableAdNetworkCallouts) {
-                try {
-                    updateJson.putOpt(Defines.Jsonkey.DisableAdNetworkCallouts.getKey(), disableAdNetworkCallouts);
-                } catch (JSONException e) {
-                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                }
+        boolean disableAdNetworkCallouts = prefHelper_.getAdNetworkCalloutsDisabled();
+        if (disableAdNetworkCallouts) {
+            try {
+                deviceDataParamsObject().putOpt(Defines.Jsonkey.DisableAdNetworkCallouts.getKey(), disableAdNetworkCallouts);
+            } catch (JSONException e) {
+                BranchLogger.w("Caught JSONException " + e.getMessage());
             }
         }
     }
@@ -819,14 +789,7 @@ public abstract class ServerRequest {
     protected void updateEnvironment(Context context, JSONObject post) {
         try {
             String environment = DeviceInfo.getInstance().isPackageInstalled() ? Defines.Jsonkey.NativeApp.getKey() : Defines.Jsonkey.InstantApp.getKey();
-            if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V2) {
-                JSONObject userData = post.optJSONObject(Defines.Jsonkey.UserData.getKey());
-                if (userData != null) {
-                    userData.put(Defines.Jsonkey.Environment.getKey(), environment);
-                }
-            } else {
-                post.put(Defines.Jsonkey.Environment.getKey(), environment);
-            }
+            deviceDataParamsObject().put(Defines.Jsonkey.Environment.getKey(), environment);
         } catch (Exception e) {
             BranchLogger.d(e.getMessage());
         }
@@ -839,6 +802,18 @@ public abstract class ServerRequest {
      */
     public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
         return BRANCH_API_VERSION.V1;  // Default is v1
+    }
+
+    /**
+     * Returns the JSONObject that device/user data fields should be written into.
+     * V1 requests write flat into the top-level params; V2 requests nest under "user_data".
+     */
+    private JSONObject deviceDataParamsObject() {
+        if (getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1) {
+            return params_;
+        }
+        JSONObject userData = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
+        return userData != null ? userData : params_;
     }
     
     /**
