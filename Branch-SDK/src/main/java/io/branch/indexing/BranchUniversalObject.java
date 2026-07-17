@@ -430,24 +430,36 @@ public class BranchUniversalObject implements Parcelable {
 
         Branch.BranchNativeLinkShareListener nativeCallback = null;
         if (callback != null) {
-            nativeCallback = new Branch.BranchNativeLinkShareListener() {
-                @Override
-                public void onLinkShareResponse(String sharedLink, BranchError error) {
-                    // Channel is null here by necessity. The OS reports which app the user
-                    // *chose* (EXTRA_CHOSEN_COMPONENT, surfaced through onChannelSelected below),
-                    // but never whether the share then completed, so nothing can be attached to
-                    // the completion callback. Read the channel from onChannelSelected instead.
-                    callback.onLinkShareResponse(sharedLink, null, error);
-                }
-
-                @Override
-                public void onChannelSelected(String channelName) {
-                    callback.onChannelSelected(channelName);
-                }
-            };
+            nativeCallback = new NativeShareListenerAdapter(callback);
         }
 
         branch.share(activity, this, linkProperties, nativeCallback, style.getMessageTitle(), style.getMessageBody());
+    }
+
+    /**
+     * Adapts the two-argument native share callbacks onto the three-argument
+     * {@link Branch.BranchLinkShareListener} that 5.x integrations implement.
+     */
+    /* package */ static class NativeShareListenerAdapter implements Branch.BranchNativeLinkShareListener {
+        private final Branch.BranchLinkShareListener delegate_;
+
+        NativeShareListenerAdapter(@NonNull Branch.BranchLinkShareListener delegate) {
+            delegate_ = delegate;
+        }
+
+        @Override
+        public void onLinkShareResponse(String sharedLink, BranchError error) {
+            // Channel is null here by necessity. The OS reports which app the user
+            // *chose* (EXTRA_CHOSEN_COMPONENT, surfaced through onChannelSelected below),
+            // but never whether the share then completed, so nothing can be attached to
+            // the completion callback. Read the channel from onChannelSelected instead.
+            delegate_.onLinkShareResponse(sharedLink, null, error);
+        }
+
+        @Override
+        public void onChannelSelected(String channelName) {
+            delegate_.onChannelSelected(channelName);
+        }
     }
 
 
