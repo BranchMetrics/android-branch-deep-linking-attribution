@@ -91,8 +91,7 @@ Treat the number this produces as a shape, not a fact — do not report it as
 
 ## Device matrix
 
-Run the chooser test (and ideally the latency probe once, to sanity-check it
-doesn't itself introduce jank) on:
+Run the chooser test on:
 
 | Device                         | OS version      | Chooser (IntentResolver) module version      | Honored? (yes/no) | Notes                                                                                                                                        |
 | ------------------------------ | --------------- | -------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -214,7 +213,7 @@ cannot simulate. Run these steps on each physical device.
    `FLAG_STOPPED` and will NOT appear in the chooser — this step is mandatory.
 
 8. **Start capturing logs** in a terminal:
-   `adb logcat -c && adb logcat -s EMT3881_SPIKE_TX:I EMT3881_SPIKE_RX:I EMT3881_SPIKE_LATENCY:I`
+   `adb logcat -c && adb logcat -s EMT3881_SPIKE_TX:I EMT3881_SPIKE_RX:I`
 
 9. **Fire the chooser.** Open "EMT-3881 Spike Sender", tap **SEND WITH REPLACEMENT
    EXTRAS**. The screen (and the `EMT3881_SPIKE_TX` logs) show the baseline plus
@@ -243,11 +242,14 @@ cannot simulate. Run these steps on each physical device.
     expose the raw text as cleanly as the receiver, so treat this as a visual
     sanity check, not the oracle.
 
-14. **Latency probe (only if measuring LONG vs SHORT).** On the sender, set the
-    endpoint field to the REAL Branch link-creation endpoint (not the default
-    `httpbin.org`), set N to a realistic target count, tap **RUN LATENCY PROBE**,
-    read p50/p95 from the screen or `EMT3881_SPIKE_LATENCY` log.
-
 Record the PASS/FAIL, the OS version, and the chooser module version for each
 device in the matrix table above. All rows PASS → the gate is closed. Any row
 FAILs → the ADR falls back to Option A.
+
+> **Latency is not part of this gate.** LONG links are the default and cost no
+> network, so the OEM gate does not depend on any latency number. The `RUN
+LATENCY PROBE` button in the sender is a rough proxy (parallel GETs to an
+> arbitrary host) — it does **not** call the real Branch link-creation API,
+> which is a POST. If SHORT links are ever considered, measure real latency by
+> timing N parallel `generateShortUrl` calls in the TestBed (real Branch key),
+> not with this probe.
