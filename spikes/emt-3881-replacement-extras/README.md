@@ -248,7 +248,6 @@ cannot simulate. Run these steps on each physical device.
     `httpbin.org`), set N to a realistic target count, tap **RUN LATENCY PROBE**,
     read p50/p95 from the screen or `EMT3881_SPIKE_LATENCY` log.
 
-15. **Record the result** in the device matrix table above (OS version, chooser
-    module version, honored yes/no, notes) and report it on PR #1379. All matrix
-    rows PASS → the gate is closed and the flag can be enabled by default in a
-    separate change. Any row FAILs → ADR falls back to Option A.
+Record the PASS/FAIL, the OS version, and the chooser module version for each
+device in the matrix table above. All rows PASS → the gate is closed. Any row
+FAILs → the ADR falls back to Option A.
