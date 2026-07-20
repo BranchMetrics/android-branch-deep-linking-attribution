@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="false"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:label="EMT-3881 Spike Receiver"
+        android:theme="@style/AppTheme">
+
+        <!--
+        Single activity, dual purpose: launchable on its own (to check it's
+        installed and see the log of everything received so far), and
+        registered as an ACTION_SEND / text-plain target so it appears in
+        the OS chooser fired by the sender app.
+        -->
+        <activity
+            android:name=".ReceiverActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
