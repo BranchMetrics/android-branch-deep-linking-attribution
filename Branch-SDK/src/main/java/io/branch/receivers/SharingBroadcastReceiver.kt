@@ -35,7 +35,10 @@ class SharingBroadcastReceiver: BroadcastReceiver() {
      * is preserved so current integrations see no change.
      */
     private fun resolveChannelName(component: ComponentName?): String {
-        val raw = component.toString()
+        // EXTRA_CHOSEN_COMPONENT can be absent (share cancelled, or some OEM choosers), so guard
+        // the null: a bare component.toString() would report the literal string "null" as the
+        // channel rather than crash, which is worse than an empty channel.
+        val raw = component?.toString() ?: ""
         if (!PerTargetChannelConfig.isEnabled() || component == null) {
             return raw
         }
