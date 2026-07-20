@@ -167,3 +167,88 @@ every device is best-effort, not required for pass).
 matrix (i.e. the receiver shows baseline text instead of the replacement, or
 any real-world target shows unreplaced text), Option B is not viable as a
 universal solution. **A FAIL result means the ADR falls back to Option A.**
+
+## Running the gate on a physical device (step by step)
+
+The emulator rows are done (AOSP chooser). What remains is the OEM gate — a
+real Samsung (One UI) and a real Xiaomi (HyperOS), the choosers this harness
+cannot simulate. Run these steps on each physical device.
+
+1. **Check out the branch.**
+   `git checkout feat/EMT-3881-per-target-channel`
+   (or `git fetch origin feat/EMT-3881-per-target-channel && git checkout feat/EMT-3881-per-target-channel`).
+
+2. **Build both spike APKs.**
+
+   ```bash
+   cd spikes/emt-3881-replacement-extras
+   ./gradlew assembleDebug
+   ```
+
+   Produces `sender/build/outputs/apk/debug/sender-debug.apk` and
+   `receiver/build/outputs/apk/debug/receiver-debug.apk`.
+
+3. **Enable USB debugging on the device.** Settings → About phone → tap Build
+   number 7×, then Developer options → enable USB debugging. On Xiaomi/HyperOS
+   also enable "Install via USB" and "USB debugging (Security settings)".
+
+4. **Connect and authorize.** Plug in over USB, accept the "Allow USB debugging"
+   prompt on the phone, then confirm exactly one device is attached:
+   `adb devices -l` (should list your phone, not `unauthorized`).
+
+5. **Record the chooser module version** (the result is only valid for it):
+   `adb shell dumpsys package com.google.android.intentresolver | grep -i versionName`
+   (or the `com.android.intentresolver` variant). Note it, plus
+   `adb shell getprop ro.build.version.release` and the One UI / HyperOS version
+   from Settings.
+
+6. **Install both APKs.**
+
+   ```bash
+   adb install -r -t receiver/build/outputs/apk/debug/receiver-debug.apk
+   adb install -r -t sender/build/outputs/apk/debug/sender-debug.apk
+   ```
+
+7. **Open the receiver once, by hand.** Launch "EMT-3881 Spike Receiver" from the
+   app drawer, then press Back. An app installed but never opened stays
+   `FLAG_STOPPED` and will NOT appear in the chooser — this step is mandatory.
+
+8. **Start capturing logs** in a terminal:
+   `adb logcat -c && adb logcat -s EMT3881_SPIKE_TX:I EMT3881_SPIKE_RX:I EMT3881_SPIKE_LATENCY:I`
+
+9. **Fire the chooser.** Open "EMT-3881 Spike Sender", tap **SEND WITH REPLACEMENT
+   EXTRAS**. The screen (and the `EMT3881_SPIKE_TX` logs) show the baseline plus
+   the expected per-package tokens.
+
+10. **Pick the receiver in the share sheet.** Choose "EMT-3881 Spike Receiver"
+    (scroll the target list if needed).
+
+11. **Read the verdict.** The receiver screen shows `EXTRA_TEXT = …`, mirrored in
+    the `EMT3881_SPIKE_RX` log:
+    - `SPIKE|pkg=io.branch.spike.receiver|token=…` **→ PASS** (chooser honored the
+      per-target override; the token must match the sender's `io.branch.spike.receiver`
+      line from step 9).
+    - `SPIKE-BASELINE (no per-target override applied)` **→ FAIL** (chooser ignored
+      it — the gate fails on this device, ADR falls back to Option A).
+
+12. **Run the two negative controls** so a PASS isn't self-fulfilling:
+    - **Echo control:** `adb shell am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "CONTROL-XYZ" -n io.branch.spike.receiver/.ReceiverActivity`
+      → the receiver must display `CONTROL-XYZ` (proves it echoes, not hardcodes).
+    - **Fresh-token control:** repeat steps 8–11; the token in step 11 must be a
+      NEW value each run (proves the value flows per-run, not cached).
+
+13. **Real-world target visual check (best-effort).** With WhatsApp/Gmail
+    installed, fire the chooser again and pick one; confirm the pasted/received
+    text carries `pkg=<that package>` rather than the baseline. These apps don't
+    expose the raw text as cleanly as the receiver, so treat this as a visual
+    sanity check, not the oracle.
+
+14. **Latency probe (only if measuring LONG vs SHORT).** On the sender, set the
+    endpoint field to the REAL Branch link-creation endpoint (not the default
+    `httpbin.org`), set N to a realistic target count, tap **RUN LATENCY PROBE**,
+    read p50/p95 from the screen or `EMT3881_SPIKE_LATENCY` log.
+
+15. **Record the result** in the device matrix table above (OS version, chooser
+    module version, honored yes/no, notes) and report it on PR #1379. All matrix
+    rows PASS → the gate is closed and the flag can be enabled by default in a
+    separate change. Any row FAILs → ADR falls back to Option A.
