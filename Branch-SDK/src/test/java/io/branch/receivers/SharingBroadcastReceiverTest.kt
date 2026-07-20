@@ -67,4 +67,15 @@ class SharingBroadcastReceiverTest : BranchTestBase() {
 
         assertEquals(component.toString(), result)
     }
+
+    @Test
+    fun `does not crash and returns empty string when no component is supplied`() {
+        // EXTRA_CHOSEN_COMPONENT can be absent (share cancelled, or some OEM choosers),
+        // so resolveChannelName must tolerate a null component without throwing.
+        PerTargetChannelConfig.setEnabled(true)
+
+        val result = resolveChannelName.invoke(receiver, *arrayOf<Any?>(null)) as String
+
+        assertEquals("", result)
+    }
 }
