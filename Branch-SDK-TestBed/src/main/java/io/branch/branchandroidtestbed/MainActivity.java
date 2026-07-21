@@ -49,7 +49,6 @@ import io.branch.referral.BranchShareSheetBuilder;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
-import io.branch.referral.ServerRequestGetLATD;
 import io.branch.referral.SharingHelper;
 import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchContentSchema;
@@ -705,22 +704,6 @@ public class MainActivity extends Activity {
                 }
             }
         });
-
-        findViewById(R.id.getLatdButton).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    Branch.getInstance().getLastAttributedTouchData(new ServerRequestGetLATD.BranchLastAttributedTouchDataListener() {
-                        @Override
-                        public void onDataFetched(JSONObject jsonObject, BranchError error) {
-                            Log.i("BranchSDK_Tester", "Result: " + String.valueOf(jsonObject) + "\nError: " + error);
-                        }
-                    });
-                } catch (Exception e) {
-                    Log.e("BranchSDK_Tester", e.getMessage());
-                }
-            }
-        });
     }
 
     private void createNotificationChannel() {
@@ -843,7 +826,9 @@ public class MainActivity extends Activity {
                     BranchLogger.d(referringParams.toString());
                 }
             }
-        }).reInit();
+            // reInit() was removed in 6.0 (EMT-3883); init() is its sanctioned replacement and,
+            // with the ERR_IMPROPER_REINITIALIZATION guard gone, is now valid to call in onNewIntent.
+        }).init();
     }
 
     @Override
