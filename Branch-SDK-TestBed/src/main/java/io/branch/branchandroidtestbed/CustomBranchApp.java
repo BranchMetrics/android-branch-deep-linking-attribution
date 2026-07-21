@@ -14,7 +14,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchConfiguration;
 import io.branch.referral.BranchLogger;
+import io.branch.referral.DMAParameters;
 import io.branch.referral.IBranchRequestTracingCallback;
 
 public final class CustomBranchApp extends Application {
@@ -22,17 +24,28 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-//        IBranchLoggingCallbacks loggingCallbacks = (message, tag) -> {
-//            Log.d("BranchTestbed", message);
-//            saveLogToFile(message);
-//        };
+        // TODO replace getAutoInstance with Branch.initialize
+        //   Branch.initialize(this, new BranchConfiguration.Builder("key_live_xxx")
+        //       .setLogLevel(BranchLogger.BranchLogLevel.VERBOSE)
+        //       .setDMAParameters(new DMAParameters(true, false, true))
+        //       .setRequestTracingCallback(tracingCallback())
+        //       .build());
+
+        // --- Deprecated calls below — migrate to BranchConfiguration.Builder (AND-16) ---
+
+        // @deprecated — use BranchConfiguration.Builder.setLogLevel()
         Branch.enableLogging(BranchLogger.BranchLogLevel.VERBOSE);
+
+        // @deprecated — use Branch.initialize(context, config) via BranchConfiguration.Builder
         Branch branch = Branch.getAutoInstance(this);
+
+        // Not deprecated — runtime appearance setting, stays as instance method.
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
         branch.setCustomTabsIntent(customTabsIntent);
 
+        // @deprecated — use BranchConfiguration.Builder.setRequestTracingCallback()
         Branch.setCallbackForTracingRequests(new IBranchRequestTracingCallback() {
             @Override
             public void onRequestCompleted(String uri, JSONObject request, JSONObject response, String error, String requestUrl) {
