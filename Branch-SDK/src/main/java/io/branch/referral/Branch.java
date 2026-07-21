@@ -392,18 +392,7 @@ public class Branch {
             return branchReferral_;
         }
         branchReferral_ = new Branch(context.getApplicationContext());
-
-        if (TextUtils.isEmpty(branchKey)) {
-            BranchLogger.w("Warning: Please enter your branch_key in your project's Manifest file!");
-            branchReferral_.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
-        } else {
-            branchReferral_.prefHelper_.setBranchKey(branchKey);
-            // Set the source to "init_function" since this method is called via getAutoInstance with explicit key
-            if (!branchKey.equals(BranchUtil.readBranchKey(context))) {
-                branchReferral_.prefHelper_.setBranchKeySource("init_function");
-            }
-        }
-
+        applyBranchKey(context, branchReferral_, branchKey);
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
         // ProcessLifecycleOwner tracks the whole process, so no Application reference is required.
@@ -412,18 +401,108 @@ public class Branch {
         return branchReferral_;
     }
 
+    private static void applyBranchKey(@NonNull Context context, @NonNull Branch branch, String branchKey) {
+        if (TextUtils.isEmpty(branchKey)) {
+            BranchLogger.w("Warning: Please enter your branch_key in your project's Manifest file!");
+            branch.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
+        } else {
+            branch.prefHelper_.setBranchKey(branchKey);
+            if (!branchKey.equals(BranchUtil.readBranchKey(context))) {
+                branch.prefHelper_.setBranchKeySource("init_function");
+            }
+        }
+    }
+
     public Context getApplicationContext() {
         return context_;
     }
 
     /**
-     * Sets a custom Branch Remote interface for handling RESTful requests. Call this for implementing a custom network layer for handling communication between
-     * Branch SDK and remote Branch server
-     *
-     * @param remoteInterface A instance of class extending {@link BranchRemoteInterface} with
-     *                        implementation for abstract RESTful GET or POST methods, if null
-     *                        is passed, the SDK will use its default.
+     * Single canonical initialization entry point. Call once in {@code Application.onCreate};
+     * use {@link #getInstance()} afterwards to access the singleton.
      */
+    synchronized public static void initialize(@NonNull Context context, @NonNull BranchConfiguration config) {
+        if (branchReferral_ != null) {
+            BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
+            return;
+        }
+        branchReferral_ = new Branch(context.getApplicationContext());
+        applyBranchKey(context, branchReferral_, config.getBranchKey());
+
+        // Caller values applied first so branch.json/manifest serve only as fallbacks.
+        applyConfiguration(branchReferral_, config);
+
+        BranchConfigurationManager.loadConfiguration(context, branchReferral_);
+
+        branchReferral_.setupProcessLifecycleObserver();
+
+        if (!config.getAutomaticOpenEvents()) {
+            BranchProcessLifecycleObserver.unregister();
+        }
+    }
+
+    /** Wires all {@link BranchConfiguration} fields to their underlying setters. */
+    @SuppressWarnings("deprecation")
+    private static void applyConfiguration(@NonNull Branch branch, @NonNull BranchConfiguration config) {
+        // Logging — logLevel always has a value; initialize() owns the logger state entirely.
+        Branch.enableLogging(config.getLoggingCallback(), config.getLogLevel());
+        if (config.getRequestTracingCallback() != null) {
+            Branch.setCallbackForTracingRequests(config.getRequestTracingCallback());
+        }
+
+        // Identity & environment
+        BranchUtil.setTestMode(config.getTestMode());
+        if (config.getApiUrl() != null) Branch.setAPIUrl(config.getApiUrl());
+        if (config.getCdnBaseUrl() != null) Branch.setCDNBaseUrl(config.getCdnBaseUrl());
+        if (config.getEuEndpoint()) Branch.useEUEndpoint();
+
+        // Network
+        branch.setNetworkTimeout(config.getNetworkTimeout());
+        branch.setNetworkConnectTimeout(config.getNetworkConnectTimeout());
+        branch.setRetryCount(config.getRetryCount());
+        branch.setRetryInterval(config.getRetryInterval());
+        branch.setNoConnectionRetryMax(config.getNoConnectionRetryMax());
+        if (config.getRemoteInterface() != null) branch.setBranchRemoteInterface(config.getRemoteInterface());
+
+        // Privacy & attribution
+        if (config.getAttributionLevel() != null) {
+            branch.setConsumerProtectionAttributionLevel(config.getAttributionLevel());
+        }
+        if (config.getDmaParameters() != null) {
+            DMAParameters dma = config.getDmaParameters();
+            branch.setDMAParamsForEEA(dma.getEeaRegion(), dma.getAdPersonalizationConsent(), dma.getAdUserDataUsageConsent());
+        }
+        branch.setLimitFacebookTracking(config.getLimitFacebookAttribution());
+        branch.disableAdNetworkCallouts(config.getAdNetworkCalloutsDisabled());
+
+        // Install attribution
+        if (config.getFacebookAppId() != null) Branch.setFBAppID(config.getFacebookAppId());
+        if (config.getPreinstallCampaign() != null) branch.setPreinstallCampaign(config.getPreinstallCampaign());
+        if (config.getPreinstallPartner() != null) branch.setPreinstallPartner(config.getPreinstallPartner());
+        for (java.util.Map.Entry<String, String> entry : config.getInstallMetadata().entrySet()) {
+            branch.addInstallMetadata(entry.getKey(), entry.getValue());
+        }
+        if (config.getReferringLinkAttributionForPreinstalledApps()) {
+            Branch.setReferringLinkAttributionForPreinstalledAppsEnabled();
+        }
+
+        // URL collection
+        for (String scheme : config.getWhitelistedSchemes()) branch.addWhiteListedScheme(scheme);
+        for (String host : config.getUriHostsToSkip()) branch.addUriHostsToSkip(host);
+
+        // User agent
+        Branch.setIsUserAgentSync(config.getUserAgentFetchSync());
+    }
+
+    // =========================================================================
+    // Deprecated pre-init setters — use BranchConfiguration.Builder instead.
+    // These will be removed in the next major release.
+    // =========================================================================
+
+    /**
+     * @deprecated Use {@link BranchConfiguration.Builder#setRemoteInterface} instead.
+     */
+    @Deprecated
     public void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
         if (remoteInterface == null) {
             branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
@@ -437,16 +516,9 @@ public class Branch {
     }
     
     /**
-     * <p>
-     * Enables the test mode for the SDK. This will use the Branch Test Keys. This is same as setting
-     * "io.branch.sdk.TestMode" to "True" in Manifest file.
-     *
-     * Note: As of v5.0.1, enableTestMode has been changed. It now uses the test key but will not log or randomize
-     * the device IDs. If you wish to enable logging, please invoke enableLogging. If you wish to simulate
-     * installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)
-     * then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).
-     * </p>
+     * @deprecated Use {@link BranchConfiguration.Builder#setTestMode} instead.
      */
+    @Deprecated
     public static void enableTestMode() {
         if (Branch.getInstance() != null) {
             Branch.getInstance().branchConfigurationController_.setTestModeEnabled(true);
@@ -460,10 +532,9 @@ public class Branch {
     }
 
     /**
-     * <p>
-     * Disables the test mode for the SDK.
-     * </p>
+     * @deprecated Use {@link BranchConfiguration.Builder#setTestMode} instead.
      */
+    @Deprecated
     public static void disableTestMode() {
         if (Branch.getInstance() != null) {
             Branch.getInstance().branchConfigurationController_.setTestModeEnabled(false);
@@ -473,20 +544,17 @@ public class Branch {
     }
 
     /**
-     * Disable (or re-enable) ad network callouts. This setting is persistent.
-     *
-     * @param disabled (@link Boolean) whether ad network callouts should be disabled.
+     * @deprecated Use {@link BranchConfiguration.Builder#setAdNetworkCalloutsDisabled} instead.
      */
+    @Deprecated
     public void disableAdNetworkCallouts(boolean disabled) {
         PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
     }
 
-
-
     /**
-     * <p>Sets a custom base URL for all calls to the Branch API.  Requires https.</p>
-     * @param url The {@link String} URL base URL that the Branch API uses.
+     * @deprecated Use {@link BranchConfiguration.Builder#setApiUrl} instead.
      */
+    @Deprecated
     public static void setAPIUrl(String url) {
         if (!TextUtils.isEmpty(url)) {
             if (!url.endsWith("/")) {
@@ -500,41 +568,28 @@ public class Branch {
         }
     }
     /**
-     * <p>Sets a custom CDN base URL.</p>
-     * @param url The {@link String} base URL for CDN endpoints.
+     * @deprecated Use {@link BranchConfiguration.Builder#setCdnBaseUrl} instead.
      */
+    @Deprecated
     public static void setCDNBaseUrl(String url) {
         PrefHelper.setCDNBaseUrl(url);
     }
 
     /**
-     * Toggles the tracking state of the SDK. When tracking is disabled, the SDK will not track any user data or state,
-     * and it will not initiate any network calls except for deep linking operations.
-     * Re-enabling tracking will reinitialize the Branch session and resume normal SDK operations.
-     * This method allows for optional callback specification to handle post-operation actions or state notifications.
-     *
-     * @param disableTracking A boolean value indicating whether tracking should be disabled ({@code true}) or enabled
-     *                        ({@code false}).
-     * @param callback An optional {@link TrackingStateCallback} instance for receiving callback notifications about
-     *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
-     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)}
-     * with {@link Defines.BranchAttributionLevel#NONE} instead to disable tracking.
-     * */
-    @Deprecated public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
+     * @deprecated Use {@link BranchConfiguration.Builder#setAttributionLevel} with
+     * {@link Defines.BranchAttributionLevel#NONE} instead.
+     */
+    @Deprecated
+    public void disableTracking(boolean disableTracking, @Nullable TrackingStateCallback callback) {
         trackingController.disableTracking(context_, disableTracking, callback);
     }
 
     /**
-     * Toggles the tracking state of the SDK. When tracking is disabled, the SDK will not track any user data or state,
-     * and it will not initiate any network calls except for deep linking operations.
-     * Re-enabling tracking will reinitialize the Branch session and resume normal SDK operations.
-     *
-     * @param disableTracking A boolean value indicating whether tracking should be disabled ({@code true}) or enabled
-     *                        ({@code false}).
-     * @deprecated Use {@link #setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel)}
-     * with {@link Defines.BranchAttributionLevel#NONE} instead to disable tracking.
-     * */
-    @Deprecated public void disableTracking(boolean disableTracking) {
+     * @deprecated Use {@link BranchConfiguration.Builder#setAttributionLevel} with
+     * {@link Defines.BranchAttributionLevel#NONE} instead.
+     */
+    @Deprecated
+    public void disableTracking(boolean disableTracking) {
         disableTracking(disableTracking, null);
     }
 
@@ -686,41 +741,29 @@ public class Branch {
     }
     
     /**
-     * Sets the max number of times to re-attempt a timed-out request to the Branch API, before
-     * considering the request to have failed entirely. Default to 3. Note that the the network
-     * timeout, as set in {@link #setNetworkTimeout(int)}, together with the retry interval value from
-     * {@link #setRetryInterval(int)} will determine if the max retry count will be attempted.
-     *
-     * @param retryCount An {@link Integer} specifying the number of times to retry before giving
-     *                   up and declaring defeat.
+     * @deprecated Use {@link BranchConfiguration.Builder#setRetryCount} instead.
      */
+    @Deprecated
     public void setRetryCount(int retryCount) {
         if (prefHelper_ != null && retryCount >= 0) {
             prefHelper_.setRetryCount(retryCount);
         }
     }
-    
+
     /**
-     * Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
-     * to the Branch API. Default 1000 ms.
-     *
-     * @param retryInterval An {@link Integer} value specifying the number of milliseconds to
-     *                      wait before re-attempting a timed-out request.
+     * @deprecated Use {@link BranchConfiguration.Builder#setRetryInterval} instead.
      */
+    @Deprecated
     public void setRetryInterval(int retryInterval) {
         if (prefHelper_ != null && retryInterval > 0) {
             prefHelper_.setRetryInterval(retryInterval);
         }
     }
-    
+
     /**
-     * <p>Sets the duration in milliseconds that the system should wait for a response before timing
-     * out any Branch API. Default 5500 ms. Note that this is the total time allocated for all request
-     * retries as set in {@link #setRetryCount(int)}.
-     *
-     * @param timeout An {@link Integer} value specifying the number of milliseconds to wait before
-     *                considering the request to have timed out.
+     * @deprecated Use {@link BranchConfiguration.Builder#setNetworkTimeout} instead.
      */
+    @Deprecated
     public void setNetworkTimeout(int timeout) {
         if (prefHelper_ != null && timeout > 0) {
             prefHelper_.setTimeout(timeout);
@@ -728,12 +771,9 @@ public class Branch {
     }
 
     /**
-     * <p>Sets the duration in milliseconds that the system should wait for initializing a network
-     * * request.</p>
-     *
-     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to wait before
-     *                considering the initialization to have timed out.
+     * @deprecated Use {@link BranchConfiguration.Builder#setNetworkConnectTimeout} instead.
      */
+    @Deprecated
     public void setNetworkConnectTimeout(int connectTimeout) {
         if (prefHelper_ != null && connectTimeout > 0) {
             prefHelper_.setConnectTimeout(connectTimeout);
@@ -741,75 +781,56 @@ public class Branch {
     }
 
     /**
-     * In cases of persistent no internet connection or offline modes,
-     * set a maximum number of attempts for the Branch Request to be tried.
-     *
-     * Must be greater than 0
-     * Defaults to 3
-     * @param retryMax
+     * @deprecated Use {@link BranchConfiguration.Builder#setNoConnectionRetryMax} instead.
      */
-    public void setNoConnectionRetryMax(int retryMax){
-        if(prefHelper_ != null && retryMax > 0){
+    @Deprecated
+    public void setNoConnectionRetryMax(int retryMax) {
+        if (prefHelper_ != null && retryMax > 0) {
             prefHelper_.setNoConnectionRetryMax(retryMax);
         }
     }
 
     /**
-     * Enables or disables app tracking with Branch or any other third parties that Branch use internally
-     *
-     * @param isLimitFacebookTracking {@code true} to limit app tracking
+     * @deprecated Use {@link BranchConfiguration.Builder#setLimitFacebookAttribution} instead.
      */
+    @Deprecated
     public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
         prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
     }
 
     /**
-     * Sets the value of parameters required by Google Conversion APIs for DMA Compliance in EEA region.
-     *
-     * @param eeaRegion {@code true} If European regulations, including the DMA, apply to this user and conversion.
-     * @param adPersonalizationConsent {@code true} If End user has granted/denied ads personalization consent.
-     * @param adUserDataUsageConsent {@code true} If User has granted/denied consent for 3P transmission of user level data for ads.
+     * @deprecated Use {@link BranchConfiguration.Builder#setDMAParameters} with a
+     * {@link DMAParameters} instance instead.
      */
+    @Deprecated
     public void setDMAParamsForEEA(boolean eeaRegion, boolean adPersonalizationConsent, boolean adUserDataUsageConsent) {
         prefHelper_.setEEARegion(eeaRegion);
         prefHelper_.setAdPersonalizationConsent(adPersonalizationConsent);
         prefHelper_.setAdUserDataUsageConsent(adUserDataUsageConsent);
     }
 
-    /**
-     * <p>Add key value pairs to all requests</p>
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#addInstallMetadata} instead. */
+    @Deprecated
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         prefHelper_.setRequestMetadata(key, value);
     }
 
-    /**
-     * <p>
-     * This API allows to tag the install with custom attribute. Add any key-values that qualify or distinguish an install here.
-     * Please make sure this method is called before the Branch init, which is on the onStartMethod of first activity.
-     * A better place to call this  method is right after Branch#init()
-     * </p>
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#addInstallMetadata} instead. */
+    @Deprecated
     public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
         prefHelper_.addInstallMetadata(key, value);
         return this;
     }
 
-    /**
-     * <p>
-     *   wrapper method to add the pre-install campaign analytics
-     * </p>
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setPreinstallCampaign} instead. */
+    @Deprecated
     public Branch setPreinstallCampaign(@NonNull String preInstallCampaign) {
         addInstallMetadata(PreinstallKey.campaign.getKey(), preInstallCampaign);
         return this;
     }
 
-    /**
-     * <p>
-     *   wrapper method to add the pre-install campaign analytics
-     * </p>
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setPreinstallPartner} instead. */
+    @Deprecated
     public Branch setPreinstallPartner(@NonNull String preInstallPartner) {
         addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
         return this;
@@ -918,49 +939,26 @@ public class Branch {
         return (link.equals(PrefHelper.NO_STRING_VALUE) ? null : link);
     }
 
-    /**
-     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
-     * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
-     * If whitelist is not empty SDK will collect only the URLs that matches the white list.
-     * <p>
-     * This method should be called immediately after calling {@link Branch#getInstance()}
-     *
-     * @param urlWhiteListPattern A regular expression with a URI white listing pattern
-     * @return {@link Branch} instance for successive method calls
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#addWhitelistedScheme} instead. */
+    @Deprecated
     public Branch addWhiteListedScheme(String urlWhiteListPattern) {
         if (urlWhiteListPattern != null) {
             UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPattern);
         }
         return this;
     }
-    
-    /**
-     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
-     * However the following method provisions application to set SDK to collect only URLs in particular form. This method allow application to specify a set of regular expressions to white list the URL collection.
-     * If whitelist is not empty SDK will collect only the URLs that matches the white list.
-     * <p>
-     * This method should be called immediately after calling {@link Branch#getInstance()}
-     *
-     * @param urlWhiteListPatternList {@link List} of regular expressions with URI white listing pattern
-     * @return {@link Branch} instance for successive method calls
-     */
+
+    /** @deprecated Use {@link BranchConfiguration.Builder#addWhitelistedScheme} per scheme instead. */
+    @Deprecated
     public Branch setWhiteListedSchemes(List<String> urlWhiteListPatternList) {
         if (urlWhiteListPatternList != null) {
             UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPatternList);
         }
         return this;
     }
-    
-    /**
-     * Branch collect the URLs in the incoming intent for better attribution. Branch SDK extensively check for any sensitive data in the URL and skip if exist.
-     * This method allows applications specify SDK to skip any additional URL patterns to be skipped
-     * <p>
-     * This method should be called immediately after calling {@link Branch#getInstance()}
-     *
-     * @param urlSkipPattern {@link String} A URL pattern that Branch SDK should skip from collecting data
-     * @return {@link Branch} instance for successive method calls
-     */
+
+    /** @deprecated Use {@link BranchConfiguration.Builder#addUriHostToSkip} instead. */
+    @Deprecated
     public Branch addUriHostsToSkip(String urlSkipPattern) {
         if (!TextUtils.isEmpty(urlSkipPattern))
             UniversalResourceAnalyser.getInstance(context_).addToSkipURLFormats(urlSkipPattern);
@@ -1912,11 +1910,10 @@ public class Branch {
     }
 
     /**
-     * Enable logging with a specific log level, independent of Debug Mode.
-     *
-     * @param iBranchLogging Optional interface to receive logging from the SDK.
-     * @param level The minimum log level for logging output.
+     * @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} and
+     * {@link BranchConfiguration.Builder#setLoggingCallback} instead.
      */
+    @Deprecated
     public static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
         BranchLogger.setLoggerCallback(iBranchLogging);
         BranchLogger.setLoggingLevel(level);
@@ -1924,42 +1921,26 @@ public class Branch {
         BranchLogger.logAlways(GOOGLE_VERSION_TAG);
     }
 
-    /**
-     * Enable Logging, independent of Debug Mode. Defaults to DEBUG level, which shows network
-     * request/response traffic. To also see the internal request queue and lock diagnostics
-     * (for example when debugging a stuck request), call {@link #enableLogging(BranchLogger.BranchLogLevel)}
-     * with {@link BranchLogger.BranchLogLevel#VERBOSE}.
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} instead. */
+    @Deprecated
     public static void enableLogging() {
         enableLogging(null, BranchLogger.BranchLogLevel.DEBUG);
     }
 
-    /**
-     * Enable Logging, independent of Debug Mode. Defaults to DEBUG level (network
-     * request/response traffic). Implement a callback to receive logging from the SDK directly to
-     * your own logging solution. If null, and enabled, the default android.util.Log is used.
-     *
-     * @param iBranchLogging Optional interface to receive logging from the SDK.
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setLoggingCallback} instead. */
+    @Deprecated
     public static void enableLogging(IBranchLoggingCallbacks iBranchLogging) {
         enableLogging(iBranchLogging, BranchLogger.BranchLogLevel.DEBUG);
     }
 
-    /**
-     * Enable logging with a specific log level. Use {@link BranchLogger.BranchLogLevel#DEBUG} for
-     * network request/response traffic, or {@link BranchLogger.BranchLogLevel#VERBOSE} to also emit
-     * the internal request queue and lock trace when diagnosing a stuck request.
-     *
-     * @param level The minimum log level for logging output.
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} instead. */
+    @Deprecated
     public static void enableLogging(BranchLogger.BranchLogLevel level) {
         enableLogging(null, level);
-
     }
 
-    /**
-     * Disable Logging, independent of Debug Mode.
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} instead. */
+    @Deprecated
     public static void disableLogging() {
         BranchLogger.setLoggingEnabled(false);
         BranchLogger.setLoggerCallback(null);
@@ -2377,19 +2358,14 @@ public class Branch {
         }
     }
 
-    /**
-     * Send requests to EU endpoints.
-     * This feature must also be enabled on the server side, otherwise the server will drop requests. Contact your account manager for details.
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setEUEndpoint} instead. */
+    @Deprecated
     public static void useEUEndpoint() {
         PrefHelper.useEUEndpoint(true);
     }
 
-    /**
-     * Sets the Facebook App ID for the Branch instance.
-     *
-     * @param fbAppID The Facebook App ID as a {@link String}.
-     */
+    /** @deprecated Use {@link BranchConfiguration.Builder#setFacebookAppId} instead. */
+    @Deprecated
     public static void setFBAppID(String fbAppID) {
         if (!TextUtils.isEmpty(fbAppID)) {
             PrefHelper.fbAppId_ = fbAppID;
@@ -2583,39 +2559,24 @@ public class Branch {
     }
 
     /**
-     * Enables referring url attribution for preinstalled apps.
-     *
-     * By default, Branch prioritizes preinstall attribution on preinstalled apps.
-     * Some clients prefer the referring link, when present, to be prioritized over preinstall attribution.
+     * @deprecated Use {@link BranchConfiguration.Builder#setReferringLinkAttributionForPreinstalledApps} instead.
      */
+    @Deprecated
     public static void setReferringLinkAttributionForPreinstalledAppsEnabled() {
         referringLinkAttributionForPreinstalledAppsEnabled = true;
     }
 
-    /**
-     * Returns whether referring link attribution for preinstalled apps is enabled.
-     *
-     * @return {@link Boolean} true if referring link attribution for preinstalled apps is enabled, false otherwise.
-     */
     public static boolean isReferringLinkAttributionForPreinstalledAppsEnabled() {
         return referringLinkAttributionForPreinstalledAppsEnabled;
     }
 
-    /**
-     * Sets whether user agent synchronization is enabled.
-     *
-     * @param sync {@link Boolean} true to enable user agent synchronization, false to disable.
-     */
-    public static void setIsUserAgentSync(boolean sync){
+    /** @deprecated Use {@link BranchConfiguration.Builder#setUserAgentFetchSync} instead. */
+    @Deprecated
+    public static void setIsUserAgentSync(boolean sync) {
         userAgentSync = sync;
     }
 
-    /**
-     * Returns whether user agent synchronization is enabled.
-     *
-     * @return {@link Boolean} true if user agent synchronization is enabled, false otherwise.
-     */
-    public static boolean getIsUserAgentSync(){
+    public static boolean getIsUserAgentSync() {
         return userAgentSync;
     }
 
@@ -2708,13 +2669,14 @@ public class Branch {
         }
     }
 
-    public static void setCallbackForTracingRequests(IBranchRequestTracingCallback iBranchRequestTracingCallback){
+    /** @deprecated Use {@link BranchConfiguration.Builder#setRequestTracingCallback} instead. */
+    @Deprecated
+    public static void setCallbackForTracingRequests(IBranchRequestTracingCallback iBranchRequestTracingCallback) {
         _iBranchRequestTracingCallback = iBranchRequestTracingCallback;
     }
 
-    public static IBranchRequestTracingCallback getCallbackForTracingRequests(){
+    public static IBranchRequestTracingCallback getCallbackForTracingRequests() {
         return _iBranchRequestTracingCallback;
-
     }
 
     /**
