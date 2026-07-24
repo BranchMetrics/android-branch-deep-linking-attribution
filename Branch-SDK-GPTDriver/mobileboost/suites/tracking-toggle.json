@@ -1,0 +1,31 @@
+{
+  "name": "[Android] Tracking Toggle",
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Ensure the Branch TestBed app is open on its main screen. If you see buttons like 'Create Branch Link', 'Disable Tracking', you are already on the main screen. If you are on a different screen, press Back repeatedly until you reach the main screen, or go to the device home screen, then find and open the 'Branch-SDK-TestBed' app."
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Look for a toggle button that says either 'Disable Tracking' or 'Enable Tracking'. Note the current text. Tap on it."
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "Wait 2 seconds. Verify the button text has changed: if it previously said 'Disable Tracking', it should now say 'Enable Tracking', and vice versa. If the text changed, succeed this step."
+    },
+    {
+      "id": 4,
+      "type": "ai",
+      "instruction": "Tap the toggle button again to restore the original tracking state."
+    },
+    {
+      "id": 5,
+      "type": "ai",
+      "instruction": "Wait 2 seconds. Verify the button text has changed back to its original value ('Disable Tracking'). If it did, the test succeeds."
+    }
+  ],
+  "params": {}
+}
