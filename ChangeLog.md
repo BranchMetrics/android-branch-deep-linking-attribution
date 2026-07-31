@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v5.21.2
+  - Updated Google Play Billing library to 8.0.0
+  - Fixed logging bug
+  
 - v5.21.1
   - Fix for `getLastAttributedTouchData(BranchLastAttributedTouchDataListener())` with no `attributionWindow` parameter, now correctly uses attribution window value configured in app dashboard.
 
