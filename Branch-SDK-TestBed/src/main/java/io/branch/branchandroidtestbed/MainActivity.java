@@ -28,6 +28,8 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
+import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.QueryProductDetailsParams;
 
@@ -259,7 +261,11 @@ public class MainActivity extends Activity {
             String productId = "credits";
 
             BillingClient billingClient = BillingClient.newBuilder(MainActivity.this)
-                    .enablePendingPurchases()
+                    .enablePendingPurchases(
+                            PendingPurchasesParams.newBuilder()
+                                    .enableOneTimeProducts()
+                                    .build()
+                    )
                     .setListener(
                             (billingResult, list) -> {
                                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
@@ -290,8 +296,9 @@ public class MainActivity extends Activity {
 
                         billingClient.queryProductDetailsAsync(
                                 params,
-                                (billingQueryResult, productDetailsList) -> {
+                                (billingQueryResult, queryProductDetailsResult) -> {
                                     BranchLogger.d("Billing Query Result: " + billingQueryResult);
+                                    List<ProductDetails> productDetailsList = queryProductDetailsResult.getProductDetailsList();
                                     List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
 
                                     BillingFlowParams.ProductDetailsParams productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
