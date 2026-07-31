@@ -775,8 +775,13 @@ public abstract class ServerRequest {
         locks_.remove(lock);
     }
 
-    public String printWaitLocks(){
-        return Arrays.toString(locks_.toArray());
+    public String printWaitLocks() {
+        try {
+            return Arrays.toString(locks_.toArray());
+        } catch (ConcurrentModificationException e) {
+            BranchLogger.w("ConcurrentModificationException in printWaitLocks - queue modified during iteration.");
+            return "[concurrent-modification]";
+        }
     }
     
     
