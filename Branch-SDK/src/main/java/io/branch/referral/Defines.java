@@ -238,16 +238,7 @@ public class Defines {
         Web_Link_Redirect_URL("web_link_redirect_url"),
         Web_Link_Context("web_link_context"),
         UX_Type("ux_type"),
-        URL_Load_MS("url_load_ms"),
-
-        // App Attestation (Android Key Attestation)
-        AppEcdhPub("app_ecdh_pub"),
-        KeyAttestationChain("key_attestation_chain"),
-        Nonce("nonce"),
-        EcdhPublicKey("ecdh_public_key"),
-
-        // App Attestation (Play Integrity fallback)
-        PlayIntegrityToken("play_integrity_token");
+        URL_Load_MS("url_load_ms");
 
         private final String key;
         
