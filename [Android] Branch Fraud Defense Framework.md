@@ -183,7 +183,9 @@ performAttestationCheck(requestBody: JSONObject)
       │     IntegrityManagerFactory.create(context)
       │     IntegrityTokenRequest.builder()
       │       .setNonce(nonceBase64url)
-      │       .setCloudProjectNumber(projectNumber)
+      │       // No setCloudProjectNumber(): supplying one switches Play Integrity to
+      │       // Google-managed response encryption. We use self-managed keys, so the
+      │       // token is decrypted locally with our DECRYPTION_KEY/VERIFICATION_KEY.
       │       .build()
       │     Wait for token (blocking)
       └── Return {
