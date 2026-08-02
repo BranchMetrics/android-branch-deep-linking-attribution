@@ -6,44 +6,30 @@ import org.json.JSONObject;
 import java.util.Iterator;
 
 /**
- * Deep-merges branch_sdk_secure_context from fraud defense responses into request JSON.
+ * Merges a fraud defense response into the request JSON.
  *
- * Both addDeviceTrustParams and addSignatureAndNonceForParams return a JSONObject
- * containing a "branch_sdk_secure_context" key. This merger ensures sub-keys
- * (initialization_context, activity_context, context_key) accumulate rather than
- * overwrite each other.
+ * <p>By design a single request carries exactly one secure-context block: a first
+ * install/open carries initialization_context (device attestation) and every later
+ * request carries activity_context (HMAC signature + nonce). The two are never sent
+ * together, so a shallow top-level merge is sufficient — this mirrors iOS, which just
+ * does {@code [json addEntriesFromDictionary:fraudDefenseParams]} in
+ * {@code BNCRequestFactory}.</p>
  */
 public class SecureContextMerger {
 
-    private static final String SECURE_CONTEXT = "branch_sdk_secure_context";
-
     /**
-     * Merges the fraud defense response into the target request JSON.
-     * Deep-merges the branch_sdk_secure_context sub-object.
+     * Shallow-merges the fraud defense response into the target request JSON.
+     *
+     * <p>Each call replaces the top-level {@code branch_sdk_secure_context} rather than
+     * accumulating into it. That is correct because a request only ever receives one
+     * fraud-defense contribution (attestation OR signature, never both — the callers
+     * enforce this via the {@code bnc_device_trust_checked} if/else).</p>
      */
     public static void merge(JSONObject fraudDefenseResponse, JSONObject target) throws JSONException {
-        if (!fraudDefenseResponse.has(SECURE_CONTEXT)) {
-            // No secure context — shallow merge everything
-            Iterator<String> keys = fraudDefenseResponse.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                target.put(key, fraudDefenseResponse.get(key));
-            }
-            return;
-        }
-
-        JSONObject newContext = fraudDefenseResponse.getJSONObject(SECURE_CONTEXT);
-
-        if (target.has(SECURE_CONTEXT)) {
-            // Deep merge into existing
-            JSONObject existingContext = target.getJSONObject(SECURE_CONTEXT);
-            Iterator<String> keys = newContext.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                existingContext.put(key, newContext.get(key));
-            }
-        } else {
-            target.put(SECURE_CONTEXT, newContext);
+        Iterator<String> keys = fraudDefenseResponse.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            target.put(key, fraudDefenseResponse.get(key));
         }
     }
 }

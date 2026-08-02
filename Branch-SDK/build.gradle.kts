@@ -144,13 +144,6 @@ android {
             enableAndroidTestCoverage = true
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
             buildConfigField("String", "VERSION_NAME", VERSION_NAME.wrapInQuotes())
-            // POC only — set in local.properties (never commit this key).
-            // Steps: Google Cloud Console → APIs & Services → Credentials → Create API Key
-            //        → restrict to "Google Play Integrity API"
-            //        Then add to local.properties:  PLAY_INTEGRITY_CLOUD_API_KEY=AIzaSy...
-            val playIntegrityApiKey =
-                project.findProperty("PLAY_INTEGRITY_CLOUD_API_KEY") as? String ?: ""
-            buildConfigField("String", "PLAY_INTEGRITY_CLOUD_API_KEY", playIntegrityApiKey.wrapInQuotes())
         }
         release {
             buildConfigField("long", "VERSION_CODE", VERSION_CODE)
