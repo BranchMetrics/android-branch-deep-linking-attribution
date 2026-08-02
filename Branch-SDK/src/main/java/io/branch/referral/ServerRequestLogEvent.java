@@ -59,7 +59,7 @@ public class ServerRequestLogEvent extends ServerRequest {
                     BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
                     JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
                     if (signatureFields != null) {
-                        SecureContextMerger.merge(signatureFields, getPost());
+                        SecureContextApplier.apply(signatureFields, getPost());
                         BranchLogger.v("Fraud defense signature fields added to event request");
                     }
                 } catch (Exception e) {

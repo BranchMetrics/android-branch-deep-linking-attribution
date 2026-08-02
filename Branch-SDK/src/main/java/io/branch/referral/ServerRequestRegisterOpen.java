@@ -45,7 +45,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                         JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
                         if (fraudDefenseFields != null) {
                             prefHelper_.setBool("bnc_device_trust_checked", true);
-                            SecureContextMerger.merge(fraudDefenseFields, getPost());
+                            SecureContextApplier.apply(fraudDefenseFields, getPost());
                             BranchLogger.v("Fraud defense fields added to open request");
                         }
                     } catch (Exception e) {
@@ -56,7 +56,7 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                     try {
                         JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
                         if (signatureFields != null) {
-                            SecureContextMerger.merge(signatureFields, getPost());
+                            SecureContextApplier.apply(signatureFields, getPost());
                         }
                     } catch (Exception e) {
                         BranchLogger.w("Fraud defense signature failed for open: " + e.getMessage());

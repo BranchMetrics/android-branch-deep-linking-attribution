@@ -46,16 +46,24 @@ internal class RequestOpen(
             if (provider != null) {
                 if (!prefHelper_.getBool("bnc_device_trust_checked")) {
                     // Layer 1: attestation. Retried on the next open if it fails.
-                    val trustFields = provider.addDeviceTrustParams(post)
-                    if (trustFields != null) {
-                        prefHelper_.setBool("bnc_device_trust_checked", true)
-                        SecureContextMerger.merge(trustFields, post)
+                    try {
+                        val trustFields = provider.addDeviceTrustParams(post)
+                        if (trustFields != null) {
+                            prefHelper_.setBool("bnc_device_trust_checked", true)
+                            SecureContextApplier.apply(trustFields, post)
+                        }
+                    } catch (e: Exception) {
+                        BranchLogger.w("Fraud defense failed for open: ${e.message}")
                     }
                 } else {
                     // Layer 2 + 3: HMAC + nonce
-                    val sigFields = provider.addSignatureAndNonceForParams(post)
-                    if (sigFields != null) {
-                        SecureContextMerger.merge(sigFields, post)
+                    try {
+                        val sigFields = provider.addSignatureAndNonceForParams(post)
+                        if (sigFields != null) {
+                            SecureContextApplier.apply(sigFields, post)
+                        }
+                    } catch (e: Exception) {
+                        BranchLogger.w("Fraud defense signature failed for open: ${e.message}")
                     }
                 }
             }

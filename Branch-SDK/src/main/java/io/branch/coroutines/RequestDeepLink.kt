@@ -8,7 +8,7 @@ import io.branch.referral.BranchLogger
 import io.branch.referral.Defines
 import io.branch.referral.PrefHelper
 import io.branch.referral.ServerRequestInitSession
-import io.branch.referral.SecureContextMerger
+import io.branch.referral.SecureContextApplier
 import io.branch.referral.ServerResponse
 import org.json.JSONException
 import org.json.JSONObject
@@ -65,9 +65,15 @@ internal class RequestDeepLink(
             // Layer 2 + 3: HMAC signature + nonce (no attestation on deeplink)
             val provider = Branch.getInstance()?.fraudDefenseProvider
             if (provider != null) {
-                val sigFields = provider.addSignatureAndNonceForParams(post)
-                if (sigFields != null) {
-                    SecureContextMerger.merge(sigFields, post)
+                // Isolate provider failures (crypto/key errors are not JSONExceptions)
+                // so they cannot abort request construction. Matches the Java requests.
+                try {
+                    val sigFields = provider.addSignatureAndNonceForParams(post)
+                    if (sigFields != null) {
+                        SecureContextApplier.apply(sigFields, post)
+                    }
+                } catch (e: Exception) {
+                    BranchLogger.w("Fraud defense signature failed for deeplink: ${e.message}")
                 }
             }
         } catch (ex: JSONException) {
