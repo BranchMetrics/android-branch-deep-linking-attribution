@@ -6,6 +6,9 @@ plugins {
 }
 
 dependencies {
+    implementation(kotlin("stdlib"))
+    implementation(kotlin("stdlib-jdk8"))
+
     implementation(project(":Branch-SDK"))
     implementation(project(":securesdk"))
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")

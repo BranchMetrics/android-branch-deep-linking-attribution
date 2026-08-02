@@ -1,0 +1,36 @@
+{
+  "name": "[Android] Set User ID",
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Ensure the Branch TestBed app is open on its main screen. If you see buttons like 'Create Branch Link', 'Set User ID', you are already on the main screen. If you are on a different screen, press Back repeatedly until you reach the main screen, or go to the device home screen, then find and open the 'Branch-SDK-TestBed' app."
+    },
+    {
+      "id": 2,
+      "type": "tap",
+      "text": "Set User ID"
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "A dialog titled 'Set User ID' should appear with a text input field and 'Set' and 'Cancel' buttons. If the dialog is visible, succeed. If not, fail the test."
+    },
+    {
+      "id": 4,
+      "type": "type",
+      "text": "test_user_123"
+    },
+    {
+      "id": 5,
+      "type": "tap",
+      "text": "Set"
+    },
+    {
+      "id": 6,
+      "type": "ai",
+      "instruction": "Wait up to 5 seconds. The dialog should close and return to the main screen. If the main screen is visible again with buttons like 'Create Branch Link', the test succeeds."
+    }
+  ],
+  "params": {}
+}

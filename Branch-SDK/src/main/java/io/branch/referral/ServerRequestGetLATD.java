@@ -7,6 +7,18 @@ import org.json.JSONObject;
 
 public class ServerRequestGetLATD extends ServerRequest {
 
+    /**
+     * @deprecated This listener moved to {@link Branch.BranchLastAttributedTouchDataListener}. This
+     * alias is kept only for source compatibility with 5.x integrations that implemented the nested
+     * {@code ServerRequestGetLATD.BranchLastAttributedTouchDataListener}; it is <b>not</b> binary
+     * compatible, so a prebuilt app must be recompiled. Use {@link Branch.BranchLastAttributedTouchDataListener}
+     * directly in new code.
+     */
+    @Deprecated
+    public interface BranchLastAttributedTouchDataListener
+            extends Branch.BranchLastAttributedTouchDataListener {
+    }
+
     // defaultAttributionWindow is the "default" for the SDK's side, server interprets it as 30 days
     protected static final int defaultAttributionWindow = -1;
     private int attributionWindow;

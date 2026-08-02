@@ -1,19 +1,28 @@
 package io.branch.referral.validators;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.WindowManager;
 
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchSessionState;
+import io.branch.referral.BranchSessionStateListener;
 
 public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppConfigEvents {
 
     private static IntegrationValidator instance;
+
+    /** EMT-3862: max time the validator waits for session init before surfacing a config-unavailable diagnostic. */
+    private static final long SESSION_INIT_WAIT_MS = 10_000L;
+
     private final BranchIntegrationModel integrationModel;
     private final String TAG = "BranchSDK_Doctor";
     private final StringBuilder branchLogsStringBuilder;
@@ -52,13 +61,68 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         return instance.branchLogsStringBuilder.toString();
     }
 
-    private void validateSDKIntegration(Context context) {
+    private void validateSDKIntegration(final Context context) {
+        final Branch branch = Branch.getInstance();
+
+        // EMT-3862: ServerRequestGetAppConfig needs a session. On a first cold launch, with init
+        // still in flight, enqueuing it immediately fails it with ERR_NO_SESSION and the failure
+        // path (onAppConfigAvailable(null)) never shows the validator dialog. Defer the request
+        // until the session is initialized. Dev-only diagnostic; it does not change
+        // BranchRequestQueue failure semantics.
+        if (branch.canPerformOperations()) {
+            enqueueGetAppConfigRequest(context);
+            return;
+        }
+
+        // The validator exists to diagnose broken integrations, so it must NOT go silent if init
+        // fails or never completes. Resolve exactly once: enqueue on Initialized, otherwise surface
+        // the existing config-unavailable diagnostic on Failed or after a timeout. Always deregister
+        // the observer so it cannot leak the Context held by this validator.
+        final AtomicBoolean resolved = new AtomicBoolean(false);
+        final Handler handler = new Handler(Looper.getMainLooper());
+        final BranchSessionStateListener[] observerRef = new BranchSessionStateListener[1];
+
+        final Runnable onTimeout = new Runnable() {
+            @Override
+            public void run() {
+                if (resolved.compareAndSet(false, true)) {
+                    branch.removeSessionStateObserver(observerRef[0]);
+                    onAppConfigAvailable(null);
+                }
+            }
+        };
+
+        observerRef[0] = new BranchSessionStateListener() {
+            @Override
+            public void onSessionStateChanged(BranchSessionState previousState, BranchSessionState currentState) {
+                if (currentState instanceof BranchSessionState.Initialized) {
+                    if (resolved.compareAndSet(false, true)) {
+                        handler.removeCallbacks(onTimeout);
+                        branch.removeSessionStateObserver(this);
+                        enqueueGetAppConfigRequest(context);
+                    }
+                } else if (currentState instanceof BranchSessionState.Failed) {
+                    if (resolved.compareAndSet(false, true)) {
+                        handler.removeCallbacks(onTimeout);
+                        branch.removeSessionStateObserver(this);
+                        onAppConfigAvailable(null);
+                    }
+                }
+            }
+        };
+
+        branch.addSessionStateObserver(observerRef[0]);
+        handler.postDelayed(onTimeout, SESSION_INIT_WAIT_MS);
+    }
+
+    private void enqueueGetAppConfigRequest(Context context) {
         Branch.getInstance().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, IntegrationValidator.this));
     }
 
     private void doValidateWithAppConfig(JSONObject branchAppConfig) {
-        //retrieve the Branch dashboard configurations from the server
-        Branch.getInstance().requestQueue_.handleNewRequest(new ServerRequestGetAppConfig(context, this));
+        // EMT-3862: the dashboard config is already delivered by onAppConfigAvailable(branchAppConfig).
+        // The previous re-fetch here issued a redundant duplicate ServerRequestGetAppConfig and has
+        // been removed.
 
         logValidationProgress("\n\n------------------- Initiating Branch integration verification ---------------------------");
 

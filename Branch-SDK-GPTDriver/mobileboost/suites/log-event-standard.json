@@ -1,0 +1,36 @@
+{
+  "name": "[Android] Log event - Standard",
+  "tags": [
+    "Android",
+    "Release"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "tap",
+      "text": "Send Standard Event"
+    },
+    {
+      "id": 2,
+      "type": "tap",
+      "text": "Purchase"
+    },
+    {
+      "id": 3,
+      "type": "scrollUntil",
+      "direction": "down",
+      "text": "See Requests"
+    },
+    {
+      "id": 4,
+      "type": "tap",
+      "text": "See Requests"
+    },
+    {
+      "id": 5,
+      "type": "ai",
+      "instruction": "Check if you see \"v2/event/standard\" and you see \"Status Code: 200\" right beneath it. Ignore all other \"Status Code: 200\" where preceded with \"v1/open\" or \"v1/install\""
+    }
+  ],
+  "params": {}
+}

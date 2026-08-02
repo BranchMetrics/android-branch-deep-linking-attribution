@@ -28,3 +28,10 @@ Branch-SDK-TestBed/gradlew.bat
 Branch-SDK-TestBed/gradle/wrapper/gradle-wrapper.properties
 
 .direnv
+
+# Local tooling / automation artifacts (never commit)
+*.hprof
+failure_logs.txt
+success_logs.txt
+mobileboost.config.json
+.claude/

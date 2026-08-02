@@ -7,6 +7,8 @@ include(":BranchFraudDefense")
 include(":securesdk")
 project(":securesdk").projectDir = file("../branch-secure-sdk-android/securesdk")
 
+include(":Branch-SDK-GPTDriver")
+
 pluginManagement {
     repositories {
         mavenLocal()

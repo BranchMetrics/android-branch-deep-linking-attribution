@@ -446,6 +446,12 @@ class ShareLinkManager {
      * Class for sharing item more
      */
     private class MoreShareItem extends ResolveInfo {
+        public MoreShareItem() {
+            activityInfo = new android.content.pm.ActivityInfo();
+            activityInfo.packageName = context_.getPackageName();
+            activityInfo.name = MoreShareItem.class.getName();
+        }
+
         @SuppressWarnings("NullableProblems")
         @Override
         public CharSequence loadLabel(PackageManager pm) {
@@ -463,6 +469,12 @@ class ShareLinkManager {
      * Class for Sharing Item copy URl
      */
     private class CopyLinkItem extends ResolveInfo {
+        public CopyLinkItem() {
+            activityInfo = new android.content.pm.ActivityInfo();
+            activityInfo.packageName = context_.getPackageName();
+            activityInfo.name = CopyLinkItem.class.getName();
+        }
+
         @SuppressWarnings("NullableProblems")
         @Override
         public CharSequence loadLabel(PackageManager pm) {

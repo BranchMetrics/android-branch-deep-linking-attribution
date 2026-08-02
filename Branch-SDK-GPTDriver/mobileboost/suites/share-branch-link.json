@@ -1,0 +1,26 @@
+{
+  "name": "[Android] Share Branch Link",
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Ensure the Branch TestBed app is open on its main screen. If you see buttons like 'Create Branch Link', 'Share Branch Link', you are already on the main screen. If you are on a different screen (e.g. a log screen, a dialog, or any other app), press Back repeatedly until you reach the main screen, or go to the device home screen, then find and open the 'Branch-SDK-TestBed' app."
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Tap on the button that says exactly 'Share Branch Link'. Do not tap on 'Native Share Branch Link'. Do not scroll."
+    },
+    {
+      "id": 3,
+      "type": "ai",
+      "instruction": "Wait up to 5 seconds for a share sheet or share menu to appear on the screen. Look for sharing options like 'Bluetooth', 'Quick Share', 'Copy link', or similar share actions. If a share sheet is visible, succeed. If not, fail the test."
+    },
+    {
+      "id": 4,
+      "type": "ai",
+      "instruction": "Press the back button or tap outside the share sheet to dismiss it. Succeed when the share sheet is closed and the main screen is visible again."
+    }
+  ],
+  "params": {}
+}

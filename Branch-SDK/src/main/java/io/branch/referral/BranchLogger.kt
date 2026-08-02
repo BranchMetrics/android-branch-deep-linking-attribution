@@ -19,7 +19,7 @@ object BranchLogger {
 
     @JvmStatic
     var loggingEnabled = false
-    
+
     @JvmStatic
     var loggerCallback: IBranchLoggingCallbacks? = null
 
