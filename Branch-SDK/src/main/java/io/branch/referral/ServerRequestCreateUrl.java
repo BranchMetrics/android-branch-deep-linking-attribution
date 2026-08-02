@@ -89,6 +89,23 @@ class ServerRequestCreateUrl extends ServerRequest {
             linkPost_.remove("is_hardware_id_real");
             linkPost_.remove("hardware_id");
 
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters();
+
+            // Layer 2 + 3: HMAC signature + smart nonce for short url requests
+            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
+                try {
+                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
+                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
+                    if (signatureFields != null) {
+                        SecureContextApplier.apply(signatureFields, getPost());
+                        BranchLogger.v("Fraud defense signature fields added to create url request");
+                    }
+                } catch (Exception e) {
+                    BranchLogger.w("Fraud defense signature failed for create url: " + e.getMessage());
+                }
+            }
+
         } catch (JSONException ex) {
             BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;
