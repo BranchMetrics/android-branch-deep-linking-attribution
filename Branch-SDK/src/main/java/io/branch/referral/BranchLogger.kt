@@ -26,21 +26,31 @@ object BranchLogger {
     private fun shouldLog(level: BranchLogLevel): Boolean = level.level <= loggingLevel.level
 
     // android.util.Log truncates a single entry at ~4000 chars, which chops long messages
-    // (e.g. canonical strings carrying an attestation cert chain). Split into chunks so the
-    // full message is emitted across multiple logcat lines. Chunks are raw (no injected
-    // markers) so consecutive lines concatenate back to the exact original string.
+    // (e.g. a request body carrying an attestation cert chain). Split into chunks so the full
+    // message is emitted across multiple logcat lines.
+    //
+    // Every chunk repeats the message's leading [tags] and is numbered. Emitting the chunks raw
+    // instead would put the tags on chunk 1 only, so filtering logcat on a tag (`[***FILTER]`)
+    // captures the first 3500 chars and silently drops the rest of the body — which is exactly
+    // the part the backend needs. Reassemble by stripping the `…[chunk i/n] ` prefix and
+    // concatenating in order; the payloads are verbatim substrings of the original.
     private const val MAX_LOG_CHUNK = 3500
+    private val LEADING_TAGS = Regex("^(?:\\[[^\\]]*\\])+")
 
     private fun platformLog(priority: Int, message: String) {
         if (message.length <= MAX_LOG_CHUNK) {
             Log.println(priority, TAG, message)
             return
         }
+        val tags = LEADING_TAGS.find(message)?.value ?: ""
+        val total = (message.length + MAX_LOG_CHUNK - 1) / MAX_LOG_CHUNK
         var start = 0
+        var index = 1
         while (start < message.length) {
             val end = minOf(start + MAX_LOG_CHUNK, message.length)
-            Log.println(priority, TAG, message.substring(start, end))
+            Log.println(priority, TAG, "$tags[chunk $index/$total] ${message.substring(start, end)}")
             start = end
+            index++
         }
     }
 
