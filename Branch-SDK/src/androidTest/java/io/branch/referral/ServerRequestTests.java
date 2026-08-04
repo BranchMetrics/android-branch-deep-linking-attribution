@@ -145,8 +145,7 @@ public class ServerRequestTests extends BranchTest {
         Assert.assertTrue(eventRequest.creation_ts > 0);
     }
 
-    private void setTimeouts(int timeout, int connectTimeout){
-        branch.setNetworkTimeout(timeout);
-        branch.setNetworkConnectTimeout(connectTimeout);
+    private void setTimeouts(int readTimeout, int connectTimeout){
+        branch.setNetworkTimeout(connectTimeout, readTimeout);
     }
 }
