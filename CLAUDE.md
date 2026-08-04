@@ -24,7 +24,7 @@ This is the foundation the beta changes sit on top of. (If a `CLAUDE.md` exists 
 1. **Intent parsing** — `readAndStripParam()` runs extractors (`extractBranchLinkFromIntentExtra`, `extractClickID`, `extractAppLink`, `extractExternalUriAndIntentExtras`) that write results into `PrefHelper`. A Branch link is consumed exactly once, marked by the `BranchLinkUsed` intent extra.
 2. **Request selection** — `getInstallOrOpenRequest()` picks `ServerRequestRegisterInstall` vs `ServerRequestRegisterOpen` based on whether a randomized bundle token is already persisted (`hasUser()`).
 3. **Queue + wait locks** — `registerAppInit()` sets state `INITIALISING` and force-inserts init at the front of the queue; `initTasks()` attaches `PROCESS_WAIT_LOCK`s so it won't fire until prerequisites resolve: `INTENT_PENDING_WAIT_LOCK` (until `onIntentReady` at `Activity.onResume`), `INSTALL_REFERRER_FETCH_WAIT_LOCK` (install only), `GAID_FETCH_WAIT_LOCK` (always), `USER_SET_WAIT_LOCK` (when the delay option is used — see the known bug below).
-4. **Response → callback** — on success the init request stores returned params into `PrefHelper` as **session params** (latest) and **install params** (first-ever), then invokes the caller's init callback. Init-state machine: `UNINITIALISED → INITIALISING → INITIALISED` (`getInitState()`); `INITIALISED` means the current intent is consumed and events can send.
+4. **Response → callback** — on success the init request stores returned params into `PrefHelper` as **session params** (latest) and **install params** (first-ever), then invokes the caller's init callback. `getInitState()` returns the sealed `BranchSessionState` (`Uninitialized`/`Initializing`/`Initialized`/`Resetting`/`Failed`, checked via `instanceof`) — the legacy `SESSION_STATE` enum (`Branch.java:304`) still exists in source but is not what this method returns; `getInitState() == SESSION_STATE.INITIALISED` looks valid but does not compile. `Initialized` means the current intent is consumed and events can send.
 
 `getLatestReferringParams()` reads session params; `getFirstReferringParams()` reads install params. Sync variants block on a latch (≤2500 ms) and must be called off the UI thread.
 
@@ -67,7 +67,7 @@ Facts to know before touching it (all verifiable in source on this branch):
 
 Two request paths were added alongside the init flow — know them before touching OPEN/attribution behavior:
 
-- **`sendOpen()` / `sendOpen(JSONObject responseData)`** (`Branch.java:2414`, `:2428`) enqueue a `RequestOpen` (`v1/open`, `coroutines/RequestOpen.kt`) — but **only when the consumer-protection attribution level is not `NONE`** (both check `getConsumerProtectionAttributionLevel()` first). Callers: (1) `setConsumerProtectionAttributionLevel(level)` when re-enabling attribution, (2) `BranchProcessLifecycleObserver.onStart` — foreground OPENs are now driven by **AndroidX `ProcessLifecycleOwner`** (SDK-2463), which fires only on real process foreground, not on config-change recreation (fold/rotate/multi-window), removing duplicate OPENs by construction, and (3) after a successful `RequestDeepLink`.
+- **`sendOpen()` / `sendOpen(JSONObject responseData)`** (`Branch.java:2414`, `:2428`) enqueue a `RequestOpen` (`v3/events/open` via `Defines.RequestPath.EventsOpen`, `coroutines/RequestOpen.kt` — not the legacy `v1/open` `RegisterOpen` path, which still exists separately) — but **only when the consumer-protection attribution level is not `NONE`** (both check `getConsumerProtectionAttributionLevel()` first). Callers: (1) `setConsumerProtectionAttributionLevel(level)` when re-enabling attribution, (2) `BranchProcessLifecycleObserver.onStart` — foreground OPENs are now driven by **AndroidX `ProcessLifecycleOwner`** (SDK-2463), which fires only on real process foreground, not on config-change recreation (fold/rotate/multi-window), removing duplicate OPENs by construction, and (3) after a successful `RequestDeepLink`.
 - **`requestDeepLinkData(uri, callback)`** (`Branch.java:2726`, public) manually resolves a URI: it builds a `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, a `ServerRequestInitSession` subclass) hitting the **new `v3/deeplink`** endpoint (`Defines.RequestPath.Deeplink`) and routes it through `requestQueue_.handleNewRequest(...)`. It maps `link_click_id` / app-link-url / scheme-uri into the POST, and on success writes `sessionParams`, fires the callback with `latestReferringParams`, and (if attribution ≠ NONE) chains a `sendOpen(response)`. Coroutine-friendly; intended to be called from a `LifecycleScope`.
 
 ### Other beta subsystems
@@ -75,8 +75,8 @@ Two request paths were added alongside the init flow — know them before touchi
 - **`ModernLinkGenerator.kt`** — coroutine link-creation path (replaces the AsyncTask pattern). Establishes the branch's async idiom: per-class `CoroutineScope(SupervisorJob() + Dispatchers.IO)` + `shutdown()`, `withTimeout` for cancellation, a single `runBlocking` / `scope.launch{ … withContext(Main){callback} }` bridge for Java callers, sealed exception mapping back to `BranchError`. **Reuse this idiom** for new async code.
 - **`BranchSessionState*.kt`** — sealed session state (`Uninitialized/Initializing/Initialized/Resetting/Failed`) in a `MutableStateFlow` (`BranchSessionStateManager`, `BranchSessionStateProvider`). The StateFlow is currently consumed via `.value` / `instanceof` / manual listeners, **not** reactively collected.
 - **`network/BranchAsyncNetworkLayer.kt`** — coroutine network layer with non-blocking `delay()` backoff.
-- **Logging:** `BranchLogger` (levels `ERROR..VERBOSE`, no separate trace channel). Per EMT-3864 (`604fd770`), route internal/queue trace through the existing `.v()` level — **do not add a second logging gate.** Trace lines use stable `key=value` prefixes.
-- **Public API is gated:** a CI check diffs the public API against the last 5.x release (EMT-3877, `bf422f32`). Intentional API changes are expected on the beta — update the baseline deliberately rather than working around the gate.
+- **Logging:** `BranchLogger` (levels `ERROR..VERBOSE`, no separate trace channel). Per EMT-3864 (`604fd770`), route internal/queue trace through the existing `.v()` level — **do not add a second logging gate.** Trace lines are prose with an all-caps label (e.g. `STUCK_LOCK_DETECTION:`), not `key=value` pairs — grepping a field name won't find them.
+- **Public API diff is report-only, not a CI gate:** `apiCompatibilityReport` (`Branch-SDK/build.gradle.kts:411`, EMT-3877/`bf422f32`) diffs the public API against a hardcoded last-5.x-release Maven coordinate, but it isn't wired into any workflow and doesn't fail the build without `-PapiDiffStrict`. There's no baseline artifact to update — running it is informational only. Intentional API changes are expected on the beta.
 - **Removed / restored APIs (check `git log` before assuming an API's state):** `reInit()` / `isReInitializing` were removed from `InitSessionBuilder` (EMT-3883). Some 5.x source-compat aliases were deliberately restored earlier in the beta (no-arg `Branch.logout()`, a relocated LATD listener alias, synchronous deep-link param getters).
 
 ## Source layout
@@ -85,11 +85,12 @@ Code spans several `io/branch/*` packages, not just `referral/`:
 
 - **`referral/`** — SDK core: `Branch`, `PrefHelper`, `ServerRequest*`, the coroutine queue (`BranchRequestQueue.kt`, `BranchRequestQueueAdapter.kt`), `ModernLinkGenerator.kt`, `BranchSessionState*.kt`, device/tracking/config. Sub-dirs: `network/` (HTTP incl. `BranchAsyncNetworkLayer.kt`), `util/` (`BranchEvent`, `LinkProperties`, `CommerceEvent`, content-metadata), `validators/`, `QRCode/`.
 - **`indexing/`** — `BranchUniversalObject` (BUO content model).
-- **`coroutines/`** — async fetch entry points (`AdvertisingIds`, `DeviceSignals`, `InstallReferrers`) **and** the newer coroutine request classes `RequestOpen` (`v1/open`) and `RequestDeepLink` (`v3/deeplink`).
+- **`coroutines/`** — async fetch entry points (`AdvertisingIds`, `DeviceSignals`, `InstallReferrers`) **and** the newer coroutine request classes `RequestOpen` (`v3/events/open`) and `RequestDeepLink` (`v3/deeplink`).
 - **`observers/`** — `BranchProcessLifecycleObserver` (process-level foreground detection → OPEN, SDK-2463).
 - **`data/`** — `InstallReferrerResult`.
 - **`interfaces/`** — public callback interfaces (e.g. `IBranchLoggingCallbacks`).
 - **`receivers/`** — `SharingBroadcastReceiver`.
+- **`modernization/`** — `PublicApiRegistry`, `modernization/wrappers/PreservedBranchApi.kt` (legacy API shims), `modernization/core/ModernBranchCore.kt` (new reactive session entry point).
 
 ### Where to make changes
 
@@ -134,7 +135,7 @@ Toolchain: **Java 17** for Gradle, `compileSdk 34`, `minSdk 21`, **Kotlin 1.6.21
 ### Modules & CI
 
 - **`:Branch-SDK`** (library), **`:Branch-SDK-TestBed`** (sample app, `io.branch.branchandroidtestbed`), **`:Branch-SDK-GPTDriver`** (`com.android.test` MobileBoost/GPTDriver E2E, targets TestBed; needs `MOBILEBOOST_API_KEY`).
-- CI: `unit-and-instrumented-tests-action.yml` (unit + instrumented on API 21/34 + JaCoCo→Codecov); `sdk-l1-validation.yml` (PR gate — builds TestBed+GPTDriver, runs an instrumented test, validates on-wire `/v1/*` fields via `scripts/validate_l1_logs.py`; local: `python3 scripts/validate_l1_logs.py branchlogs.txt`). A public-API diff gate (EMT-3877) runs against the last 5.x release.
+- CI: `unit-and-instrumented-tests-action.yml` (unit + instrumented on API 21/34 + JaCoCo→Codecov). `sdk-l1-validation.yml` exists but its `pull_request` trigger is scoped to `[master, main, feature/mobileboost-e2e-tests]` — it does **not** run on PRs into `6.0.0-beta.0`, despite the workflow's own `name:` implying it's a general PR gate. The public-API diff (`apiCompatibilityReport`, EMT-3877) is report-only — see above — not a CI gate.
 
 ## Optional integrations
 
