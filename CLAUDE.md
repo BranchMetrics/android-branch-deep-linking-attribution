@@ -6,7 +6,7 @@ This is the **Branch Android SDK** for deep linking and attribution. Production 
 
 ## Modules
 
-- **`Branch-SDK`** — the published SDK library (`com.android.library`). All production code lives under `Branch-SDK/src/main/java/io/branch/referral/`.
+- **`Branch-SDK`** — the published SDK library (`com.android.library`). All production code lives under `Branch-SDK/src/main/java/io/branch/`, most of it in `referral/`.
 - **`Branch-SDK-TestBed`** — a sample/demo app (`com.android.application`, `io.branch.branchandroidtestbed`) that depends on `:Branch-SDK`. Used for manual testing and as the target app for E2E tests.
 - **`Branch-SDK-GPTDriver`** — a `com.android.test` module (MobileBoost/GPTDriver hybrid E2E tests) whose `targetProjectPath` is `:Branch-SDK-TestBed`. Deterministic Espresso first, AI-assisted validation only when Espresso can't express the intent. Requires a `MOBILEBOOST_API_KEY` (see `local.properties.example` / `Branch-SDK-GPTDriver/README.md`).
 
@@ -44,7 +44,7 @@ Most code is in `io.branch.referral`, but not all — check these sibling packag
 
 ## Build, test, lint
 
-Toolchain: **Java 17** for Gradle (CI uses Corretto/Temurin 17), `compileSdk 34`, `minSdk 21`. Copy `local.properties.example` → `local.properties` (Android Studio fills in `sdk.dir`).
+Toolchain: **Java 17** for Gradle (CI uses Corretto/Temurin 17), `compileSdk 34`, `minSdk 21` for `:Branch-SDK` (`:Branch-SDK-GPTDriver` sets `minSdk 24`). Copy `local.properties.example` → `local.properties` (Android Studio fills in `sdk.dir`).
 
 ```bash
 # JVM unit tests (fast, no emulator) — the everyday loop
@@ -59,7 +59,7 @@ Toolchain: **Java 17** for Gradle (CI uses Corretto/Temurin 17), `compileSdk 34`
 # A single instrumented class
 ./gradlew :Branch-SDK:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.branch.referral.BranchApiTests
 
-# Coverage (JaCoCo, aggregates unit + instrumented)
+# Coverage (JaCoCo, aggregates unit + instrumented; depends on createDebugCoverageReport, so it needs a device like the line above)
 ./gradlew :Branch-SDK:jacocoTestReport
 
 # Lint (SDK module has abortOnError = false — lint won't fail the build)
@@ -72,6 +72,7 @@ Toolchain: **Java 17** for Gradle (CI uses Corretto/Temurin 17), `compileSdk 34`
 
 - **`unit-and-instrumented-tests-action.yml`** — runs `testDebugUnitTest` + `connectedDebugAndroidTest` on API 21 and 34, plus `jacocoTestReport` → Codecov.
 - **`sdk-l1-validation.yml`** — the "Layer 1" PR gate. Builds TestBed + GPTDriver APKs, runs an instrumented test on the emulator, pulls `branchlogs.txt`, and asserts required device/SDK fields are on the wire via `scripts/validate_l1_logs.py`. To reproduce the wire check locally: `python3 scripts/validate_l1_logs.py path/to/branchlogs.txt` (validator self-tests: `python3 -m unittest scripts.test_validate_l1_logs -v`). Required-field lists live at the top of `validate_l1_logs.py`; the check is presence-only and scoped to `/v1/*`.
+- **`gptdriverautomation.yaml`** — drives the `:Branch-SDK-GPTDriver` module (MobileBoost/GPTDriver hybrid E2E tests).
 
 ## Architecture
 
@@ -95,12 +96,12 @@ Callers drive init through the fluent `Branch.sessionBuilder(activity).withCallb
 
 1. **Intent parsing** — `readAndStripParam(uri/intent, activity)` runs a chain of extractors (`extractBranchLinkFromIntentExtra`, `extractClickID`, `extractAppLink`, `extractExternalUriAndIntentExtras`, …) that write results into `PrefHelper` (link click id, app link, push identifier, external intent uri/extra, initial referrer). A Branch link in an intent is consumed exactly once, marked by the `BranchLinkUsed` intent extra.
 2. **Request selection** — `getInstallOrOpenRequest()` picks `ServerRequestRegisterInstall` vs `ServerRequestRegisterOpen` based on `requestQueue_.hasUser()` (true iff a randomized bundle token is already persisted).
-3. **Queueing with wait locks** — `registerAppInit()` sets state `INITIALISING` and force-inserts the init request at the front of the queue (or reuses an in-flight self-init request and transfers the callback, to preserve ordering). `initTasks()` attaches `PROCESS_WAIT_LOCK`s so the request won't fire until prerequisites resolve: `INTENT_PENDING_WAIT_LOCK` (until `onIntentReady` at `Activity.onResume`), `INSTALL_REFERRER_FETCH_WAIT_LOCK` (install only), `GAID_FETCH_WAIT_LOCK` (always), and `USER_SET_WAIT_LOCK` (when `withDelay` is used).
+3. **Queueing with wait locks** — `registerAppInit()` sets state `INITIALISING` and force-inserts the init request at the front of the queue (or reuses an in-flight self-init request and transfers the callback, to preserve ordering). `initTasks()` attaches `PROCESS_WAIT_LOCK`s so the request won't fire until prerequisites resolve: `INTENT_PENDING_WAIT_LOCK` (until `onIntentReady` at `Activity.onResume`), `INSTALL_REFERRER_FETCH_WAIT_LOCK` (install only), `GAID_FETCH_WAIT_LOCK` (always). `initializeSession` separately attaches `USER_SET_WAIT_LOCK` when `withDelay` is used.
 4. **Response → callback** — on success the init request stores returned params into `PrefHelper` as **session params** (latest) and **install params** (first-ever), then invokes `callback.onInitFinished(...)`.
 
 `getLatestReferringParams()` reads `PrefHelper.getSessionParams()`; `getFirstReferringParams()` reads `PrefHelper.getInstallParams()`. Sync variants block on a `CountDownLatch` (≤2500 ms) and must be called off the UI thread.
 
-**Init state machine:** `SessionState { UNINITIALISED, INITIALISING, INITIALISED }`, exposed via `getInitState()`. `INITIALISED` means the SDK has consumed the current intent and can send events.
+**Init state machine:** `SessionState { INITIALISED, INITIALISING, UNINITIALISED }`, exposed via `getInitState()`. `INITIALISED` means the SDK has consumed the current intent and can send events.
 
 **Intent lock:** by default the SDK waits for `Activity.onResume` (`intentState_` PENDING→READY via `onIntentReady`) so it captures the freshest intent (e.g. `onNewIntent` single-top). `bypassWaitingForIntent(true)` or `unlockPendingIntent()` are escape hatches. `removeSessionInitializationDelay()` clears the `withDelay` lock.
 
@@ -110,7 +111,7 @@ Callers drive init through the fluent `Branch.sessionBuilder(activity).withCallb
 
 ### ServerRequest lifecycle and the queue
 
-`ServerRequest` (abstract) is the base for every API call. It owns the POST/GET body (`params_`), a `Defines.RequestPath`, a set of wait locks (`locks_`), and a retry count. `setPost()` branches on API version: **V1** (`/v1/install`, `/v1/open`, `/v1/url`) puts device fields at the top level; **V2** (`/v2/event/…`, LATD) nests them under a `user_data` object. Subclasses: `ServerRequestInitSession` (→ `ServerRequestRegisterInstall`, `ServerRequestRegisterOpen`), `ServerRequestLogEvent` (V2), `ServerRequestCreateUrl`, `ServerRequestGetLATD`, plus the queue-only operations `QueueOperationSetIdentity` and `QueueOperationLogout` (these are enqueued but are not network requests).
+`ServerRequest` (abstract) is the base for every API call. It owns the POST/GET body (`params_`), a `Defines.RequestPath`, a set of wait locks (`locks_`), and a retry count. `BRANCH_API_VERSION` has three values — `V1`, `V1_LATD`, `V2`. `setPost()` branches `if (== V1) ... else ...`: **V1** (`/v1/install`, `/v1/open`, `/v1/url`) puts device fields at the top level; everything else — **V2** (`/v2/event/…`) and **`V1_LATD`** (`ServerRequestGetLATD`) — nests them under a `user_data` object. Subclasses: `ServerRequestInitSession` (→ `ServerRequestRegisterInstall`, `ServerRequestRegisterOpen`), `ServerRequestLogEvent` (V2), `ServerRequestCreateUrl`, `ServerRequestGetLATD` (V1_LATD), `QRCode/ServerRequestCreateQRCode`, `validators/ServerRequestGetAppConfig`, plus the queue-only operations `QueueOperationSetIdentity` and `QueueOperationLogout` (these are enqueued but are not network requests).
 
 **`ServerRequestQueue` is serialized, single-flight, and currently in-memory:**
 
@@ -134,8 +135,8 @@ Singleton wrapper over the `"branch_referral_shared_pref"` SharedPreferences fil
 - **`clearPrefOnBranchKeyChange()`** (triggered when `setBranchKey` sees a different key) does `prefsEditor_.clear()` but deliberately re-writes four values so an in-flight deep link survives: link-click id, link-click identifier, app link, push identifier.
 - **Tracking-disabled** (`TrackingController`, or `setConsumerProtectionAttributionLevel(NONE)`) blocks network calls except deep-linking. Disabling clears session/link/referrer prefs but **not** identity or device/bundle tokens. Only requests whose `prepareExecuteWithoutTracking()` returns true are allowed through; init requests strip all PII and set `TrackingDisabled=true` in that mode. There is no `SKIP_QUEUE` mechanism — gating is entirely via `prepareExecuteWithoutTracking()` and the `ERR_BRANCH_TRACKING_DISABLED` checks.
 - **One-time writes:** `KEY_ORIGINAL_INSTALL_TIME` is written once (when 0); enhanced-web-link UX type/load-time are consumed once then reset; `postInitClear` resets link/referrer/intent identifiers only when ≤1 init request remains queued.
-- **Retry policy** (`onRequestFailed`): a request is dropped on HTTP 400–451, on `ERR_BRANCH_TRACKING_DISABLED`, when `!shouldRetryOnFail()`, or once `currentRetryCount` hits the no-connection retry max; otherwise it stays for replay. Init failure resets state to `UNINITIALISED`.
+- **Retry policy** (`onRequestFailed`): a request is dropped on HTTP 400–451, on `ERR_BRANCH_TRACKING_DISABLED`, when `!shouldRetryOnFail()`, or once `currentRetryCount` hits the no-connection retry max; otherwise it stays for replay. Init failure resets state to `UNINITIALISED` — but only if no session params are stored yet, so the intra-app-linking case deliberately keeps `INITIALISED`.
 
 ## Optional integrations
 
-Ad-ID / install-referrer / billing / in-app-browser dependencies are `compileOnly` in `Branch-SDK/build.gradle` — the SDK works without any of them and detects them by reflection at runtime. When touching that code, guard every reference so the SDK still builds and runs when the optional dependency is absent (Google/Huawei/Samsung/Xiaomi install referrers, Play Billing, `androidx.browser`).
+Ad-ID / Huawei-Samsung-Xiaomi install-referrer / billing / in-app-browser dependencies are `compileOnly` in `Branch-SDK/build.gradle.kts` — the SDK works without any of them and detects them by reflection at runtime. When touching that code, guard every reference so the SDK still builds and runs when the optional dependency is absent. The **Google** Play install referrer is the exception: it is a hard `implementation` dependency and is always present.
