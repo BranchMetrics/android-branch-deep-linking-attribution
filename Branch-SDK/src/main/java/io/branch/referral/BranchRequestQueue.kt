@@ -970,7 +970,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         BranchLogger.v("BranchRequestQueue.updateAllRequestsInQueue called")
         synchronized(queueList) {
             for (req in queueList) {
-                req.updateEnvironment(context, req.post)
+                req.updateEnvironment()
             }
         }
         BranchLogger.v("BranchRequestQueue.updateAllRequestsInQueue completed")

@@ -54,7 +54,7 @@ public abstract class ServerRequestInitSession extends ServerRequest {
         }
 
         updateInstallStateAndTimestamps(post);
-        updateEnvironment(context_, post);
+        updateEnvironment();
 
         String identity = Branch.installDeveloperId;
 
