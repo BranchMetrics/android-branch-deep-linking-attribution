@@ -39,11 +39,27 @@ public interface BranchSecureSDKProvider {
     /**
      * Layer 1: performs device attestation and returns device-trust fields to add to the request.
      *
+     * <p>At most one request at a time may carry an initialization_context. The provider claims
+     * that slot here and returns null to every other caller until
+     * {@link #releaseAttestationClaim()} runs, so a burst of opens cannot each attest.</p>
      *
      * @param requestBody Current request body (before fraud defense fields)
      * @return JSONObject with fraud defense fields to merge, or null if unavailable
      */
     JSONObject addDeviceTrustParams(JSONObject requestBody);
+
+    /**
+     * Releases the Layer 1 slot claimed by {@link #addDeviceTrustParams(JSONObject)}.
+     *
+     * <p>Call this once the request that carried the initialization_context has been answered:
+     * on success, because attestation is done and later requests use Layer 2 anyway; on terminal
+     * failure, so the next open can attest in its place. Skipping the failure case would hold the
+     * slot for the rest of the process and leave the device unable to register.</p>
+     *
+     * <p>Default is a no-op, for providers that do not gate attestation.</p>
+     */
+    default void releaseAttestationClaim() {
+    }
 
     /**
      * Layer 2 + 3: generates HMAC-SHA256 signature and smart nonce for the request.

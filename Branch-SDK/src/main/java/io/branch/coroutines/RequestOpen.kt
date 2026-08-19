@@ -87,6 +87,7 @@ internal class RequestOpen(
         // The server has the initialization_context now, so later requests can switch to Layer 2.
         if (carriedInitializationContext) {
             prefHelper_.setBool("bnc_device_trust_checked", true)
+            Branch.getInstance()?.fraudDefenseProvider?.releaseAttestationClaim()
             BranchLogger.v("Device trust attestation acknowledged by the server")
         }
 
@@ -131,6 +132,13 @@ internal class RequestOpen(
     override fun handleFailure(statusCode: Int, causeMsg: String) {
         val serverErrorMessage = "Request Open failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
+
+        // shouldRetryOnFail is false, so this attestation is spent. Hand the claim back or no
+        // later open can attest and the device never registers.
+        if (carriedInitializationContext) {
+            Branch.getInstance()?.fraudDefenseProvider?.releaseAttestationClaim()
+            BranchLogger.v("Open carrying the initialization_context failed; attestation will be retried on the next open")
+        }
 
         if (callback_ != null) {
             val obj = JSONObject()
