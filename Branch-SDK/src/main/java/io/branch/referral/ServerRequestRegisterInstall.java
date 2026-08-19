@@ -68,38 +68,6 @@ class ServerRequestRegisterInstall extends ServerRequestInitSession {
                 getPost().put(Defines.Jsonkey.OperationalMetrics.getKey(), configurations);
             }
 
-            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
-            addClientRequestParameters();
-
-            // First install carries initialization_context only; a later install (attestation
-            // already done) carries activity_context only. Never both.
-            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
-                BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                if (!prefHelper_.getBool("bnc_device_trust_checked")) {
-                    // Layer 1: device attestation. Retried on the next request if it fails.
-                    try {
-                        JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
-                        if (fraudDefenseFields != null) {
-                            prefHelper_.setBool("bnc_device_trust_checked", true);
-                            SecureContextApplier.apply(fraudDefenseFields, getPost());
-                            BranchLogger.v("Fraud defense fields added to install request");
-                        }
-                    } catch (Exception e) {
-                        BranchLogger.w("Fraud defense failed for install: " + e.getMessage());
-                    }
-                } else {
-                    // Layer 2 + 3: HMAC signature + nonce.
-                    try {
-                        JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
-                        if (signatureFields != null) {
-                            SecureContextApplier.apply(signatureFields, getPost());
-                        }
-                    } catch (Exception e) {
-                        BranchLogger.w("Fraud defense signature failed for install: " + e.getMessage());
-                    }
-                }
-            }
-
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }

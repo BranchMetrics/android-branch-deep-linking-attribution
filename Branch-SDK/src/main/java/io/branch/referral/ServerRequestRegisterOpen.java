@@ -30,39 +30,6 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
             openPost.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
             openPost.put(Defines.Jsonkey.RandomizedBundleToken.getKey(), prefHelper_.getRandomizedBundleToken());
             setPost(openPost);
-
-            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
-            addClientRequestParameters();
-
-            // First open carries initialization_context only; every later open carries
-            // activity_context only. The two are never sent together, so the attestation and the
-            // HMAC never have to agree on one canonical.
-            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
-                BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                if (!prefHelper_.getBool("bnc_device_trust_checked")) {
-                    // Layer 1: device attestation. Retried on the next open if it fails.
-                    try {
-                        JSONObject fraudDefenseFields = provider.addDeviceTrustParams(getPost());
-                        if (fraudDefenseFields != null) {
-                            prefHelper_.setBool("bnc_device_trust_checked", true);
-                            SecureContextApplier.apply(fraudDefenseFields, getPost());
-                            BranchLogger.v("Fraud defense fields added to open request");
-                        }
-                    } catch (Exception e) {
-                        BranchLogger.w("Fraud defense failed for open: " + e.getMessage());
-                    }
-                } else {
-                    // Layer 2 + 3: HMAC signature + nonce.
-                    try {
-                        JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
-                        if (signatureFields != null) {
-                            SecureContextApplier.apply(signatureFields, getPost());
-                        }
-                    } catch (Exception e) {
-                        BranchLogger.w("Fraud defense signature failed for open: " + e.getMessage());
-                    }
-                }
-            }
         } catch (JSONException ex) {
             BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;
