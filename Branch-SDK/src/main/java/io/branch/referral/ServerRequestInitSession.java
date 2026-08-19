@@ -5,6 +5,8 @@ import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 import android.content.Context;
 import android.text.TextUtils;
 
+import java.util.concurrent.CountDownLatch;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -89,11 +91,16 @@ public abstract class ServerRequestInitSession extends ServerRequest {
         branch.setInitState(BranchSessionState.Initialized.INSTANCE);
 
         // Release any callers blocked in getLatestReferringParamsSync / getFirstReferringParamsSync (EMT-3882).
-        if (branch.getLatestReferringParamsLatch != null) {
-            branch.getLatestReferringParamsLatch.countDown();
+        // Capture each latch into a local variable before null-checking (EMT-3899 TOCTOU fix):
+        // a racing *Sync caller can null the field between the check and countDown(), so we
+        // operate on a single stable reference throughout.
+        CountDownLatch latestLatch = branch.getLatestReferringParamsLatch;
+        if (latestLatch != null) {
+            latestLatch.countDown();
         }
-        if (branch.getFirstReferringParamsLatch != null) {
-            branch.getFirstReferringParamsLatch.countDown();
+        CountDownLatch firstLatch = branch.getFirstReferringParamsLatch;
+        if (firstLatch != null) {
+            firstLatch.countDown();
         }
 
         DeepLinkRoutingValidator.validate(branch.currentActivityReference_);
