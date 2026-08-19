@@ -32,7 +32,7 @@ public class PrefHelper {
     /**
      * The base URL to use for all calls to the Branch API.
      */
-    static final String BRANCH_BASE_URL_V2 = "https://api2.branch.io/";
+    static final String BRANCH_BASE_URL_V2 = "https://api3.branch.io/";
     static final String BRANCH_BASE_URL_V1 = "https://api.branch.io/";
     static final String BRANCH_EU_BASE_URL_V3 = "https://api3-eu.branch.io/";
 

@@ -23,9 +23,10 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // Initialize the Branch Secure SDK (optional)
+        // Initialize the Branch Secure SDK (optional). setFraudDefenseProvider() below starts it
+        // with the real branch key; calling initializeBranchSecureSDK() here too would only start
+        // it early with a null key and the second call is ignored.
         BranchSecureSDK secureSDK = BranchSecureSDK.getInstance(this);
-        secureSDK.initializeBranchSecureSDK(null);
 
         Branch.enableLogging((message, tag) -> {
             Log.d("BranchTestbed", message);

@@ -11,6 +11,9 @@ internal class RequestOpen(
     responseData: JSONObject?
 ) : ServerRequestInitSession(context, Defines.RequestPath.EventsOpen, isAutoInitialization) {
 
+    /** True when this request carries an initialization_context that the server has yet to ack. */
+    private var carriedInitializationContext = false
+
     init {
         callback_ = callback
         try {
@@ -49,7 +52,11 @@ internal class RequestOpen(
                     try {
                         val trustFields = provider.addDeviceTrustParams(post)
                         if (trustFields != null) {
-                            prefHelper_.setBool("bnc_device_trust_checked", true)
+                            // Not marked done here: the flag is what makes every later request use
+                            // Layer 2 instead, and the server can only verify those signatures once
+                            // it has actually received this initialization_context. Setting it at
+                            // build time strands the device if the open never lands.
+                            carriedInitializationContext = true
                             SecureContextApplier.apply(trustFields, post)
                         }
                     } catch (e: Exception) {
@@ -76,6 +83,12 @@ internal class RequestOpen(
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
         super.onRequestSucceeded(response, branch)
         BranchLogger.v("RequestOpen Succeeded. Response: ${response.`object`}")
+
+        // The server has the initialization_context now, so later requests can switch to Layer 2.
+        if (carriedInitializationContext) {
+            prefHelper_.setBool("bnc_device_trust_checked", true)
+            BranchLogger.v("Device trust attestation acknowledged by the server")
+        }
 
         try {
             val responseJson = response.`object`
