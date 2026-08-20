@@ -1523,6 +1523,13 @@ public class Branch {
              r.callback_ = request.callback_;
              BranchLogger.v(r + " now has callback " + request.callback_);
              BranchLogger.v("Updated existing request callback");
+             // The queued init request owns this initialization now; it already carries its own
+             // wait locks and will fire the callback we just handed it. Running initTasks() on the
+             // new instance would enqueue it as well and put a second v3/events/open on the wire —
+             // which is exactly what a host calling init() twice per foreground used to produce.
+             BranchLogger.v("Finished ordering init calls");
+             requestQueue_.printQueue();
+             return;
          }
          BranchLogger.v("Finished ordering init calls");
          requestQueue_.printQueue();
@@ -1544,10 +1551,16 @@ public class Branch {
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
 
-        if (request instanceof ServerRequestRegisterInstall) {
+        // Fresh install: the Play install referrer has to be fetched before the init request goes
+        // out, or install_referrer_extras / app_store / link_identifier (written by
+        // ServerRequestInitSession.updateLinkReferrerParams) are missing and the install is
+        // unattributed. Keyed on "no randomized bundle token yet" rather than on the request type,
+        // because a fresh install is now a RequestOpen (v3/events/open) too, not a
+        // ServerRequestRegisterInstall.
+        if (request instanceof ServerRequestInitSession && !requestQueue_.hasUser()) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
-            BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
+            BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK for fresh-install init request");
 
             deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
                 @Override
@@ -1575,6 +1588,16 @@ public class Branch {
         requestQueue_.handleNewRequest(request);
     }
 
+    /**
+     * Builds the request that initializes the session.
+     *
+     * <p>Every init — fresh install included — now goes out as a {@link RequestOpen} on
+     * {@code v3/events/open}. The legacy {@code v1/install} split is gone: the server tells a fresh
+     * install apart from a repeat open by the {@code update} state / {@code first_install_time} that
+     * {@link ServerRequestInitSession#setPost(JSONObject)} always writes, and it mints the
+     * randomized bundle token in the open response (persisted by the queue's init-response
+     * handling), so the SDK no longer needs a distinct install endpoint to acquire one.</p>
+     */
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         boolean hasUser = requestQueue_.hasUser();
         String bundleToken = prefHelper_.getRandomizedBundleToken();
@@ -1586,13 +1609,7 @@ public class Branch {
                 ", sessionId: " + (sessionId.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
                 ", deviceToken: " + (deviceToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS"));
 
-        ServerRequestInitSession request;
-        if (hasUser) {
-            request = new io.branch.referral.RequestOpen(context_, callback, isAutoInitialization, null);
-        } else {
-            request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
-        }
-        return request;
+        return new io.branch.referral.RequestOpen(context_, callback, isAutoInitialization, null);
     }
     
     void onIntentReady(@NonNull Activity activity) {
@@ -2464,8 +2481,31 @@ public class Branch {
 
             BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
             if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
+                // An init request is already queued for this foreground (the host called init(), or
+                // a previous sendOpen already queued one) — it is going to hit v3/events/open
+                // itself, so adding another request here just duplicates the OPEN.
+                ServerRequest queuedInit = ((BranchRequestQueueAdapter) requestQueue_).getSelfInitRequest();
+                if (queuedInit instanceof ServerRequestInitSession) {
+                    BranchLogger.v("sendOpen skipped: init request already queued (" + queuedInit + ")");
+                    return;
+                }
+
                 RequestOpen requestOpen = new RequestOpen(context_, null, false, null);
-                branchReferral_.requestQueue_.handleNewRequest(requestOpen);
+
+                if (!(getInitState() instanceof BranchSessionState.Initialized)) {
+                    // No session yet and no init queued, so this foreground open IS the session
+                    // initialization (a host that never calls init(), or a re-foreground after
+                    // executeClose() reset the state). It therefore has to wait on the same locks
+                    // as a normal init — above all the launch intent must be parsed before it goes
+                    // out, or the deep link is unattributed (EMT-3860). A host init() arriving
+                    // after this merges its callback into this request instead of queuing another
+                    // open.
+                    BranchLogger.v("sendOpen with no initialized session; routing through initTasks as the session init request");
+                    setInitState(BranchSessionState.Initializing.INSTANCE);
+                    initTasks(requestOpen);
+                } else {
+                    branchReferral_.requestQueue_.handleNewRequest(requestOpen);
+                }
             }
         }
     }
