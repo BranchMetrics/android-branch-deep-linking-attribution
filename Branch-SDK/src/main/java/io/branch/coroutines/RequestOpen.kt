@@ -59,11 +59,13 @@ internal class RequestOpen(
                 branch.openBrowserExperience(invokeFeaturesJson)
 
             } else {
+                // Write the slot only when this response actually carries session data. The
+                // v3/events/open response has no "data" key, link-driven or organic, so writing
+                // whatever it says always cleared the payload a deep link resolution had just
+                // persisted. A data-less response leaves the slot as it stands; if the endpoint
+                // starts returning session data, the write resumes on its own.
                 if (responseJson.has(Defines.Jsonkey.Data.key)) {
-                    val params = responseJson.getString(Defines.Jsonkey.Data.key)
-                    prefHelper_.sessionParams = params
-                } else {
-                    prefHelper_.sessionParams = PrefHelper.NO_STRING_VALUE
+                    prefHelper_.sessionParams = responseJson.getString(Defines.Jsonkey.Data.key)
                 }
 
                 if (callback_ != null) {
