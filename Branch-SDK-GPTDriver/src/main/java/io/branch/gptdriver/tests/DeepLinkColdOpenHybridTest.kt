@@ -30,20 +30,20 @@ import org.junit.runner.RunWith
  * HYBRID — Tests deep link cold open (app launched directly via Branch link).
  *
  * Simulates:  User taps a Branch link → app launches with the link as intent data
- *             → Branch SDK processes the link during session init in onStart().
+ *             → the app resolves the link with requestDeepLinkData() in onCreate().
  *
  * Flow:
  * 1. Launch the app normally to generate a real Branch link
  * 2. Extract the URL via AI
  * 3. Close the activity
  * 4. Relaunch with an ACTION_VIEW intent containing the Branch link
- *    (FLAG_ACTIVITY_CLEAR_TASK forces a fresh activity + session init with the URI)
+ *    (FLAG_ACTIVITY_CLEAR_TASK forces a fresh activity, so onCreate sees the URI)
  * 5. Verify "Latest Referring Params" shows link metadata (channel, feature, tags)
  *
- * Note: ActivityScenario.close() does not kill the process, so Branch singleton
+ * Note: ActivityScenario.close() does not kill the process, so the Branch singleton
  * persists. However, FLAG_ACTIVITY_CLEAR_TASK + new intent data triggers a fresh
- * sessionBuilder().withData(intent.getData()).init() in onStart(), which is the
- * same code path as a real cold open.
+ * requestDeepLinkData(getIntent().getData()) in onCreate, which is the same code
+ * path as a real cold open.
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
@@ -118,8 +118,8 @@ class DeepLinkColdOpenHybridTest {
         normalLaunch.close()
 
         // PHASE 2: Relaunch with deep link intent
-        // CLEAR_TASK forces fresh activity creation → onStart() calls
-        // Branch.sessionBuilder().withData(intent.getData()).init()
+        // CLEAR_TASK forces fresh activity creation → onCreate() calls
+        // Branch.getInstance().requestDeepLinkData(getIntent().getData(), callback)
         val deepLinkIntent = Intent(Intent.ACTION_VIEW, Uri.parse(generatedUrl)).apply {
             setClassName(
                 InstrumentationRegistry.getInstrumentation().targetContext,
@@ -130,9 +130,9 @@ class DeepLinkColdOpenHybridTest {
 
         val deepLinkLaunch = ActivityScenario.launch<MainActivity>(deepLinkIntent)
 
-        // Wait for Branch session init to resolve the deep link.
+        // Wait for requestDeepLinkData to resolve the deep link.
         // Note: Thread.sleep is used because after ActivityScenario relaunch, there is no
-        // observable UI state to create an IdlingResource for — the SDK init happens
+        // observable UI state to create an IdlingResource for — resolution happens
         // internally before any UI update. The AI driver handles the rest.
         Thread.sleep(5000)
 
