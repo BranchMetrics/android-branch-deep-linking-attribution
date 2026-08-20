@@ -752,7 +752,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         BranchLogger.d("initSession");
 
-        Branch.getInstance().setIdentity("Identity1");
+       // Branch.getInstance().setIdentity("Identity1");
 
         Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
             @Override

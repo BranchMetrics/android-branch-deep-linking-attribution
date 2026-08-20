@@ -92,19 +92,18 @@ class ServerRequestCreateUrl extends ServerRequest {
             // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
             addClientRequestParameters();
 
-            // Layer 2 + 3: HMAC signature + smart nonce for short url requests
-            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
-                try {
-                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
-                    if (signatureFields != null) {
-                        SecureContextApplier.apply(signatureFields, getPost());
-                        BranchLogger.v("Fraud defense signature fields added to create url request");
-                    }
-                } catch (Exception e) {
-                    BranchLogger.w("Fraud defense signature failed for create url: " + e.getMessage());
-                }
-            }
+            // Signed here rather than from doFinalUpdateOnBackgroundThread, unlike every other
+            // request. BranchLegacyLinkGenerator's synchronous path posts getPost() directly from an
+            // AsyncTask and never runs doFinalUpdateOnBackgroundThread, so a link created via
+            // getShortUrl() would otherwise go out unsigned. The guard in applySecureContextOnce()
+            // makes the later call from doFinalUpdateOnBackgroundThread a no-op.
+            //
+            // Cost of signing early: on the queued path updateGAdsParams() still adds
+            // advertising_ids / google_advertising_id afterwards, so /v1/url keeps the
+            // signed-before-mutation mismatch this class of bug is about. Fixing it means either
+            // teaching the sync path to run the final update, or excluding those two keys from the
+            // canonical on iOS + Android + Gateway together.
+            applySecureContextOnce();
 
         } catch (JSONException ex) {
             BranchLogger.w("Caught JSONException " + ex.getMessage());
@@ -114,6 +113,11 @@ class ServerRequestCreateUrl extends ServerRequest {
 
     public ServerRequestCreateUrl(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+    }
+
+    @Override
+    protected void applySecureContext() {
+        applyLayer2SecureContext();
     }
 
     public BranchLinkData getLinkPost() {

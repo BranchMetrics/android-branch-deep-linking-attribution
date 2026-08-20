@@ -53,23 +53,21 @@ public class ServerRequestLogEvent extends ServerRequest {
             // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
             addClientRequestParameters();
 
-            // Layer 2 + 3: HMAC signature + smart nonce for event requests
-            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
-                try {
-                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
-                    if (signatureFields != null) {
-                        SecureContextApplier.apply(signatureFields, getPost());
-                        BranchLogger.v("Fraud defense signature fields added to event request");
-                    }
-                } catch (Exception e) {
-                    BranchLogger.w("Fraud defense signature failed: " + e.getMessage());
-                }
-            }
+            // Layer 2 + 3 (HMAC signature + nonce) are attached by applySecureContext() below,
+            // from doFinalUpdateOnBackgroundThread. Signing here would miss updateEnvironment()
+            // below, plus everything updateDeviceInfo() and updateGAdsParams() write later —
+            // user_data.environment, user_data.developer_identity, user_data.aaid,
+            // user_data.limit_ad_tracking, advertising_ids, hardware_id — and would hash a stale
+            // user_data.randomized_device_token.
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         updateEnvironment(context, reqBody);
+    }
+
+    @Override
+    protected void applySecureContext() {
+        applyLayer2SecureContext();
     }
 
     @Override

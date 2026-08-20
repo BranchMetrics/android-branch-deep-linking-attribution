@@ -48,6 +48,9 @@ public abstract class ServerRequest {
     private long queueWaitTime_ = 0;
     private final Context context_;
 
+    /* Guards applySecureContextOnce(): a request is signed exactly once. */
+    private boolean secureContextApplied_ = false;
+
     // Various process wait locks for Branch server request
     public enum PROCESS_WAIT_LOCK {
         SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK, USER_AGENT_STRING_LOCK
@@ -734,8 +737,80 @@ public abstract class ServerRequest {
         if (isGAdsParamsRequired()) {
             updateGAdsParams();
         }
+
+        // Sign last. Everything above mutates params_, so signing any earlier signs a body the
+        // host has not finished building.
+        applySecureContextOnce();
     }
-    
+
+    /**
+     * Runs {@link #applySecureContext()} at most once per request.
+     *
+     * <p>A request must be signed exactly once. {@link SecureContextApplier} replaces
+     * {@code branch_sdk_secure_context} wholesale, so a second pass would issue a fresh nonce
+     * while the canonical that produced the previous signature covered the old one.</p>
+     */
+    final void applySecureContextOnce() {
+        if (secureContextApplied_) {
+            return;
+        }
+        secureContextApplied_ = true;
+        applySecureContext();
+    }
+
+    /**
+     * Attaches the Branch Secure SDK context to this request. No-op by default.
+     *
+     * <p>Only the endpoints the Gateway verifies opt in, by overriding this: {@code RequestOpen}
+     * (Layer 1 attestation on first open, Layer 2 afterwards), {@code ServerRequestLogEvent},
+     * {@code ServerRequestGetLATD} and {@code ServerRequestCreateUrl} (Layer 2 + 3). Notably
+     * {@code /v1/install} stays unsigned, as it was before signing moved out of the constructors —
+     * the device has no HMAC secret yet on a first install, and widening the set of signed
+     * endpoints is a wire-contract change, not part of fixing the signing order.</p>
+     *
+     * <p>Called as the final step of {@link #doFinalUpdateOnBackgroundThread()}, on a background
+     * thread, immediately before the request is handed to the network layer — see
+     * {@link #applyLayer2SecureContext()} for why that timing matters.</p>
+     */
+    protected void applySecureContext() {
+        // No-op: this request does not carry a secure context.
+    }
+
+    /**
+     * Layer 2 (HMAC signature) + Layer 3 (nonce). Call from an {@link #applySecureContext()}
+     * override.
+     *
+     * <p>Safe to call only from {@link #applySecureContext()}, i.e. at the end of
+     * {@link #doFinalUpdateOnBackgroundThread()}. By that point {@code updateLinkReferrerParams},
+     * {@code updateDeviceInfo} and {@code updateGAdsParams} have all run, so {@code hardware_id},
+     * {@code advertising_ids}, {@code google_advertising_id}, {@code install_referrer_extras} and
+     * the {@code user_data.*} fields are already in place.</p>
+     *
+     * <p>Signing in a constructor instead — as this SDK used to — signs 32 keys while the host goes
+     * on to post 38, so the Gateway rebuilds a different canonical from the bytes it received and
+     * every {@code request_signature} mismatches. Only {@code instrumentation} is added after this
+     * point, and both clients and the Gateway exclude it from the canonical.</p>
+     *
+     * <p>{@link #addClientRequestParameters()} still runs at construction: the timestamp and uuid
+     * it writes must be fixed for the lifetime of the request, not re-stamped at send time.</p>
+     */
+    protected final void applyLayer2SecureContext() {
+        Branch branch = Branch.getInstance();
+        BranchSecureSDKProvider provider = branch != null ? branch.getFraudDefenseProvider() : null;
+        if (provider == null || getPost() == null) {
+            return;
+        }
+        try {
+            JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
+            if (signatureFields != null) {
+                SecureContextApplier.apply(signatureFields, getPost());
+                BranchLogger.v("Fraud defense signature fields added to " + requestPath_);
+            }
+        } catch (Exception e) {
+            BranchLogger.w("Fraud defense signature failed for " + requestPath_ + ": " + e.getMessage());
+        }
+    }
+
     /*
      * Checks if this Application has internet permissions.
      *

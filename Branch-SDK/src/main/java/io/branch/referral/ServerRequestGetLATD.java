@@ -38,23 +38,18 @@ public class ServerRequestGetLATD extends ServerRequest {
             // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
             addClientRequestParameters();
 
-            // Layer 2 + 3: HMAC signature + smart nonce for LATD requests
-            if (Branch.getInstance() != null && Branch.getInstance().getFraudDefenseProvider() != null) {
-                try {
-                    BranchSecureSDKProvider provider = Branch.getInstance().getFraudDefenseProvider();
-                    JSONObject signatureFields = provider.addSignatureAndNonceForParams(getPost());
-                    if (signatureFields != null) {
-                        SecureContextApplier.apply(signatureFields, getPost());
-                        BranchLogger.v("Fraud defense signature fields added to LATD request");
-                    }
-                } catch (Exception e) {
-                    BranchLogger.w("Fraud defense signature failed for LATD: " + e.getMessage());
-                }
-            }
+            // Layer 2 + 3 (HMAC signature + nonce) are attached by applySecureContext() below,
+            // from doFinalUpdateOnBackgroundThread — after updateEnvironment() below and the
+            // device/GAds params have settled.
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         updateEnvironment(context, reqBody);
+    }
+
+    @Override
+    protected void applySecureContext() {
+        applyLayer2SecureContext();
     }
 
     ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, Branch.BranchLastAttributedTouchDataListener callback) {

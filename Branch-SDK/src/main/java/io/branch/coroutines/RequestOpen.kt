@@ -43,40 +43,50 @@ internal class RequestOpen(
             // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
             addClientRequestParameters()
 
-            // First open carries initialization_context only; every later open carries
-            // activity_context only. The two are never sent together.
-            val provider = Branch.getInstance()?.fraudDefenseProvider
-            if (provider != null) {
-                if (!prefHelper_.getBool("bnc_device_trust_checked")) {
-                    // Layer 1: attestation. Retried on the next open if it fails.
-                    try {
-                        val trustFields = provider.addDeviceTrustParams(post)
-                        if (trustFields != null) {
-                            // Not marked done here: the flag is what makes every later request use
-                            // Layer 2 instead, and the server can only verify those signatures once
-                            // it has actually received this initialization_context. Setting it at
-                            // build time strands the device if the open never lands.
-                            carriedInitializationContext = true
-                            SecureContextApplier.apply(trustFields, post)
-                        }
-                    } catch (e: Exception) {
-                        BranchLogger.w("Fraud defense failed for open: ${e.message}")
-                    }
-                } else {
-                    // Layer 2 + 3: HMAC + nonce
-                    try {
-                        val sigFields = provider.addSignatureAndNonceForParams(post)
-                        if (sigFields != null) {
-                            SecureContextApplier.apply(sigFields, post)
-                        }
-                    } catch (e: Exception) {
-                        BranchLogger.w("Fraud defense signature failed for open: ${e.message}")
-                    }
-                }
-            }
+            // The secure context is attached in applySecureContext(), not here — see there for why.
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")
             constructError_ = true
+        }
+    }
+
+    /**
+     * First open carries initialization_context only; every later open carries activity_context
+     * only. The two are never sent together.
+     *
+     * Runs from [doFinalUpdateOnBackgroundThread], after the host has finished writing
+     * `hardware_id`, `advertising_ids`, `install_referrer_extras`, `app_store` and the rest — so the
+     * canonical hashed here is the canonical the Gateway will rebuild from the posted bytes. It also
+     * means Layer 1 no longer blocks the main thread: attestation can cost ~10s on the first Play
+     * Integrity call after process start.
+     */
+    override fun applySecureContext() {
+        val provider = Branch.getInstance()?.fraudDefenseProvider ?: return
+        if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+            // Layer 1: attestation. Retried on the next open if it fails.
+            try {
+                val trustFields = provider.addDeviceTrustParams(post)
+                if (trustFields != null) {
+                    // Not marked done here: the flag is what makes every later request use
+                    // Layer 2 instead, and the server can only verify those signatures once
+                    // it has actually received this initialization_context. Setting it at
+                    // build time strands the device if the open never lands.
+                    carriedInitializationContext = true
+                    SecureContextApplier.apply(trustFields, post)
+                }
+            } catch (e: Exception) {
+                BranchLogger.w("Fraud defense failed for open: ${e.message}")
+            }
+        } else {
+            // Layer 2 + 3: HMAC + nonce
+            try {
+                val sigFields = provider.addSignatureAndNonceForParams(post)
+                if (sigFields != null) {
+                    SecureContextApplier.apply(sigFields, post)
+                }
+            } catch (e: Exception) {
+                BranchLogger.w("Fraud defense signature failed for open: ${e.message}")
+            }
         }
     }
 
