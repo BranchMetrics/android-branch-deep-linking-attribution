@@ -51,6 +51,10 @@ REQUIRED_COMMON = [
 # Endpoint-specific additions on top of REQUIRED_COMMON.
 # connection_type is only emitted on init/event requests, so /v1/url
 # (a CreateUrl request) legitimately lacks it.
+# An endpoint absent from this table has no L1 contract yet: its payload is printed but nothing is
+# asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
+# PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
+# in a capture is not an error; what each scenario must emit belongs in a per-scenario contract.
 REQUIRED_PER_ENDPOINT = {
     "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time"],
     "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token"],
@@ -132,11 +136,11 @@ def validate_request(entry, idx, total):
     """Print the full payload + per-field table for one request. Return a
     list of error strings (empty when everything required is present).
 
-    Required-field checks are scoped to `/v1/*` endpoints — that's the L1
-    contract. Non-v1 endpoints (e.g. `/v2/event/*`) use a different schema
-    (device fields under `user_data`, different identity fields) and are
-    out of L1's enforcement scope; the validator still dumps their payload
-    for visibility but does not fail the run."""
+    Required-field checks apply to any endpoint with an entry in
+    REQUIRED_PER_ENDPOINT. The beta emits `/v3/deeplink` and
+    `/v3/events/open`, which the `/v1/*` scope skipped silently. An
+    endpoint absent from the table has no L1 contract yet; the validator
+    dumps its payload for visibility but does not fail the run."""
     errors = []
     uri = entry["uri"]
     url = entry["url"]
@@ -155,11 +159,11 @@ def validate_request(entry, idx, total):
     print(json.dumps(request, indent=2, sort_keys=True))
     print()
 
-    if not uri.startswith("/v1/"):
-        print(f"(Non-v1 endpoint; required-field checks skipped per L1 scope)")
+    if uri not in REQUIRED_PER_ENDPOINT:
+        print(f"(No L1 contract for this endpoint; required-field checks skipped)")
         return errors
 
-    fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT.get(uri, [])
+    fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT[uri]
     print(f"Required fields ({len(fields)}):")
     for field in fields:
         value = lookup_field(request, field)
@@ -185,15 +189,10 @@ def validate_entries(entries):
 
     print(f"Captured {len(entries)} Branch wire requests. Validating...")
 
-    found_paths = [e["uri"] for e in entries]
-    if "/v1/install" not in found_paths:
-        errors.append("Mandatory endpoint '/v1/install' was not captured.")
-
-    if "/v1/open" not in found_paths:
-        print(
-            "Note: '/v1/open' not present in capture. Expected in a normal "
-            "install+open flow, but not enforced here."
-        )
+    # No endpoint is mandatory. A correct beta capture contains no install at all: on
+    # 6.0.0-beta.0 the first launch resolves through requestDeepLinkData and the open goes to
+    # /v3/events/open, so requiring /v1/install failed every correct run. What each scenario must
+    # emit belongs in a per-scenario contract, not in a global rule.
 
     for i, entry in enumerate(entries, start=1):
         errors.extend(validate_request(entry, i, len(entries)))
