@@ -55,10 +55,34 @@ REQUIRED_COMMON = [
 # asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
 # PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
 # in a capture is not an error; what each scenario must emit belongs in a per-scenario contract.
+# The beta's two-request open flow: /v3/deeplink resolves the link, /v3/events/open attributes.
+# They share a contract because they carry the same device block; measured on 6.0.0-beta.0, these
+# three plus REQUIRED_COMMON are present in every occurrence of both, with and without a resolved
+# link.
+#
+# Deliberately not required:
+#   android_app_link_url  — only when the resolution was driven by a URL.
+#   link_data             — only on an open that follows a resolved link.
+#   randomized_device_token / randomized_bundle_token — the backend issues these once a device is
+#     known, so a first-ever open carries neither. iOS excludes them for the same reason.
+#   connection_type       — in the iOS common list, absent from both /v3 payloads here.
+REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
+
+# An endpoint absent from this table has no L1 contract yet: its payload is printed but nothing is
+# asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
+# PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
+# in a capture is not an error; what each scenario must emit belongs in a per-scenario contract.
+#
+# /v2/event/* is still uncontracted. Its schema nests the device block under user_data, which
+# lookup_field already resolves, but it carries no `wifi` — a REQUIRED_COMMON field — so a v2
+# contract cannot be expressed by extending the common list. iOS gives v2 its own complete list
+# instead. That mechanism change is out of scope here.
 REQUIRED_PER_ENDPOINT = {
     "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time"],
     "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token"],
     "/v1/url": [],
+    "/v3/deeplink": REQUIRED_V3_SESSION,
+    "/v3/events/open": REQUIRED_V3_SESSION,
 }
 
 
