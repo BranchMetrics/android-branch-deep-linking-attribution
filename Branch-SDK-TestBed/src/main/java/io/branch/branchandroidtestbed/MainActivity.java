@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -74,6 +75,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+
+        handleDeepLink(this.getIntent().getData());
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
 
@@ -754,35 +757,7 @@ public class MainActivity extends Activity {
 
         Branch.getInstance().setIdentity("Identity1");
 
-        Branch.sessionBuilder(this).withCallback(new Branch.BranchUniversalReferralInitListener() {
-            @Override
-            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
-                if (error != null) {
-                    Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
-                    Log.d("BranchSDK_Tester", "Session state should be not be INITIALISED, actual: " + Branch.getInstance().getInitState());
-                } else {
-                    Log.d("BranchSDK_Tester", "branch init complete!");
-                    Log.d("BranchSDK_Tester", "Session state should be INITIALISED, actual: " + Branch.getInstance().getInitState());
-                    if (branchUniversalObject != null) {
-                        Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-                        Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                        Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-                    }
-
-                    if (linkProperties != null) {
-                        Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-                        Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
-                    }
-                }
-
-
-                // QA purpose only
-                // TrackingControlTestRoutines.runTrackingControlTest(MainActivity.this);
-                // BUOTestRoutines.TestBUOFunctionalities(MainActivity.this);
-            }
-        }).withData(this.getIntent().getData()).init();
-
-        initSessionsWithTests();
+        userAgentTests(true, 1);
 
         // Branch integration validation: Validate Branch integration with your app
         // NOTE : The below method will run few checks for verifying correctness of the Branch integration.
@@ -794,10 +769,6 @@ public class MainActivity extends Activity {
     }
 
 
-    private void initSessionsWithTests() {
-        boolean testUserAgent = true;
-        userAgentTests(testUserAgent, 1);
-    }
 
     // Enqueue several v2 events prior to init to simulate worst timing conditions for user agent fetch
     // TODO Add to automation.
@@ -805,30 +776,34 @@ public class MainActivity extends Activity {
     private void userAgentTests(boolean userAgentSync, int n) {
         BranchLogger.d("Beginning stress tests");
 
-        // Initialize session first, then create events in callback
-        initializeSessionWithEventTests(n);
+        TestBedHelper.logTestEvents(this, n);
     }
 
-    private void initializeSessionWithEventTests(int eventCount) {
-        TestBedHelper.initializeSessionWithEventTests(this, eventCount);
-    }
 
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         this.setIntent(intent);
-        Branch.sessionBuilder(this).withCallback(new BranchReferralInitListener() {
+
+        handleDeepLink(intent.getData());
+    }
+
+    /**
+     * Resolves Branch data for a launch or new intent.
+     *
+     * @param data the intent's URI, or null when the app was not opened from a link
+     */
+    private void handleDeepLink(Uri data) {
+        Branch.getInstance().requestDeepLinkData(data, new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 if (error != null) {
-                    BranchLogger.d(error.getMessage());
+                    BranchLogger.d("Deep link error: " + error.getMessage());
                 } else if (referringParams != null) {
-                    BranchLogger.d(referringParams.toString());
+                    BranchLogger.d("Deep link params: " + referringParams.toString());
                 }
             }
-            // reInit() was removed in 6.0 (EMT-3883); init() is its sanctioned replacement and,
-            // with the ERR_IMPROPER_REINITIALIZATION guard gone, is now valid to call in onNewIntent.
-        }).init();
+        });
     }
 
     @Override
