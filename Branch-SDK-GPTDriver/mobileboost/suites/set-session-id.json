@@ -1,0 +1,69 @@
+{
+  "name": "[Android] Set Session ID",
+  "tags": [
+    "Android"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Scroll down to bottom of the page"
+    },
+    {
+      "id": 2,
+      "type": "ai",
+      "instruction": "Wait for screen to stabilize"
+    },
+    {
+      "id": 3,
+      "type": "tap",
+      "text": "Change App's Session ID and wait until you can focus on the text input"
+    },
+    {
+      "id": 4,
+      "type": "ai",
+      "instruction": "delete all text from text input"
+    },
+    {
+      "id": 5,
+      "type": "type",
+      "text": "sessionExample\" into text input"
+    },
+    {
+      "id": 6,
+      "type": "tap",
+      "text": "Save"
+    },
+    {
+      "id": 7,
+      "type": "ai",
+      "instruction": "Scroll up to the top of the page"
+    },
+    {
+      "id": 8,
+      "type": "tap",
+      "text": "Send Custom Event"
+    },
+    {
+      "id": 9,
+      "type": "ai",
+      "instruction": "Scroll down until you see \"See Requests\""
+    },
+    {
+      "id": 10,
+      "type": "tap",
+      "text": "See Requests"
+    },
+    {
+      "id": 11,
+      "type": "tap",
+      "text": "the first result at the top of the page that says \"v2/event/custom\" in the text"
+    },
+    {
+      "id": 12,
+      "type": "ai",
+      "instruction": "if you see \"bls_session_id\": \"sessionExample\" in the logs, succeed the test"
+    }
+  ],
+  "params": {}
+}

@@ -1,0 +1,15 @@
+{
+  "name": "[Android] Event Tracking - Post SDK Rewrite",
+  "tags": [
+    "Android",
+    "SDK Rewrite"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ai",
+      "instruction": "Execute the test: [Android] Event Tracking - Post SDK Rewrite. Follow all steps as defined in MobileBoost Studio."
+    }
+  ],
+  "params": {}
+}

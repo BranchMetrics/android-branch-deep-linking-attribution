@@ -304,6 +304,13 @@ publishing {
 
 tasks {
     withType<Test> {
+        // Opt-in fast loop: `-PexcludeSlowTests` skips tests that wait out a real timeout
+        // (see io.branch.referral.SlowTest). Default runs keep full coverage.
+        if (project.hasProperty("excludeSlowTests")) {
+            useJUnit {
+                excludeCategories("io.branch.referral.SlowTest")
+            }
+        }
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
             events = setOf(
