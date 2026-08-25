@@ -429,7 +429,8 @@ public class Branch {
         branchReferral_ = new Branch(context.getApplicationContext());
         applyBranchKey(context, branchReferral_, config.getBranchKey());
 
-        // Caller values applied first so branch.json/manifest serve only as fallbacks.
+        // Logging is configured inside applyTo(), so this is the first point at which anything
+        // logged is visible.
         config.applyTo(branchReferral_);
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
@@ -438,6 +439,58 @@ public class Branch {
 
         if (!config.getAutomaticOpenEvents()) {
             BranchProcessLifecycleObserver.unregister();
+        }
+
+        logInitializeComplete(branchReferral_, config);
+    }
+
+    /** Discriminator for the single-line JSON emitted at the end of {@link #initialize}. */
+    static final String EVENT_INITIALIZE_COMPLETE = "branch_initialize_complete";
+
+    /**
+     * Logs the values actually in force once initialization has finished, as a single-line JSON
+     * object with a fixed field order. Anything here that disagrees with the
+     * {@code branch_configuration_applied} line above it was overridden after the configuration was
+     * applied.
+     */
+    private static void logInitializeComplete(@NonNull Branch branch, @NonNull BranchConfiguration config) {
+        if (!BranchLogger.getLoggingEnabled()) {
+            return;
+        }
+        PrefHelper prefHelper = branch.getPrefHelper();
+        Defines.BranchAttributionLevel attributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
+
+        StringBuilder json = new StringBuilder("{");
+        appendJsonField(json, "event", EVENT_INITIALIZE_COMPLETE);
+        appendJsonField(json, "sdkVersion", BRANCH_LIBRARY_VERSION);
+        appendJsonField(json, "apiUrl", prefHelper.getAPIBaseUrl(true));
+        appendJsonField(json, "logLevel", BranchLogger.getLoggingLevel().name());
+        appendJsonField(json, "attributionLevel", attributionLevel == null ? null : attributionLevel.name());
+        appendJsonField(json, "testMode", BranchUtil.isTestModeEnabled());
+        appendJsonField(json, "facebookAppId", PrefHelper.fbAppId_);
+        appendJsonField(json, "networkTimeout", prefHelper.getTimeout());
+        appendJsonField(json, "networkConnectTimeout", prefHelper.getConnectTimeout());
+        appendJsonField(json, "retryCount", prefHelper.getRetryCount());
+        appendJsonField(json, "retryInterval", prefHelper.getRetryInterval());
+        appendJsonField(json, "noConnectionRetryMax", prefHelper.getNoConnectionRetryMax());
+        appendJsonField(json, "automaticOpenEvents", config.getAutomaticOpenEvents());
+        json.append('}');
+
+        BranchLogger.d(json.toString());
+    }
+
+    /** Appends {@code "key":value} with JSON escaping, inserting a separator when needed. */
+    private static void appendJsonField(StringBuilder json, String key, Object value) {
+        if (json.length() > 1) {
+            json.append(',');
+        }
+        json.append(JSONObject.quote(key)).append(':');
+        if (value == null) {
+            json.append("null");
+        } else if (value instanceof Boolean || value instanceof Number) {
+            json.append(value);
+        } else {
+            json.append(JSONObject.quote(value.toString()));
         }
     }
 

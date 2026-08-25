@@ -382,4 +382,40 @@ class BranchConfigurationBuilderTest {
         assertEquals(Defines.BranchAttributionLevel.FULL, config.attributionLevel)
         assertFalse(config.automaticOpenEvents)
     }
+
+    // -------------------------------------------------------------------------
+    // toString(): the DEBUG summary line
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `toString lists only non-default settings`() {
+        val summary = BranchConfiguration.Builder("key_live_abcdefghijklmnop")
+            .setNetworkTimeout(15_000)
+            .build()
+            .toString()
+
+        assertTrue("must name the setting that was changed: $summary",
+            summary.contains("networkTimeout=15000"))
+        assertFalse("must omit settings left at their default: $summary",
+            summary.contains("retryCount="))
+        assertFalse("must omit settings left at their default: $summary",
+            summary.contains("euEndpoint="))
+    }
+
+    @Test
+    fun `toString masks the branch key`() {
+        val key = "key_live_abcdefghijklmnop"
+        val summary = BranchConfiguration.Builder(key).build().toString()
+
+        assertFalse("the whole key must not appear: $summary", summary.contains(key))
+        assertTrue("the key prefix is the useful part: $summary", summary.contains("key_live_"))
+        assertTrue("the last few characters identify the key: $summary", summary.contains("mnop"))
+    }
+
+    @Test
+    fun `toString on an unconfigured builder lists only the key`() {
+        val summary = BranchConfiguration.Builder("key_live_abcdefghijklmnop").build().toString()
+
+        assertEquals("BranchConfiguration(branchKey=key_live_...mnop)", summary)
+    }
 }

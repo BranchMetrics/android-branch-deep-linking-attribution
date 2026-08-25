@@ -8,6 +8,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.json.JSONObject
 import org.robolectric.RuntimeEnvironment
 
 /**
@@ -238,5 +239,178 @@ class BranchInitializeTest : BranchTestBase() {
     @Test
     fun beforeInitialize_getInstanceReturnsNull() {
         assertNull(Branch.getInstance())
+    }
+
+    // -------------------------------------------------------------------------
+    // Logging emitted by initialize()
+    //
+    // initialize() emits exactly two machine-readable lines, each a complete single-line JSON
+    // object: "branch_configuration_applied" (what the caller asked for) and
+    // "branch_initialize_complete" (what is actually in force afterwards).
+    // -------------------------------------------------------------------------
+
+    private val allConfigurationFields = listOf(
+        "event", "branchKey", "testMode", "apiUrl", "cdnBaseUrl", "euEndpoint", "logLevel",
+        "loggingCallback", "requestTracingCallback", "networkTimeout", "networkConnectTimeout",
+        "retryCount", "retryInterval", "noConnectionRetryMax", "remoteInterface",
+        "attributionLevel", "dmaParameters", "limitFacebookAttribution",
+        "adNetworkCalloutsDisabled", "facebookAppId", "preinstallCampaign", "preinstallPartner",
+        "installMetadata", "referringLinkAttributionForPreinstalledApps", "whitelistedSchemes",
+        "uriHostsToSkip", "automaticOpenEvents", "userAgentFetchSync"
+    )
+
+    /**
+     * applyTo() installs the config's own logging callback, so a capture callback has to be
+     * supplied through the builder to see what initialize() emits.
+     */
+    private fun captureInitLogs(
+        level: BranchLogger.BranchLogLevel = BranchLogger.BranchLogLevel.DEBUG,
+        configure: BranchConfiguration.Builder.() -> Unit = {}
+    ): List<String> {
+        val captured = mutableListOf<String>()
+        val config = BranchConfiguration.Builder(TEST_KEY)
+            .setLogLevel(level)
+            .setLoggingCallback { message, _ -> captured.add(message) }
+            .apply(configure)
+            .build()
+
+        Branch.initialize(context, config)
+        return captured
+    }
+
+    /** Every logged line that parses as a JSON object carrying the given event name. */
+    private fun jsonEvents(logs: List<String>, event: String): List<JSONObject> =
+        logs.mapNotNull { line ->
+            runCatching { JSONObject(line) }.getOrNull()?.takeIf { it.optString("event") == event }
+        }
+
+    private fun singleEvent(logs: List<String>, event: String): JSONObject {
+        val matches = jsonEvents(logs, event)
+        assertEquals("expected exactly one \"$event\" line, got: $logs", 1, matches.size)
+        return matches.single()
+    }
+
+    @Test
+    fun initialize_logsAppliedConfigurationAsOneParseableJsonObject() {
+        val logs = captureInitLogs {
+            setNetworkTimeout(15_000)
+            setPreinstallPartner("samsung")
+            addWhitelistedScheme("myapp://")
+            addInstallMetadata("store", "galaxy_store")
+            setDMAParameters(DMAParameters(true, false, true))
+        }
+
+        val applied = singleEvent(logs, BranchConfiguration.EVENT_CONFIGURATION_APPLIED)
+
+        assertEquals(15_000, applied.getInt("networkTimeout"))
+        assertEquals("samsung", applied.getString("preinstallPartner"))
+        assertEquals("myapp://", applied.getJSONArray("whitelistedSchemes").getString(0))
+        assertEquals("galaxy_store", applied.getJSONObject("installMetadata").getString("store"))
+        assertTrue(applied.getJSONObject("dmaParameters").getBoolean("eeaRegion"))
+        assertFalse(applied.getJSONObject("dmaParameters").getBoolean("adPersonalizationConsent"))
+        assertTrue(applied.getJSONObject("dmaParameters").getBoolean("adUserDataUsageConsent"))
+    }
+
+    @Test
+    fun initialize_appliedConfigurationJson_alwaysCarriesEveryField() {
+        val applied = singleEvent(
+            captureInitLogs(),
+            BranchConfiguration.EVENT_CONFIGURATION_APPLIED
+        )
+
+        val present = applied.keys().asSequence().toList()
+        assertEquals(
+            "the applied-configuration object must be a fixed shape so assertions can rely on it",
+            allConfigurationFields.sorted(),
+            present.sorted()
+        )
+    }
+
+    @Test
+    fun initialize_appliedConfigurationJson_reportsUnsetFieldsAsNull() {
+        val applied = singleEvent(
+            captureInitLogs(),
+            BranchConfiguration.EVENT_CONFIGURATION_APPLIED
+        )
+
+        assertTrue("apiUrl was never set", applied.isNull("apiUrl"))
+        assertTrue("attributionLevel was never set", applied.isNull("attributionLevel"))
+        assertTrue("dmaParameters was never set", applied.isNull("dmaParameters"))
+        assertEquals("installMetadata should be an empty object, not null",
+            0, applied.getJSONObject("installMetadata").length())
+        assertEquals("whitelistedSchemes should be an empty array, not null",
+            0, applied.getJSONArray("whitelistedSchemes").length())
+    }
+
+    @Test
+    fun initialize_appliedConfigurationJson_escapesAwkwardValues() {
+        val awkward = "a\"b\\c\nd"
+        val applied = singleEvent(
+            captureInitLogs { addInstallMetadata("weird\"key", awkward) },
+            BranchConfiguration.EVENT_CONFIGURATION_APPLIED
+        )
+
+        assertEquals(awkward, applied.getJSONObject("installMetadata").getString("weird\"key"))
+    }
+
+    @Test
+    fun initialize_logsCompletionAsOneParseableJsonObject() {
+        val complete = singleEvent(captureInitLogs(), Branch.EVENT_INITIALIZE_COMPLETE)
+
+        assertEquals("DEBUG", complete.getString("logLevel"))
+        assertTrue("completion must report the effective API URL",
+            complete.getString("apiUrl").isNotEmpty())
+        assertTrue("completion must report the SDK version",
+            complete.getString("sdkVersion").isNotEmpty())
+        assertTrue("completion must report whether auto-open is on",
+            complete.getBoolean("automaticOpenEvents"))
+    }
+
+    @Test
+    fun initialize_completionJson_reportsAutomaticOpenEventsDisabled() {
+        val complete = singleEvent(
+            captureInitLogs { setAutomaticOpenEvents(false) },
+            Branch.EVENT_INITIALIZE_COMPLETE
+        )
+
+        assertFalse(complete.getBoolean("automaticOpenEvents"))
+    }
+
+    @Test
+    fun initialize_logsNothingPerSettingAcrossMultipleLines() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
+            setNetworkTimeout(15_000)
+            setPreinstallPartner("samsung")
+        }
+
+        assertTrue(
+            "configuration detail must stay on the JSON lines, not spread across many, got: $logs",
+            logs.none { it.startsWith("BranchConfiguration:") }
+        )
+    }
+
+    @Test
+    fun initialize_errorLevel_logsNoConfigurationAtAll() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.ERROR) { setNetworkTimeout(15_000) }
+
+        assertTrue(
+            "the quiet default must not narrate initialization, got: $logs",
+            jsonEvents(logs, BranchConfiguration.EVENT_CONFIGURATION_APPLIED).isEmpty()
+                    && jsonEvents(logs, Branch.EVENT_INITIALIZE_COMPLETE).isEmpty()
+        )
+    }
+
+    @Test
+    fun initialize_neverLogsTheWholeBranchKey() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
+
+        assertTrue("the branch key must be masked in logs, got: $logs",
+            logs.none { it.contains(TEST_KEY) })
+        assertEquals("key_test_...5678",
+            singleEvent(logs, BranchConfiguration.EVENT_CONFIGURATION_APPLIED).getString("branchKey"))
+    }
+
+    private companion object {
+        const val TEST_KEY = "key_test_abcdefghijklmnop12345678"
     }
 }
