@@ -37,6 +37,66 @@ class BranchConfiguration private constructor(
     val userAgentFetchSync: Boolean
 ) {
 
+    /**
+     * Writes every configured value through to the subsystem that owns it. Called once by
+     * [Branch.initialize]; this is the only place pre-init state is applied.
+     */
+    @JvmName("applyTo")
+    internal fun applyTo(branch: Branch) {
+        val context = branch.applicationContext
+        val prefHelper = branch.prefHelper
+
+        // Logging — logLevel always has a value, so initialize() owns the logger state entirely.
+        BranchLogger.loggerCallback = loggingCallback
+        BranchLogger.loggingLevel = logLevel
+        BranchLogger.loggingEnabled = true
+        BranchLogger.logAlways(Branch.GOOGLE_VERSION_TAG)
+        requestTracingCallback?.let { Branch._iBranchRequestTracingCallback = it }
+
+        // Identity & environment
+        BranchUtil.setTestMode(testMode)
+        apiUrl?.let { PrefHelper.setAPIUrl(it) }
+        cdnBaseUrl?.let { PrefHelper.setCDNBaseUrl(it) }
+        if (euEndpoint) PrefHelper.useEUEndpoint(true)
+
+        // Network
+        if (networkTimeout > 0) prefHelper.timeout = networkTimeout
+        if (networkConnectTimeout > 0) prefHelper.connectTimeout = networkConnectTimeout
+        if (retryCount >= 0) prefHelper.retryCount = retryCount
+        if (retryInterval > 0) prefHelper.retryInterval = retryInterval
+        if (noConnectionRetryMax > 0) prefHelper.noConnectionRetryMax = noConnectionRetryMax
+        remoteInterface?.let { branch.setBranchRemoteInterface(it) }
+
+        // Privacy & attribution
+        attributionLevel?.let { branch.setConsumerProtectionAttributionLevel(it) }
+        dmaParameters?.let {
+            prefHelper.setEEARegion(it.eeaRegion)
+            prefHelper.setAdPersonalizationConsent(it.adPersonalizationConsent)
+            prefHelper.setAdUserDataUsageConsent(it.adUserDataUsageConsent)
+        }
+        prefHelper.setLimitFacebookTracking(limitFacebookAttribution)
+        prefHelper.setAdNetworkCalloutsDisabled(adNetworkCalloutsDisabled)
+
+        // Install attribution
+        facebookAppId?.let { PrefHelper.setFbAppId(it) }
+        preinstallCampaign?.let { prefHelper.setPreinstallCampaign(it) }
+        preinstallPartner?.let { prefHelper.setPreinstallPartner(it) }
+        installMetadata.forEach { (key, value) -> prefHelper.addInstallMetadata(key, value) }
+        if (referringLinkAttributionForPreinstalledApps) {
+            Branch.referringLinkAttributionForPreinstalledAppsEnabled = true
+        }
+
+        // URL collection
+        if (whitelistedSchemes.isNotEmpty() || uriHostsToSkip.isNotEmpty()) {
+            val analyser = UniversalResourceAnalyser.getInstance(context)
+            whitelistedSchemes.filter { it.isNotBlank() }.forEach { analyser.addToAcceptURLFormats(it) }
+            uriHostsToSkip.filter { it.isNotBlank() }.forEach { analyser.addToSkipURLFormats(it) }
+        }
+
+        // User agent
+        Branch.userAgentSync = userAgentFetchSync
+    }
+
     class Builder(private val branchKey: String) {
         private var testMode: Boolean = false
         private var apiUrl: String? = null

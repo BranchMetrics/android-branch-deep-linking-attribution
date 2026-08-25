@@ -88,11 +88,11 @@ public class TraceLoggingTest {
     }
 
     @Test
-    public void enableLoggingDefaultsToDebug() {
-        // enableLogging() clears the logger callback (routes to android.util.Log), so assert the
-        // resulting level directly rather than through the capture callback.
-        Branch.enableLogging();
-        assertEquals("enableLogging() must default to DEBUG so it shows traffic, not the VERBOSE queue trace",
-                BranchLogger.BranchLogLevel.DEBUG, BranchLogger.getLoggingLevel());
+    public void configurationDefaultsToErrorLevel() {
+        // A caller who says nothing about logging gets the quiet default; DEBUG (traffic) and
+        // VERBOSE (queue trace) are both opt-in, per debugLevel_/verboseLevel_ above.
+        BranchConfiguration config = new BranchConfiguration.Builder("key_live_x").build();
+        assertEquals("an unconfigured BranchConfiguration must default to the quiet ERROR level",
+                BranchLogger.BranchLogLevel.ERROR, config.getLogLevel());
     }
 }

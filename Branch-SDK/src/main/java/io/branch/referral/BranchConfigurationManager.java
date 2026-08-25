@@ -65,7 +65,9 @@ public class BranchConfigurationManager {
      */
     private static void loadLoggingConfiguration(@NonNull Context context) {
         if (BranchUtil.getEnableLoggingConfig(context)) {
-            Branch.enableLogging();
+            BranchLogger.setLoggerCallback(null);
+            BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
+            BranchLogger.setLoggingEnabled(true);
             BranchLogger.v("Logging enabled from configuration");
         }
     }
@@ -159,8 +161,9 @@ public class BranchConfigurationManager {
      * This method is useful for testing or when configuration needs to be cleared.
      */
     public static void resetConfiguration() {
-        Branch.disableTestMode();
-        Branch.disableLogging();
+        BranchUtil.setTestMode(false);
+        BranchLogger.setLoggingEnabled(false);
+        BranchLogger.setLoggerCallback(null);
         Branch.deferInitForPluginRuntime(false);
         BranchLogger.v("Configuration reset to default values");
     }

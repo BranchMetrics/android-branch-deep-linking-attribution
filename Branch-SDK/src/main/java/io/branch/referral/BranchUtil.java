@@ -244,7 +244,7 @@ public class BranchUtil {
         BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
         String apiUrl = jsonConfig.getAPIUrl();
         if (!TextUtils.isEmpty(apiUrl)) {
-            Branch.setAPIUrl(apiUrl);
+            PrefHelper.setAPIUrl(apiUrl);
         }
     }
 
@@ -252,7 +252,7 @@ public class BranchUtil {
         BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
         String fbAppId = jsonConfig.getFbAppId();
         if (!TextUtils.isEmpty(fbAppId)) {
-            Branch.setFBAppID(fbAppId);
+            PrefHelper.setFbAppId(fbAppId);
         }
     }
 

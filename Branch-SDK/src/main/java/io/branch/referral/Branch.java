@@ -69,7 +69,7 @@ import io.branch.referral.util.LinkProperties;
 public class Branch {
 
     private static final String BRANCH_LIBRARY_VERSION = "io.branch.sdk.android:library:" + Branch.getSdkVersionNumber();
-    private static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
+    static final String GOOGLE_VERSION_TAG = "!SDK-VERSION-STRING!" + ":" + BRANCH_LIBRARY_VERSION;
 
     /**
      * Hard-coded {@link String} that denotes a {@link BranchLinkData}; applies to links that
@@ -307,7 +307,7 @@ public class Branch {
         INITIALISED
     }
 
-    private static IBranchRequestTracingCallback _iBranchRequestTracingCallback;
+    static IBranchRequestTracingCallback _iBranchRequestTracingCallback;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -430,7 +430,7 @@ public class Branch {
         applyBranchKey(context, branchReferral_, config.getBranchKey());
 
         // Caller values applied first so branch.json/manifest serve only as fallbacks.
-        applyConfiguration(branchReferral_, config);
+        config.applyTo(branchReferral_);
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
@@ -441,69 +441,13 @@ public class Branch {
         }
     }
 
-    /** Wires all {@link BranchConfiguration} fields to their underlying setters. */
-    @SuppressWarnings("deprecation")
-    private static void applyConfiguration(@NonNull Branch branch, @NonNull BranchConfiguration config) {
-        // Logging — logLevel always has a value; initialize() owns the logger state entirely.
-        Branch.enableLogging(config.getLoggingCallback(), config.getLogLevel());
-        if (config.getRequestTracingCallback() != null) {
-            Branch.setCallbackForTracingRequests(config.getRequestTracingCallback());
-        }
-
-        // Identity & environment
-        BranchUtil.setTestMode(config.getTestMode());
-        if (config.getApiUrl() != null) Branch.setAPIUrl(config.getApiUrl());
-        if (config.getCdnBaseUrl() != null) Branch.setCDNBaseUrl(config.getCdnBaseUrl());
-        if (config.getEuEndpoint()) Branch.useEUEndpoint();
-
-        // Network
-        branch.setNetworkTimeout(config.getNetworkTimeout());
-        branch.setNetworkConnectTimeout(config.getNetworkConnectTimeout());
-        branch.setRetryCount(config.getRetryCount());
-        branch.setRetryInterval(config.getRetryInterval());
-        branch.setNoConnectionRetryMax(config.getNoConnectionRetryMax());
-        if (config.getRemoteInterface() != null) branch.setBranchRemoteInterface(config.getRemoteInterface());
-
-        // Privacy & attribution
-        if (config.getAttributionLevel() != null) {
-            branch.setConsumerProtectionAttributionLevel(config.getAttributionLevel());
-        }
-        if (config.getDmaParameters() != null) {
-            DMAParameters dma = config.getDmaParameters();
-            branch.setDMAParamsForEEA(dma.getEeaRegion(), dma.getAdPersonalizationConsent(), dma.getAdUserDataUsageConsent());
-        }
-        branch.setLimitFacebookTracking(config.getLimitFacebookAttribution());
-        branch.disableAdNetworkCallouts(config.getAdNetworkCalloutsDisabled());
-
-        // Install attribution
-        if (config.getFacebookAppId() != null) Branch.setFBAppID(config.getFacebookAppId());
-        if (config.getPreinstallCampaign() != null) branch.setPreinstallCampaign(config.getPreinstallCampaign());
-        if (config.getPreinstallPartner() != null) branch.setPreinstallPartner(config.getPreinstallPartner());
-        for (java.util.Map.Entry<String, String> entry : config.getInstallMetadata().entrySet()) {
-            branch.addInstallMetadata(entry.getKey(), entry.getValue());
-        }
-        if (config.getReferringLinkAttributionForPreinstalledApps()) {
-            Branch.setReferringLinkAttributionForPreinstalledAppsEnabled();
-        }
-
-        // URL collection
-        for (String scheme : config.getWhitelistedSchemes()) branch.addWhiteListedScheme(scheme);
-        for (String host : config.getUriHostsToSkip()) branch.addUriHostsToSkip(host);
-
-        // User agent
-        Branch.setIsUserAgentSync(config.getUserAgentFetchSync());
-    }
-
-    // =========================================================================
-    // Deprecated pre-init setters — use BranchConfiguration.Builder instead.
-    // These will be removed in the next major release.
-    // =========================================================================
 
     /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setRemoteInterface} instead.
+     * Swaps the HTTP layer. Configured pre-init via
+     * {@link BranchConfiguration.Builder#setRemoteInterface}; package-private so tests can
+     * substitute a mock.
      */
-    @Deprecated
-    public void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
+    void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
         if (remoteInterface == null) {
             branchRemoteInterface_ = new BranchRemoteInterfaceUrlConnection(this);
         } else {
@@ -515,66 +459,6 @@ public class Branch {
         return branchRemoteInterface_;
     }
     
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setTestMode} instead.
-     */
-    @Deprecated
-    public static void enableTestMode() {
-        if (Branch.getInstance() != null) {
-            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(true);
-        } else {
-            BranchUtil.setTestMode(true);
-        }
-        BranchLogger.logAlways("enableTestMode has been changed. It now uses the test key but will not" +
-                " log or randomize the device IDs. If you wish to enable logging, please invoke enableLogging." +
-                " If you wish to simulate installs, please see add a Test Device (https://help.branch.io/using-branch/docs/adding-test-devices)" +
-                " then reset your test device's data (https://help.branch.io/using-branch/docs/adding-test-devices#section-resetting-your-test-device-data).");
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setTestMode} instead.
-     */
-    @Deprecated
-    public static void disableTestMode() {
-        if (Branch.getInstance() != null) {
-            Branch.getInstance().branchConfigurationController_.setTestModeEnabled(false);
-        } else {
-            BranchUtil.setTestMode(false);
-        }
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setAdNetworkCalloutsDisabled} instead.
-     */
-    @Deprecated
-    public void disableAdNetworkCallouts(boolean disabled) {
-        PrefHelper.getInstance(context_).setAdNetworkCalloutsDisabled(disabled);
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setApiUrl} instead.
-     */
-    @Deprecated
-    public static void setAPIUrl(String url) {
-        if (!TextUtils.isEmpty(url)) {
-            if (!url.endsWith("/")) {
-                url = url + "/";
-            }
-
-            PrefHelper.setAPIUrl(url);
-            BranchLogger.v("setAPIUrl: Branch API URL was set to " + url);
-        } else {
-            BranchLogger.w("setAPIUrl: URL cannot be empty or null");
-        }
-    }
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setCdnBaseUrl} instead.
-     */
-    @Deprecated
-    public static void setCDNBaseUrl(String url) {
-        PrefHelper.setCDNBaseUrl(url);
-    }
-
     /**
      * @deprecated Use {@link BranchConfiguration.Builder#setAttributionLevel} with
      * {@link Defines.BranchAttributionLevel#NONE} instead.
@@ -741,99 +625,14 @@ public class Branch {
     }
     
     /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setRetryCount} instead.
+     * <p>Attaches additional metadata to every outgoing request. This is a runtime setting —
+     * it may be changed at any point after initialization.</p>
+     *
+     * @param key   A {@link String} key for the metadata entry.
+     * @param value A {@link String} value for the metadata entry.
      */
-    @Deprecated
-    public void setRetryCount(int retryCount) {
-        if (prefHelper_ != null && retryCount >= 0) {
-            prefHelper_.setRetryCount(retryCount);
-        }
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setRetryInterval} instead.
-     */
-    @Deprecated
-    public void setRetryInterval(int retryInterval) {
-        if (prefHelper_ != null && retryInterval > 0) {
-            prefHelper_.setRetryInterval(retryInterval);
-        }
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setNetworkTimeout} instead.
-     */
-    @Deprecated
-    public void setNetworkTimeout(int timeout) {
-        if (prefHelper_ != null && timeout > 0) {
-            prefHelper_.setTimeout(timeout);
-        }
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setNetworkConnectTimeout} instead.
-     */
-    @Deprecated
-    public void setNetworkConnectTimeout(int connectTimeout) {
-        if (prefHelper_ != null && connectTimeout > 0) {
-            prefHelper_.setConnectTimeout(connectTimeout);
-        }
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setNoConnectionRetryMax} instead.
-     */
-    @Deprecated
-    public void setNoConnectionRetryMax(int retryMax) {
-        if (prefHelper_ != null && retryMax > 0) {
-            prefHelper_.setNoConnectionRetryMax(retryMax);
-        }
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setLimitFacebookAttribution} instead.
-     */
-    @Deprecated
-    public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
-        prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
-    }
-
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setDMAParameters} with a
-     * {@link DMAParameters} instance instead.
-     */
-    @Deprecated
-    public void setDMAParamsForEEA(boolean eeaRegion, boolean adPersonalizationConsent, boolean adUserDataUsageConsent) {
-        prefHelper_.setEEARegion(eeaRegion);
-        prefHelper_.setAdPersonalizationConsent(adPersonalizationConsent);
-        prefHelper_.setAdUserDataUsageConsent(adUserDataUsageConsent);
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#addInstallMetadata} instead. */
-    @Deprecated
     public void setRequestMetadata(@NonNull String key, @NonNull String value) {
         prefHelper_.setRequestMetadata(key, value);
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#addInstallMetadata} instead. */
-    @Deprecated
-    public Branch addInstallMetadata(@NonNull String key, @NonNull String value) {
-        prefHelper_.addInstallMetadata(key, value);
-        return this;
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setPreinstallCampaign} instead. */
-    @Deprecated
-    public Branch setPreinstallCampaign(@NonNull String preInstallCampaign) {
-        addInstallMetadata(PreinstallKey.campaign.getKey(), preInstallCampaign);
-        return this;
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setPreinstallPartner} instead. */
-    @Deprecated
-    public Branch setPreinstallPartner(@NonNull String preInstallPartner) {
-        addInstallMetadata(PreinstallKey.partner.getKey(), preInstallPartner);
-        return this;
     }
 
     /*
@@ -939,31 +738,6 @@ public class Branch {
         return (link.equals(PrefHelper.NO_STRING_VALUE) ? null : link);
     }
 
-    /** @deprecated Use {@link BranchConfiguration.Builder#addWhitelistedScheme} instead. */
-    @Deprecated
-    public Branch addWhiteListedScheme(String urlWhiteListPattern) {
-        if (urlWhiteListPattern != null) {
-            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPattern);
-        }
-        return this;
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#addWhitelistedScheme} per scheme instead. */
-    @Deprecated
-    public Branch setWhiteListedSchemes(List<String> urlWhiteListPatternList) {
-        if (urlWhiteListPatternList != null) {
-            UniversalResourceAnalyser.getInstance(context_).addToAcceptURLFormats(urlWhiteListPatternList);
-        }
-        return this;
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#addUriHostToSkip} instead. */
-    @Deprecated
-    public Branch addUriHostsToSkip(String urlSkipPattern) {
-        if (!TextUtils.isEmpty(urlSkipPattern))
-            UniversalResourceAnalyser.getInstance(context_).addToSkipURLFormats(urlSkipPattern);
-        return this;
-    }
     
     /**
      * Check and update the URL / URI Skip list in case an update is available.
@@ -1909,42 +1683,6 @@ public class Branch {
         return matched;
     }
 
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} and
-     * {@link BranchConfiguration.Builder#setLoggingCallback} instead.
-     */
-    @Deprecated
-    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging, BranchLogger.BranchLogLevel level) {
-        BranchLogger.setLoggerCallback(iBranchLogging);
-        BranchLogger.setLoggingLevel(level);
-        BranchLogger.setLoggingEnabled(true);
-        BranchLogger.logAlways(GOOGLE_VERSION_TAG);
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} instead. */
-    @Deprecated
-    public static void enableLogging() {
-        enableLogging(null, BranchLogger.BranchLogLevel.DEBUG);
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setLoggingCallback} instead. */
-    @Deprecated
-    public static void enableLogging(IBranchLoggingCallbacks iBranchLogging) {
-        enableLogging(iBranchLogging, BranchLogger.BranchLogLevel.DEBUG);
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} instead. */
-    @Deprecated
-    public static void enableLogging(BranchLogger.BranchLogLevel level) {
-        enableLogging(null, level);
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setLogLevel} instead. */
-    @Deprecated
-    public static void disableLogging() {
-        BranchLogger.setLoggingEnabled(false);
-        BranchLogger.setLoggerCallback(null);
-    }
 
 
 
@@ -2358,22 +2096,6 @@ public class Branch {
         }
     }
 
-    /** @deprecated Use {@link BranchConfiguration.Builder#setEUEndpoint} instead. */
-    @Deprecated
-    public static void useEUEndpoint() {
-        PrefHelper.useEUEndpoint(true);
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setFacebookAppId} instead. */
-    @Deprecated
-    public static void setFBAppID(String fbAppID) {
-        if (!TextUtils.isEmpty(fbAppID)) {
-            PrefHelper.fbAppId_ = fbAppID;
-            BranchLogger.v("setFBAppID to " + fbAppID);
-        } else {
-            BranchLogger.w("setFBAppID: fbAppID cannot be empty or null");
-        }
-    }
 
     /**
      * Sets the consumer protection attribution level.
@@ -2558,22 +2280,8 @@ public class Branch {
         }
     }
 
-    /**
-     * @deprecated Use {@link BranchConfiguration.Builder#setReferringLinkAttributionForPreinstalledApps} instead.
-     */
-    @Deprecated
-    public static void setReferringLinkAttributionForPreinstalledAppsEnabled() {
-        referringLinkAttributionForPreinstalledAppsEnabled = true;
-    }
-
     public static boolean isReferringLinkAttributionForPreinstalledAppsEnabled() {
         return referringLinkAttributionForPreinstalledAppsEnabled;
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setUserAgentFetchSync} instead. */
-    @Deprecated
-    public static void setIsUserAgentSync(boolean sync) {
-        userAgentSync = sync;
     }
 
     public static boolean getIsUserAgentSync() {
@@ -2667,12 +2375,6 @@ public class Branch {
                 BranchLogger.e("Error in delayed session initialization: " + e.getMessage());
             }
         }
-    }
-
-    /** @deprecated Use {@link BranchConfiguration.Builder#setRequestTracingCallback} instead. */
-    @Deprecated
-    public static void setCallbackForTracingRequests(IBranchRequestTracingCallback iBranchRequestTracingCallback) {
-        _iBranchRequestTracingCallback = iBranchRequestTracingCallback;
     }
 
     public static IBranchRequestTracingCallback getCallbackForTracingRequests() {
