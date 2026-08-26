@@ -14,15 +14,16 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.ConcurrentHashMap
 import java.net.HttpURLConnection
 
 /**
- * The link cache is keyed by BranchLinkData, whose hashCode covers the link attributes only.
+ * Both link generators cache by BranchLinkData, whose hashCode covers the link attributes only.
  * A request carries identifiers that differ on every call, so keying on the serialised payload
  * would make the cache miss every time.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ModernLinkGeneratorCacheKeyTest : BranchTestBase() {
+class LinkCacheKeyTest : BranchTestBase() {
 
     @Mock
     private lateinit var remoteInterface: BranchRemoteInterface
@@ -71,6 +72,23 @@ class ModernLinkGeneratorCacheKeyTest : BranchTestBase() {
         generator.generateShortLink(sms)
 
         verify(remoteInterface, times(2)).make_restful_post(any(), any(), any(), any())
+    }
+
+    @Test
+    fun `the direct path caches under the link attributes`() {
+        `when`(remoteInterface.make_restful_post(any(), any(), any(), any()))
+            .thenReturn(successResponse(URL))
+        val legacy = BranchLegacyLinkGenerator(prefHelper, remoteInterface)
+        val cache = ConcurrentHashMap<BranchLinkData, String>()
+
+        val url = legacy.generateShortLinkSyncDirect(
+            linkData().stamped("uuid-1", 1_000L), false, null, cache
+        )
+
+        assertEquals(URL, url)
+        // Retrievable by an equivalent link carrying different identifiers -- the property the
+        // queue path and Branch.linkCache_ both rely on, and the one toString() keying breaks.
+        assertEquals(URL, cache[linkData().stamped("uuid-2", 2_000L)])
     }
 
     private fun linkData() = BranchLinkData().apply {
