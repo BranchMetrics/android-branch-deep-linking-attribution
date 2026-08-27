@@ -237,13 +237,13 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun initialize_defaultLogLevel_setsWarn() {
+    fun initialize_defaultLogLevel_setsNone() {
         // initialize() must always own the logger state — no inherited ambient level.
         BranchLogger.loggingLevel = BranchLogger.BranchLogLevel.VERBOSE // simulate prior state
 
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
 
-        assertEquals(BranchLogger.BranchLogLevel.ERROR, BranchLogger.loggingLevel)
+        assertEquals(BranchLogger.BranchLogLevel.NONE, BranchLogger.loggingLevel)
     }
 
     // -------------------------------------------------------------------------

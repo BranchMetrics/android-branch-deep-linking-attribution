@@ -28,7 +28,7 @@ class BranchConfigurationBuilderTest {
         assertNull(config.apiUrl)
         assertNull(config.cdnBaseUrl)
         assertFalse(config.euEndpoint)
-        assertEquals(BranchLogger.BranchLogLevel.ERROR, config.logLevel)
+        assertEquals(BranchLogger.BranchLogLevel.NONE, config.logLevel)
         assertNull(config.loggingCallback)
         assertNull(config.requestTracingCallback)
         assertEquals(PrefHelper.TIMEOUT, config.networkTimeout)

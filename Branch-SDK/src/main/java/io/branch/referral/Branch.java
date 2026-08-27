@@ -380,11 +380,13 @@ public class Branch {
             BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
             return;
         }
+
+        // Before anything else, so construction and branch-key warnings are visible.
+        config.applyLogging();
+
         branchReferral_ = new Branch(context.getApplicationContext());
         applyBranchKey(context, branchReferral_, config.getBranchKey());
 
-        // Logging is configured inside applyTo(), so this is the first point at which anything
-        // logged is visible.
         config.applyTo(branchReferral_);
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);

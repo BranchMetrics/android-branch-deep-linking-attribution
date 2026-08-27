@@ -122,11 +122,26 @@ public class TraceLoggingTest {
     }
 
     @Test
-    public void configurationDefaultsToErrorLevel() {
-        // A caller who says nothing about logging gets the quiet default; DEBUG (traffic) and
-        // VERBOSE (queue trace) are both opt-in, per debugLevel_/verboseLevel_ above.
+    public void configurationDefaultsToNoneLevel() {
         BranchConfiguration config = new BranchConfiguration.Builder("key_live_x").build();
-        assertEquals("an unconfigured BranchConfiguration must default to the quiet ERROR level",
-                BranchLogger.BranchLogLevel.ERROR, config.getLogLevel());
+        assertEquals("an unconfigured BranchConfiguration must emit nothing by default",
+                BranchLogger.BranchLogLevel.NONE, config.getLogLevel());
+    }
+
+    @Test
+    public void applyLogging_routesToCallerLevelBeforeAnyOtherInitWork() {
+        BranchLogger.setLoggingEnabled(false);
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.NONE);
+
+        new BranchConfiguration.Builder("key_live_x")
+                .setLogLevel(BranchLogger.BranchLogLevel.VERBOSE)
+                .setLoggingCallback((message, severity) -> captured.add(message))
+                .build()
+                .applyLogging();
+        BranchLogger.w("Warning: Please pass your Branch key to BranchConfiguration.Builder!");
+
+        assertTrue("warnings raised during construction and key resolution must be visible once "
+                        + "the caller has asked for them",
+                captured.contains("Warning: Please pass your Branch key to BranchConfiguration.Builder!"));
     }
 }

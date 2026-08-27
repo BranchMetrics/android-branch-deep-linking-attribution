@@ -42,16 +42,23 @@ class BranchConfiguration private constructor(
      * Writes every configured value through to the subsystem that owns it. Called once by
      * [Branch.initialize]; this is the only place pre-init state is applied.
      */
+    /**
+     * Routes logging to the caller's level and callback. Called by [Branch.initialize] before any
+     * other init work, so warnings raised during construction and branch-key resolution are visible
+     * to whoever configured logging.
+     */
+    @JvmName("applyLogging")
+    internal fun applyLogging() {
+        BranchLogger.loggerCallback = loggingCallback
+        BranchLogger.loggingLevel = logLevel
+        BranchLogger.loggingEnabled = true
+    }
+
     @JvmName("applyTo")
     internal fun applyTo(branch: Branch) {
         val context = branch.applicationContext
         val prefHelper = branch.prefHelper
 
-        // Logging is configured first so the line below is emitted at the level the caller asked
-        // for. Anything logged before this point is invisible — logging starts out disabled.
-        BranchLogger.loggerCallback = loggingCallback
-        BranchLogger.loggingLevel = logLevel
-        BranchLogger.loggingEnabled = true
         BranchLogger.logAlways(Branch.GOOGLE_VERSION_TAG)
         BranchLogger.d(toJson())
         requestTracingCallback?.let { Branch._iBranchRequestTracingCallback = it }
@@ -203,7 +210,7 @@ class BranchConfiguration private constructor(
     }
 
     internal companion object {
-        internal val DEFAULT_LOG_LEVEL = BranchLogger.BranchLogLevel.ERROR
+        internal val DEFAULT_LOG_LEVEL = BranchLogger.BranchLogLevel.NONE
 
         /** Discriminator for the single-line JSON emitted by [applyTo]. */
         internal const val EVENT_CONFIGURATION_APPLIED = "branch_configuration_applied"
