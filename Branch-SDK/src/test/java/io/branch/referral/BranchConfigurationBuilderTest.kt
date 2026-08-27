@@ -290,15 +290,10 @@ class BranchConfigurationBuilderTest {
         BranchConfiguration.Builder("key_live_x").setNetworkTimeout(-1).build()
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `network timeout exceeding 60s throws`() {
-        BranchConfiguration.Builder("key_live_x").setNetworkTimeout(60_001).build()
-    }
-
     @Test
-    fun `network timeout of exactly 60s is accepted`() {
-        val config = BranchConfiguration.Builder("key_live_x").setNetworkTimeout(60_000).build()
-        assertEquals(60_000, config.networkTimeout)
+    fun `large network timeout is accepted`() {
+        val config = BranchConfiguration.Builder("key_live_x").setNetworkTimeout(120_000).build()
+        assertEquals(120_000, config.networkTimeout)
     }
 
     @Test
@@ -324,9 +319,10 @@ class BranchConfigurationBuilderTest {
         BranchConfiguration.Builder("key_live_x").setNetworkConnectTimeout(-100).build()
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `connect timeout exceeding 60s throws`() {
-        BranchConfiguration.Builder("key_live_x").setNetworkConnectTimeout(61_000).build()
+    @Test
+    fun `large connect timeout is accepted`() {
+        val config = BranchConfiguration.Builder("key_live_x").setNetworkConnectTimeout(120_000).build()
+        assertEquals(120_000, config.networkConnectTimeout)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -342,6 +338,55 @@ class BranchConfigurationBuilderTest {
     fun `zero retry count is accepted`() {
         val config = BranchConfiguration.Builder("key_live_x").setRetryCount(0).build()
         assertEquals(0, config.retryCount)
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // build() validation — retry interval
+    // -----------------------------------------------------------------------------------------
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `zero retry interval throws`() {
+        BranchConfiguration.Builder("key_live_x").setRetryInterval(0).build()
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `negative retry interval throws`() {
+        BranchConfiguration.Builder("key_live_x").setRetryInterval(-1).build()
+    }
+
+    @Test
+    fun `large retry interval is accepted`() {
+        val config = BranchConfiguration.Builder("key_live_x").setRetryInterval(120_000).build()
+        assertEquals(120_000, config.retryInterval)
+    }
+
+    @Test
+    fun `retry interval error message includes invalid value`() {
+        val ex = runCatching {
+            BranchConfiguration.Builder("key_live_x").setRetryInterval(0).build()
+        }.exceptionOrNull() as? IllegalArgumentException
+        assertNotNull(ex)
+        assertTrue(ex!!.message!!.contains("0"))
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // build() validation — no-connection retry max
+    // -----------------------------------------------------------------------------------------
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `zero no-connection retry max throws`() {
+        BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(0).build()
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `negative no-connection retry max throws`() {
+        BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(-1).build()
+    }
+
+    @Test
+    fun `no-connection retry max of one is accepted`() {
+        val config = BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(1).build()
+        assertEquals(1, config.noConnectionRetryMax)
     }
 
     // -----------------------------------------------------------------------------------------

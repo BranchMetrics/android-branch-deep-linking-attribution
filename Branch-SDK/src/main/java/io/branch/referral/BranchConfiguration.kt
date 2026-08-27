@@ -62,12 +62,12 @@ class BranchConfiguration private constructor(
         cdnBaseUrl?.let { PrefHelper.setCDNBaseUrl(it) }
         if (euEndpoint) PrefHelper.useEUEndpoint(true)
 
-        // Network
-        if (networkTimeout > 0) prefHelper.timeout = networkTimeout
-        if (networkConnectTimeout > 0) prefHelper.connectTimeout = networkConnectTimeout
-        if (retryCount >= 0) prefHelper.retryCount = retryCount
-        if (retryInterval > 0) prefHelper.retryInterval = retryInterval
-        if (noConnectionRetryMax > 0) prefHelper.noConnectionRetryMax = noConnectionRetryMax
+        // Network — validated in Builder.build()
+        prefHelper.timeout = networkTimeout
+        prefHelper.connectTimeout = networkConnectTimeout
+        prefHelper.retryCount = retryCount
+        prefHelper.retryInterval = retryInterval
+        prefHelper.noConnectionRetryMax = noConnectionRetryMax
         remoteInterface?.let { branch.setBranchRemoteInterface(it) }
 
         // Privacy & attribution
@@ -288,17 +288,17 @@ class BranchConfiguration private constructor(
             require(networkTimeout > 0) {
                 "Network timeout must be a positive number of milliseconds (got $networkTimeout)."
             }
-            require(networkTimeout <= 60_000) {
-                "Network timeout cannot exceed 60 seconds / 60000 ms (got $networkTimeout)."
-            }
             require(networkConnectTimeout > 0) {
                 "Network connect timeout must be a positive number of milliseconds (got $networkConnectTimeout)."
             }
-            require(networkConnectTimeout <= 60_000) {
-                "Network connect timeout cannot exceed 60 seconds / 60000 ms (got $networkConnectTimeout)."
-            }
             require(retryCount >= 0) {
                 "Retry count must be >= 0 (got $retryCount)."
+            }
+            require(retryInterval > 0) {
+                "Retry interval must be a positive number of milliseconds (got $retryInterval)."
+            }
+            require(noConnectionRetryMax > 0) {
+                "No-connection retry max must be > 0 (got $noConnectionRetryMax)."
             }
 
             return BranchConfiguration(
