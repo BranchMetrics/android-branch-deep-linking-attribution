@@ -49,48 +49,27 @@ public class BranchUtil {
     }
 
     /**
-     * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
-     * This will also set the value of {@link BranchUtil#isTestModeEnabled()}
+     * Resolves test mode from branch.json. A value set programmatically — via
+     * {@link BranchConfiguration.Builder#setTestMode} or {@link BranchUtil#setTestMode} — takes
+     * precedence and short-circuits this lookup.
      *
-     * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
-     * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
+     * @return whether test mode is enabled. False when branch.json does not set it.
      */
     static boolean checkTestMode(Context context) {
-        // setting isTestModeEnabled_ programmatically overrides both manifest and branch.json configurations.
         if (!isTestModeEnabled_) {
 
             if (testModeEnabledViaCompileTimeConfiguration == null) {
 
                 BranchJsonConfig jsonConfig = BranchJsonConfig.getInstance(context);
                 if (jsonConfig.isValid(BranchJsonConfig.BranchJsonKey.useTestInstance)) {
-                    // branch.json overrides manifest configurations
                     Boolean r = jsonConfig.getUseTestInstance();
                     isTestModeEnabled_ = r != null ? r : false;
-                } else {
-                    // manifest configurations is the last resort
-                    isTestModeEnabled_ = readTestMode(context);
                 }
 
                 testModeEnabledViaCompileTimeConfiguration = isTestModeEnabled_;
             }
         }
         return isTestModeEnabled_;
-    }
-
-    private static boolean readTestMode(Context context) {
-        boolean result = isTestModeEnabled_;
-        String testModeKey = "io.branch.sdk.TestMode";
-        try {
-            final ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null && ai.metaData.containsKey(testModeKey)) {
-                result = ai.metaData.getBoolean(testModeKey, false);
-            } else {
-                Resources resources = context.getResources();
-                result = Boolean.parseBoolean(resources.getString(resources.getIdentifier(testModeKey, "string", context.getPackageName())));
-            }
-        } catch (Exception e) { // Extending catch to trap any exception to handle a rare dead object scenario
-        }
-        return result;
     }
 
     public static String readBranchKey(Context context) {
@@ -268,11 +247,8 @@ public class BranchUtil {
     }
 
     /**
-     * Get the value of "io.branch.sdk.TestMode" entry in application manifest or from String res.
-     * This value can be overridden via. {@link Branch#enableTestMode()}
-     *
-     * @return value of "io.branch.sdk.TestMode" entry in application manifest or String res.
-     * false if "io.branch.sdk.TestMode" is not added in the manifest or String res.
+     * @return whether test mode is enabled. Set via
+     * {@link BranchConfiguration.Builder#setTestMode}, or resolved from branch.json.
      */
     public static boolean isTestModeEnabled() {
         return isTestModeEnabled_;
