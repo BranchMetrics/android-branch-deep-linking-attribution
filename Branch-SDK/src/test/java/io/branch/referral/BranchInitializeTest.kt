@@ -1,5 +1,6 @@
 package io.branch.referral
 
+import android.os.Looper
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -13,6 +14,7 @@ import org.junit.Before
 import org.junit.Test
 import org.json.JSONObject
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows
 
 /**
  * Tests for [Branch.initialize] and its private helpers [applyConfiguration] and [applyBranchKey].
@@ -38,6 +40,10 @@ class BranchInitializeTest : BranchTestBase() {
     override fun tearDownBase() {
         super.tearDownBase()
         Branch.shutDown()
+        // ProcessLifecycleOwner is process-global; leaving it STARTED makes every later
+        // initialize() register an observer that fires OPEN immediately.
+        (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState =
+            Lifecycle.State.CREATED
     }
 
     // -------------------------------------------------------------------------
@@ -122,6 +128,7 @@ class BranchInitializeTest : BranchTestBase() {
         val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
             setAutomaticOpenEvents(false)
         }
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
 
         assertFalse(
             "automaticOpenEvents=false must not emit an OPEN, even when the process is already " +
@@ -135,6 +142,9 @@ class BranchInitializeTest : BranchTestBase() {
         startProcessLifecycle()
 
         val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
+        // register() posts to the main looper when off-thread; drain it so the assertion does not
+        // depend on which path was taken.
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
 
         assertTrue(
             "the default must still emit an OPEN when the process is already foregrounded",

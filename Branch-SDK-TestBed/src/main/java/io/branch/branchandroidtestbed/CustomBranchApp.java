@@ -38,6 +38,10 @@ public final class CustomBranchApp extends Application {
                 new BranchConfiguration.Builder(USE_TEST_KEY ? TEST_KEY : LIVE_KEY)
                         .setTestMode(USE_TEST_KEY)
                         .setLogLevel(BranchLogger.BranchLogLevel.VERBOSE)
+                        .setLoggingCallback((message, severity) -> {
+                            Log.d("BranchTestbed", message);
+                            saveLogToFile(message);
+                        })
                         .setRequestTracingCallback(tracingCallback());
 
         // Operator-set override from SettingsActivity, applied at launch because the API URL is a
@@ -60,18 +64,18 @@ public final class CustomBranchApp extends Application {
         return new IBranchRequestTracingCallback() {
             @Override
             public void onRequestCompleted(String uri, JSONObject request, JSONObject response, String error, String requestUrl) {
-                Log.d("Shortlink_Session_Test",
-                        "URI Sent to Branch: " + uri
+                String entry = "URI Sent to Branch: " + uri
                         + "\nRequest: " + request
                         + "\nResponse: " + response
                         + "\nError Message: " + error
-                        + "\nRequest Url: " + requestUrl
-                );
+                        + "\nRequest Url: " + requestUrl;
+                Log.d("Shortlink_Session_Test", entry);
+                saveLogToFile(entry);
             }
         };
     }
 
-    private void saveLogToFile(String logMessage) {
+    private synchronized void saveLogToFile(String logMessage) {
         File logFile = new File(getFilesDir(), "branchlogs.txt");
 
         try {
