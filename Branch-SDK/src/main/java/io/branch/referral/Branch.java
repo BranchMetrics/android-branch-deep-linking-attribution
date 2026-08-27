@@ -435,9 +435,9 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
-        branchReferral_.setupProcessLifecycleObserver();
-
-        if (!config.getAutomaticOpenEvents()) {
+        if (config.getAutomaticOpenEvents()) {
+            branchReferral_.setupProcessLifecycleObserver();
+        } else {
             BranchProcessLifecycleObserver.unregister();
         }
 
@@ -579,6 +579,7 @@ public class Branch {
 
         // Reset all of the statics.
         branchReferral_ = null;
+        _iBranchRequestTracingCallback = null;
     }
 
 

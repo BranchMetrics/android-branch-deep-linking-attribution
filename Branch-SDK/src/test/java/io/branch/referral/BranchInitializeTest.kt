@@ -1,5 +1,8 @@
 package io.branch.referral
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ProcessLifecycleOwner
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -94,6 +97,92 @@ class BranchInitializeTest : BranchTestBase() {
         Branch.initialize(context, config)
 
         assertEquals(4, PrefHelper.getInstance(context).getNoConnectionRetryMax())
+    }
+
+    // -------------------------------------------------------------------------
+    // Automatic open events / process lifecycle observer
+    // -------------------------------------------------------------------------
+
+    /**
+     * Adding an observer to an already-STARTED lifecycle dispatches onStart synchronously, so
+     * registering-then-unregistering still emits the OPEN it was meant to suppress. Driving the
+     * process lifecycle to STARTED before initialize() is what exposes that.
+     */
+    private fun startProcessLifecycle() {
+        (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState =
+            Lifecycle.State.STARTED
+    }
+
+    private val openEmitted = "process foregrounded, sending OPEN"
+
+    @Test
+    fun initialize_automaticOpenEventsFalse_emitsNoOpenWhenAlreadyForegrounded() {
+        startProcessLifecycle()
+
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
+            setAutomaticOpenEvents(false)
+        }
+
+        assertFalse(
+            "automaticOpenEvents=false must not emit an OPEN, even when the process is already " +
+                "foregrounded at initialize()",
+            logs.any { it.contains(openEmitted) }
+        )
+    }
+
+    @Test
+    fun initialize_automaticOpenEventsDefault_emitsOpenWhenAlreadyForegrounded() {
+        startProcessLifecycle()
+
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
+
+        assertTrue(
+            "the default must still emit an OPEN when the process is already foregrounded",
+            logs.any { it.contains(openEmitted) }
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Request tracing callback
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun initialize_requestTracingCallback_reachesBranch() {
+        val callback = IBranchRequestTracingCallback { _, _, _, _, _ -> }
+        val config = BranchConfiguration.Builder("key_live_test123")
+            .setRequestTracingCallback(callback)
+            .build()
+
+        Branch.initialize(context, config)
+
+        assertEquals(callback, Branch.getCallbackForTracingRequests())
+    }
+
+    @Test
+    fun shutDown_clearsRequestTracingCallback() {
+        val config = BranchConfiguration.Builder("key_live_test123")
+            .setRequestTracingCallback(IBranchRequestTracingCallback { _, _, _, _, _ -> })
+            .build()
+        Branch.initialize(context, config)
+
+        Branch.shutDown()
+
+        assertNull(Branch.getCallbackForTracingRequests())
+    }
+
+    @Test
+    fun initialize_withoutTracingCallback_doesNotInheritPreviousOne() {
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setRequestTracingCallback(IBranchRequestTracingCallback { _, _, _, _, _ -> })
+                .build()
+        )
+        Branch.shutDown()
+
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        assertNull(Branch.getCallbackForTracingRequests())
     }
 
     // -------------------------------------------------------------------------
