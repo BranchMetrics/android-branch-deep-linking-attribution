@@ -357,59 +357,13 @@ public class Branch {
         return branchReferral_;
     }
 
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context A {@link Context} from which this call was made.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    synchronized public static Branch getAutoInstance(@NonNull Context context) {
-        if (branchReferral_ == null) {
-            String branchKey = BranchUtil.readBranchKey(context);
-            return getAutoInstance(context, branchKey);
-        }
-        return branchReferral_;
-    }
-
-    /**
-     * <p>Singleton method to return the pre-initialised, or newly initialise and return, a singleton
-     * object of the type {@link Branch}.</p>
-     * <p>Use this whenever you need to call a method directly on the {@link Branch} object.</p>
-     *
-     * @param context   A {@link Context} from which this call was made.
-     * @param branchKey A {@link String} value used to initialize Branch.
-     * @return An initialised {@link Branch} object, either fetched from a pre-initialised
-     * instance within the singleton class, or a newly instantiated object where
-     * one was not already requested during the current app lifecycle.
-     */
-    synchronized private static Branch getAutoInstance(@NonNull Context context, String branchKey) {
-        if (branchReferral_ != null) {
-            BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
-            return branchReferral_;
-        }
-        branchReferral_ = new Branch(context.getApplicationContext());
-        applyBranchKey(context, branchReferral_, branchKey);
-        BranchConfigurationManager.loadConfiguration(context, branchReferral_);
-
-        // ProcessLifecycleOwner tracks the whole process, so no Application reference is required.
-        branchReferral_.setupProcessLifecycleObserver();
-
-        return branchReferral_;
-    }
-
     private static void applyBranchKey(@NonNull Context context, @NonNull Branch branch, String branchKey) {
         if (TextUtils.isEmpty(branchKey)) {
-            BranchLogger.w("Warning: Please enter your branch_key in your project's Manifest file!");
+            BranchLogger.w("Warning: Please pass your Branch key to BranchConfiguration.Builder!");
             branch.prefHelper_.setBranchKey(PrefHelper.NO_STRING_VALUE);
         } else {
             branch.prefHelper_.setBranchKey(branchKey);
-            if (!branchKey.equals(BranchUtil.readBranchKey(context))) {
-                branch.prefHelper_.setBranchKeySource("init_function");
-            }
+            branch.prefHelper_.setBranchKeySource("init_function");
         }
     }
 
