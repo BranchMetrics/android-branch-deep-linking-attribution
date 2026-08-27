@@ -88,6 +88,40 @@ public class TraceLoggingTest {
     }
 
     @Test
+    public void noneLevel_silencesEveryLevel() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.NONE);
+
+        BranchLogger.e("error");
+        BranchLogger.w("warn");
+        BranchLogger.i("info");
+        BranchLogger.d("debug");
+        BranchLogger.v("verbose");
+
+        assertTrue("NONE must suppress every level, including ERROR", captured.isEmpty());
+    }
+
+    @Test
+    public void noneLevel_silencesLogAlways() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.NONE);
+
+        BranchLogger.logAlways("io.branch.sdk.android:library:6.0.0");
+
+        assertTrue("logAlways bypasses shouldLog, so NONE must gate it explicitly or init still "
+                + "emits one line per launch", captured.isEmpty());
+    }
+
+    @Test
+    public void errorLevel_stillShowsErrors() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.ERROR);
+
+        BranchLogger.e("error");
+        BranchLogger.w("warn");
+
+        assertTrue("ERROR must still emit at the ERROR level", captured.contains("error"));
+        assertFalse("WARN must not emit at the ERROR level", captured.contains("warn"));
+    }
+
+    @Test
     public void configurationDefaultsToErrorLevel() {
         // A caller who says nothing about logging gets the quiet default; DEBUG (traffic) and
         // VERBOSE (queue trace) are both opt-in, per debugLevel_/verboseLevel_ above.

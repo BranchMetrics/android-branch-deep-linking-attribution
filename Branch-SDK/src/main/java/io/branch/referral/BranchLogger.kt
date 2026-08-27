@@ -11,7 +11,7 @@ object BranchLogger {
     private const val TAG = "BranchSDK"
 
     enum class BranchLogLevel(val level: Int) {
-        ERROR(1), WARN(2), INFO(3), DEBUG(4), VERBOSE(5)
+        NONE(0), ERROR(1), WARN(2), INFO(3), DEBUG(4), VERBOSE(5)
     }
 
     @JvmStatic
@@ -107,7 +107,7 @@ object BranchLogger {
 
     @JvmStatic
     fun logAlways(message: String) {
-        if (message.isNotEmpty()) {
+        if (loggingLevel != BranchLogLevel.NONE && message.isNotEmpty()) {
             if (useCustomLogger()) {
                 loggerCallback?.onBranchLog(message, "INFO")
             } else {
