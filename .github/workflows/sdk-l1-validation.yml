@@ -162,7 +162,7 @@ jobs:
       # have GITHUB_TOKEN write restrictions, so the raw log never escapes
       # to fork artifacts.
       - name: Upload Logs on Failure
-        if: steps.validate.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
+        if: always() && steps.validate.outcome != 'success' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/upload-artifact@v4
         with:
           name: branch-wire-logs
