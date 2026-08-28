@@ -56,7 +56,7 @@ public class BranchConfigurationIntegrationTest {
     public void dmaParameters_fieldsStoredCorrectly() {
         Log.i(TAG, "--- dmaParameters_fieldsStoredCorrectly ---");
 
-        DMAParameters params = new DMAParameters(true, false, true);
+        DMAParameters params = new DMAParameters.Builder().setEeaRegion(true).setAdUserDataUsageConsent(true).build();
 
         Log.i(TAG, "DMAParameters.eeaRegion             = " + params.getEeaRegion());
         Log.i(TAG, "DMAParameters.adPersonalization     = " + params.getAdPersonalizationConsent());
@@ -71,7 +71,7 @@ public class BranchConfigurationIntegrationTest {
     public void dmaParameters_allFalse_stored() {
         Log.i(TAG, "--- dmaParameters_allFalse_stored ---");
 
-        DMAParameters params = new DMAParameters(false, false, false);
+        DMAParameters params = new DMAParameters.Builder().build();
 
         assertFalse(params.getEeaRegion());
         assertFalse(params.getAdPersonalizationConsent());
@@ -136,7 +136,7 @@ public class BranchConfigurationIntegrationTest {
     public void builder_dmaParameters_stored() {
         Log.i(TAG, "--- builder_dmaParameters_stored ---");
 
-        DMAParameters dma = new DMAParameters(true, true, false);
+        DMAParameters dma = new DMAParameters.Builder().setEeaRegion(true).setAdPersonalizationConsent(true).build();
         BranchConfiguration config = new BranchConfiguration.Builder("key_live_test123")
                 .setDMAParameters(dma)
                 .build();

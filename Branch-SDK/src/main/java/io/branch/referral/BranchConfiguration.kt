@@ -80,6 +80,7 @@ class BranchConfiguration private constructor(
         // Privacy & attribution
         attributionLevel?.let { branch.setConsumerProtectionAttributionLevel(it, null) }
         dmaParameters?.let {
+            it.logWarnings()
             prefHelper.setEEARegion(it.eeaRegion)
             prefHelper.setAdPersonalizationConsent(it.adPersonalizationConsent)
             prefHelper.setAdUserDataUsageConsent(it.adUserDataUsageConsent)
@@ -287,25 +288,32 @@ class BranchConfiguration private constructor(
         fun setAutomaticOpenEvents(enabled: Boolean) = apply { automaticOpenEvents = enabled }
         fun setUserAgentFetchSync(sync: Boolean) = apply { userAgentFetchSync = sync }
 
-        /** @throws IllegalArgumentException if any field fails validation. */
+        /**
+         * @throws IllegalArgumentException listing every field that failed validation, so a caller
+         * with several bad values fixes them in one pass rather than one per run.
+         */
         fun build(): BranchConfiguration {
-            require(branchKey.isNotBlank()) {
-                "Branch key cannot be empty. Get your key from dashboard.branch.io/settings."
+            val errors = mutableListOf<String>()
+            if (branchKey.isBlank()) {
+                errors += "Branch key cannot be empty. Get your key from dashboard.branch.io/settings."
             }
-            require(networkTimeout > 0) {
-                "Network timeout must be a positive number of milliseconds (got $networkTimeout)."
+            if (networkTimeout <= 0) {
+                errors += "Network timeout must be a positive number of milliseconds (got $networkTimeout)."
             }
-            require(networkConnectTimeout > 0) {
-                "Network connect timeout must be a positive number of milliseconds (got $networkConnectTimeout)."
+            if (networkConnectTimeout <= 0) {
+                errors += "Network connect timeout must be a positive number of milliseconds (got $networkConnectTimeout)."
             }
-            require(retryCount >= 0) {
-                "Retry count must be >= 0 (got $retryCount)."
+            if (retryCount < 0) {
+                errors += "Retry count must be >= 0 (got $retryCount)."
             }
-            require(retryInterval > 0) {
-                "Retry interval must be a positive number of milliseconds (got $retryInterval)."
+            if (retryInterval <= 0) {
+                errors += "Retry interval must be a positive number of milliseconds (got $retryInterval)."
             }
-            require(noConnectionRetryMax > 0) {
-                "No-connection retry max must be > 0 (got $noConnectionRetryMax)."
+            if (noConnectionRetryMax <= 0) {
+                errors += "No-connection retry max must be > 0 (got $noConnectionRetryMax)."
+            }
+            require(errors.isEmpty()) {
+                "Invalid BranchConfiguration:\n  - " + errors.joinToString("\n  - ")
             }
 
             return BranchConfiguration(
