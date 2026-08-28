@@ -248,13 +248,88 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     // -------------------------------------------------------------------------
+    // DMA parameters at runtime
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun setDMAParameters_afterInitialize_reachesPrefHelper() {
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setDMAParameters(DMAParameters.Builder().setEeaRegion(true).build())
+                .build()
+        )
+
+        Branch.getInstance().setDMAParameters(
+            DMAParameters.Builder()
+                .setEeaRegion(true)
+                .setAdPersonalizationConsent(true)
+                .setAdUserDataUsageConsent(true)
+                .build()
+        )
+
+        val prefHelper = PrefHelper.getInstance(context)
+        assertTrue(prefHelper.getEEARegion())
+        assertTrue(prefHelper.getAdPersonalizationConsent())
+        assertTrue(prefHelper.getAdUserDataUsageConsent())
+    }
+
+    @Test
+    fun setDMAParameters_canRevokeConsentGrantedAtInit() {
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setDMAParameters(
+                    DMAParameters.Builder()
+                        .setEeaRegion(true)
+                        .setAdPersonalizationConsent(true)
+                        .setAdUserDataUsageConsent(true)
+                        .build()
+                )
+                .build()
+        )
+
+        Branch.getInstance().setDMAParameters(
+            DMAParameters.Builder().setEeaRegion(true).build()
+        )
+
+        val prefHelper = PrefHelper.getInstance(context)
+        assertTrue(prefHelper.getEEARegion())
+        assertFalse(prefHelper.getAdPersonalizationConsent())
+        assertFalse(prefHelper.getAdUserDataUsageConsent())
+    }
+
+    @Test
+    fun setDMAParameters_emitsTheInconsistencyWarning() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
+
+        Branch.getInstance().setDMAParameters(
+            DMAParameters.Builder().setAdUserDataUsageConsent(true).build()
+        )
+
+        assertTrue(
+            "the runtime path must drain the warning too, not just applyTo()",
+            logs.any { it.contains("consent was granted with eeaRegion false") }
+        )
+    }
+
+    @Test
+    fun initialize_emitsTheInconsistencyWarningFromApplyTo() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
+            setDMAParameters(DMAParameters.Builder().setAdUserDataUsageConsent(true).build())
+        }
+
+        assertTrue(logs.any { it.contains("consent was granted with eeaRegion false") })
+    }
+
+    // -------------------------------------------------------------------------
     // DMA parameters wired to PrefHelper
     // -------------------------------------------------------------------------
 
     @Test
     fun initialize_dmaParameters_eeaRegion_reachesPrefHelper() {
         val config = BranchConfiguration.Builder("key_live_test123")
-            .setDMAParameters(DMAParameters(eeaRegion = true, adPersonalizationConsent = false, adUserDataUsageConsent = false))
+            .setDMAParameters(DMAParameters.Builder().setEeaRegion(true).build())
             .build()
 
         Branch.initialize(context, config)
@@ -265,7 +340,7 @@ class BranchInitializeTest : BranchTestBase() {
     @Test
     fun initialize_dmaParameters_adPersonalizationConsent_reachesPrefHelper() {
         val config = BranchConfiguration.Builder("key_live_test123")
-            .setDMAParameters(DMAParameters(eeaRegion = false, adPersonalizationConsent = true, adUserDataUsageConsent = false))
+            .setDMAParameters(DMAParameters.Builder().setAdPersonalizationConsent(true).build())
             .build()
 
         Branch.initialize(context, config)
@@ -276,7 +351,7 @@ class BranchInitializeTest : BranchTestBase() {
     @Test
     fun initialize_dmaParameters_adUserDataUsageConsent_reachesPrefHelper() {
         val config = BranchConfiguration.Builder("key_live_test123")
-            .setDMAParameters(DMAParameters(eeaRegion = false, adPersonalizationConsent = false, adUserDataUsageConsent = true))
+            .setDMAParameters(DMAParameters.Builder().setAdUserDataUsageConsent(true).build())
             .build()
 
         Branch.initialize(context, config)
@@ -397,7 +472,7 @@ class BranchInitializeTest : BranchTestBase() {
             setPreinstallPartner("samsung")
             addWhitelistedScheme("myapp://")
             addInstallMetadata("store", "galaxy_store")
-            setDMAParameters(DMAParameters(true, false, true))
+            setDMAParameters(DMAParameters.Builder().setEeaRegion(true).setAdUserDataUsageConsent(true).build())
         }
 
         val applied = singleEvent(logs, BranchConfiguration.EVENT_CONFIGURATION_APPLIED)

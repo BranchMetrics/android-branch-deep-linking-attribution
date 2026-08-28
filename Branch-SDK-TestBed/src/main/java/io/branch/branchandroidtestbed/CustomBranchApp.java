@@ -17,6 +17,7 @@ import java.io.OutputStreamWriter;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchConfiguration;
 import io.branch.referral.BranchLogger;
+import io.branch.referral.DMAParameters;
 import io.branch.referral.IBranchRequestTracingCallback;
 
 public final class CustomBranchApp extends Application {
@@ -42,7 +43,12 @@ public final class CustomBranchApp extends Application {
                             Log.d("BranchTestbed", message);
                             saveLogToFile(message);
                         })
-                        .setRequestTracingCallback(tracingCallback());
+                        .setRequestTracingCallback(tracingCallback())
+                        .setDMAParameters(new DMAParameters.Builder()
+                                .setEeaRegion(true)
+                                .setAdPersonalizationConsent(false)
+                                .setAdUserDataUsageConsent(true)
+                                .build());
 
         // Operator-set override from SettingsActivity, applied at launch because the API URL is a
         // pre-init decision.
