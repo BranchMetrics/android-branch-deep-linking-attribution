@@ -203,6 +203,42 @@ def validate_request(entry, idx, total):
     return errors
 
 
+# Set at construction and re-sent unchanged on every attempt, so a repeated
+# value marks a retry rather than a second logical request.
+REQUEST_ID_FIELD = "branch_sdk_request_unique_id"
+
+
+def collapse_retries(entries):
+    """Drop retry attempts so a capture holds one entry per logical request.
+
+    The capture line is written in `BranchRemoteInterface.makeRestfulPost`
+    (`posting to` / `Post value =`), which runs once per attempt, so a flaky
+    network inflates every count. That is the opposite of what exact counts
+    are for, and this runner currently fails with socket timeouts, which is
+    precisely the condition that produces retries.
+
+    iOS collapses on `retryNumber`. That field does not work here: it is
+    stamped in `BranchAsyncNetworkLayer`, while the captured line comes from
+    the legacy interface, so no payload in a real capture carries it —
+    verified against the capture from run 32502951452, 0 of 8 requests.
+    `branch_sdk_request_unique_id` is fixed at construction and re-sent
+    unchanged, so a repeat of it is a retry.
+
+    Entries without the field are kept: a request that predates EMT-4198's
+    stamping is not silently dropped."""
+    seen = set()
+    kept = []
+    for entry in entries:
+        request = entry.get("request")
+        request_id = request.get(REQUEST_ID_FIELD) if isinstance(request, dict) else None
+        if isinstance(request_id, str) and request_id:
+            if request_id in seen:
+                continue
+            seen.add(request_id)
+        kept.append(entry)
+    return kept
+
+
 # What the wire must look like after a scenario ran. All endpoint names live
 # here rather than in the checks, so the same checks serve this line's capture
 # and the iOS one.
@@ -222,7 +258,34 @@ def validate_request(entry, idx, total):
 # Ported from the iOS line, where the same engine gates 4.0.0-beta.0. Kept
 # byte-compatible on purpose: a contract that reads differently per platform
 # is a parity gap wearing a helper's clothes.
-SCENARIO_CONTRACTS = {}
+SCENARIO_CONTRACTS = {
+    # Not a test-plan scenario. This is what the harness drives today: one run
+    # that resolves two links, creates one, and fires a custom event. The plan
+    # scenarios (C1, C3, N1) need one capture each and the runner is not
+    # producing those yet, so contracting them would mean writing from the
+    # ticket text rather than from a measurement.
+    #
+    # Measured from run 32502951452 on 6.0.0-beta.0. It earns its place by
+    # pinning the shape the gate sees now: if the harness or the SDK changes
+    # what a run emits, this goes red and someone looks.
+    #
+    # hardware_id at 0 on /v1/url is the measured fact, not an omission.
+    # ServerRequestCreateUrl removes it, identically on beta and master, while
+    # iOS sends it on the same endpoint. Which platform is right is EMT-4199,
+    # open with the server team. Asserting the absence means the gate turns red
+    # the moment Android's behaviour changes, which a comment naming the ticket
+    # would not do.
+    "harness": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 4,
+            "/v1/url": 1,
+            "/v2/event/custom": 1,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {"/v1/url": {"hardware_id": 0}},
+    },
+}
 
 
 class UnknownScenario(Exception):
@@ -321,7 +384,7 @@ def validate_entries(entries, contract=None):
     # emit belongs in a per-scenario contract, not in a global rule.
 
     if contract is not None:
-        errors.extend(assert_contract(entries, contract))
+        errors.extend(assert_contract(collapse_retries(entries), contract))
 
     for i, entry in enumerate(entries, start=1):
         errors.extend(validate_request(entry, i, len(entries)))
