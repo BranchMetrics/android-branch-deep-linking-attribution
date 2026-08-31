@@ -72,41 +72,6 @@ jobs:
             :Branch-SDK-GPTDriver:assembleDebug \
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
-      # TEMPORARY, revert before review. Asks the positional question the two
-      # earlier probes got wrong: after WIPE_FIRST, does the FIRST captured
-      # request carry randomized_bundle_token? A whole-log count cannot answer
-      # it, because every request after the install response carries one.
-      - name: TEMP does pm clear produce a first install
-        uses: reactivecircus/android-emulator-runner@v2
-        env:
-          MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          disable-animations: true
-          script: |
-            OUTPUT_LOG=warm.txt ./scripts/run_l1_instrumented.sh
-            OUTPUT_LOG=fresh.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
-            python3 - warm.txt fresh.txt <<'PROBE'
-            import json, re, sys
-            RE = re.compile(r'Post value = (\{.*)$')
-            for path in sys.argv[1:]:
-                shape = []
-                for line in open(path, errors='replace'):
-                    m = RE.search(line.rstrip())
-                    if not m:
-                        continue
-                    try:
-                        b = json.loads(m.group(1))
-                    except Exception:
-                        continue
-                    shape.append('tok' if b.get('randomized_bundle_token') else 'NO')
-                print(f"SHAPE {path} n={len(shape)} first={shape[0] if shape else 'none'} all={shape}")
-            PROBE
-
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
         env:
