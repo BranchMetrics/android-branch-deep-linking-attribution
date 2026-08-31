@@ -35,6 +35,23 @@ RUNNER="androidx.test.runner.AndroidJUnitRunner"
 TEST_CLASS="${TEST_CLASS:-io.branch.gptdriver.tests.LinkCreationDeterministicTest}"
 OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
 
+# Both default off, so a caller that sets neither gets exactly the previous
+# behaviour. CI starts from a fresh emulator, so a single-scenario job has
+# nothing to inherit and needs neither.
+#
+# CLEAR_LOG truncates the capture file. It matters only when a job drives more
+# than one scenario: CustomBranchApp.saveLogToFile opens the file in append
+# mode and nothing truncates it, so the second scenario would be judged against
+# the first one's traffic as well.
+#
+# WIPE_FIRST runs `pm clear`, which is how a scenario asks for a first install.
+# `adb install -r` preserves app data, so without this every run after the
+# first sees a returning device. It removes the log as a side effect, which is
+# why the two are separate switches rather than one: a scenario that must keep
+# its install still needs a clean log.
+CLEAR_LOG="${CLEAR_LOG:-0}"
+WIPE_FIRST="${WIPE_FIRST:-0}"
+
 adb wait-for-device
 adb shell input keyevent 82 || true
 
@@ -42,6 +59,14 @@ echo "Installing target APK: $TARGET_APK"
 adb install -r -t "$TARGET_APK"
 echo "Installing test APK: $TEST_APK"
 adb install -r -t "$TEST_APK"
+
+if [ "$WIPE_FIRST" = "1" ]; then
+  echo "Wiping app data so the SDK sees a first install"
+  adb shell pm clear "$TARGET_PKG"
+elif [ "$CLEAR_LOG" = "1" ]; then
+  echo "Truncating the capture file"
+  adb shell "run-as $TARGET_PKG sh -c 'rm -f /data/user/0/$TARGET_PKG/files/branchlogs.txt'" || true
+fi
 
 # Run via am instrument directly (no orchestrator) so the target package
 # remains installed after the run, allowing run-as to read its private files.
