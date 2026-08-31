@@ -72,6 +72,27 @@ jobs:
             :Branch-SDK-GPTDriver:assembleDebug \
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
+      # TEMPORARY, revert before review. Proves CLEAR_LOG truncates on a real
+      # device: drive the same class twice and compare the two captures.
+      - name: TEMP prove CLEAR_LOG truncates
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            OUTPUT_LOG=probe-first.txt ./scripts/run_l1_instrumented.sh
+            OUTPUT_LOG=probe-second.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            echo "=== first  ==="; grep -c 'posting to' probe-first.txt || true
+            echo "=== second ==="; grep -c 'posting to' probe-second.txt || true
+            echo "=== second contains first? ==="
+            if head -1 probe-first.txt | grep -qFf - probe-second.txt; then echo "CONTAMINATED"; else echo "TRUNCATED"; fi
+
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
         env:
