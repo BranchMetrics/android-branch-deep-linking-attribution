@@ -17,6 +17,7 @@ lines for every wire request just before HTTP send:
     Post value = {"hardware_id":"...","sdk":"android5.21.1",...}
 """
 
+import argparse
 import json
 import os
 import sys
@@ -202,9 +203,110 @@ def validate_request(entry, idx, total):
     return errors
 
 
-def validate_entries(entries):
-    """Run validate_request on every entry plus the top-level
-    /v1/install-must-be-present check. Returns aggregated errors."""
+# What the wire must look like after a scenario ran. All endpoint names live
+# here rather than in the checks, so the same checks serve this line's capture
+# and the iOS one.
+#
+#   counts  endpoint -> exact number of requests. 0 forbids the endpoint.
+#           An endpoint absent from counts is unconstrained.
+#   order   (earlier, later) pairs. Relative, not adjacency: a request
+#           between the two does not violate it.
+#   fields  endpoint -> field -> exact number of that endpoint's requests
+#           carrying the field. Same counting as `counts`, one level down;
+#           0 forbids. Presence only, never a value comparison.
+#           It exists because an endpoint count cannot see a request changing
+#           character: on 6.0.0-beta.0 the install is a /v3/events/open like
+#           any other, so a first install and a launch on an installed device
+#           put the same endpoints on the wire in the same order.
+#
+# Ported from the iOS line, where the same engine gates 4.0.0-beta.0. Kept
+# byte-compatible on purpose: a contract that reads differently per platform
+# is a parity gap wearing a helper's clothes.
+SCENARIO_CONTRACTS = {}
+
+
+class UnknownScenario(Exception):
+    """Raised for a scenario name with no contract."""
+
+
+def contract_for(scenario):
+    """Return the contract for `scenario`, or raise UnknownScenario."""
+    try:
+        return SCENARIO_CONTRACTS[scenario]
+    except KeyError:
+        known = ", ".join(sorted(SCENARIO_CONTRACTS)) or "(none defined yet)"
+        raise UnknownScenario(
+            f"No contract for scenario '{scenario}'. Known scenarios: {known}"
+        )
+
+
+def occurs_after(uris, earlier, later):
+    """True when some `later` request appears after some `earlier` one.
+
+    Relative, not adjacency: unrelated traffic between the two does not
+    violate it. Deliberately not "the first `later` follows the first
+    `earlier`" — a launch open legitimately precedes a link resolution, so
+    that reading would fail a correct capture.
+
+    Fail-closed: if either endpoint is missing the order is not satisfied."""
+    for index, uri in enumerate(uris):
+        if uri == earlier and later in uris[index + 1:]:
+            return True
+    return False
+
+
+def assert_contract(entries, contract):
+    """Check a normalized capture against a scenario contract.
+
+    Returns a list of error strings, empty when the capture satisfies it.
+    Holds no endpoint name of its own: every value compared comes from the
+    contract, so the same checks serve either platform's capture."""
+    errors = []
+    uris = [entry["uri"] for entry in entries]
+
+    for endpoint, expected in sorted(contract["counts"].items()):
+        actual = uris.count(endpoint)
+        if actual == expected:
+            continue
+        if expected == 0:
+            errors.append(
+                f"'{endpoint}' must not be captured for this scenario, "
+                f"but appeared {actual} time(s)."
+            )
+        else:
+            errors.append(
+                f"Expected {expected} '{endpoint}' request(s), captured {actual}."
+            )
+
+    for earlier, later in contract["order"]:
+        if not occurs_after(uris, earlier, later):
+            errors.append(f"Expected a '{later}' request after a '{earlier}' one.")
+
+    for endpoint, fields in sorted(contract.get("fields", {}).items()):
+        matching = [e for e in entries if e["uri"] == endpoint]
+        for field, expected in sorted(fields.items()):
+            actual = sum(
+                1 for e in matching if is_present(lookup_field(e["request"], field))
+            )
+            if actual == expected:
+                continue
+            if expected == 0:
+                errors.append(
+                    f"No '{endpoint}' request may carry '{field}', "
+                    f"but {actual} of {len(matching)} did."
+                )
+            else:
+                errors.append(
+                    f"Expected {expected} of the '{endpoint}' request(s) to carry "
+                    f"'{field}', but {actual} of {len(matching)} did."
+                )
+
+    return errors
+
+
+def validate_entries(entries, contract=None):
+    """Check every request's required fields, and the capture against
+    `contract` when one is given. Returns aggregated errors."""
     errors = []
 
     if not entries:
@@ -218,6 +320,9 @@ def validate_entries(entries):
     # /v3/events/open, so requiring /v1/install failed every correct run. What each scenario must
     # emit belongs in a per-scenario contract, not in a global rule.
 
+    if contract is not None:
+        errors.extend(assert_contract(entries, contract))
+
     for i, entry in enumerate(entries, start=1):
         errors.extend(validate_request(entry, i, len(entries)))
 
@@ -225,7 +330,18 @@ def validate_entries(entries):
 
 
 def main():
-    log_file_path = sys.argv[1] if len(sys.argv) > 1 else "branchlogs.txt"
+    parser = argparse.ArgumentParser(description="Validate a Branch SDK wire capture.")
+    parser.add_argument(
+        "log_file", nargs="?", default="branchlogs.txt",
+        help="capture to validate (default: branchlogs.txt)",
+    )
+    parser.add_argument(
+        "--scenario", default=None,
+        help="which scenario produced this capture; selects its contract. "
+             "Omitted, only the per-request required fields are asserted.",
+    )
+    args = parser.parse_args()
+    log_file_path = args.log_file
 
     entries = parse_branch_logs(log_file_path)
 
@@ -242,7 +358,14 @@ def main():
     except OSError:
         pass
 
-    errors = validate_entries(entries)
+    try:
+        contract = contract_for(args.scenario) if args.scenario else None
+    except UnknownScenario as e:
+        print("\n--- VALIDATION FAILED ---")
+        print(f"FAILED: {e}")
+        sys.exit(1)
+
+    errors = validate_entries(entries, contract)
 
     if errors:
         print("\n--- VALIDATION FAILED ---")

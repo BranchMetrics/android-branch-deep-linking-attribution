@@ -88,3 +88,104 @@ class NoMandatoryEndpointTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _capture(*uris):
+    """A normalized capture with no payload — enough for counts and order."""
+    return [{"uri": u, "url": "https://h" + u, "request": {}} for u in uris]
+
+
+class AssertionEngineTests(unittest.TestCase):
+    """counts and order, ported from the iOS line so both platforms assert
+    the same way. The engine holds no endpoint name of its own."""
+
+    def _contract(self, counts=None, order=()):
+        return {"counts": counts or {}, "order": order, "fields": {}}
+
+    def test_exact_count_satisfied(self):
+        entries = _capture("/a", "/a")
+        self.assertEqual(v.assert_contract(entries, self._contract({"/a": 2})), [])
+
+    def test_too_many_fails(self):
+        errors = v.assert_contract(_capture("/a", "/a"), self._contract({"/a": 1}))
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("captured 2", errors[0])
+
+    def test_count_zero_forbids_the_endpoint(self):
+        errors = v.assert_contract(_capture("/a"), self._contract({"/a": 0}))
+        self.assertIn("must not be captured", errors[0])
+
+    def test_unlisted_endpoints_are_unconstrained(self):
+        self.assertEqual(v.assert_contract(_capture("/a", "/b"), self._contract({"/a": 1})), [])
+
+    def test_order_holds_when_other_traffic_interleaves(self):
+        entries = _capture("/a", "/x", "/b")
+        self.assertEqual(v.assert_contract(entries, self._contract(order=(("/a", "/b"),))), [])
+
+    def test_order_violated_when_later_never_follows(self):
+        entries = _capture("/b", "/a")
+        errors = v.assert_contract(entries, self._contract(order=(("/a", "/b"),)))
+        self.assertIn("after", errors[0])
+
+    def test_order_is_fail_closed_when_an_endpoint_is_absent(self):
+        errors = v.assert_contract(_capture("/a"), self._contract(order=(("/a", "/b"),)))
+        self.assertEqual(len(errors), 1, errors)
+
+    def test_a_launch_open_before_the_resolution_does_not_violate_order(self):
+        # Why occurs_after is relative. On both betas the launch open precedes
+        # the link resolution, and the attributed open follows it.
+        entries = _capture("/v3/events/open", "/v3/deeplink", "/v3/events/open")
+        contract = self._contract(order=(("/v3/deeplink", "/v3/events/open"),))
+        self.assertEqual(v.assert_contract(entries, contract), [])
+
+
+class FieldPresenceEngineTests(unittest.TestCase):
+    """`fields` counts how many of an endpoint's requests carry a field.
+    Presence only — is_present is the whole test."""
+
+    def _entries(self, *payloads):
+        return [{"uri": "/e", "url": "https://h/e", "request": p} for p in payloads]
+
+    def _contract(self, fields):
+        return {"counts": {}, "order": (), "fields": {"/e": fields}}
+
+    def test_exact_field_count_satisfied(self):
+        self.assertEqual(
+            v.assert_contract(self._entries({"tok": "a"}, {}), self._contract({"tok": 1})), []
+        )
+
+    def test_too_many_carriers_fails(self):
+        errors = v.assert_contract(
+            self._entries({"tok": "a"}, {"tok": "b"}), self._contract({"tok": 1})
+        )
+        self.assertIn("2 of 2 did", errors[0])
+
+    def test_zero_forbids_the_field(self):
+        errors = v.assert_contract(self._entries({"tok": "a"}), self._contract({"tok": 0}))
+        self.assertIn("may carry", errors[0])
+
+    def test_empty_string_does_not_count_as_carrying(self):
+        # is_present treats "" as absent; a cleared identifier must not read
+        # as present.
+        self.assertEqual(
+            v.assert_contract(self._entries({"tok": ""}), self._contract({"tok": 0})), []
+        )
+
+    def test_the_v2_shape_is_resolved(self):
+        # lookup_field reaches under user_data, which is where Android nests
+        # device fields on /v2/event/*.
+        self.assertEqual(
+            v.assert_contract(self._entries({"user_data": {"tok": "a"}}), self._contract({"tok": 1})), []
+        )
+
+
+class UnknownScenarioTests(unittest.TestCase):
+    def test_an_unknown_name_is_refused_by_name(self):
+        with self.assertRaises(v.UnknownScenario) as ctx:
+            v.contract_for("C9")
+        self.assertIn("C9", str(ctx.exception))
+
+    def test_the_registry_is_empty_until_a_scenario_is_measured(self):
+        # Contracts are written from a measured capture, never from the plan
+        # text. The registry stays empty until one exists.
+        self.assertEqual(v.SCENARIO_CONTRACTS, {})
