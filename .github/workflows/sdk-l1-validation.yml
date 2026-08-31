@@ -90,7 +90,22 @@ jobs:
           script: |
             OUTPUT_LOG=warm.txt ./scripts/run_l1_instrumented.sh
             OUTPUT_LOG=fresh.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
-            python3 scripts/probe_first_install.py warm.txt fresh.txt
+            python3 - warm.txt fresh.txt <<'PROBE'
+            import json, re, sys
+            RE = re.compile(r'Post value = (\{.*)$')
+            for path in sys.argv[1:]:
+                shape = []
+                for line in open(path, errors='replace'):
+                    m = RE.search(line.rstrip())
+                    if not m:
+                        continue
+                    try:
+                        b = json.loads(m.group(1))
+                    except Exception:
+                        continue
+                    shape.append('tok' if b.get('randomized_bundle_token') else 'NO')
+                print(f"SHAPE {path} n={len(shape)} first={shape[0] if shape else 'none'} all={shape}")
+            PROBE
 
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
