@@ -139,7 +139,7 @@ internal class BranchLegacyLinkGenerator(
      * @param linkData The BranchLinkData containing link generation parameters
      * @param defaultToLongUrl If true, returns longUrl parameter on API failure
      * @param longUrl Fallback URL to return when API fails and defaultToLongUrl is true
-     * @param linkCache Thread-safe String-based cache for generated URLs
+     * @param linkCache Thread-safe cache keyed by the link attributes
      * @return Generated short URL, longUrl fallback, or null on complete failure
      * 
      * @see BranchLinkData
@@ -149,7 +149,7 @@ internal class BranchLegacyLinkGenerator(
         linkData: BranchLinkData,
         defaultToLongUrl: Boolean,
         longUrl: String?,
-        linkCache: ConcurrentHashMap<String, String>
+        linkCache: ConcurrentHashMap<BranchLinkData, String>
     ): String? {
         var response: ServerResponse? = null
         
@@ -228,7 +228,7 @@ internal class BranchLegacyLinkGenerator(
         linkData: BranchLinkData,
         defaultToLongUrl: Boolean,
         longUrl: String?,
-        linkCache: ConcurrentHashMap<String, String>
+        linkCache: ConcurrentHashMap<BranchLinkData, String>
     ): String? {
         var url: String? = null
         
@@ -242,8 +242,8 @@ internal class BranchLegacyLinkGenerator(
             try {
                 url = response.`object`.getString("url")
                 
-                // Cache successful result using linkData toString as key
-                linkCache[linkData.toString()] = url
+                // Cache successful result
+                linkCache[linkData] = url
             } catch (e: JSONException) {
                 BranchLogger.e("Error parsing URL from direct response: ${e.message}")
             }

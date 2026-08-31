@@ -45,8 +45,15 @@ REQUIRED_COMMON = [
     "screen_width",
     "wifi",
     "ui_mode",
-    "hardware_id",
 ]
+
+# hardware_id is deliberately not common. ServerRequestCreateUrl builds the
+# payload and then removes anon_id, is_hardware_id_real and hardware_id before
+# sending, so requiring it everywhere fails /v1/url on a correct SDK. Whether
+# that removal is right is EMT-4199, open with the server team: iOS sends all
+# three on the same endpoint, on both the beta and the release line. Until that
+# is answered this layer asserts the field only where both platforms agree it
+# belongs, rather than encoding one side of an undecided question.
 
 # Endpoint-specific additions on top of REQUIRED_COMMON.
 # connection_type is only emitted on init/event requests, so /v1/url
@@ -78,8 +85,8 @@ REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
 # contract cannot be expressed by extending the common list. iOS gives v2 its own complete list
 # instead. That mechanism change is out of scope here.
 REQUIRED_PER_ENDPOINT = {
-    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time"],
-    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token"],
+    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time", "hardware_id"],
+    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token", "hardware_id"],
     "/v1/url": [],
     "/v3/deeplink": REQUIRED_V3_SESSION,
     "/v3/events/open": REQUIRED_V3_SESSION,
