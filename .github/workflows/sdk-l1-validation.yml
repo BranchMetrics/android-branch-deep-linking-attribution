@@ -87,8 +87,8 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
-            TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=m-n1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
-            TEST_CLASS=io.branch.gptdriver.tests.C3FirstInstallLinkWireTest OUTPUT_LOG=m-c3.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=m-n1.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=io.branch.gptdriver.tests.C3FirstInstallLinkWireTest OUTPUT_LOG=m-c3.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=io.branch.gptdriver.tests.C1InstalledLinkWireTest OUTPUT_LOG=m-c1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             python3 scripts/probe_shape.py m-n1.txt m-c3.txt m-c1.txt
 
