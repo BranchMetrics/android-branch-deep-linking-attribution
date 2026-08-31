@@ -36,6 +36,6 @@ class N1OrganicOpenWireTest {
 
     private companion object {
         /** Covers session init and the round trips it triggers. */
-        const val SETTLE_MS = 12_000L
+        const val SETTLE_MS = 45_000L
     }
 }

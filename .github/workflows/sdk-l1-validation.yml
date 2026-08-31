@@ -75,7 +75,7 @@ jobs:
       # TEMPORARY, revert before review. Drives the three scenario classes and
       # prints each capture's shape. The contracts in the next PR are written
       # from this output rather than from the plan text.
-      - name: TEMP measure the three scenarios
+      - name: TEMP measure N1 with a long settle
         uses: reactivecircus/android-emulator-runner@v2
         env:
           MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
@@ -87,10 +87,8 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
-            TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=m-n1.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
-            TEST_CLASS=io.branch.gptdriver.tests.C3FirstInstallLinkWireTest OUTPUT_LOG=m-c3.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
-            TEST_CLASS=io.branch.gptdriver.tests.C1InstalledLinkWireTest OUTPUT_LOG=m-c1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
-            python3 scripts/probe_shape.py m-n1.txt m-c3.txt m-c1.txt
+            TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=m-n1-long.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            python3 scripts/probe_shape.py m-n1-long.txt
 
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
