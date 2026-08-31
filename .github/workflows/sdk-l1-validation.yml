@@ -72,6 +72,28 @@ jobs:
             :Branch-SDK-GPTDriver:assembleDebug \
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
+      # TEMPORARY, revert before review. Proves WIPE_FIRST produces a first
+      # install and does not break the run-as pull that follows it.
+      - name: TEMP prove WIPE_FIRST
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            OUTPUT_LOG=wipe-before.txt ./scripts/run_l1_instrumented.sh
+            OUTPUT_LOG=wipe-after.txt WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            echo "PULL_OK_BEFORE=$( [ -s wipe-before.txt ] && echo yes || echo NO )"
+            echo "PULL_OK_AFTER=$( [ -s wipe-after.txt ] && echo yes || echo NO )"
+            echo "REQ_BEFORE=$(grep -c 'posting to' wipe-before.txt || true)"
+            echo "REQ_AFTER=$(grep -c 'posting to' wipe-after.txt || true)"
+            echo "TOKENS_AFTER=$(grep -c 'randomized_bundle_token' wipe-after.txt || true)"
+
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
         env:
