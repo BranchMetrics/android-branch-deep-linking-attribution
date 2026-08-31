@@ -28,7 +28,12 @@ TEST_APK="Branch-SDK-GPTDriver/build/outputs/apk/debug/Branch-SDK-GPTDriver-debu
 TARGET_PKG="io.branch.branchandroidtestbed"
 TEST_PKG="io.branch.gptdriver"
 RUNNER="androidx.test.runner.AndroidJUnitRunner"
-TEST_CLASS="io.branch.gptdriver.tests.LinkCreationDeterministicTest"
+# Both default to what this script did before they existed, so a caller that
+# sets neither is unaffected. TEST_CLASS selects the instrumented class to
+# drive; OUTPUT_LOG names where the pulled capture lands. One scenario per
+# invocation needs both, because the capture file accumulates across launches.
+TEST_CLASS="${TEST_CLASS:-io.branch.gptdriver.tests.LinkCreationDeterministicTest}"
+OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
 
 adb wait-for-device
 adb shell input keyevent 82 || true
@@ -59,5 +64,5 @@ else
 fi
 
 # Pull logs while the target package is still installed.
-adb shell "run-as $TARGET_PKG cat /data/user/0/$TARGET_PKG/files/branchlogs.txt" > branchlogs.txt
-wc -l branchlogs.txt
+adb shell "run-as $TARGET_PKG cat /data/user/0/$TARGET_PKG/files/branchlogs.txt" > "$OUTPUT_LOG"
+wc -l "$OUTPUT_LOG"
