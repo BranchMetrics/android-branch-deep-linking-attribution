@@ -27,7 +27,6 @@ def _fixture(name):
 # Every contract in the registry must appear here, and every entry must name a
 # file that exists. That binding is what the registry guard checks.
 SCENARIO_FIXTURES = {
-    "harness": "harness_mixed_session.txt",
     "N1": "n1_organic_open.txt",
     "C3": "c3_first_install_link.txt",
     "C1": "c1_installed_link.txt",
@@ -233,45 +232,8 @@ class RetryCollapseTests(unittest.TestCase):
         self.assertTrue(v.assert_contract(entries, contract))
 
 
-class HarnessContractTests(unittest.TestCase):
-    """The one contract the available measurement sustains.
-
-    Asserted through assert_contract rather than the CLI on purpose: the
-    fixture is a real capture from before EMT-4198 stamped the request
-    identifiers, so it still fails the per-request field checks. Those
-    failures are the defect that ticket fixes, and they are not what this
-    contract is about."""
-
-    def _entries(self):
-        return v.collapse_retries(v.parse_branch_logs(_fixture("harness_mixed_session.txt")))
-
-    def test_the_measured_capture_satisfies_the_contract(self):
-        errors = v.assert_contract(self._entries(), v.contract_for("harness"))
-        self.assertEqual(errors, [], f"Unexpected errors: {errors}")
-
-    def test_the_contract_traces_to_the_capture_it_was_written_from(self):
-        # Every count in the contract must be a fact about the fixture, not a
-        # number someone liked. This is the check that would have caught a
-        # contract written from the ticket text.
-        entries = self._entries()
-        uris = [e["uri"] for e in entries]
-        for endpoint, expected in v.contract_for("harness")["counts"].items():
-            self.assertEqual(uris.count(endpoint), expected, endpoint)
-
-    def test_a_missing_deeplink_fails(self):
-        entries = [e for e in self._entries() if e["uri"] != "/v3/deeplink"]
-        errors = v.assert_contract(entries, v.contract_for("harness"))
-        self.assertTrue(any("/v3/deeplink" in e for e in errors), errors)
-
-    def test_hardware_id_appearing_on_link_creation_fails(self):
-        # The EMT-4199 signal. Android strips hardware_id on /v1/url today; if
-        # that changes the gate must notice rather than pass quietly.
-        entries = self._entries()
-        for e in entries:
-            if e["uri"] == "/v1/url":
-                e["request"]["hardware_id"] = "something"
-        errors = v.assert_contract(entries, v.contract_for("harness"))
-        self.assertTrue(any("hardware_id" in e for e in errors), errors)
+class ContractRegistryTests(unittest.TestCase):
+    """The binding between a contract and the capture it was written from."""
 
     def test_every_contract_names_a_fixture_that_exists(self):
         # Replaces the empty-registry pin, which died the moment a contract
@@ -284,6 +246,12 @@ class HarnessContractTests(unittest.TestCase):
                 os.path.exists(_fixture(SCENARIO_FIXTURES[name])),
                 f"contract '{name}' maps to a missing fixture",
             )
+
+    def test_the_map_holds_no_entry_without_a_contract(self):
+        # The other direction. A fixture mapping left behind after its
+        # contract was removed is dead weight that reads as coverage.
+        for name in SCENARIO_FIXTURES:
+            self.assertIn(name, v.SCENARIO_CONTRACTS, f"'{name}' maps a fixture to no contract")
 
 
 class ScenarioContractTests(unittest.TestCase):
@@ -334,6 +302,16 @@ class ScenarioContractTests(unittest.TestCase):
                     any("/v3/events/open" in e for e in errors),
                     f"{scenario} accepted the duplicate open: {errors}",
                 )
+
+    def test_a_missing_endpoint_fails_every_scenario(self):
+        # The counterpart to the duplicate-open case: too few is a defect the
+        # same way too many is. Carried over from the harness contract's
+        # coverage, which this class replaces.
+        for scenario in ("N1", "C3", "C1"):
+            entries = [e for e in self._entries(scenario) if e["uri"] != "/v3/deeplink"]
+            with self.subTest(scenario=scenario):
+                errors = v.assert_contract(entries, v.contract_for(scenario))
+                self.assertTrue(any("/v3/deeplink" in e for e in errors), errors)
 
     def test_a_first_install_that_reads_as_a_returning_device_fails_C3(self):
         # The Android shape of EMT-4027: nothing is treated as an install, so
