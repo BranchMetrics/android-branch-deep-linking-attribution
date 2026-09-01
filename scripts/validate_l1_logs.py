@@ -266,33 +266,7 @@ def collapse_retries(entries):
 # byte-compatible on purpose: a contract that reads differently per platform
 # is a parity gap wearing a helper's clothes.
 SCENARIO_CONTRACTS = {
-    # Not a test-plan scenario. This is what the harness drives today: one run
-    # that resolves two links, creates one, and fires a custom event. The plan
-    # scenarios (C1, C3, N1) need one capture each and the runner is not
-    # producing those yet, so contracting them would mean writing from the
-    # ticket text rather than from a measurement.
-    #
-    # Measured from run 32502951452 on 6.0.0-beta.0. It earns its place by
-    # pinning the shape the gate sees now: if the harness or the SDK changes
-    # what a run emits, this goes red and someone looks.
-    #
-    # hardware_id at 0 on /v1/url is the measured fact, not an omission.
-    # ServerRequestCreateUrl removes it, identically on beta and master, while
-    # iOS sends it on the same endpoint. Which platform is right is EMT-4199,
-    # open with the server team. Asserting the absence means the gate turns red
-    # the moment Android's behaviour changes, which a comment naming the ticket
-    # would not do.
-    "harness": {
-        "counts": {
-            "/v3/deeplink": 2,
-            "/v3/events/open": 4,
-            "/v1/url": 1,
-            "/v2/event/custom": 1,
-        },
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {"/v1/url": {"hardware_id": 0}},
-    },
-    # The three below are derived from run 33541932795, which drove each
+    # Derived from run 33541932795, which drove each
     # scenario into its own capture and reported endpoint order plus the
     # presence of randomized_bundle_token, hardware_id and the two request
     # identifiers. One subtraction was applied to each measured shape: the
