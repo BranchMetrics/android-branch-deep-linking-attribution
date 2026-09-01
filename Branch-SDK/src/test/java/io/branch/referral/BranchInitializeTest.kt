@@ -275,6 +275,32 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
+    fun setDMAParameters_afterInitialize_reachesRequestBody() {
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        Branch.getInstance().setDMAParameters(
+            DMAParameters.Builder()
+                .setEeaRegion(true)
+                .setAdPersonalizationConsent(false)
+                .setAdUserDataUsageConsent(true)
+                .build()
+        )
+
+        // ServerRequestLogEvent is V2-shaped, so DMA keys nest under user_data — matches what
+        // actually goes out on the wire, not just what PrefHelper stores.
+        val event = ServerRequestLogEvent(
+            context, Defines.RequestPath.TrackCustomEvent, "my_event",
+            HashMap(), JSONObject(), JSONObject(), emptyList()
+        )
+        event.doFinalUpdateOnMainThread()
+
+        val userData = event.post.getJSONObject(Defines.Jsonkey.UserData.key)
+        assertTrue(userData.getBoolean(Defines.Jsonkey.DMA_EEA.key))
+        assertFalse(userData.getBoolean(Defines.Jsonkey.DMA_Ad_Personalization.key))
+        assertTrue(userData.getBoolean(Defines.Jsonkey.DMA_Ad_User_Data.key))
+    }
+
+    @Test
     fun setDMAParameters_canRevokeConsentGrantedAtInit() {
         Branch.initialize(
             context,

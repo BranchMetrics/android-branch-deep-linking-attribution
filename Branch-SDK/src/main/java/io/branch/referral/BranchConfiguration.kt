@@ -81,9 +81,7 @@ class BranchConfiguration private constructor(
         attributionLevel?.let { branch.setConsumerProtectionAttributionLevel(it, null) }
         dmaParameters?.let {
             it.logWarnings()
-            prefHelper.setEEARegion(it.eeaRegion)
-            prefHelper.setAdPersonalizationConsent(it.adPersonalizationConsent)
-            prefHelper.setAdUserDataUsageConsent(it.adUserDataUsageConsent)
+            prefHelper.setDMAParameters(it.eeaRegion, it.adPersonalizationConsent, it.adUserDataUsageConsent)
         }
         prefHelper.setLimitFacebookTracking(limitFacebookAttribution)
         prefHelper.setAdNetworkCalloutsDisabled(adNetworkCalloutsDisabled)

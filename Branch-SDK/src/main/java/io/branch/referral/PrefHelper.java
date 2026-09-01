@@ -1037,6 +1037,18 @@ public class PrefHelper {
         return getBool(KEY_DMA_EEA);
     }
 
+    /**
+     * Writes all three DMA consent values in a single editor commit, so a concurrent read (the
+     * request builder reads them independently just before send) cannot observe a torn combination
+     * of old and new values.
+     */
+    void setDMAParameters(boolean isEEARegion, boolean hasAdPersonalizationConsent, boolean hasAdUserDataUsageConsent) {
+        prefsEditor_.putBoolean(KEY_DMA_EEA, isEEARegion)
+                .putBoolean(KEY_DMA_AD_PERSONALIZATION, hasAdPersonalizationConsent)
+                .putBoolean(KEY_DMA_AD_USER_DATA, hasAdUserDataUsageConsent)
+                .apply();
+    }
+
      /**
      * <p>Sets value of consent granted/denied by end user for ads personalization.</p>
      *  @param hasAdPersonalizationConsent {@code true} if user has given consent.

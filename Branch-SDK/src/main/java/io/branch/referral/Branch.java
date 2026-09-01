@@ -2116,9 +2116,8 @@ public class Branch {
      */
     public void setDMAParameters(@NonNull DMAParameters params) {
         params.logWarnings();
-        prefHelper_.setEEARegion(params.getEeaRegion());
-        prefHelper_.setAdPersonalizationConsent(params.getAdPersonalizationConsent());
-        prefHelper_.setAdUserDataUsageConsent(params.getAdUserDataUsageConsent());
+        prefHelper_.setDMAParameters(
+                params.getEeaRegion(), params.getAdPersonalizationConsent(), params.getAdUserDataUsageConsent());
     }
 
     /**

@@ -43,12 +43,17 @@ public final class CustomBranchApp extends Application {
                             Log.d("BranchTestbed", message);
                             saveLogToFile(message);
                         })
-                        .setRequestTracingCallback(tracingCallback())
-                        .setDMAParameters(new DMAParameters.Builder()
-                                .setEeaRegion(true)
-                                .setAdPersonalizationConsent(false)
-                                .setAdUserDataUsageConsent(true)
-                                .build());
+                        .setRequestTracingCallback(tracingCallback());
+
+        // Operator-set override from SettingsActivity, applied at launch because DMA consent is a
+        // pre-init decision here. Off by default — see TestBedSettings.isDmaParamsEnabled.
+        if (TestBedSettings.isDmaParamsEnabled(this)) {
+            config.setDMAParameters(new DMAParameters.Builder()
+                    .setEeaRegion(true)
+                    .setAdPersonalizationConsent(false)
+                    .setAdUserDataUsageConsent(true)
+                    .build());
+        }
 
         // Operator-set override from SettingsActivity, applied at launch because the API URL is a
         // pre-init decision.
