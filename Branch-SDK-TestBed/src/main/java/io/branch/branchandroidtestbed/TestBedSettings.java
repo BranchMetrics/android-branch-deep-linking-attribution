@@ -15,6 +15,7 @@ final class TestBedSettings {
 
     private static final String PREFS_NAME = "branch_testbed_settings";
     private static final String KEY_API_URL = "api_url";
+    private static final String KEY_ENABLE_DMA_PARAMS = "enable_dma_params";
 
     private TestBedSettings() {
     }
@@ -31,5 +32,18 @@ final class TestBedSettings {
     /** Takes effect on the next launch, when CustomBranchApp builds the configuration. */
     static void setApiUrl(Context context, String apiUrl) {
         prefs(context).edit().putString(KEY_API_URL, apiUrl).apply();
+    }
+
+    /**
+     * Off by default, so a fresh checkout doesn't declare EEA with fixed consent values on every
+     * launch — that would mislead anyone reading a TestBed log capture.
+     */
+    static boolean isDmaParamsEnabled(Context context) {
+        return prefs(context).getBoolean(KEY_ENABLE_DMA_PARAMS, false);
+    }
+
+    /** Takes effect on the next launch, when CustomBranchApp builds the configuration. */
+    static void setDmaParamsEnabled(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_ENABLE_DMA_PARAMS, enabled).apply();
     }
 }
