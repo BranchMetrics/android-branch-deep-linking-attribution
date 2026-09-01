@@ -24,6 +24,16 @@ def _fixture(name):
     return os.path.join(FIXTURE_DIR, name)
 
 
+# Every contract in the registry must appear here, and every entry must name a
+# file that exists. That binding is what the registry guard checks.
+SCENARIO_FIXTURES = {
+    "harness": "harness_mixed_session.txt",
+    "N1": "n1_organic_open.txt",
+    "C3": "c3_first_install_link.txt",
+    "C1": "c1_installed_link.txt",
+}
+
+
 def _run_validation(fixture_name):
     entries = v.parse_branch_logs(_fixture(fixture_name))
     buf = io.StringIO()
@@ -263,12 +273,112 @@ class HarnessContractTests(unittest.TestCase):
         errors = v.assert_contract(entries, v.contract_for("harness"))
         self.assertTrue(any("hardware_id" in e for e in errors), errors)
 
-    def test_the_registry_holds_only_measured_contracts(self):
+    def test_every_contract_names_a_fixture_that_exists(self):
         # Replaces the empty-registry pin, which died the moment a contract
-        # existed. Every entry must name a fixture that exists.
+        # existed, and the filename guess that replaced it. An explicit map
+        # is what makes "written from a measurement" checkable: a contract
+        # added from the ticket text has nothing to point at here.
         for name in v.SCENARIO_CONTRACTS:
+            self.assertIn(name, SCENARIO_FIXTURES, f"contract '{name}' has no fixture mapping")
             self.assertTrue(
-                os.path.exists(_fixture(f"{name}_mixed_session.txt"))
-                or os.path.exists(_fixture(f"{name}.txt")),
-                f"contract '{name}' has no fixture backing it",
+                os.path.exists(_fixture(SCENARIO_FIXTURES[name])),
+                f"contract '{name}' maps to a missing fixture",
             )
+
+
+class ScenarioContractTests(unittest.TestCase):
+    """C1, C3 and N1, derived from run 33541932795.
+
+    Each fixture reproduces that run's measured endpoint sequence and field
+    presence with one subtraction: the duplicate /v3/events/open that EMT-4136
+    describes and PR 1392 removes. So these assert the wire after that fix,
+    which is why the workflow does not yet pass --scenario. Measured N1 3, C3
+    7, C1 8; contracted 2, 6 and 7."""
+
+    def _entries(self, scenario):
+        path = _fixture(SCENARIO_FIXTURES[scenario])
+        return v.collapse_retries(v.parse_branch_logs(path))
+
+    def _errors(self, capture_scenario, contract_scenario):
+        return v.assert_contract(
+            self._entries(capture_scenario), v.contract_for(contract_scenario)
+        )
+
+    def test_each_fixture_satisfies_its_own_contract(self):
+        for scenario in ("N1", "C3", "C1"):
+            with self.subTest(scenario=scenario):
+                errors = self._errors(scenario, scenario)
+                self.assertEqual(errors, [], f"{scenario}: {errors}")
+
+    def test_each_count_is_a_fact_about_its_fixture(self):
+        # The check that would catch a contract written from the plan text
+        # rather than from a capture.
+        for scenario in ("N1", "C3", "C1"):
+            uris = [e["uri"] for e in self._entries(scenario)]
+            for endpoint, expected in v.contract_for(scenario)["counts"].items():
+                with self.subTest(scenario=scenario, endpoint=endpoint):
+                    self.assertEqual(uris.count(endpoint), expected)
+
+    def test_the_duplicate_open_fails_every_scenario(self):
+        # The negative control these contracts exist for. Putting the EMT-4136
+        # duplicate back is exactly the wire as it stands today, so each
+        # contract must reject it. If one of these ever passes, the contract
+        # has drifted back onto the defect.
+        for scenario in ("N1", "C3", "C1"):
+            entries = self._entries(scenario)
+            first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
+            duplicated = entries + [dict(first_open, request=dict(first_open["request"]))]
+            with self.subTest(scenario=scenario):
+                errors = v.assert_contract(duplicated, v.contract_for(scenario))
+                self.assertTrue(
+                    any("/v3/events/open" in e for e in errors),
+                    f"{scenario} accepted the duplicate open: {errors}",
+                )
+
+    def test_a_first_install_that_reads_as_a_returning_device_fails_C3(self):
+        # The Android shape of EMT-4027: nothing is treated as an install, so
+        # every open carries the token. Counts and order are unchanged by that
+        # defect, which is why the field rule has to exist.
+        entries = self._entries("C3")
+        for e in entries:
+            if e["uri"] == "/v3/events/open":
+                e["request"]["randomized_bundle_token"] = "1111111111111111111"
+        errors = v.assert_contract(entries, v.contract_for("C3"))
+        self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_a_missing_token_fails_C1(self):
+        entries = self._entries("C1")
+        opens = [e for e in entries if e["uri"] == "/v3/events/open"]
+        opens[0]["request"].pop("randomized_bundle_token")
+        errors = v.assert_contract(entries, v.contract_for("C1"))
+        self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_C1_and_C3_are_separated_by_two_independent_signals(self):
+        # Each capture must fail the other's contract on both the custom-event
+        # count and the token count. Two signals rather than one is more than
+        # iOS has, where only the field distinguishes them, and it means either
+        # can catch a fixture regenerated under the wrong scenario.
+        for capture, contract in (("C3", "C1"), ("C1", "C3")):
+            errors = self._errors(capture, contract)
+            with self.subTest(capture=capture, contract=contract):
+                self.assertTrue(any("/v2/event/custom" in e for e in errors), errors)
+                self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_hardware_id_on_link_creation_fails_the_cold_scenarios(self):
+        # The EMT-4199 signal, moved off the harness contract onto the two
+        # scenarios that actually produce /v1/url.
+        for scenario in ("C3", "C1"):
+            entries = self._entries(scenario)
+            for e in entries:
+                if e["uri"] == "/v1/url":
+                    e["request"]["hardware_id"] = "something"
+            with self.subTest(scenario=scenario):
+                errors = v.assert_contract(entries, v.contract_for(scenario))
+                self.assertTrue(any("hardware_id" in e for e in errors), errors)
+
+    def test_N1_forbids_nothing_it_did_not_measure(self):
+        # N1 carries no `fields` rule on purpose. The property the scenario is
+        # about is that the open carries no link data, and the run these were
+        # derived from reported the token rather than the link payload. The
+        # counts still earn their place: they catch a second open reappearing.
+        self.assertEqual(v.contract_for("N1")["fields"], {})
