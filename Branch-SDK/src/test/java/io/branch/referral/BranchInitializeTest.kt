@@ -15,6 +15,7 @@ import org.junit.Test
 import org.json.JSONObject
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Tests for [Branch.initialize] and its private helpers [applyConfiguration] and [applyBranchKey].
@@ -366,7 +367,7 @@ class BranchInitializeTest : BranchTestBase() {
         level: BranchLogger.BranchLogLevel = BranchLogger.BranchLogLevel.DEBUG,
         configure: BranchConfiguration.Builder.() -> Unit = {}
     ): List<String> {
-        val captured = mutableListOf<String>()
+        val captured = CopyOnWriteArrayList<String>()
         val config = BranchConfiguration.Builder(TEST_KEY)
             .setLogLevel(level)
             .setLoggingCallback { message, _ -> captured.add(message) }

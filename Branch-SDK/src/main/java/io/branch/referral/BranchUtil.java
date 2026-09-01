@@ -44,6 +44,9 @@ public class BranchUtil {
      * Resolves test mode from branch.json. A value set programmatically — via
      * {@link BranchConfiguration.Builder#setTestMode} or {@link BranchUtil#setTestMode} — takes
      * precedence and short-circuits this lookup.
+     * <p>
+     * <b>Breaking:</b> the {@code io.branch.sdk.TestMode} manifest meta-data is no longer read.
+     * Migrate to {@link BranchConfiguration.Builder#setTestMode}.
      *
      * @return whether test mode is enabled. False when branch.json does not set it.
      */

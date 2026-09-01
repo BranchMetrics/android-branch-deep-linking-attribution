@@ -410,7 +410,7 @@ public class Branch {
      * applied.
      */
     private static void logInitializeComplete(@NonNull Branch branch, @NonNull BranchConfiguration config) {
-        if (!BranchLogger.getLoggingEnabled()) {
+        if (!BranchLogger.isLoggable(BranchLogger.BranchLogLevel.DEBUG)) {
             return;
         }
         PrefHelper prefHelper = branch.getPrefHelper();

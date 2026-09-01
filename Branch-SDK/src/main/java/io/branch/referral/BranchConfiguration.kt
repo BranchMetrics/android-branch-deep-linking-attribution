@@ -39,10 +39,6 @@ class BranchConfiguration private constructor(
 ) {
 
     /**
-     * Writes every configured value through to the subsystem that owns it. Called once by
-     * [Branch.initialize]; this is the only place pre-init state is applied.
-     */
-    /**
      * Routes logging to the caller's level and callback. Called by [Branch.initialize] before any
      * other init work, so warnings raised during construction and branch-key resolution are visible
      * to whoever configured logging.
@@ -54,13 +50,17 @@ class BranchConfiguration private constructor(
         BranchLogger.loggingEnabled = true
     }
 
+    /**
+     * Writes every configured value through to the subsystem that owns it. Called once by
+     * [Branch.initialize].
+     */
     @JvmName("applyTo")
     internal fun applyTo(branch: Branch) {
         val context = branch.applicationContext
         val prefHelper = branch.prefHelper
 
         BranchLogger.logAlways(Branch.GOOGLE_VERSION_TAG)
-        BranchLogger.d(toJson())
+        if (BranchLogger.isLoggable(BranchLogger.BranchLogLevel.DEBUG)) BranchLogger.d(toJson())
         requestTracingCallback?.let { Branch._iBranchRequestTracingCallback = it }
 
         // Identity & environment
@@ -78,7 +78,7 @@ class BranchConfiguration private constructor(
         remoteInterface?.let { branch.setBranchRemoteInterface(it) }
 
         // Privacy & attribution
-        attributionLevel?.let { branch.setConsumerProtectionAttributionLevel(it) }
+        attributionLevel?.let { branch.setConsumerProtectionAttributionLevel(it, null) }
         dmaParameters?.let {
             prefHelper.setEEARegion(it.eeaRegion)
             prefHelper.setAdPersonalizationConsent(it.adPersonalizationConsent)

@@ -25,6 +25,10 @@ object BranchLogger {
 
     private fun shouldLog(level: BranchLogLevel): Boolean = level.level <= loggingLevel.level
 
+    /** Whether a message at [level] would actually be emitted, so callers can skip building it. */
+    @JvmStatic
+    fun isLoggable(level: BranchLogLevel): Boolean = loggingEnabled && shouldLog(level)
+
     /**
      * <p>Creates a <b>Error</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
