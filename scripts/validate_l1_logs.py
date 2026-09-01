@@ -292,6 +292,76 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {"/v1/url": {"hardware_id": 0}},
     },
+    # The three below are derived from run 33541932795, which drove each
+    # scenario into its own capture and reported endpoint order plus the
+    # presence of randomized_bundle_token, hardware_id and the two request
+    # identifiers. One subtraction was applied to each measured shape: the
+    # duplicate /v3/events/open that EMT-4136 describes.
+    #
+    # That duplicate is real and currently on the wire, in all three captures,
+    # not only the organic one. `sendOpen` has two callers that both fire on a
+    # launch, BranchProcessLifecycleObserver and RequestDeepLink, and
+    # MainActivity.onCreate calls handleDeepLink unconditionally so the
+    # resolution runs even with no link. Measured: N1 3 requests, C3 7, C1 8;
+    # contracted here at 2, 6 and 7.
+    #
+    # So these contracts describe the wire after EMT-4136's fix lands, and they
+    # are deliberately not enforced against a live capture yet -- the workflow
+    # passes no --scenario. The self-test exercises them against fixtures. When
+    # the fix merges, wiring enforcement is the only remaining change.
+
+    # N1 organic_open: a launch with no link. Android emits /v3/deeplink here
+    # where the iOS contract forbids it, because MainActivity.onCreate calls
+    # handleDeepLink unconditionally and RequestDeepLink guards only the
+    # parsing, so the request goes out carrying no link. That divergence is
+    # documented platform behaviour, tracked for EMT-4092's parity comparison,
+    # not a defect.
+    #
+    # No `fields` rule. The property this scenario is really about is that the
+    # open carries no link data, and the measurement that produced these shapes
+    # reported the token rather than the link payload. The exact counts still
+    # earn their place: they are what catches a second open reappearing.
+    "N1": {
+        "counts": {"/v3/deeplink": 1, "/v3/events/open": 1},
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {},
+    },
+    # C3 cold_firstInstall: a link opened on a device that does not have the
+    # app. Counts and order alone cannot tell this from C1 -- on 6.0 the
+    # install is a /v3/events/open like any other, decided client-side by
+    # randomizedBundleToken == nil -- so the token count is what separates
+    # them. Here the first open predates the install response and carries no
+    # token; the attributed one does.
+    "C3": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 2,
+            "/v1/url": 1,
+            "/v2/event/custom": 1,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 1},
+            "/v1/url": {"hardware_id": 0},
+        },
+    },
+    # C1 cold_https: a link opened on a device that already has the app. Both
+    # opens carry the token, and the capture holds a second /v2/event/custom
+    # that C3's does not. Two independent signals separate it from C3, which is
+    # more than iOS has -- there only the field distinguishes them.
+    "C1": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 2,
+            "/v1/url": 1,
+            "/v2/event/custom": 2,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 2},
+            "/v1/url": {"hardware_id": 0},
+        },
+    },
 }
 
 
