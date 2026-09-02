@@ -27,7 +27,7 @@ POST_VALUE_PREFIX = "Post value = "
 
 # Required on every captured /v1/* request. Lookup tolerates v2 user_data
 # nesting (Android emits device fields top-level on v1, nested under
-# user_data on /v2/event/*; only /v1/* is in L1 scope today).
+# user_data on /v3/events/*; only /v1/* is in L1 scope today).
 REQUIRED_COMMON = [
     "branch_key",
     "sdk",
@@ -133,7 +133,7 @@ def validate_request(entry, idx, total):
     list of error strings (empty when everything required is present).
 
     Required-field checks are scoped to `/v1/*` endpoints — that's the L1
-    contract. Non-v1 endpoints (e.g. `/v2/event/*`) use a different schema
+    contract. Non-v1 endpoints (e.g. `/v3/events/*`) use a different schema
     (device fields under `user_data`, different identity fields) and are
     out of L1's enforcement scope; the validator still dumps their payload
     for visibility but does not fail the run."""

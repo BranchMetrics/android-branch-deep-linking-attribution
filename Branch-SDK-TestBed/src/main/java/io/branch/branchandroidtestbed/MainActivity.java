@@ -640,6 +640,33 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.cmdCustomEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BranchLogger.d("MODERNIZATION_DEBUG: Send Custom Event button clicked");
+
+                new BranchEvent("my_custom_event")
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setDescription("Testbed custom event")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                            @Override
+                            public void onSuccess(int responseCode) {
+                                BranchLogger.d("MODERNIZATION_DEBUG: Custom Event sent successfully: " + responseCode);
+                                showLongToast("Sent Branch Custom Event: " + responseCode);
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                BranchLogger.d("MODERNIZATION_DEBUG: Custom Event failed: " + e.getMessage());
+                                BranchLogger.d("BranchSDK_Tester: " + e.toString());
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Custom Event: " + e, Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+        });
+
         findViewById(R.id.initSessionButton).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
