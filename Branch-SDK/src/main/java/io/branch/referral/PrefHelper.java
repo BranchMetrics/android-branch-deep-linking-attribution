@@ -1043,7 +1043,8 @@ public class PrefHelper {
      * of old and new values.
      */
     void setDMAParameters(boolean isEEARegion, boolean hasAdPersonalizationConsent, boolean hasAdUserDataUsageConsent) {
-        prefsEditor_.putBoolean(KEY_DMA_EEA, isEEARegion)
+        appSharedPrefs_.edit()
+                .putBoolean(KEY_DMA_EEA, isEEARegion)
                 .putBoolean(KEY_DMA_AD_PERSONALIZATION, hasAdPersonalizationConsent)
                 .putBoolean(KEY_DMA_AD_USER_DATA, hasAdUserDataUsageConsent)
                 .apply();
