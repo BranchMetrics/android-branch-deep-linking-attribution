@@ -2108,6 +2108,19 @@ public class Branch {
 
 
     /**
+     * Updates DMA consent after initialization. Configure the initial value with
+     * {@link BranchConfiguration.Builder#setDMAParameters}; call this when the user's consent
+     * changes, for example from a privacy settings screen.
+     *
+     * @param params The consent values to apply. Build with {@link DMAParameters.Builder}.
+     */
+    public void setDMAParameters(@NonNull DMAParameters params) {
+        params.logWarnings();
+        prefHelper_.setDMAParameters(
+                params.getEeaRegion(), params.getAdPersonalizationConsent(), params.getAdUserDataUsageConsent());
+    }
+
+    /**
      * Sets the consumer protection attribution level.
      *
      * @param level The consumer protection attribution level {@link Defines.BranchAttributionLevel}.
