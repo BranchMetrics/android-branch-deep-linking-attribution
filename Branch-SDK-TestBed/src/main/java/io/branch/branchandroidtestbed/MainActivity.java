@@ -671,26 +671,35 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 try {
-                    Branch.sessionBuilder(MainActivity.this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+                    Uri data = MainActivity.this.getIntent().getData();
+                    if (data == null) {
+                        Log.d("BranchSDK_Tester", "no link in the launch intent; nothing to resolve");
+                        Toast.makeText(getApplicationContext(), "No link in the launch intent", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Branch.getInstance().requestDeepLinkData(data, new Branch.BranchReferralInitListener() {
                         @Override
-                        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                        public void onInitFinished(JSONObject referringParams, BranchError error) {
                             if (error != null) {
-                                Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
-                            } else {
-                                Log.d("BranchSDK_Tester", "branch init complete!");
-                                if (branchUniversalObject != null) {
-                                    Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-                                    Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                                    Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-                                }
+                                Log.d("BranchSDK_Tester", "deep link resolution failed. Caused by -" + error.getMessage());
+                                return;
+                            }
+                            Log.d("BranchSDK_Tester", "deep link resolved! params " + referringParams);
 
-                                if (linkProperties != null) {
-                                    Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-                                    Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
-                                }
+                            BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBranchUniversalObject();
+                            if (branchUniversalObject != null) {
+                                Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                                Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                                Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                            }
+
+                            LinkProperties linkProperties = LinkProperties.getReferredLinkProperties();
+                            if (linkProperties != null) {
+                                Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                                Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
                             }
                         }
-                    }).withData(MainActivity.this.getIntent().getData()).init();
+                    });
                 } catch (Exception e) {
                     Log.e("BranchSDK_Tester", e.getMessage());
                 }
