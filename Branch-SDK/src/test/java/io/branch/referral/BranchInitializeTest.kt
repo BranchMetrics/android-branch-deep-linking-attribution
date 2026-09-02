@@ -307,6 +307,31 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     // -------------------------------------------------------------------------
+    // Attribution level wired to PrefHelper, without sendOpen()'s side effect
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun initialize_attributionLevel_appliesWithoutCallingSendOpen() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
+            setAttributionLevel(Defines.BranchAttributionLevel.FULL)
+            setAutomaticOpenEvents(false) // isolates this from the unrelated foreground-OPEN path
+        }
+
+        assertTrue(
+            "the level must still reach Branch via setConsumerProtectionAttributionLevel",
+            logs.any { it.contains("Set Consumer Protection Preference to FULL") }
+        )
+        assertEquals(
+            Defines.BranchAttributionLevel.FULL,
+            PrefHelper.getInstance(context).getConsumerProtectionAttributionLevel()
+        )
+        assertTrue(
+            "setting an attribution level at init must not also fire sendOpen()",
+            logs.none { it.contains("sendOpen BranchAttributionLevel") }
+        )
+    }
+
+    // -------------------------------------------------------------------------
     // Singleton guard — second initialize() call is a no-op
     // -------------------------------------------------------------------------
 
