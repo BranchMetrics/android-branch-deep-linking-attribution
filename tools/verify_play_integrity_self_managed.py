@@ -64,6 +64,7 @@ import argparse
 import base64
 import getpass
 import hashlib
+import copy
 import json
 import sys
 import time
@@ -85,39 +86,125 @@ except ImportError:
 # ── Canonical query string ─────────────────────────────────────────────────────
 # Must match Android SDK: sorted keys, "key=value&key=value" format
 
+UNSIGNED_ROOT_KEYS = {"retryNumber", "instrumentation", "lat_val", "unidentified_device"}
+
+# Added to initialization_context *after* clientDataHash is computed, so they are
+# never part of the canonical the nonce is derived from.
+ATTESTATION_OUTPUT_KEYS = ("attestation_object", "play_integrity_token")
+
+SECURE_CONTEXT = "branch_sdk_secure_context"
+INITIALIZATION_CONTEXT = "initialization_context"
+
+
+def _number_to_string(v) -> str:
+    """Render a number as its JSON literal, trailing zeros stripped: 2.0 -> 2, 3.50 -> 3.5."""
+    text = json.dumps(v) if isinstance(v, float) else str(v)
+    if "e" in text or "E" in text:
+        return text          # exponent notation does not canonicalize portably
+    if "." not in text:
+        return text
+    return text.rstrip("0").rstrip(".")
+
+
+def _stringify(v) -> str:
+    if isinstance(v, bool):
+        return "1" if v else "0"     # never true/false
+    if isinstance(v, (int, float)):
+        return _number_to_string(v)
+    return str(v)
+
+
+def _flatten_value(value, full_key: str, out: dict) -> None:
+    if value is None:
+        return                       # null excludes the key entirely
+    if isinstance(value, dict):
+        out.update(_flatten(value, full_key))
+    elif isinstance(value, list):
+        for i, item in enumerate(value):
+            _flatten_value(item, f"{full_key}.{i}", out)
+    else:
+        out[full_key] = _stringify(value)
+
+
+def _flatten(params: dict, prefix: str = "") -> dict:
+    out = {}
+    for key, value in params.items():
+        if prefix == "" and key in UNSIGNED_ROOT_KEYS:
+            continue                 # top-level only
+        _flatten_value(value, key if prefix == "" else f"{prefix}.{key}", out)
+    return out
+
+
 def canonical_query_string(body: dict) -> str:
+    """Port of securesdk ParamsFlattener.canonicalString().
+
+    flatten -> drop excluded roots -> sort by UTF-8 byte order -> "k1=v1&k2=v2".
+    Nested objects flatten to dot-separated keys, arrays by index, booleans to 1/0,
+    nulls drop out, and values are never URL-encoded.
+
+    Verified byte-identical against securesdk's canonical_fixture.json and the
+    string pinned in ParamsFlattenerTest.
     """
-    Mirrors AppAttestation.canonicalQueryString() — sorted keys, key=value& format.
+    flat = _flatten(body)
+    keys = sorted(flat, key=lambda k: k.encode("utf-8"))
+    return "&".join(f"{k}={flat[k]}" for k in keys)
 
-    For nested objects (dicts, lists), uses JSON serialization to match Android's
-    JSONObject.toString() behavior.
+
+def strip_attestation_outputs(body: dict) -> dict:
+    """Copy of `body` with the attestation outputs removed.
+
+    attestation_object / play_integrity_token are written into
+    initialization_context after the hash is taken, so they must come out before
+    re-deriving. Everything else — including context_key, client_public_key and
+    challenge — stays in.
     """
-    def serialize_value(v):
-        if isinstance(v, (dict, list)):
-            # Use JSON serialization for nested objects (no spaces, sorted keys for dicts)
-            return json.dumps(v, separators=(',', ':'), sort_keys=True)
-        elif isinstance(v, bool):
-            # JSON boolean lowercase (true/false), not Python (True/False)
-            return 'true' if v else 'false'
-        elif v is None:
-            return 'null'
-        else:
-            return str(v)
-
-    return "&".join(f"{k}={serialize_value(v)}" for k, v in sorted(body.items()))
+    out = copy.deepcopy(body)
+    init = out.get(SECURE_CONTEXT, {}).get(INITIALIZATION_CONTEXT)
+    if isinstance(init, dict):
+        for k in ATTESTATION_OUTPUT_KEYS:
+            init.pop(k, None)
+    return out
 
 
-# ── Nonce re-derivation ────────────────────────────────────────────────────────
-# SHA-256(canonical_utf8 || ecdh_pub_bytes || random_nonce_bytes)
-# Then base64url-encode (no padding) — this is what was sent to Play Integrity.
+def b64_any_to_bytes(value: str) -> Optional[bytes]:
+    """Decode base64 in whichever dialect turned up: standard or url-safe, padded or not."""
+    if not value:
+        return None
+    t = value.strip().replace("-", "+").replace("_", "/")
+    t += "=" * (-len(t) % 4)
+    try:
+        return base64.b64decode(t)
+    except Exception:
+        return None
 
-def derive_expected_nonce(body_without_pi_fields: dict, ecdh_pub_b64: str, random_nonce_b64: str) -> str:
-    canonical = canonical_query_string(body_without_pi_fields).encode("utf-8")
-    ecdh_bytes = base64.b64decode(ecdh_pub_b64)
-    nonce_bytes = base64.b64decode(random_nonce_b64)
 
-    digest = hashlib.sha256(canonical + ecdh_bytes + nonce_bytes).digest()
+def derive_expected_nonce(body: dict) -> str:
+    """The Play Integrity nonce the SDK sent: base64url(SHA256(canonical)), unpadded.
+
+    The client public key and challenge are already inside the canonical, under
+    branch_sdk_secure_context.initialization_context — they are not concatenated
+    onto the digest input. See BranchSecureSDK.attestDevice.
+    """
+    canonical = canonical_query_string(strip_attestation_outputs(body)).encode("utf-8")
+    digest = hashlib.sha256(canonical).digest()
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def derive_expected_nonce_legacy(body: dict, ecdh_pub_b64: str, random_nonce_b64: str) -> str:
+    """Pre-secure-context (POC) formula: SHA256(canonical || ecdh_pub || random_nonce).
+
+    Kept so old captures still explain themselves. Those builds also signed in the
+    request constructor, before updateGAdsParams() added the advertising ids and
+    swapped hardware_id, so the nonce in such a capture will not bind against the
+    body that actually went out.
+    """
+    legacy = {k: v for k, v in body.items() if k not in PI_FIELDS}
+    canonical = canonical_query_string(legacy).encode("utf-8")
+    return base64.urlsafe_b64encode(
+        hashlib.sha256(canonical
+                       + (b64_any_to_bytes(ecdh_pub_b64) or b"")
+                       + (b64_any_to_bytes(random_nonce_b64) or b"")).digest()
+    ).rstrip(b"=").decode("ascii")
 
 
 # ── Local token decryption ─────────────────────────────────────────────────────
@@ -410,7 +497,12 @@ def verify(decoded: dict, package_name: str, expected_nonce_b64url: str) -> dict
     age_ms        = int(time.time() * 1000) - token_ts_ms
     device_verdicts = device_integrity.get("deviceRecognitionVerdict", [])
 
-    nonce_ok    = token_nonce == expected_nonce_b64url
+    # Google echoes the nonce back base64url-*padded* (44 chars) while the SDK sends it
+    # unpadded (43), so a string compare fails on an otherwise-correct token.
+    token_nonce_bytes    = b64_any_to_bytes(token_nonce)
+    expected_nonce_bytes = b64_any_to_bytes(expected_nonce_b64url)
+    nonce_ok    = (token_nonce_bytes is not None
+                   and token_nonce_bytes == expected_nonce_bytes)
     package_ok  = token_package == package_name
     fresh_ok    = 0 <= age_ms <= FRESHNESS_WINDOW_MS
     integrity_ok = any(v in device_verdicts for v in
@@ -584,10 +676,30 @@ Examples:
 
     print("\n── Step 1: Re-derive expected nonce ─────────────────────────────")
     step1_start_ms = int(time.time() * 1000)
-    expected_nonce = derive_expected_nonce(body_clean, ecdh, nonce)
+
+    # Which contract the capture was produced under. The current SDK carries
+    # branch_sdk_secure_context and derives the nonce from the canonical alone;
+    # POC-era builds put play_integrity_token / nonce / ecdh_public_key flat at the
+    # top level and concatenated the key and a random nonce onto the digest input.
+    if SECURE_CONTEXT in response_body:
+        canonical_source = strip_attestation_outputs(response_body)
+        expected_nonce = derive_expected_nonce(response_body)
+        print("  Contract: current (branch_sdk_secure_context present)")
+        print("  Digest input: canonical only — client_public_key and challenge are")
+        print("                inside initialization_context, not appended")
+    else:
+        canonical_source = {k: v for k, v in response_body.items() if k not in PI_FIELDS}
+        expected_nonce = derive_expected_nonce_legacy(response_body, ecdh, nonce)
+        print("  Contract: LEGACY (no branch_sdk_secure_context in this capture)")
+        print("  ⚠️  Pre-secure-context build. Those also signed in the request")
+        print("      constructor, before updateGAdsParams() added the advertising ids")
+        print("      and swapped hardware_id — so the nonce is not expected to bind")
+        print("      against the body that actually went out. Recapture on a current")
+        print("      build before treating a mismatch here as a bug.")
+
     step1_end_ms = int(time.time() * 1000)
-    print(f"  Canonical string: {canonical_query_string(body_clean)[:120]}...")
-    print(f"  Expected nonce (base64url): {expected_nonce}")
+    print(f"  Canonical string: {canonical_query_string(canonical_source)[:120]}...")
+    print(f"  Expected nonce (base64url, unpadded): {expected_nonce}")
     print(f"  ⏱  start={step1_start_ms} ms  end={step1_end_ms} ms  total={step1_end_ms - step1_start_ms} ms")
 
     print("\n── Step 2: Load and decrypt encryption keys ────────────────────")
