@@ -115,6 +115,11 @@
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/ic_baseline_emoji_events_24"
                 android:text="Send Lifecycle Event" />
+            <Button
+                android:id="@+id/cmdCustomEvent"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/ic_baseline_open_in_new_24"
+                android:text="Send Custom Event" />
 
             <Button
                 android:id="@+id/report_view_btn"

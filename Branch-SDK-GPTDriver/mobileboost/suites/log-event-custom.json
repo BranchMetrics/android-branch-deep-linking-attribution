@@ -24,7 +24,7 @@
     {
       "id": 4,
       "type": "ai",
-      "instruction": "Check if you see \"v2/event/custom\" and you see \"Status Code: 200\" right beneath it. Ignore all other \"Status Code: 200\" where preceded with \"v1/open\" or \"v1/install\""
+      "instruction": "Check if you see \"v3/events/custom\" and you see \"Status Code: 200\" right beneath it. Ignore all other \"Status Code: 200\" where preceded with \"v3/events/open\" or \"v1/install\""
     }
   ],
   "params": {}
