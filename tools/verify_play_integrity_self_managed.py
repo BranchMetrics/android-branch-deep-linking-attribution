@@ -527,46 +527,64 @@ def verify(decoded: dict, package_name: str, expected_nonce_b64url: str) -> dict
 # ── Response body parsing ──────────────────────────────────────────────────────
 
 def parse_response_body(response_body: dict) -> dict:
+    """Pull the Play Integrity fields out of a captured request body.
+
+    Two shapes are accepted:
+
+    Current — the token lives under the secure-context envelope, and there is no
+    top-level `nonce`: the Play Integrity nonce is derived from the canonical, not
+    sent as a field.
+
+        branch_sdk_secure_context.initialization_context.play_integrity_token
+        branch_sdk_secure_context.initialization_context.client_public_key
+
+    Legacy (POC) — play_integrity_token / nonce / ecdh_public_key flat at the top level.
     """
-    Parse Play Integrity fields from response body.
+    init = {}
+    if isinstance(response_body.get(SECURE_CONTEXT), dict):
+        init = response_body[SECURE_CONTEXT].get(INITIALIZATION_CONTEXT) or {}
 
-    Expected fields:
-      - play_integrity_token: encrypted token from Play Integrity API
-      - nonce: base64 random nonce
-      - ecdh_public_key: base64 ECDH public key
+    if isinstance(init, dict) and init.get("play_integrity_token"):
+        return {
+            "token": init["play_integrity_token"],
+            # Derived from the canonical, so there is nothing to read here.
+            "nonce": None,
+            "ecdh": init.get("client_public_key"),
+        }
 
-    Returns dict with parsed fields or raises error if missing.
-    """
-    required_fields = ["play_integrity_token", "nonce", "ecdh_public_key"]
+    if all(f in response_body for f in ("play_integrity_token", "nonce", "ecdh_public_key")):
+        return {
+            "token": response_body["play_integrity_token"],
+            "nonce": response_body["nonce"],
+            "ecdh": response_body["ecdh_public_key"],
+        }
 
-    missing = [f for f in required_fields if f not in response_body]
-    if missing:
-        print(f"❌ Missing required fields in response body: {', '.join(missing)}")
-        print(f"\n💡 Response body should contain:")
-        print(f"   • play_integrity_token: encrypted token from Play Integrity API")
-        print(f"   • nonce: base64 random nonce")
-        print(f"   • ecdh_public_key: base64 ECDH public key")
-        print(f"\n📋 Fields actually present in response body ({len(response_body)} total):")
-        # Show first 20 field names to help debug
-        for i, key in enumerate(sorted(response_body.keys())[:20]):
-            value = response_body[key]
-            # Truncate long values for readability
-            value_str = str(value)[:50] + "..." if len(str(value)) > 50 else str(value)
-            print(f"   • {key}: {value_str}")
-        if len(response_body) > 20:
-            print(f"   ... and {len(response_body) - 20} more fields")
-        print(f"\n💡 These fields are added by BranchFraudDefense.performAttestationCheck()")
-        print(f"   Make sure you've:")
-        print(f"   1. Enabled fraud defense: BranchFraudDefense.getInstance(context).startFraudDefenseSystem()")
-        print(f"   2. Set the provider: branch.setFraudDefenseProvider(fraudDefense)")
-        print(f"   3. Captured the request body AFTER attestation is performed")
-        sys.exit(1)
-
-    return {
-        "token": response_body["play_integrity_token"],
-        "nonce": response_body["nonce"],
-        "ecdh": response_body["ecdh_public_key"]
-    }
+    print("❌ No Play Integrity token found in this capture.")
+    print()
+    if isinstance(init, dict) and init.get("attestation_object"):
+        print("   This request carries attestation_object — the device used hardware Key")
+        print("   Attestation, so no Play Integrity token exists. To capture one, set")
+        print("   FORCE_PLAY_INTEGRITY = true in CustomBranchApp, reinstall, and relaunch")
+        print("   on a fresh install (Layer 1 only runs when the device is unregistered).")
+    elif SECURE_CONTEXT in response_body:
+        print(f"   {SECURE_CONTEXT} is present but has no initialization_context with a")
+        print("   play_integrity_token. A Layer 2 request (activity_context) carries a")
+        print("   signature and nonce, not an attestation — capture the first open instead.")
+    else:
+        print(f"   No {SECURE_CONTEXT} and no flat play_integrity_token / nonce /")
+        print("   ecdh_public_key. Check that the provider is set via")
+        print("   branch.setFraudDefenseProvider() and that the body was captured after")
+        print("   attestation ran.")
+    print()
+    print(f"📋 Fields present ({len(response_body)} total):")
+    for key in sorted(response_body)[:20]:
+        value_str = str(response_body[key])
+        if len(value_str) > 50:
+            value_str = value_str[:50] + "..."
+        print(f"   • {key}: {value_str}")
+    if len(response_body) > 20:
+        print(f"   ... and {len(response_body) - 20} more fields")
+    sys.exit(1)
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
@@ -641,12 +659,16 @@ Examples:
         nonce = parsed["nonce"]
         ecdh = parsed["ecdh"]
 
-        # Validate extracted values are not empty
-        if not token or not nonce or not ecdh:
-            print(f"❌ Extracted values are empty!")
+        # The token is always required. nonce and ecdh are only wire fields on the
+        # legacy contract; on the current one the nonce is derived and the client key
+        # lives inside initialization_context, already covered by the canonical.
+        legacy_shape = SECURE_CONTEXT not in response_body
+        if not token or (legacy_shape and (not nonce or not ecdh)):
+            print("❌ Extracted values are empty!")
             print(f"   Token: {'<empty>' if not token else 'OK'}")
-            print(f"   Nonce: {'<empty>' if not nonce else 'OK'}")
-            print(f"   ECDH public key: {'<empty>' if not ecdh else 'OK'}")
+            if legacy_shape:
+                print(f"   Nonce: {'<empty>' if not nonce else 'OK'}")
+                print(f"   ECDH public key: {'<empty>' if not ecdh else 'OK'}")
             sys.exit(1)
 
         # Use response body as request body (will strip PI fields)
@@ -655,10 +677,14 @@ Examples:
         print(f"  ✅ Extracted Play Integrity fields:")
         print(f"     Token length: {len(token)} chars")
         print(f"     Token preview: {token[:80]}...")
-        print(f"     Nonce length: {len(nonce)} chars")
-        print(f"     Nonce: {nonce[:64]}...")
-        print(f"     ECDH public key length: {len(ecdh)} chars")
-        print(f"     ECDH public key: {ecdh[:64]}...")
+        if nonce:
+            print(f"     Nonce length: {len(nonce)} chars")
+            print(f"     Nonce: {nonce[:64]}...")
+        else:
+            print("     Nonce: not a wire field on this contract — derived in Step 1")
+        if ecdh:
+            print(f"     Client/ECDH public key length: {len(ecdh)} chars")
+            print(f"     Client/ECDH public key: {ecdh[:64]}...")
         print(f"  ✅ Found {len(body)} total fields in response body")
     else:
         # Individual arguments
@@ -672,7 +698,8 @@ Examples:
         body = json.loads(args.body)
 
     # Strip Play Integrity fields that were appended after nonce was computed
-    body_clean = {k: v for k, v in body.items() if k not in PI_FIELDS}
+    body_clean = (strip_attestation_outputs(body) if SECURE_CONTEXT in body
+                  else {k: v for k, v in body.items() if k not in PI_FIELDS})
 
     print("\n── Step 1: Re-derive expected nonce ─────────────────────────────")
     step1_start_ms = int(time.time() * 1000)
