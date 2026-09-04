@@ -1,0 +1,31 @@
+{
+  "name": "[Android] View Latest Referring Params",
+  "steps": [
+    {
+      "id": 1,
+      "type": "assert",
+      "text": "View Latest Referring Params"
+    },
+    {
+      "id": 2,
+      "type": "tap",
+      "text": "View Latest Referring Params"
+    },
+    {
+      "id": 3,
+      "type": "assert",
+      "text": "Latest Referring Params"
+    },
+    {
+      "id": 4,
+      "type": "assert",
+      "text": "OK"
+    },
+    {
+      "id": 5,
+      "type": "tap",
+      "text": "OK"
+    }
+  ],
+  "params": {}
+}

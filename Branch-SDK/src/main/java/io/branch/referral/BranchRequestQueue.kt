@@ -841,6 +841,38 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
+     * Whether an install or open is already queued or in flight.
+     *
+     * Deep link resolution is not an open: the beta's flow is /v3/deeplink followed by
+     * /v3/events/open, so RequestDeepLink is deliberately excluded — counting it would suppress
+     * the open that has to follow it.
+     *
+     * Checks both the queue and the requests already executing, because the duplicate this guards
+     * against is enqueued while the first open is pending, before it reaches the network.
+     */
+    fun containsInstallOrOpen(): Boolean {
+        synchronized(queueList) {
+            if (queueList.any { isInstallOrOpen(it) }) {
+                BranchLogger.v("containsInstallOrOpen: found one queued")
+                return true
+            }
+        }
+        val executing = activeRequests.values.any { isInstallOrOpen(it) }
+        if (executing) {
+            BranchLogger.v("containsInstallOrOpen: found one executing")
+        }
+        return executing
+    }
+
+    // RequestOpen is the beta's open. ServerRequestRegisterInstall is still reachable here:
+    // getInstallOrOpenRequest builds one when there is no randomized bundle token, and
+    // sessionBuilder().init() remains public API. ServerRequestRegisterOpen is not included —
+    // its only construction site is the queue-restore path in ServerRequest, and nothing on this
+    // line restores a persisted queue.
+    private fun isInstallOrOpen(request: ServerRequest): Boolean =
+        request is ServerRequestRegisterInstall || request is RequestOpen
+
+    /**
      * Peek at request at specific index
      */
     fun peekAt(index: Int): ServerRequest? {

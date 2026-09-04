@@ -16,7 +16,7 @@ public class KeyTest extends BranchTest {
         String branchKey = BranchUtil.readBranchKey(getTestContext());
         Assert.assertTrue(branchKey.startsWith("key_live"));
 
-        Branch.enableTestMode();
+        BranchUtil.setTestMode(true);
         branchKey = BranchUtil.readBranchKey(getTestContext());
         Assert.assertTrue(branchKey.startsWith("key_test"));
     }
