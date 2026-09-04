@@ -250,7 +250,9 @@ public class PrefHelperTest extends BranchTest {
 
         Assert.assertEquals(prefHelper.isDMAParamsInitialized(),false);
 
-        Branch.getInstance().setDMAParamsForEEA(true, false,true);
+        prefHelper.setEEARegion(true);
+        prefHelper.setAdPersonalizationConsent(false);
+        prefHelper.setAdUserDataUsageConsent(true);
 
         Assert.assertEquals(prefHelper.isDMAParamsInitialized(),true);
         Assert.assertEquals(prefHelper.getEEARegion(),true);
@@ -258,7 +260,9 @@ public class PrefHelperTest extends BranchTest {
         Assert.assertEquals(prefHelper.getAdUserDataUsageConsent(),true);
 
         // check by flipping values - if they are overwritten
-        Branch.getInstance().setDMAParamsForEEA(false, true,false);
+        prefHelper.setEEARegion(false);
+        prefHelper.setAdPersonalizationConsent(true);
+        prefHelper.setAdUserDataUsageConsent(false);
 
         Assert.assertEquals(prefHelper.getEEARegion(),false);
         Assert.assertEquals(prefHelper.getAdPersonalizationConsent(),true);

@@ -148,6 +148,12 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.hasUser result: $result")
         return result
     }
+    fun containsInstallOrOpen(): Boolean {
+        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOrOpen called")
+        val result = newQueue.containsInstallOrOpen()
+        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOrOpen result: $result")
+        return result
+    }
     fun peek(): ServerRequest? {
         BranchLogger.v("BranchRequestQueueAdapter.peek called")
         val result = newQueue.peek()

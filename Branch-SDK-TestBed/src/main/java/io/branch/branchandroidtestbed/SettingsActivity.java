@@ -53,7 +53,8 @@ public class SettingsActivity extends Activity {
     void setupApiUrlText() {
         final EditText apiUrlText = findViewById(R.id.api_url_text);
         final PrefHelper prefHelper = PrefHelper.getInstance(this);
-        String currentApiUrl = prefHelper.getAPIBaseUrl(true);
+        String pendingApiUrl = TestBedSettings.getApiUrl(this);
+        String currentApiUrl = pendingApiUrl != null ? pendingApiUrl : prefHelper.getAPIBaseUrl(true);
         if (currentApiUrl != null) {
             apiUrlText.setText(currentApiUrl);
         }
@@ -61,12 +62,16 @@ public class SettingsActivity extends Activity {
         apiUrlText.setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_DONE) {
                 String newApiUrl = textView.getText().toString();
-                Branch.setAPIUrl(newApiUrl);
+                // The API URL is a pre-init decision, so it is persisted and read into
+                // BranchConfiguration.Builder by CustomBranchApp on the next launch.
+                TestBedSettings.setApiUrl(SettingsActivity.this, newApiUrl);
 
                 InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(apiUrlText.getWindowToken(), 0);
 
-                Toast.makeText(getApplicationContext(), "Set API Base URL to " + newApiUrl, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),
+                        "API Base URL set to " + newApiUrl + " — restart the app to apply",
+                        Toast.LENGTH_LONG).show();
                 return true;
             }
             return false;
@@ -120,7 +125,7 @@ public class SettingsActivity extends Activity {
         disableAdNetworkCalloutsSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Branch.getInstance().disableAdNetworkCallouts(disableAdNetworkCalloutsSwitch.isChecked());
+                prefHelper.setAdNetworkCalloutsDisabled(disableAdNetworkCalloutsSwitch.isChecked());
             }
         });
 
