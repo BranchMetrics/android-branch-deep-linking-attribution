@@ -58,7 +58,7 @@ jobs:
       # modules using `ANDROIDX_TEST_ORCHESTRATOR` + `clearPackageData=true`, AGP's task
       # runner uninstalls the target package once the run finishes. The post-test
       # `adb shell run-as io.branch.branchandroidtestbed cat ...` then fails with
-      # `unknown package` and `branchlogs.txt` is never produced for L1 validation.
+      # `unknown package` and no capture is produced for L1 validation.
       - name: Build TestBed + GPTDriver APKs
         env:
           # Gradle maps ORG_GRADLE_PROJECT_<name> env vars to project properties,
@@ -72,6 +72,18 @@ jobs:
             :Branch-SDK-GPTDriver:assembleDebug \
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
+      # Three scenarios, three captures. Each needs its own file because
+      # CustomBranchApp.saveLogToFile opens the capture in append mode and
+      # nothing truncates it, so a shared path would judge scenario N against
+      # scenarios 1 through N. CLEAR_LOG truncates before each run.
+      #
+      # The order is load-bearing. N1 and C3 wipe app data first; C1 is the
+      # launch on a device that already has the app, so it must follow C3 and
+      # keep the install C3 established.
+      #
+      # One line per command: the emulator-runner action splits `script:` on
+      # newlines and runs each through its own `sh -c`, so a multi-line
+      # construct here would not survive.
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
         env:
@@ -86,7 +98,10 @@ jobs:
           # MOBILEBOOST_API_KEY is propagated to the script via the step `env:`
           # block above; the script reads it from the environment, so we no
           # longer pass the secret as a positional argument (avoids argv leak).
-          script: ./scripts/run_l1_instrumented.sh
+          script: |
+            TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=wire-n1.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=io.branch.gptdriver.tests.C3FirstInstallLinkWireTest OUTPUT_LOG=wire-c3.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=io.branch.gptdriver.tests.C1InstalledLinkWireTest OUTPUT_LOG=wire-c1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -96,7 +111,7 @@ jobs:
       # Self-test the validator first. A regression in validate_l1_logs.py
       # itself (wrong required field, broken parser) would otherwise
       # surface as a false PASS or a confusing failure on the real
-      # branchlogs.txt step. Unit tests run from the repo root so the
+      # captures. Unit tests run from the repo root so the
       # `scripts.test_validate_l1_logs` module path resolves cleanly.
       - name: Run L1 Validator Unit Tests
         run: python -m unittest scripts.test_validate_l1_logs -v
@@ -108,7 +123,19 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          python scripts/validate_l1_logs.py branchlogs.txt 2>&1 | tee /tmp/l1-output.txt
+          rc=0
+          check () {
+            echo "::group::$1"
+            if ! python scripts/validate_l1_logs.py "$2" 2>&1 \
+                 | sed "s/^FAILED:/FAILED: [$1]/" | tee -a /tmp/l1-output.txt; then
+              rc=1
+            fi
+            echo "::endgroup::"
+          }
+          check N1 wire-n1.txt
+          check C3 wire-c3.txt
+          check C1 wire-c1.txt
+          exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
       # the job log.
@@ -118,7 +145,7 @@ jobs:
           {
             echo "### Layer 1 — SDK wire validation"
             echo
-            grep -o 'posting to https://[^ ]*' branchlogs.txt 2>/dev/null \
+            grep -h -o 'posting to https://[^ ]*' wire-n1.txt wire-c3.txt wire-c1.txt 2>/dev/null \
               | sed 's|.*api2.branch.io||' | sort | uniq -c > /tmp/l1-endpoints.txt || true
             if [ -s /tmp/l1-endpoints.txt ]; then
               echo "| endpoint | requests |"
@@ -151,7 +178,8 @@ jobs:
               echo "<details><summary>Captured wire log</summary>"
               echo
               echo '```'
-              if [ -s branchlogs.txt ]; then head -c 40000 branchlogs.txt; echo; else echo "(branchlogs.txt is empty or missing)"; fi
+              cat wire-n1.txt wire-c3.txt wire-c1.txt > /tmp/l1-all.txt 2>/dev/null || true
+              if [ -s /tmp/l1-all.txt ]; then head -c 40000 /tmp/l1-all.txt; echo; else echo "(no capture was produced)"; fi
               echo '```'
               echo
               echo "</details>"
@@ -166,7 +194,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: branch-wire-logs
-          path: branchlogs.txt
+          path: |
+            wire-n1.txt
+            wire-c3.txt
+            wire-c1.txt
 
       - name: Fail the job if validation failed
         if: steps.validate.outcome == 'failure'
