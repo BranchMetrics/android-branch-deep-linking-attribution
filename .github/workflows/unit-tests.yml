@@ -1,0 +1,33 @@
+name: Unit tests
+
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+      - 6.0.0-beta.0
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      # repo's gradle is configured to run on java 17
+      - name: Set up java 17 for gradle
+        uses: actions/setup-java@v5
+        with:
+          distribution: "corretto"
+          java-version: "17"
+
+      - name: Run unit tests
+        run: ./gradlew :Branch-SDK:testDebugUnitTest
+
+      - name: Save test report
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: Branch-SDK/build/reports/tests/testDebugUnitTest
