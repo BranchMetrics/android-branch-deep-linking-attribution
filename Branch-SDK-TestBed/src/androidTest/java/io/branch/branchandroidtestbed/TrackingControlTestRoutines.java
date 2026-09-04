@@ -14,6 +14,8 @@ import java.util.UUID;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchSessionStateListener;
+import io.branch.referral.BranchSessionState;
 import io.branch.referral.BranchError;
 import io.branch.referral.util.LinkProperties;
 
@@ -216,14 +218,19 @@ public class TrackingControlTestRoutines {
     
     
     private void waitForBranchInitAndExecuteNext(final int testCnt) {
-        Branch.sessionBuilder(null).withCallback(new Branch.BranchUniversalReferralInitListener() {
+        // Session init is no longer something a caller drives; observe the state instead and run
+        // the next routine once the session has settled either way.
+        final Branch branch = Branch.getInstance();
+        branch.addSessionStateObserver(new BranchSessionStateListener() {
             @Override
-            public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
-                if (error != null) {
+            public void onSessionStateChanged(BranchSessionState previousState, BranchSessionState currentState) {
+                if (currentState instanceof BranchSessionState.Initialized
+                        || currentState instanceof BranchSessionState.Failed) {
+                    branch.removeSessionStateObserver(this);
                     runTrackingControlTest(testCnt);
                 }
             }
-        }).init();
+        });
     }
     
 }
