@@ -101,15 +101,73 @@ jobs:
       - name: Run L1 Validator Unit Tests
         run: python -m unittest scripts.test_validate_l1_logs -v
 
+      # continue-on-error so the summary below still runs on a failure -- the
+      # job is failed explicitly at the end.
       - name: Run L1 Validation Script
-        run: python scripts/validate_l1_logs.py branchlogs.txt
+        id: validate
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python scripts/validate_l1_logs.py branchlogs.txt 2>&1 | tee /tmp/l1-output.txt
+
+      # What the gate actually asserted, on the PR page rather than buried in
+      # the job log.
+      - name: Write run summary
+        if: always()
+        run: |
+          {
+            echo "### Layer 1 — SDK wire validation"
+            echo
+            grep -o 'posting to https://[^ ]*' branchlogs.txt 2>/dev/null \
+              | sed 's|.*api2.branch.io||' | sort | uniq -c > /tmp/l1-endpoints.txt || true
+            if [ -s /tmp/l1-endpoints.txt ]; then
+              echo "| endpoint | requests |"
+              echo "| --- | ---: |"
+              awk '{printf "| `%s` | %s |\n", $2, $1}' /tmp/l1-endpoints.txt
+            else
+              echo "No wire requests were captured."
+            fi
+            echo
+            echo "Scenario coverage:"
+            echo
+            echo "No scenario is authored yet, so the endpoint table above is the only assertion this gate makes."
+            echo
+            echo "| scenario group | status |"
+            echo "| --- | --- |"
+            echo "| Cold (C1–C3) | not implemented |"
+            echo "| Warm (W1–W2) | not implemented |"
+            echo "| Hot (H1–H2) | not implemented |"
+            echo "| Negative / guards (N1–N4) | not implemented |"
+            echo
+            if [ "${{ steps.validate.outcome }}" = "success" ]; then
+              echo "Result: **PASS**"
+            else
+              echo "Result: **FAIL**"
+              echo
+              echo '```'
+              grep '^FAILED:' /tmp/l1-output.txt || echo "(no FAILED lines; see the job log)"
+              echo '```'
+              echo
+              echo "<details><summary>Captured wire log</summary>"
+              echo
+              echo '```'
+              if [ -s branchlogs.txt ]; then head -c 40000 branchlogs.txt; echo; else echo "(branchlogs.txt is empty or missing)"; fi
+              echo '```'
+              echo
+              echo "</details>"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # Only upload from PRs originating in this repo. Forked PRs already
       # have GITHUB_TOKEN write restrictions, so the raw log never escapes
       # to fork artifacts.
       - name: Upload Logs on Failure
-        if: failure() && github.event.pull_request.head.repo.full_name == github.repository
+        if: always() && steps.validate.outcome != 'success' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/upload-artifact@v4
         with:
           name: branch-wire-logs
           path: branchlogs.txt
+
+      - name: Fail the job if validation failed
+        if: steps.validate.outcome == 'failure'
+        run: exit 1
