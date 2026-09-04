@@ -986,6 +986,8 @@ public class Branch {
                 req.onUrlAvailable(url);
                 return url;
             }
+            // The link generators below bypass the queue, which is what normally stamps these.
+            req.addClientRequestParameters();
             if (req.isAsync()) {
                 // Use modern link generator for async requests when available
                 if (modernLinkGenerator_ != null) {

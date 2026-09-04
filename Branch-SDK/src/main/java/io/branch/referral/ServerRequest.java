@@ -686,9 +686,10 @@ public abstract class ServerRequest {
     }
 
     /**
-     * Put request time stamp and uuid at top level of POST body
+     * Put request time stamp and uuid at top level of POST body. Idempotent: both values are
+     * fixed at construction.
      */
-    private void addClientRequestParameters() {
+    void addClientRequestParameters() {
         if(prefHelper_ != null){
             try {
                 params_.put(Defines.Jsonkey.Branch_Sdk_Request_Creation_Time_Stamp.getKey(), this.creation_ts);

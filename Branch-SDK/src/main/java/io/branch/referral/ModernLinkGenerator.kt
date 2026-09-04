@@ -79,7 +79,7 @@ class ModernLinkGenerator(
     )
     
     // Thread-safe cache for generated links - prevents duplicate requests
-    private val linkCache = ConcurrentHashMap<String, String>()
+    private val linkCache = ConcurrentHashMap<BranchLinkData, String>()
     
     /**
      * Generate short link asynchronously using coroutines.
@@ -95,15 +95,14 @@ class ModernLinkGenerator(
         
         try {
             // Check cache first to avoid duplicate requests
-            val cacheKey = linkData.toString()
-            linkCache[cacheKey]?.let { cachedUrl ->
+            linkCache[linkData]?.let { cachedUrl ->
                 return@withContext Result.success(cachedUrl)
             }
             
             // Apply timeout to prevent ANR
             withTimeout(timeoutMs) {
                 val response = performLinkRequest(linkData)
-                processLinkResponse(response, cacheKey)
+                processLinkResponse(response, linkData)
             }
         } catch (e: TimeoutCancellationException) {
             Result.failure(
@@ -323,13 +322,13 @@ class ModernLinkGenerator(
     /**
      * Process the server response and extract the URL.
      */
-    private fun processLinkResponse(response: ServerResponse, cacheKey: String): Result<String> {
+    private fun processLinkResponse(response: ServerResponse, linkData: BranchLinkData): Result<String> {
         return try {
             when (response.statusCode) {
                 HttpURLConnection.HTTP_OK -> {
                     val url = response.`object`.getString("url")
                     // Cache successful result
-                    linkCache[cacheKey] = url
+                    linkCache[linkData] = url
                     Result.success(url)
                 }
                 HttpURLConnection.HTTP_CONFLICT -> {
