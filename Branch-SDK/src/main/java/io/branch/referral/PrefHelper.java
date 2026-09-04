@@ -47,7 +47,7 @@ public class PrefHelper {
     public static final String NO_STRING_VALUE = "bnc_no_value";
     
     // We should keep this non-zero to give the connection time to recover after a failure
-    private static final int INTERVAL_RETRY = 1000;
+    static final int INTERVAL_RETRY = 1000;
     
     /**
      * Number of times to reattempt connection to the Branch server before giving up and throwing an
@@ -230,7 +230,15 @@ public class PrefHelper {
      * @param url The {@link String} URL base URL that the Branch API uses.
      */
     static void setAPIUrl(String url) {
+        if (TextUtils.isEmpty(url)) {
+            BranchLogger.w("setAPIUrl: URL cannot be empty or null");
+            return;
+        }
+        if (!url.endsWith("/")) {
+            url = url + "/";
+        }
         customServerURL_ = url;
+        BranchLogger.v("setAPIUrl: Branch API URL was set to " + url);
     }
 
     /**
@@ -1400,6 +1408,20 @@ public class PrefHelper {
     }
 
     /**
+     * Records the preinstall campaign in the install request metadata.
+     */
+    void setPreinstallCampaign(String preinstallCampaign) {
+        addInstallMetadata(Defines.PreinstallKey.campaign.getKey(), preinstallCampaign);
+    }
+
+    /**
+     * Records the preinstall partner in the install request metadata.
+     */
+    void setPreinstallPartner(String preinstallPartner) {
+        addInstallMetadata(Defines.PreinstallKey.partner.getKey(), preinstallPartner);
+    }
+
+    /**
      * gets the value for the specified key from the custom data from install request metadata
      *
      * @param key   A {@link String} value containing the key in the install meta data
@@ -1439,6 +1461,15 @@ public class PrefHelper {
     private static boolean useEUEndpoint_ = false;
 
     public static String fbAppId_ = null;
+
+    static void setFbAppId(String fbAppId) {
+        if (TextUtils.isEmpty(fbAppId)) {
+            BranchLogger.w("setFbAppId: fbAppId cannot be empty or null");
+            return;
+        }
+        fbAppId_ = fbAppId;
+        BranchLogger.v("setFbAppId to " + fbAppId);
+    }
 
     static void enableLogging(boolean fEnable) {
         enableLogging_ = fEnable;

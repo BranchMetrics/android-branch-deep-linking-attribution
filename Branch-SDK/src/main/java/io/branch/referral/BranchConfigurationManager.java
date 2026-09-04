@@ -7,8 +7,8 @@ import androidx.annotation.NonNull;
 /**
  * Modular configuration manager for Branch SDK initialization.
  * 
- * This class handles all configuration loading that was previously done in the
- * getAutoInstance method, ensuring proper separation of concerns and modularity.
+ * This class handles the configuration loading done during {@link Branch#initialize}, ensuring
+ * proper separation of concerns and modularity.
  * 
  * Follows Single Responsibility Principle by focusing solely on configuration management.
  * Follows Dependency Inversion Principle by depending on abstractions (BranchJsonConfig).
@@ -20,9 +20,8 @@ public class BranchConfigurationManager {
     /**
      * Loads all configuration settings from various sources.
      * 
-     * This method centralizes all configuration loading logic that was previously
-     * scattered across the getAutoInstance method, ensuring proper initialization
-     * order and error handling.
+     * This method centralizes the configuration loading logic invoked from
+     * {@link Branch#initialize}, ensuring proper initialization order and error handling.
      * 
      * @param context Android context for resource access
      * @param branchInstance The Branch instance to configure
@@ -65,7 +64,9 @@ public class BranchConfigurationManager {
      */
     private static void loadLoggingConfiguration(@NonNull Context context) {
         if (BranchUtil.getEnableLoggingConfig(context)) {
-            Branch.enableLogging();
+            BranchLogger.setLoggerCallback(null);
+            BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
+            BranchLogger.setLoggingEnabled(true);
             BranchLogger.v("Logging enabled from configuration");
         }
     }
@@ -116,7 +117,7 @@ public class BranchConfigurationManager {
     }
     
     /**
-     * Loads test mode configuration from branch.json and manifest.
+     * Loads test mode configuration from branch.json.
      * 
      * @param context Android context for resource access
      */
@@ -136,22 +137,6 @@ public class BranchConfigurationManager {
         BranchLogger.v("Preinstall system data loaded");
     }
     
-    /**
-     * Validates that essential configuration is present.
-     * 
-     * @param context Android context for resource access
-     * @return true if essential configuration is valid, false otherwise
-     */
-    public static boolean validateConfiguration(@NonNull Context context) {
-        String branchKey = BranchUtil.readBranchKey(context);
-        if (TextUtils.isEmpty(branchKey)) {
-            BranchLogger.w("Branch key is missing from configuration");
-            return false;
-        }
-        
-        BranchLogger.v("Configuration validation passed");
-        return true;
-    }
     
     /**
      * Resets all configuration to default values.
@@ -159,8 +144,9 @@ public class BranchConfigurationManager {
      * This method is useful for testing or when configuration needs to be cleared.
      */
     public static void resetConfiguration() {
-        Branch.disableTestMode();
-        Branch.disableLogging();
+        BranchUtil.setTestMode(false);
+        BranchLogger.setLoggingEnabled(false);
+        BranchLogger.setLoggerCallback(null);
         Branch.deferInitForPluginRuntime(false);
         BranchLogger.v("Configuration reset to default values");
     }

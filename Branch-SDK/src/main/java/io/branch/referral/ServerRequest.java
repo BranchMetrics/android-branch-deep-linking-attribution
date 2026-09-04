@@ -59,6 +59,12 @@ public abstract class ServerRequest {
     /*True if there is an error in creating this request such as error with json parameters.*/
     public boolean constructError_ = false;
     
+    /**
+     * Selects the request body shape, not the endpoint's URL version. V1 puts device
+     * fields at the top level; V2 nests them under user_data; V1_LATD is nested minus
+     * the V2-only identity fields. Paths in {@link Defines.RequestPath} vary
+     * independently: v3/events/open is V1, v3/events/standard is V2.
+     */
     public enum BRANCH_API_VERSION {
         V1,
         V1_LATD,
@@ -680,9 +686,10 @@ public abstract class ServerRequest {
     }
 
     /**
-     * Put request time stamp and uuid at top level of POST body
+     * Put request time stamp and uuid at top level of POST body. Idempotent: both values are
+     * fixed at construction.
      */
-    private void addClientRequestParameters() {
+    void addClientRequestParameters() {
         if(prefHelper_ != null){
             try {
                 params_.put(Defines.Jsonkey.Branch_Sdk_Request_Creation_Time_Stamp.getKey(), this.creation_ts);
