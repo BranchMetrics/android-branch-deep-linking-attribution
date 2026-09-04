@@ -22,7 +22,10 @@ class EventRequestPathTest : BranchTestBase() {
     @Before
     fun setUp() {
         super.setUpBase()
-        Branch.getAutoInstance(RuntimeEnvironment.getApplication())
+        Branch.initialize(
+            RuntimeEnvironment.getApplication(),
+            BranchConfiguration.Builder("key_live_test123").build(),
+        )
     }
 
     @After
