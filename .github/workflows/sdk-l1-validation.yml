@@ -1,8 +1,31 @@
 name: Layer 1 - SDK Wire Validation (PR Gate)
 
 on:
+  # The ticket's acceptance is that a push to the beta triggers this, and the badges in EMT-4079
+  # read a branch status, which only a push event produces. A pull_request-only trigger leaves
+  # both unmet.
+  push:
+    branches: ["6.0.0-beta.0"]
+    paths:
+      - "Branch-SDK/src/main/**"
+      - "Branch-SDK-TestBed/**"
+      - "Branch-SDK-GPTDriver/**"
+      - "scripts/validate_l1_logs.py"
+      - "scripts/test_validate_l1_logs.py"
+      - "scripts/run_l1_instrumented.sh"
+      - ".github/workflows/sdk-l1-validation.yml"
   pull_request:
-    branches: [master, main, feature/mobileboost-e2e-tests]
+    branches: [master, main, feature/mobileboost-e2e-tests, "6.0.0-beta.0"]
+    # Duplicated rather than shared via a YAML anchor: GitHub Actions does not guarantee anchor
+    # support, and a silently dead trigger is the worst failure mode for a gate.
+    paths:
+      - "Branch-SDK/src/main/**"
+      - "Branch-SDK-TestBed/**"
+      - "Branch-SDK-GPTDriver/**"
+      - "scripts/validate_l1_logs.py"
+      - "scripts/test_validate_l1_logs.py"
+      - "scripts/run_l1_instrumented.sh"
+      - ".github/workflows/sdk-l1-validation.yml"
   workflow_dispatch:
 
 permissions:

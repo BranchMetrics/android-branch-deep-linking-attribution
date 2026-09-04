@@ -26,7 +26,7 @@ The direction is away from session state as an asserted flag. `SDK_INIT_WAIT_LOC
 
 ## Singleton wiring
 
-`Branch` is a process singleton (`branchReferral_`). Apps obtain it with `Branch.getAutoInstance(Context)`; `getInstance()` is a pure accessor that never creates.
+`Branch` is a process singleton (`branchReferral_`). Apps create it with `Branch.initialize(Context, BranchConfiguration)`; `getInstance()` is a pure accessor that never creates.
 
 The private constructor wires the sub-systems, most into `final` fields set once: `prefHelper_` (persistent state), `requestQueue_` (a `BranchRequestQueueAdapter` on this branch, `Branch.java:217`, assigned `:328`), `deviceInfo_`, `trackingController`, `branchConfigurationController_`, and `branchRemoteInterface_` (swappable, which is how tests mock the network).
 
@@ -55,7 +55,7 @@ Regardless of entry point, init drives this sequence:
 
 `ServerRequest` (abstract) is the base for every API call. It owns the POST/GET body (`params_`), a `Defines.RequestPath`, its wait-lock set, and a retry count.
 
-`BRANCH_API_VERSION` has three values: `V1`, `V1_LATD`, `V2`. `setPost()` branches on `V1`: **V1** (`v1/install`, `v1/open`, `v1/url`) puts device fields at the top level, while **V2** (`v2/event/standard`, `v2/event/custom`) and **`V1_LATD`** nest them under `user_data`.
+`BRANCH_API_VERSION` has three values: `V1`, `V1_LATD`, `V2`. `setPost()` branches on `V1`: **V1** (`v1/install`, `v1/open`, `v1/url`) puts device fields at the top level, while **V2** (`v3/events/standard`, `v3/events/custom`) and **`V1_LATD`** nest them under `user_data`.
 
 Subclasses: `ServerRequestInitSession` leading to `ServerRequestRegisterInstall` and `ServerRequestRegisterOpen`; `ServerRequestLogEvent` (V2); `ServerRequestCreateUrl`; `ServerRequestGetLATD`; plus the client-only queue operations `QueueOperationSetIdentity` and `QueueOperationLogout`, which are enqueued for ordering but skip the network.
 

@@ -36,7 +36,7 @@ The required field list lives at the top of `validate_l1_logs.py`:
   on init/event requests, so `/v1/url` legitimately lacks it).
 
 Required-field checks are scoped to `/v1/*` only. Captured non-v1
-endpoints (e.g. `/v2/event/*`) get their payload printed for visibility
+endpoints (e.g. `/v3/events/*`) get their payload printed for visibility
 but do not fail the run — the L1 contract covers v1 only.
 
 Lookups tolerate `user_data` nesting so a future move from top-level to

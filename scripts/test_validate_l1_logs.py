@@ -57,12 +57,19 @@ class MissingFieldTests(unittest.TestCase):
         )
 
 
-class InstallRequiredTests(unittest.TestCase):
-    def test_capture_without_install_fails(self):
+class NoMandatoryEndpointTests(unittest.TestCase):
+    """The global rule requiring /v1/install in every capture is gone.
+
+    A correct beta capture contains no install at all: on 6.0.0-beta.0 the first launch resolves
+    through requestDeepLinkData and the open goes to /v3/events/open. The old rule failed every
+    correct beta run. No existing test covered the absence of that rule, which is why removing it
+    could have gone unnoticed.
+    """
+
+    def test_capture_without_install_is_valid(self):
         errors, _ = _run_validation("no_install.txt")
-        self.assertTrue(
-            any("'/v1/install' was not captured" in e for e in errors),
-            f"Expected install-missing error, got: {errors}",
+        self.assertEqual(
+            [], errors, f"A capture without an install must be valid, got: {errors}"
         )
 
 
