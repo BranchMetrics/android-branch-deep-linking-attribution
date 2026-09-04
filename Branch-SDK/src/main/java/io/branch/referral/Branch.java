@@ -2129,6 +2129,13 @@ public class Branch {
 
             BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
             if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
+                // The foreground observer and the deep link callback both reach here, and the
+                // first open is still queued when the second arrives. Without this the launch
+                // sends two.
+                if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
+                    BranchLogger.d("sendOpen skipped: an install or open is already pending");
+                    return;
+                }
                 RequestOpen requestOpen = new RequestOpen(context_, null, false, null);
                 branchReferral_.requestQueue_.handleNewRequest(requestOpen);
             }
@@ -2143,6 +2150,10 @@ public class Branch {
 
             BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
             if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
+                if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
+                    BranchLogger.d("sendOpen skipped: an install or open is already pending");
+                    return;
+                }
                 RequestOpen requestOpen = new RequestOpen(context_, null, false, responseData);
                 branchReferral_.requestQueue_.handleNewRequest(requestOpen);
             }
