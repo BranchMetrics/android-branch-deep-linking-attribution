@@ -57,6 +57,19 @@ class MissingFieldTests(unittest.TestCase):
         )
 
 
+class V3ContractTests(unittest.TestCase):
+    """The /v3 endpoints were skipped by the old `/v1/*` path scope, so nothing asserted on the
+    beta's actual wire. Catches a /v3 payload losing a required field — the previous scope would
+    have passed it silently."""
+
+    def test_v3_missing_required_field_fails(self):
+        errors, _ = _run_validation("v3_missing_anon_id.txt")
+        self.assertTrue(
+            any("/v3/deeplink" in e and "'anon_id'" in e for e in errors),
+            f"Expected a named anon_id error on /v3/deeplink, got: {errors}",
+        )
+
+
 class NoMandatoryEndpointTests(unittest.TestCase):
     """The global rule requiring /v1/install in every capture is gone.
 
