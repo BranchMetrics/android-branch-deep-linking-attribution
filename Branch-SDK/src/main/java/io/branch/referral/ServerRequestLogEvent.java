@@ -84,7 +84,7 @@ public class ServerRequestLogEvent extends ServerRequest {
 
     @Override
     public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
-        return BRANCH_API_VERSION.V2; //This is a v2 event
+        return BRANCH_API_VERSION.V2; // v3/events/* uses the V2 (nested user_data) body shape
     }
 
     @Override

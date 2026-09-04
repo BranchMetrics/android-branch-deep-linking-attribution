@@ -82,7 +82,8 @@ abstract public class BranchTest extends BranchTestRequestUtil {
             throw new IllegalStateException("sdk already initialized, makes sure initBranchInstance is called just once per test.");
         }
 
-        Branch.enableLogging();
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
+        BranchLogger.setLoggingEnabled(true);
 
         if (branchKey == null) {
             branch = Branch.getInstance();

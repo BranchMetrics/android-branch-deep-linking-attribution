@@ -40,7 +40,7 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
          * **Threading:** If already on main thread, executes synchronously. Otherwise, marshalled
          * to the main thread because ProcessLifecycleOwner requires it. For standard init paths
          * (Application.onCreate on main thread), this is safe and synchronous. Custom integrations
-         * calling getAutoInstance() from background threads should ensure the app hasn't entered
+         * calling initialize() from background threads should ensure the app hasn't entered
          * foreground before registration completes, or the first OPEN event may be missed.
          */
         @JvmStatic
