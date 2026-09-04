@@ -5,7 +5,7 @@ import static io.branch.referral.validators.IntegrationValidatorConstants.branch
 import android.content.Context;
 import android.text.TextUtils;
 
-import io.branch.referral.BranchUtil;
+import io.branch.referral.PrefHelper;
 
 public class BranchKeysValidatorCheck extends IntegrationValidatorCheck {
 
@@ -21,7 +21,8 @@ public class BranchKeysValidatorCheck extends IntegrationValidatorCheck {
 
     @Override
     public boolean RunTests(Context context) {
-        return !TextUtils.isEmpty(BranchUtil.readBranchKey(context));
+        String branchKey = PrefHelper.getInstance(context).getBranchKey();
+        return !TextUtils.isEmpty(branchKey) && !PrefHelper.NO_STRING_VALUE.equals(branchKey);
     }
 
     @Override
