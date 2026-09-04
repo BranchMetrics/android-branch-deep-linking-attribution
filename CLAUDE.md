@@ -18,6 +18,7 @@ Not loaded automatically. Open the one that matches the task.
 | --- | --- |
 | `docs/internal/code-map.md` | you need to find where something lives |
 | `docs/internal/architecture.md` | you are touching init, the queue, OPEN/attribution, or persisted state (opens with a glossary) |
+| `docs/internal/beta-deltas.md` | you need the long form of a trap above, the queue internals, or what this branch changed versus `master` |
 | `docs/internal/testing.md` | you are writing or running tests, or a CI check failed |
 | `docs/internal/working-agreements.md` | you are opening a PR or reviewing one |
 
