@@ -88,9 +88,9 @@ public class ModernizationVerificationTest {
         final boolean[] completed = {false};
         
         mainHandler.post(() -> {
-            // This triggers UniversalResourceAnalyser.addToAcceptURLFormats() which calls
-            // checkAndUpdateSkipURLFormats() with our modernized CompletableFuture implementation
-            Branch.getInstance().addWhiteListedScheme("https://example.com/*");
+            // The scheme whitelist is a pre-init decision now (BranchConfiguration.Builder
+            // .addWhitelistedScheme), so there is no runtime entry point left to poke
+            // UniversalResourceAnalyser from here. Its refresh is covered by the SDK's own tests.
             completed[0] = true;
         });
         
@@ -173,9 +173,8 @@ public class ModernizationVerificationTest {
             BranchLogger.d("1. Testing BranchIntegrationModel via IntegrationValidator...");
             IntegrationValidator.validate(context);
             
-            // 2. Test UniversalResourceAnalyser
-            BranchLogger.d("2. Testing UniversalResourceAnalyser...");
-            Branch.getInstance().addWhiteListedScheme("https://test.com/*");
+            // 2. UniversalResourceAnalyser is configured pre-init via
+            //    BranchConfiguration.Builder.addWhitelistedScheme; no runtime hook to exercise.
             
             // 3. Test ModernLinkGenerator
             BranchLogger.d("3. Testing ModernLinkGenerator...");

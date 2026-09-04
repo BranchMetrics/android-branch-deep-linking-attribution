@@ -640,30 +640,66 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.cmdCustomEvent).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BranchLogger.d("MODERNIZATION_DEBUG: Send Custom Event button clicked");
+
+                new BranchEvent("my_custom_event")
+                        .setCustomerEventAlias("my_custom_alias")
+                        .setDescription("Testbed custom event")
+                        .addCustomDataProperty("Custom_Event_Property_Key1", "Custom_Event_Property_val1")
+                        .addContentItems(branchUniversalObject)
+                        .logEvent(MainActivity.this, new BranchEvent.BranchLogEventCallback() {
+                            @Override
+                            public void onSuccess(int responseCode) {
+                                BranchLogger.d("MODERNIZATION_DEBUG: Custom Event sent successfully: " + responseCode);
+                                showLongToast("Sent Branch Custom Event: " + responseCode);
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                BranchLogger.d("MODERNIZATION_DEBUG: Custom Event failed: " + e.getMessage());
+                                BranchLogger.d("BranchSDK_Tester: " + e.toString());
+                                Toast.makeText(getApplicationContext(), "Error sending Branch Custom Event: " + e, Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+        });
+
         findViewById(R.id.initSessionButton).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    Branch.sessionBuilder(MainActivity.this).withCallback(new Branch.BranchUniversalReferralInitListener() {
+                    Uri data = MainActivity.this.getIntent().getData();
+                    if (data == null) {
+                        Log.d("BranchSDK_Tester", "no link in the launch intent; nothing to resolve");
+                        Toast.makeText(getApplicationContext(), "No link in the launch intent", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Branch.getInstance().requestDeepLinkData(data, new Branch.BranchReferralInitListener() {
                         @Override
-                        public void onInitFinished(BranchUniversalObject branchUniversalObject, LinkProperties linkProperties, BranchError error) {
+                        public void onInitFinished(JSONObject referringParams, BranchError error) {
                             if (error != null) {
-                                Log.d("BranchSDK_Tester", "branch init failed. Caused by -" + error.getMessage());
-                            } else {
-                                Log.d("BranchSDK_Tester", "branch init complete!");
-                                if (branchUniversalObject != null) {
-                                    Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
-                                    Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
-                                    Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
-                                }
+                                Log.d("BranchSDK_Tester", "deep link resolution failed. Caused by -" + error.getMessage());
+                                return;
+                            }
+                            Log.d("BranchSDK_Tester", "deep link resolved! params " + referringParams);
 
-                                if (linkProperties != null) {
-                                    Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
-                                    Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
-                                }
+                            BranchUniversalObject branchUniversalObject = BranchUniversalObject.getReferredBranchUniversalObject();
+                            if (branchUniversalObject != null) {
+                                Log.d("BranchSDK_Tester", "title " + branchUniversalObject.getTitle());
+                                Log.d("BranchSDK_Tester", "CanonicalIdentifier " + branchUniversalObject.getCanonicalIdentifier());
+                                Log.d("BranchSDK_Tester", "metadata " + branchUniversalObject.getContentMetadata().convertToJson());
+                            }
+
+                            LinkProperties linkProperties = LinkProperties.getReferredLinkProperties();
+                            if (linkProperties != null) {
+                                Log.d("BranchSDK_Tester", "Channel " + linkProperties.getChannel());
+                                Log.d("BranchSDK_Tester", "control params " + linkProperties.getControlParams());
                             }
                         }
-                    }).withData(MainActivity.this.getIntent().getData()).init();
+                    });
                 } catch (Exception e) {
                     Log.e("BranchSDK_Tester", e.getMessage());
                 }
