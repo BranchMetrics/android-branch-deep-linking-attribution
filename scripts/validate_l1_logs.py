@@ -28,7 +28,7 @@ POST_VALUE_PREFIX = "Post value = "
 
 # Required on every captured /v1/* request. Lookup tolerates v2 user_data
 # nesting (Android emits device fields top-level on v1, nested under
-# user_data on /v2/event/*; only /v1/* is in L1 scope today).
+# user_data on /v3/events/*; only /v1/* is in L1 scope today).
 REQUIRED_COMMON = [
     "branch_key",
     "sdk",
