@@ -95,8 +95,8 @@ public class BranchPreinstallFileTest extends BranchTest {
     @Test
     public void testAppLevelDataOverride() {
         initBranchInstance();
-        branch.setPreinstallPartner("partner1");
-        branch.setPreinstallCampaign("campaign1");
+        branch.getPrefHelper().setPreinstallPartner("partner1");
+        branch.getPrefHelper().setPreinstallCampaign("campaign1");
 
         final ServerRequestQueue queue = ServerRequestQueue.getInstance(getTestContext());
         Assert.assertEquals(0, queue.getSize());
