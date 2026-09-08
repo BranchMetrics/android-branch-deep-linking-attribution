@@ -116,6 +116,12 @@ jobs:
       - name: Run L1 Validator Unit Tests
         run: python -m unittest scripts.test_validate_l1_logs -v
 
+      # Contracts are on. Until EMT-4136 merged, a real capture carried one
+      # /v3/events/open more than the fixtures did, so --scenario would have
+      # failed a healthy run and the check ran on field presence alone. That
+      # fix is in, and all three captures satisfy their own contracts, so the
+      # counts, ordering and absence assertions now reach CI.
+      #
       # continue-on-error so the summary below still runs on a failure -- the
       # job is failed explicitly at the end.
       - name: Run L1 Validation Script
@@ -126,7 +132,7 @@ jobs:
           rc=0
           check () {
             echo "::group::$1"
-            if ! python scripts/validate_l1_logs.py "$2" 2>&1 \
+            if ! python scripts/validate_l1_logs.py "$2" --scenario "$1" 2>&1 \
                  | sed "s/^FAILED:/FAILED: [$1]/" | tee -a /tmp/l1-output.txt; then
               rc=1
             fi
