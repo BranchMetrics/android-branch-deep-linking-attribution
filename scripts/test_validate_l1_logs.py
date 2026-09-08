@@ -31,6 +31,7 @@ SCENARIO_FIXTURES = {
     "C3": "c3_first_install_link.txt",
     "C1": "c1_installed_link.txt",
     "W1": "w1_warm_https.txt",
+    "W2": "w2_warm_urischeme.txt",
 }
 
 
@@ -279,7 +280,7 @@ class ScenarioContractTests(unittest.TestCase):
         )
 
     def test_each_fixture_satisfies_its_own_contract(self):
-        for scenario in ("N1", "C3", "C1", "W1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             with self.subTest(scenario=scenario):
                 errors = self._errors(scenario, scenario)
                 self.assertEqual(errors, [], f"{scenario}: {errors}")
@@ -287,7 +288,7 @@ class ScenarioContractTests(unittest.TestCase):
     def test_each_count_is_a_fact_about_its_fixture(self):
         # The check that would catch a contract written from the plan text
         # rather than from a capture.
-        for scenario in ("N1", "C3", "C1", "W1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             uris = [e["uri"] for e in self._entries(scenario)]
             for endpoint, expected in v.contract_for(scenario)["counts"].items():
                 with self.subTest(scenario=scenario, endpoint=endpoint):
@@ -298,7 +299,7 @@ class ScenarioContractTests(unittest.TestCase):
         # duplicate back is exactly the wire as it stands today, so each
         # contract must reject it. If one of these ever passes, the contract
         # has drifted back onto the defect.
-        for scenario in ("N1", "C3", "C1", "W1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             entries = self._entries(scenario)
             first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
             duplicated = entries + [dict(first_open, request=dict(first_open["request"]))]
@@ -313,7 +314,7 @@ class ScenarioContractTests(unittest.TestCase):
         # The counterpart to the duplicate-open case: too few is a defect the
         # same way too many is. Carried over from the harness contract's
         # coverage, which this class replaces.
-        for scenario in ("N1", "C3", "C1", "W1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             entries = [e for e in self._entries(scenario) if e["uri"] != "/v3/deeplink"]
             with self.subTest(scenario=scenario):
                 errors = v.assert_contract(entries, v.contract_for(scenario))
