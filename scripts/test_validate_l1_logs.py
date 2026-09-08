@@ -32,6 +32,7 @@ SCENARIO_FIXTURES = {
     "C1": "c1_installed_link.txt",
     "LINK": "link_generation.txt",
     "W1": "w1_warm_https.txt",
+    "W2": "w2_warm_urischeme.txt",
 }
 
 
@@ -269,7 +270,7 @@ class ScenarioContractTests(unittest.TestCase):
     """N1 is a measured capture less the EMT-4136 duplicate open. C3, C1 and
     LINK are cold captures.
 
-    W1 is a warm capture taken on 2026-09-08 against an API 34 emulator,
+    W1 and W2 are warm captures taken on 2026-09-08 against an API 34 emulator,
     after EMT-4136 (PR 1392) merged. W1 carries three opens. The only thing a
     warm launch does that a cold one does not is background and foreground the
     app; that is a coincidence these fixtures record, not a cause they establish."""
