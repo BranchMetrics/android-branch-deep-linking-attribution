@@ -2,16 +2,16 @@ package io.branch.gptdriver.tests
 
 import android.content.Intent
 import android.net.Uri
+import androidx.lifecycle.Lifecycle
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.LinkFieldReader
-import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -29,18 +29,26 @@ import org.junit.Test
  * directly is deliberate: it re-runs onActivityStarted and onActivityResumed, so the SDK's
  * PENDING -> READY intent transition happens the way it does in production.
  *
+ * No ActivityScenarioRule here, unlike the other L1 drivers. The rule closes the scenario in
+ * its after(), and once a new intent has been delivered through startActivity the scenario
+ * has lost lifecycle control, so close() throws. DeepLinkWarmOpenHybridTest hit the same wall
+ * and manages its own scenario for the same reason. The runner cleans the activity up.
+ *
  * Produces no assertion of its own. The capture is the output; the contract that judges it
  * lives in the validator.
  */
 class W1WarmHttpsWireTest {
 
-    @get:Rule
-    val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private var scenario: ActivityScenario<MainActivity>? = null
 
     @Test
     fun warmHttpsLinkEmitsWirePayload() {
-        // The rule's launch and this generation happen first, so the device is a returning
+        // This launch and the generation below happen first, so the device is a returning
         // one and the app is running by the time the link arrives.
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario?.moveToState(Lifecycle.State.RESUMED)
+        settleShort()
+
         val url = generateLink()
         settleShort()
 
@@ -62,11 +70,17 @@ class W1WarmHttpsWireTest {
     }
 
     private fun deliver(url: String) {
+        // An explicit component, not setPackage. The TestBed generates links on
+        // bnctestbed.test-app.link and its manifest does not declare that host, so a
+        // resolved VIEW intent raises ActivityNotFoundException. Naming the component
+        // skips resolution, which is what DeepLinkWarmOpenHybridTest does and what
+        // ActivityScenario.launch does for C1.
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            setPackage(InstrumentationRegistry.getInstrumentation().targetContext.packageName)
+            setClassName(context, MainActivity::class.java.name)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
-        InstrumentationRegistry.getInstrumentation().targetContext.startActivity(intent)
+        context.startActivity(intent)
     }
 
     private fun settleShort() = Thread.sleep(SETTLE_SHORT_MS)

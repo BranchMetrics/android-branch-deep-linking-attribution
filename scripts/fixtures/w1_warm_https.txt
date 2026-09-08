@@ -1,0 +1,658 @@
+BranchRemoteInterfaceUrlConnectionAsync: Initialized with modern coroutine-based networking (Thread.sleep eliminated)
+BranchRemoteInterfaceUrlConnection: Initialized with async implementation enabled (Thread.sleep eliminated)
+BranchRequestQueue constructor called
+BranchRequestQueue constructor completed
+BranchRequestQueue instance created
+BranchRequestQueueAdapter constructor called
+BranchRequestQueueAdapter constructor completed
+BranchRequestQueueAdapter instance created
+Branch constructor - initializing request queue
+Initializing BranchRequestQueueAdapter
+BranchRequestQueueAdapter.initialize called
+Initializing BranchRequestQueue with coroutines
+BranchRequestQueue.initialize called
+BranchRequestQueue.startProcessing called
+Branch constructor - request queue initialized
+Queue state set to PROCESSING
+Branch constructor - modern link generator initialized
+Branch constructor - legacy link generator initialized
+!SDK-VERSION-STRING!:io.branch.sdk.android:library:5.20.999
+{"event":"branch_configuration_applied","branchKey":"key_test_...PVJc","testMode":true,"apiUrl":null,"cdnBaseUrl":null,"euEndpoint":false,"logLevel":"VERBOSE","loggingCallback":"io.branch.branchandroidtestbed.CustomBranchApp$$ExternalSyntheticLambda0","requestTracingCallback":"io.branch.branchandroidtestbed.CustomBranchApp$1","networkTimeout":5500,"networkConnectTimeout":10000,"retryCount":3,"retryInterval":1000,"noConnectionRetryMax":3,"remoteInterface":null,"attributionLevel":null,"dmaParameters":null,"limitFacebookAttribution":false,"adNetworkCalloutsDisabled":false,"facebookAppId":null,"preinstallCampaign":null,"preinstallPartner":null,"installMetadata":{},"referringLinkAttributionForPreinstalledApps":false,"whitelistedSchemes":[],"uriHostsToSkip":[],"automaticOpenEvents":true,"userAgentFetchSync":false}
+deferInitForPluginRuntime false
+API configuration loaded from branch.json
+Facebook configuration loaded from branch.json
+Consumer protection configuration loaded from branch.json
+Test mode configuration loaded from configuration
+Preinstall system data loaded
+Branch configuration loaded successfully
+{"event":"branch_initialize_complete","sdkVersion":"io.branch.sdk.android:library:5.20.999","apiUrl":"https:\/\/api2.branch.io\/","logLevel":"VERBOSE","attributionLevel":"FULL","testMode":true,"facebookAppId":null,"networkTimeout":5500,"networkConnectTimeout":10000,"retryCount":3,"retryInterval":1000,"noConnectionRetryMax":3,"automaticOpenEvents":true}
+requestDeepLinkData called for URI: null
+ServerRequest constructor
+setPost {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393"}
+BranchRequestQueueAdapter.handleNewRequest called for: RequestDeepLink
+BranchRequestQueueAdapter.requestNeedsSession for RequestDeepLink - result: false
+Request needs session: false, can perform operations: false, legacy initialized: false, hasValidSession: false
+Enqueuing request: RequestDeepLink
+BranchRequestQueue.enqueue called for: RequestDeepLink
+Enqueuing request: io.branch.coroutines.RequestDeepLink@569c982
+Adding request to queue list
+Triggering processing for: RequestDeepLink
+BranchRequestQueue.processNextRequest called for: RequestDeepLink
+requestNeedsSession for RequestDeepLink - result: false
+requestNeedsSession for RequestDeepLink - result: false
+Request does not need session, returning true
+ServerRequestInitSession can proceed: true (isWaiting: false)
+canProcessRequest - isWaiting: false, needsSession: false, hasValidSession: true, isInitSession: true, result: true
+Processing request: RequestDeepLink, network count: 1
+requestNeedsSession for RequestDeepLink - result: false
+Request does not need session, returning true
+Executing request: RequestDeepLink
+*** EXECUTING SESSION INITIALIZATION REQUEST: RequestDeepLink ***
+Executing request: io.branch.coroutines.RequestDeepLink@569c982
+BranchRequestQueue.executeRequest called for: RequestDeepLink
+initSession
+ServerRequest constructor
+BranchRequestQueueAdapter.handleNewRequest called for: QueueOperationSetIdentity
+BranchRequestQueueAdapter.requestNeedsSession for QueueOperationSetIdentity - result: false
+Request needs session: false, can perform operations: false, legacy initialized: false, hasValidSession: false
+Enqueuing request: QueueOperationSetIdentity
+BranchRequestQueue.enqueue called for: QueueOperationSetIdentity
+Enqueuing request: io.branch.referral.QueueOperationSetIdentity@b2abd18
+Adding request to queue list
+Beginning stress tests
+Creating 1 test events
+ServerRequest constructor
+setPost {"name":"Event 0"}
+Triggering processing for: QueueOperationSetIdentity
+setPostUserAgent main
+Begin getUserAgentAsync Thread[DefaultDispatcher-worker-3,5,main]
+Preparing V2 event, user agent is 
+User agent is empty, handleNewRequest adding process wait lock USER_AGENT_STRING_LOCK
+BranchRequestQueueAdapter.handleNewRequest called for: null
+BranchRequestQueueAdapter.requestNeedsSession for null - result: true
+Request needs session: true, can perform operations: false, legacy initialized: false, hasValidSession: false
+handleNewRequest io.branch.referral.util.BranchEvent$1@c67aae1 needs a session
+Session data is actually valid, not adding SDK_INIT_WAIT_LOCK
+Enqueuing request: null
+BranchRequestQueue.enqueue called for: null
+Enqueuing request: io.branch.referral.util.BranchEvent$1@c67aae1
+Adding request to queue list
+Triggering processing for: null
+BranchProcessLifecycleObserver onStart: process foregrounded, sending OPEN
+sendOpen BranchAttributionLevel: FULL
+BranchRequestQueueAdapter.containsInstallOrOpen called
+BranchRequestQueueAdapter.containsInstallOrOpen result: false
+ServerRequest constructor
+setPost {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393"}
+BranchRequestQueueAdapter.handleNewRequest called for: RequestOpen
+BranchRequestQueueAdapter.requestNeedsSession for RequestOpen - result: false
+Request needs session: false, can perform operations: false, legacy initialized: false, hasValidSession: false
+Enqueuing request: RequestOpen
+BranchRequestQueue.enqueue called for: RequestOpen
+Enqueuing request: io.branch.referral.RequestOpen@bc69053
+Adding request to queue list
+Triggering processing for: RequestOpen
+Executing onPreExecute and doFinalUpdateOnMainThread
+onPreExecute io.branch.coroutines.RequestDeepLink@569c982
+getAppLink: bnc_no_value
+getExternalIntentUri bnc_no_value
+getInitialReferrer bnc_no_value
+doFinalUpdateOnMainThread
+Executing doFinalUpdateOnBackgroundThread
+doFinalUpdateOnBackgroundThread
+updateLinkReferrerParams retrieved bnc_no_value
+Executing network call with branch key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+addCommonParams post: {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","metadata":{},"branch_sdk_request_timestamp":1788889280697,"branch_sdk_request_unique_id":"e7633df0-d209-42bb-84d5-6bc7c357703f-2026090817","lat_val":0} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v3/deeplink
+Post value = {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","metadata":{},"branch_sdk_request_timestamp":1788889280697,"branch_sdk_request_unique_id":"e7633df0-d209-42bb-84d5-6bc7c357703f-2026090817","lat_val":0,"sdk":"android5.20.999","branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v3/deeplink with payload size 894 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+End getUserAgentAsync Thread[DefaultDispatcher-worker-3,5,main] Mozilla/5.0 (Linux; Android 14; sdk_gphone64_arm64 Build/UE1A.230829.036.A4; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/148.0.7778.120 Mobile Safari/537.36
+onUserAgentStringFetchFinished getUserAgentAsync resumeWith releasing lock
+BranchRequestQueueAdapter.unlockProcessWait called for lock: USER_AGENT_STRING_LOCK
+Queue operation unlockProcessWait USER_AGENT_STRING_LOCK
+BranchRequestQueue.unlockProcessWait called for lock: USER_AGENT_STRING_LOCK
+Process wait lock USER_AGENT_STRING_LOCK removed from all requests
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v3/deeplink
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: dd2f10b1-bc28-4ebd-b9a7-52c7d2474445-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 341ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 346ms using coroutine-based retry
+Server returned: [dd2f10b1-bc28-4ebd-b9a7-52c7d2474445-2026090817] Status: [200]; Data: {"data":"{\"+clicked_branch_link\":false,\"+is_first_session\":false}","randomized_device_token":"1625923577356662009"}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v3/deeplink-brtt, value: 352
+BranchRequestQueue.addExtraInstrumentationData called - key: v3/deeplink-brtt, value: 352
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: RequestDeepLink
+Response status code: 200
+Response successful, calling onRequestSucceeded
+*** SUCCESS: InitSession request completed successfully ***
+Processing init session response for: RequestDeepLink
+Set RandomizedDeviceToken: 1625923577356662009
+Updating all requests in queue with new tokens
+BranchRequestQueue.updateAllRequestsInQueue called
+BranchRequestQueue.updateAllRequestsInQueue completed
+RequestDeepLink Succeeded. Response: {
+  "data": "{\"+clicked_branch_link\":false,\"+is_first_session\":false}",
+  "randomized_device_token": "1625923577356662009"
+}
+Deep link params: {"+clicked_branch_link":false,"+is_first_session":false}
+Session state transition attempt: Uninitialized -> Initialized
+Invalid state transition from Uninitialized to Initialized
+onInitSessionCompleted on thread main
+Session initialization completed successfully, state set to INITIALISED
+sendOpen BranchAttributionLevel: FULL
+BranchRequestQueueAdapter.containsInstallOrOpen called
+containsInstallOrOpen: found one queued
+BranchRequestQueueAdapter.containsInstallOrOpen result: true
+sendOpen skipped: an install or open is already pending
+After io.branch.coroutines.RequestDeepLink@569c982 completion - LegacyState: Initialized, hasUser: true
+Request processing completed, network count: 0
+BranchRequestQueue.processNextRequest called for: QueueOperationSetIdentity
+requestNeedsSession for QueueOperationSetIdentity - result: false
+requestNeedsSession for QueueOperationSetIdentity - result: false
+Request does not need session, returning true
+Request can proceed (default case)
+canProcessRequest - isWaiting: false, needsSession: false, hasValidSession: true, isInitSession: false, result: true
+Processing request: QueueOperationSetIdentity, network count: 1
+requestNeedsSession for QueueOperationSetIdentity - result: false
+Request does not need session, returning true
+Executing request: QueueOperationSetIdentity
+Executing request: io.branch.referral.QueueOperationSetIdentity@b2abd18
+BranchRequestQueue.executeRequest called for: QueueOperationSetIdentity
+Executing onPreExecute and doFinalUpdateOnMainThread
+doFinalUpdateOnMainThread io.branch.referral.QueueOperationSetIdentity@b2abd18
+[Storage] setIdentity: Identity1
+Identity is now set to: Identity1
+Executing doFinalUpdateOnBackgroundThread
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: QueueOperationSetIdentity
+Response status code: 200
+Response successful, calling onRequestSucceeded
+onRequestSucceeded io.branch.referral.QueueOperationSetIdentity@b2abd18
+Request processing completed, network count: 0
+BranchRequestQueue.processNextRequest called for: null
+requestNeedsSession for null - result: true
+requestNeedsSession for null - result: true
+hasValidSession - hasSession: true, hasDeviceToken: true, hasUser: true, result: true
+Request can proceed (default case)
+canProcessRequest - isWaiting: false, needsSession: true, hasValidSession: true, isInitSession: false, result: true
+Processing request: null, network count: 1
+requestNeedsSession for null - result: true
+hasValidSession - hasSession: true, hasDeviceToken: true, hasUser: true, result: true
+Executing request: null
+Executing request: io.branch.referral.util.BranchEvent$1@c67aae1
+BranchRequestQueue.executeRequest called for: null
+Executing onPreExecute and doFinalUpdateOnMainThread
+onPreExecute io.branch.referral.util.BranchEvent$1@c67aae1
+getExternalIntentUri bnc_no_value
+Current referringURLQueryParameters: {}
+doFinalUpdateOnMainThread
+Executing doFinalUpdateOnBackgroundThread
+doFinalUpdateOnBackgroundThread
+Executing network call with branch key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+addCommonParams post: {"name":"Event 0","user_data":{"android_id":"2d6296a62de5c841","anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","randomized_device_token":"1625923577356662009","developer_identity":"Identity1","app_version":"5.20.999","sdk":"android","sdk_version":"5.20.999","cpu_type":"aarch64","build":"UE1A.230829.036.A4","locale":"en_US","connection_type":"wifi","device_carrier":"T-Mobile","os_version_android":"14","environment":"FULL_APP","user_agent":"Mozilla\/5.0 (Linux; Android 14; sdk_gphone64_arm64 Build\/UE1A.230829.036.A4; wv) AppleWebKit\/537.36 (KHTML, like Gecko) Version\/4.0 Chrome\/148.0.7778.120 Mobile Safari\/537.36","limit_ad_tracking":0},"partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"metadata":{},"branch_sdk_request_timestamp":1788889280767,"branch_sdk_request_unique_id":"4fa5d225-070e-491c-bcde-0bc49ae6f0f3-2026090817","instrumentation":{"v3\/deeplink-brtt":"352"}} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v3/events/custom
+Post value = {"name":"Event 0","user_data":{"android_id":"2d6296a62de5c841","anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","randomized_device_token":"1625923577356662009","developer_identity":"Identity1","app_version":"5.20.999","sdk":"android","sdk_version":"5.20.999","cpu_type":"aarch64","build":"UE1A.230829.036.A4","locale":"en_US","connection_type":"wifi","device_carrier":"T-Mobile","os_version_android":"14","environment":"FULL_APP","user_agent":"Mozilla\/5.0 (Linux; Android 14; sdk_gphone64_arm64 Build\/UE1A.230829.036.A4; wv) AppleWebKit\/537.36 (KHTML, like Gecko) Version\/4.0 Chrome\/148.0.7778.120 Mobile Safari\/537.36","limit_ad_tracking":0},"partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"metadata":{},"branch_sdk_request_timestamp":1788889280767,"branch_sdk_request_unique_id":"4fa5d225-070e-491c-bcde-0bc49ae6f0f3-2026090817","instrumentation":{"v3\/deeplink-brtt":"352"},"branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v3/events/custom with payload size 1281 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v3/events/custom
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: e97b679e-bc09-46ec-a89b-20b90c581738-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 209ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 217ms using coroutine-based retry
+Server returned: [e97b679e-bc09-46ec-a89b-20b90c581738-2026090817] Status: [200]; Data: {"ascending_only":false,"locked":false}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v3/events/custom-brtt, value: 228
+BranchRequestQueue.addExtraInstrumentationData called - key: v3/events/custom-brtt, value: 228
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: null
+Response status code: 200
+Response successful, calling onRequestSucceeded
+Request processing completed, network count: 0
+BranchRequestQueue.processNextRequest called for: RequestOpen
+requestNeedsSession for RequestOpen - result: false
+requestNeedsSession for RequestOpen - result: false
+Request does not need session, returning true
+ServerRequestInitSession can proceed: true (isWaiting: false)
+canProcessRequest - isWaiting: false, needsSession: false, hasValidSession: true, isInitSession: true, result: true
+Processing request: RequestOpen, network count: 1
+requestNeedsSession for RequestOpen - result: false
+Request does not need session, returning true
+Executing request: RequestOpen
+*** EXECUTING SESSION INITIALIZATION REQUEST: RequestOpen ***
+Executing request: io.branch.referral.RequestOpen@bc69053
+BranchRequestQueue.executeRequest called for: RequestOpen
+Executing onPreExecute and doFinalUpdateOnMainThread
+onPreExecute io.branch.referral.RequestOpen@bc69053
+getAppLink: bnc_no_value
+getExternalIntentUri bnc_no_value
+getInitialReferrer bnc_no_value
+doFinalUpdateOnMainThread
+Executing doFinalUpdateOnBackgroundThread
+doFinalUpdateOnBackgroundThread
+updateLinkReferrerParams retrieved bnc_no_value
+Executing network call with branch key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+addCommonParams post: {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","metadata":{},"branch_sdk_request_timestamp":1788889280799,"branch_sdk_request_unique_id":"3ab3b1ca-5d11-4f80-abb4-d407ce758734-2026090817","lat_val":0,"instrumentation":{"v3\/events\/custom-brtt":"228"}} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v3/events/open
+Post value = {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","metadata":{},"branch_sdk_request_timestamp":1788889280799,"branch_sdk_request_unique_id":"3ab3b1ca-5d11-4f80-abb4-d407ce758734-2026090817","lat_val":0,"instrumentation":{"v3\/events\/custom-brtt":"228"},"sdk":"android5.20.999","branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v3/events/open with payload size 1096 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v3/events/open
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: 901c980e-3f56-4dc7-b39a-8192e3889193-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 220ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 228ms using coroutine-based retry
+Server returned: [901c980e-3f56-4dc7-b39a-8192e3889193-2026090817] Status: [200]; Data: {"link":"https://bnctestbed.test-app.link?%24randomized_bundle_token=1625923577369313393","randomized_bundle_token":"1625923577369313393","randomized_device_token":"1625923577356662009","session_id":"1625926372785289392"}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v3/events/open-brtt, value: 233
+BranchRequestQueue.addExtraInstrumentationData called - key: v3/events/open-brtt, value: 233
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: RequestOpen
+Response status code: 200
+Response successful, calling onRequestSucceeded
+*** SUCCESS: InitSession request completed successfully ***
+Processing init session response for: RequestOpen
+Set SessionID: 1625926372785289392
+Set RandomizedDeviceToken: 1625923577356662009
+Updating all requests in queue with new tokens
+BranchRequestQueue.updateAllRequestsInQueue called
+BranchRequestQueue.updateAllRequestsInQueue completed
+RequestOpen Succeeded. Response: {"link":"https:\/\/bnctestbed.test-app.link?%24randomized_bundle_token=1625923577369313393","randomized_bundle_token":"1625923577369313393","randomized_device_token":"1625923577356662009","session_id":"1625926372785289392"}
+Session state transition attempt: Uninitialized -> Initialized
+Invalid state transition from Uninitialized to Initialized
+onInitSessionCompleted on thread main
+Session initialization completed successfully, state set to INITIALISED
+After io.branch.referral.RequestOpen@bc69053 completion - LegacyState: Initialized, hasUser: true
+Request processing completed, network count: 0
+MODERNIZATION_DEBUG: Starting generateShortUrl - should trigger ModernLinkGenerator
+ServerRequest constructor
+setPost {"duration":100,"tags":["Tag1"],"alias":"","channel":"Sharing_Channel_name","feature":"my_feature_name","stage":"","campaign":"","data":{"$og_title":"My Content Title","$canonical_identifier":"item\/12345","$canonical_url":"https:\/\/branch.io\/deepviews","$keywords":["My_Keyword1","My_Keyword2"],"$og_description":"my_product_description1","$og_image_url":"https:\/\/test_img_url","$content_schema":"COMMERCE_PRODUCT","$quantity":2,"$price":23.2,"$currency":"USD","$sku":"1994320302","$product_name":"my_product_name1","$product_brand":"my_prod_Brand1","$product_category":"Baby & Toddler","$condition":"EXCELLENT","$product_variant":"3T","$rating":6,"$rating_average":5,"$rating_count":5,"$rating_max":7,"$address_street":"Street_name1","$address_city":"city1","$address_region":"Region1","$address_country":"Country1","$address_postal_code":"postal_code","$latitude":12.07,"$longitude":-97.5,"$image_captions":["my_img_caption1","my_img_caption_2"],"Custom_Content_metadata_key1":"Custom_Content_metadata_val1","$android_deeplink_path":"custom\/path\/*","$ios_url":"http:\/\/example.com\/ios"},"source":"android"}
+MODERNIZATION_TRACE: Using ModernLinkGenerator for async link creation
+MODERNIZATION_TRACE: ModernLinkGenerator.generateShortLinkAsyncFromJava called
+addCommonParams post: {"duration":100,"tags":["Tag1"],"alias":"","channel":"Sharing_Channel_name","feature":"my_feature_name","stage":"","campaign":"","data":{"$og_title":"My Content Title","$canonical_identifier":"item\/12345","$canonical_url":"https:\/\/branch.io\/deepviews","$keywords":["My_Keyword1","My_Keyword2"],"$og_description":"my_product_description1","$og_image_url":"https:\/\/test_img_url","$content_schema":"COMMERCE_PRODUCT","$quantity":2,"$price":23.2,"$currency":"USD","$sku":"1994320302","$product_name":"my_product_name1","$product_brand":"my_prod_Brand1","$product_category":"Baby & Toddler","$condition":"EXCELLENT","$product_variant":"3T","$rating":6,"$rating_average":5,"$rating_count":5,"$rating_max":7,"$address_street":"Street_name1","$address_city":"city1","$address_region":"Region1","$address_country":"Country1","$address_postal_code":"postal_code","$latitude":12.07,"$longitude":-97.5,"$image_captions":["my_img_caption1","my_img_caption_2"],"Custom_Content_metadata_key1":"Custom_Content_metadata_val1","$android_deeplink_path":"custom\/path\/*","$ios_url":"http:\/\/example.com\/ios"},"source":"android","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","branch_sdk_request_timestamp":1788889287331,"branch_sdk_request_unique_id":"68ecf67b-6f66-4485-bf5a-b5602cb41371-2026090817"} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v1/url
+Post value = {"duration":100,"tags":["Tag1"],"alias":"","channel":"Sharing_Channel_name","feature":"my_feature_name","stage":"","campaign":"","data":{"$og_title":"My Content Title","$canonical_identifier":"item\/12345","$canonical_url":"https:\/\/branch.io\/deepviews","$keywords":["My_Keyword1","My_Keyword2"],"$og_description":"my_product_description1","$og_image_url":"https:\/\/test_img_url","$content_schema":"COMMERCE_PRODUCT","$quantity":2,"$price":23.2,"$currency":"USD","$sku":"1994320302","$product_name":"my_product_name1","$product_brand":"my_prod_Brand1","$product_category":"Baby & Toddler","$condition":"EXCELLENT","$product_variant":"3T","$rating":6,"$rating_average":5,"$rating_count":5,"$rating_max":7,"$address_street":"Street_name1","$address_city":"city1","$address_region":"Region1","$address_country":"Country1","$address_postal_code":"postal_code","$latitude":12.07,"$longitude":-97.5,"$image_captions":["my_img_caption1","my_img_caption_2"],"Custom_Content_metadata_key1":"Custom_Content_metadata_val1","$android_deeplink_path":"custom\/path\/*","$ios_url":"http:\/\/example.com\/ios"},"source":"android","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","branch_sdk_request_timestamp":1788889287331,"branch_sdk_request_unique_id":"68ecf67b-6f66-4485-bf5a-b5602cb41371-2026090817","sdk":"android5.20.999","branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v1/url with payload size 1557 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v1/url
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: 7864663e260642b6a72200f2fc2c0aaa-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 252ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 256ms using coroutine-based retry
+Server returned: [7864663e260642b6a72200f2fc2c0aaa-2026090817] Status: [200]; Data: {"url":"https://bnctestbed.test-app.link/XcVyairAa6b"}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v1/url-brtt, value: 270
+BranchRequestQueue.addExtraInstrumentationData called - key: v1/url-brtt, value: 270
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+MODERNIZATION_DEBUG: Link creation successful: https://bnctestbed.test-app.link/XcVyairAa6b
+BranchProcessLifecycleObserver onStop: process backgrounded
+initSession
+ServerRequest constructor
+BranchRequestQueueAdapter.handleNewRequest called for: QueueOperationSetIdentity
+BranchRequestQueueAdapter.requestNeedsSession for QueueOperationSetIdentity - result: false
+Request needs session: false, can perform operations: false, legacy initialized: true, hasValidSession: false
+Enqueuing request: QueueOperationSetIdentity
+BranchRequestQueue.enqueue called for: QueueOperationSetIdentity
+Enqueuing request: io.branch.referral.QueueOperationSetIdentity@8f8f76c
+Adding request to queue list
+Beginning stress tests
+Creating 1 test events
+ServerRequest constructor
+Triggering processing for: QueueOperationSetIdentity
+BranchRequestQueue.processNextRequest called for: QueueOperationSetIdentity
+setPost {"name":"Event 0"}
+requestNeedsSession for QueueOperationSetIdentity - result: false
+requestNeedsSession for QueueOperationSetIdentity - result: false
+Request does not need session, returning true
+Request can proceed (default case)
+canProcessRequest - isWaiting: false, needsSession: false, hasValidSession: true, isInitSession: false, result: true
+Processing request: QueueOperationSetIdentity, network count: 1
+requestNeedsSession for QueueOperationSetIdentity - result: false
+Request does not need session, returning true
+Executing request: QueueOperationSetIdentity
+setPostUserAgent main
+userAgent was cached: Mozilla/5.0 (Linux; Android 14; sdk_gphone64_arm64 Build/UE1A.230829.036.A4; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/148.0.7778.120 Mobile Safari/537.36
+BranchRequestQueueAdapter.unlockProcessWait called for lock: USER_AGENT_STRING_LOCK
+Queue operation unlockProcessWait USER_AGENT_STRING_LOCK
+BranchRequestQueue.unlockProcessWait called for lock: USER_AGENT_STRING_LOCK
+Process wait lock USER_AGENT_STRING_LOCK removed from all requests
+Executing request: io.branch.referral.QueueOperationSetIdentity@8f8f76c
+BranchRequestQueue.executeRequest called for: QueueOperationSetIdentity
+Preparing V2 event, user agent is Mozilla/5.0 (Linux; Android 14; sdk_gphone64_arm64 Build/UE1A.230829.036.A4; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/148.0.7778.120 Mobile Safari/537.36
+BranchRequestQueueAdapter.handleNewRequest called for: null
+BranchRequestQueueAdapter.requestNeedsSession for null - result: true
+Request needs session: true, can perform operations: false, legacy initialized: true, hasValidSession: false
+Enqueuing request: null
+BranchRequestQueue.enqueue called for: null
+Enqueuing request: io.branch.referral.util.BranchEvent$1@65c9bcc
+Adding request to queue list
+Triggering processing for: null
+BranchProcessLifecycleObserver onStart: process foregrounded, sending OPEN
+sendOpen BranchAttributionLevel: FULL
+BranchRequestQueueAdapter.containsInstallOrOpen called
+BranchRequestQueueAdapter.containsInstallOrOpen result: false
+ServerRequest constructor
+setPost {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393"}
+BranchRequestQueueAdapter.handleNewRequest called for: RequestOpen
+BranchRequestQueueAdapter.requestNeedsSession for RequestOpen - result: false
+Request needs session: false, can perform operations: false, legacy initialized: true, hasValidSession: false
+Enqueuing request: RequestOpen
+BranchRequestQueue.enqueue called for: RequestOpen
+Enqueuing request: io.branch.referral.RequestOpen@6248ffc
+Adding request to queue list
+Triggering processing for: RequestOpen
+requestDeepLinkData called for URI: https://bnctestbed.test-app.link/XcVyairAa6b
+ServerRequest constructor
+setPost {"android_app_link_url":"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b","randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393"}
+BranchRequestQueueAdapter.handleNewRequest called for: RequestDeepLink
+BranchRequestQueueAdapter.requestNeedsSession for RequestDeepLink - result: false
+Request needs session: false, can perform operations: false, legacy initialized: true, hasValidSession: false
+Enqueuing request: RequestDeepLink
+BranchRequestQueue.enqueue called for: RequestDeepLink
+Enqueuing request: io.branch.coroutines.RequestDeepLink@df9400
+Adding request to queue list
+Triggering processing for: RequestDeepLink
+Executing onPreExecute and doFinalUpdateOnMainThread
+doFinalUpdateOnMainThread io.branch.referral.QueueOperationSetIdentity@8f8f76c
+[Storage] setIdentity: Identity1
+Identity is now set to: Identity1
+Executing doFinalUpdateOnBackgroundThread
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: QueueOperationSetIdentity
+Response status code: 200
+Response successful, calling onRequestSucceeded
+onRequestSucceeded io.branch.referral.QueueOperationSetIdentity@8f8f76c
+Request processing completed, network count: 0
+BranchRequestQueue.processNextRequest called for: null
+requestNeedsSession for null - result: true
+requestNeedsSession for null - result: true
+hasValidSession - hasSession: true, hasDeviceToken: true, hasUser: true, result: true
+Request can proceed (default case)
+canProcessRequest - isWaiting: false, needsSession: true, hasValidSession: true, isInitSession: false, result: true
+Processing request: null, network count: 1
+requestNeedsSession for null - result: true
+hasValidSession - hasSession: true, hasDeviceToken: true, hasUser: true, result: true
+Executing request: null
+Executing request: io.branch.referral.util.BranchEvent$1@65c9bcc
+BranchRequestQueue.executeRequest called for: null
+Executing onPreExecute and doFinalUpdateOnMainThread
+onPreExecute io.branch.referral.util.BranchEvent$1@65c9bcc
+getExternalIntentUri bnc_no_value
+Current referringURLQueryParameters: {}
+doFinalUpdateOnMainThread
+Executing doFinalUpdateOnBackgroundThread
+doFinalUpdateOnBackgroundThread
+Executing network call with branch key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+addCommonParams post: {"name":"Event 0","user_data":{"android_id":"2d6296a62de5c841","anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","randomized_device_token":"1625923577356662009","developer_identity":"Identity1","app_version":"5.20.999","sdk":"android","sdk_version":"5.20.999","user_agent":"Mozilla\/5.0 (Linux; Android 14; sdk_gphone64_arm64 Build\/UE1A.230829.036.A4; wv) AppleWebKit\/537.36 (KHTML, like Gecko) Version\/4.0 Chrome\/148.0.7778.120 Mobile Safari\/537.36","cpu_type":"aarch64","build":"UE1A.230829.036.A4","locale":"en_US","connection_type":"wifi","device_carrier":"T-Mobile","os_version_android":"14","environment":"FULL_APP","limit_ad_tracking":0},"partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"metadata":{},"branch_sdk_request_timestamp":1788889308404,"branch_sdk_request_unique_id":"46c012e2-daf0-4619-b088-ced284a78fee-2026090817","instrumentation":{"v3\/events\/open-brtt":"233","v1\/url-brtt":"270"}} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v3/events/custom
+Post value = {"name":"Event 0","user_data":{"android_id":"2d6296a62de5c841","anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","randomized_device_token":"1625923577356662009","developer_identity":"Identity1","app_version":"5.20.999","sdk":"android","sdk_version":"5.20.999","user_agent":"Mozilla\/5.0 (Linux; Android 14; sdk_gphone64_arm64 Build\/UE1A.230829.036.A4; wv) AppleWebKit\/537.36 (KHTML, like Gecko) Version\/4.0 Chrome\/148.0.7778.120 Mobile Safari\/537.36","cpu_type":"aarch64","build":"UE1A.230829.036.A4","locale":"en_US","connection_type":"wifi","device_carrier":"T-Mobile","os_version_android":"14","environment":"FULL_APP","limit_ad_tracking":0},"partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"metadata":{},"branch_sdk_request_timestamp":1788889308404,"branch_sdk_request_unique_id":"46c012e2-daf0-4619-b088-ced284a78fee-2026090817","instrumentation":{"v3\/events\/open-brtt":"233","v1\/url-brtt":"270"},"branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v3/events/custom with payload size 1306 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v3/events/custom
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: 7b8efb7b-cbfe-4386-bead-9b7d0d27181b-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 239ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 266ms using coroutine-based retry
+Server returned: [7b8efb7b-cbfe-4386-bead-9b7d0d27181b-2026090817] Status: [200]; Data: {"ascending_only":false,"locked":false}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v3/events/custom-brtt, value: 283
+BranchRequestQueue.addExtraInstrumentationData called - key: v3/events/custom-brtt, value: 283
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: null
+Response status code: 200
+Response successful, calling onRequestSucceeded
+Request processing completed, network count: 0
+BranchRequestQueue.processNextRequest called for: RequestOpen
+requestNeedsSession for RequestOpen - result: false
+requestNeedsSession for RequestOpen - result: false
+Request does not need session, returning true
+ServerRequestInitSession can proceed: true (isWaiting: false)
+canProcessRequest - isWaiting: false, needsSession: false, hasValidSession: true, isInitSession: true, result: true
+Processing request: RequestOpen, network count: 1
+requestNeedsSession for RequestOpen - result: false
+Request does not need session, returning true
+Executing request: RequestOpen
+*** EXECUTING SESSION INITIALIZATION REQUEST: RequestOpen ***
+Executing request: io.branch.referral.RequestOpen@6248ffc
+BranchRequestQueue.executeRequest called for: RequestOpen
+Executing onPreExecute and doFinalUpdateOnMainThread
+onPreExecute io.branch.referral.RequestOpen@6248ffc
+getAppLink: bnc_no_value
+getExternalIntentUri bnc_no_value
+getInitialReferrer bnc_no_value
+doFinalUpdateOnMainThread
+Executing doFinalUpdateOnBackgroundThread
+doFinalUpdateOnBackgroundThread
+updateLinkReferrerParams retrieved bnc_no_value
+Executing network call with branch key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+addCommonParams post: {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","identity":"Identity1","metadata":{},"branch_sdk_request_timestamp":1788889308456,"branch_sdk_request_unique_id":"5302dbf2-d16b-4d61-adeb-6c85899147c9-2026090817","lat_val":0,"instrumentation":{"v3\/events\/custom-brtt":"283"}} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v3/events/open
+Post value = {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","identity":"Identity1","metadata":{},"branch_sdk_request_timestamp":1788889308456,"branch_sdk_request_unique_id":"5302dbf2-d16b-4d61-adeb-6c85899147c9-2026090817","lat_val":0,"instrumentation":{"v3\/events\/custom-brtt":"283"},"sdk":"android5.20.999","branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v3/events/open with payload size 1119 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v3/events/open
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: d050df11-3c6d-4963-85b7-fb2476badc0d-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 220ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 225ms using coroutine-based retry
+Server returned: [d050df11-3c6d-4963-85b7-fb2476badc0d-2026090817] Status: [200]; Data: {"identity":"Identity1","link":"https://bnctestbed.test-app.link?%24randomized_bundle_token=1625923577369313393","randomized_bundle_token":"1625923577369313393","randomized_device_token":"1625923577356662009","session_id":"1625926487762903363"}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v3/events/open-brtt, value: 231
+BranchRequestQueue.addExtraInstrumentationData called - key: v3/events/open-brtt, value: 231
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: RequestOpen
+Response status code: 200
+Response successful, calling onRequestSucceeded
+*** SUCCESS: InitSession request completed successfully ***
+Processing init session response for: RequestOpen
+Set SessionID: 1625926487762903363
+Set RandomizedDeviceToken: 1625923577356662009
+Updating all requests in queue with new tokens
+BranchRequestQueue.updateAllRequestsInQueue called
+BranchRequestQueue.updateAllRequestsInQueue completed
+RequestOpen Succeeded. Response: {"identity":"Identity1","link":"https:\/\/bnctestbed.test-app.link?%24randomized_bundle_token=1625923577369313393","randomized_bundle_token":"1625923577369313393","randomized_device_token":"1625923577356662009","session_id":"1625926487762903363"}
+Session state transition attempt: Uninitialized -> Initialized
+Invalid state transition from Uninitialized to Initialized
+onInitSessionCompleted on thread main
+Session initialization completed successfully, state set to INITIALISED
+After io.branch.referral.RequestOpen@6248ffc completion - LegacyState: Initialized, hasUser: true
+Request processing completed, network count: 0
+BranchRequestQueue.processNextRequest called for: RequestDeepLink
+requestNeedsSession for RequestDeepLink - result: false
+requestNeedsSession for RequestDeepLink - result: false
+Request does not need session, returning true
+ServerRequestInitSession can proceed: true (isWaiting: false)
+canProcessRequest - isWaiting: false, needsSession: false, hasValidSession: true, isInitSession: true, result: true
+Processing request: RequestDeepLink, network count: 1
+requestNeedsSession for RequestDeepLink - result: false
+Request does not need session, returning true
+Executing request: RequestDeepLink
+*** EXECUTING SESSION INITIALIZATION REQUEST: RequestDeepLink ***
+Executing request: io.branch.coroutines.RequestDeepLink@df9400
+BranchRequestQueue.executeRequest called for: RequestDeepLink
+Executing onPreExecute and doFinalUpdateOnMainThread
+onPreExecute io.branch.coroutines.RequestDeepLink@df9400
+getAppLink: bnc_no_value
+getExternalIntentUri bnc_no_value
+getInitialReferrer bnc_no_value
+doFinalUpdateOnMainThread
+Executing doFinalUpdateOnBackgroundThread
+doFinalUpdateOnBackgroundThread
+updateLinkReferrerParams retrieved bnc_no_value
+Executing network call with branch key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+addCommonParams post: {"android_app_link_url":"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b","randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","identity":"Identity1","metadata":{},"branch_sdk_request_timestamp":1788889308480,"branch_sdk_request_unique_id":"90e486ea-3393-4162-9310-5d2e688212c6-2026090817","lat_val":0,"instrumentation":{"v3\/events\/open-brtt":"231"}} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v3/deeplink
+Post value = {"android_app_link_url":"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b","randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","identity":"Identity1","metadata":{},"branch_sdk_request_timestamp":1788889308480,"branch_sdk_request_unique_id":"90e486ea-3393-4162-9310-5d2e688212c6-2026090817","lat_val":0,"instrumentation":{"v3\/events\/open-brtt":"231"},"sdk":"android5.20.999","branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v3/deeplink with payload size 1190 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v3/deeplink
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: 9c747a10-0eab-415d-abe4-f48ada899b33-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 232ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 237ms using coroutine-based retry
+Server returned: [9c747a10-0eab-415d-abe4-f48ada899b33-2026090817] Status: [200]; Data: {"data":"{\"$keywords\":[\"My_Keyword1\",\"My_Keyword2\"],\"$og_title\":\"My Content Title\",\"+link_click_id\":1625926488941509795,\"$product_variant\":\"3T\",\"$address_postal_code\":\"postal_code\",\"$image_captions\":[\"my_img_caption1\",\"my_img_caption_2\"],\"$longitude\":-97.5,\"$condition\":\"EXCELLENT\",\"$rating_average\":5,\"$product_brand\":\"my_prod_Brand1\",\"~feature\":\"my_feature_name\",\"$canonical_identifier\":\"item/12345\",\"$address_country\":\"Country1\",\"~id\":1624542920470355945,\"+is_first_session\":false,\"~channel\":\"Sharing_Channel_name\",\"$latitude\":12.07,\"$product_name\":\"my_product_name1\",\"$ios_url\":\"http://example.com/ios\",\"$currency\":\"USD\",\"$address_city\":\"city1\",\"$address_street\":\"Street_name1\",\"$product_category\":\"Baby \u0026 Toddler\",\"~creation_source\":4,\"$address_region\":\"Region1\",\"Custom_Content_metadata_key1\":\"Custom_Content_metadata_val1\",\"$og_description\":\"my_product_description1\",\"$quantity\":2,\"+click_timestamp\":1788889309,\"$rating_max\":7,\"$content_schema\":\"COMMERCE_PRODUCT\",\"$price\":23.2,\"$sku\":\"1994320302\",\"$match_duration\":100,\"$og_image_url\":\"https://test_img_url\",\"+match_guaranteed\":true,\"~tags\":[\"Tag1\"],\"$android_deeplink_path\":\"custom/path/*\",\"+clicked_branch_link\":true,\"$rating\":6,\"$canonical_url\":\"https://branch.io/deepviews\",\"~referring_link\":\"https://bnctestbed.test-app.link/XcVyairAa6b\",\"$rating_count\":5}","randomized_device_token":"1625923577356662009"}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v3/deeplink-brtt, value: 250
+BranchRequestQueue.addExtraInstrumentationData called - key: v3/deeplink-brtt, value: 250
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: RequestDeepLink
+Response status code: 200
+Response successful, calling onRequestSucceeded
+*** SUCCESS: InitSession request completed successfully ***
+Processing init session response for: RequestDeepLink
+Set RandomizedDeviceToken: 1625923577356662009
+Updating all requests in queue with new tokens
+BranchRequestQueue.updateAllRequestsInQueue called
+BranchRequestQueue.updateAllRequestsInQueue completed
+RequestDeepLink Succeeded. Response: {
+  "data": "{\"$keywords\":[\"My_Keyword1\",\"My_Keyword2\"],\"$og_title\":\"My Content Title\",\"+link_click_id\":1625926488941509795,\"$product_variant\":\"3T\",\"$address_postal_code\":\"postal_code\",\"$image_captions\":[\"my_img_caption1\",\"my_img_caption_2\"],\"$longitude\":-97.5,\"$condition\":\"EXCELLENT\",\"$rating_average\":5,\"$product_brand\":\"my_prod_Brand1\",\"~feature\":\"my_feature_name\",\"$canonical_identifier\":\"item\/12345\",\"$address_country\":\"Country1\",\"~id\":1624542920470355945,\"+is_first_session\":false,\"~channel\":\"Sharing_Channel_name\",\"$latitude\":12.07,\"$product_name\":\"my_product_name1\",\"$ios_url\":\"http:\/\/example.com\/ios\",\"$currency\":\"USD\",\"$address_city\":\"city1\",\"$address_street\":\"Street_name1\",\"$product_category\":\"Baby & Toddler\",\"~creation_source\":4,\"$address_region\":\"Region1\",\"Custom_Content_metadata_key1\":\"Custom_Content_metadata_val1\",\"$og_description\":\"my_product_description1\",\"$quantity\":2,\"+click_timestamp\":1788889309,\"$rating_max\":7,\"$content_schema\":\"COMMERCE_PRODUCT\",\"$price\":23.2,\"$sku\":\"1994320302\",\"$match_duration\":100,\"$og_image_url\":\"https:\/\/test_img_url\",\"+match_guaranteed\":true,\"~tags\":[\"Tag1\"],\"$android_deeplink_path\":\"custom\/path\/*\",\"+clicked_branch_link\":true,\"$rating\":6,\"$canonical_url\":\"https:\/\/branch.io\/deepviews\",\"~referring_link\":\"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b\",\"$rating_count\":5}",
+  "randomized_device_token": "1625923577356662009"
+}
+Deep link params: {"$keywords":["My_Keyword1","My_Keyword2"],"$og_title":"My Content Title","+link_click_id":1625926488941509795,"$product_variant":"3T","$address_postal_code":"postal_code","$image_captions":["my_img_caption1","my_img_caption_2"],"$longitude":-97.5,"$condition":"EXCELLENT","$rating_average":5,"$product_brand":"my_prod_Brand1","~feature":"my_feature_name","$canonical_identifier":"item\/12345","$address_country":"Country1","~id":1624542920470355945,"+is_first_session":false,"~channel":"Sharing_Channel_name","$latitude":12.07,"$product_name":"my_product_name1","$ios_url":"http:\/\/example.com\/ios","$currency":"USD","$address_city":"city1","$address_street":"Street_name1","$product_category":"Baby & Toddler","~creation_source":4,"$address_region":"Region1","Custom_Content_metadata_key1":"Custom_Content_metadata_val1","$og_description":"my_product_description1","$quantity":2,"+click_timestamp":1788889309,"$rating_max":7,"$content_schema":"COMMERCE_PRODUCT","$price":23.2,"$sku":"1994320302","$match_duration":100,"$og_image_url":"https:\/\/test_img_url","+match_guaranteed":true,"~tags":["Tag1"],"$android_deeplink_path":"custom\/path\/*","+clicked_branch_link":true,"$rating":6,"$canonical_url":"https:\/\/branch.io\/deepviews","~referring_link":"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b","$rating_count":5}
+Session state transition attempt: Uninitialized -> Initialized
+Invalid state transition from Uninitialized to Initialized
+onInitSessionCompleted on thread main
+Session initialization completed successfully, state set to INITIALISED
+sendOpen BranchAttributionLevel: FULL
+BranchRequestQueueAdapter.containsInstallOrOpen called
+BranchRequestQueueAdapter.containsInstallOrOpen result: false
+ServerRequest constructor
+setPost {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","link_data":{"$keywords":["My_Keyword1","My_Keyword2"],"$og_title":"My Content Title","+link_click_id":1625926488941509795,"$product_variant":"3T","$address_postal_code":"postal_code","$image_captions":["my_img_caption1","my_img_caption_2"],"$longitude":-97.5,"$condition":"EXCELLENT","$rating_average":5,"$product_brand":"my_prod_Brand1","~feature":"my_feature_name","$canonical_identifier":"item\/12345","$address_country":"Country1","~id":1624542920470355945,"+is_first_session":false,"~channel":"Sharing_Channel_name","$latitude":12.07,"$product_name":"my_product_name1","$ios_url":"http:\/\/example.com\/ios","$currency":"USD","$address_city":"city1","$address_street":"Street_name1","$product_category":"Baby & Toddler","~creation_source":4,"$address_region":"Region1","Custom_Content_metadata_key1":"Custom_Content_metadata_val1","$og_description":"my_product_description1","$quantity":2,"+click_timestamp":1788889309,"$rating_max":7,"$content_schema":"COMMERCE_PRODUCT","$price":23.2,"$sku":"1994320302","$match_duration":100,"$og_image_url":"https:\/\/test_img_url","+match_guaranteed":true,"~tags":["Tag1"],"$android_deeplink_path":"custom\/path\/*","+clicked_branch_link":true,"$rating":6,"$canonical_url":"https:\/\/branch.io\/deepviews","~referring_link":"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b","$rating_count":5}}
+BranchRequestQueueAdapter.handleNewRequest called for: RequestOpen
+BranchRequestQueueAdapter.requestNeedsSession for RequestOpen - result: false
+Request needs session: false, can perform operations: false, legacy initialized: true, hasValidSession: false
+Enqueuing request: RequestOpen
+BranchRequestQueue.enqueue called for: RequestOpen
+Enqueuing request: io.branch.referral.RequestOpen@b9c167d
+Adding request to queue list
+After io.branch.coroutines.RequestDeepLink@df9400 completion - LegacyState: Initialized, hasUser: true
+Triggering processing for: RequestOpen
+Request processing completed, network count: 0
+BranchRequestQueue.processNextRequest called for: RequestOpen
+requestNeedsSession for RequestOpen - result: false
+requestNeedsSession for RequestOpen - result: false
+Request does not need session, returning true
+ServerRequestInitSession can proceed: true (isWaiting: false)
+canProcessRequest - isWaiting: false, needsSession: false, hasValidSession: true, isInitSession: true, result: true
+Processing request: RequestOpen, network count: 1
+requestNeedsSession for RequestOpen - result: false
+Request does not need session, returning true
+Executing request: RequestOpen
+*** EXECUTING SESSION INITIALIZATION REQUEST: RequestOpen ***
+Executing request: io.branch.referral.RequestOpen@b9c167d
+BranchRequestQueue.executeRequest called for: RequestOpen
+Executing onPreExecute and doFinalUpdateOnMainThread
+onPreExecute io.branch.referral.RequestOpen@b9c167d
+getAppLink: bnc_no_value
+getExternalIntentUri bnc_no_value
+getInitialReferrer bnc_no_value
+doFinalUpdateOnMainThread
+Executing doFinalUpdateOnBackgroundThread
+doFinalUpdateOnBackgroundThread
+updateLinkReferrerParams retrieved bnc_no_value
+Executing network call with branch key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+addCommonParams post: {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","link_data":{"$keywords":["My_Keyword1","My_Keyword2"],"$og_title":"My Content Title","+link_click_id":1625926488941509795,"$product_variant":"3T","$address_postal_code":"postal_code","$image_captions":["my_img_caption1","my_img_caption_2"],"$longitude":-97.5,"$condition":"EXCELLENT","$rating_average":5,"$product_brand":"my_prod_Brand1","~feature":"my_feature_name","$canonical_identifier":"item\/12345","$address_country":"Country1","~id":1624542920470355945,"+is_first_session":false,"~channel":"Sharing_Channel_name","$latitude":12.07,"$product_name":"my_product_name1","$ios_url":"http:\/\/example.com\/ios","$currency":"USD","$address_city":"city1","$address_street":"Street_name1","$product_category":"Baby & Toddler","~creation_source":4,"$address_region":"Region1","Custom_Content_metadata_key1":"Custom_Content_metadata_val1","$og_description":"my_product_description1","$quantity":2,"+click_timestamp":1788889309,"$rating_max":7,"$content_schema":"COMMERCE_PRODUCT","$price":23.2,"$sku":"1994320302","$match_duration":100,"$og_image_url":"https:\/\/test_img_url","+match_guaranteed":true,"~tags":["Tag1"],"$android_deeplink_path":"custom\/path\/*","+clicked_branch_link":true,"$rating":6,"$canonical_url":"https:\/\/branch.io\/deepviews","~referring_link":"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b","$rating_count":5},"hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","identity":"Identity1","metadata":{},"branch_sdk_request_timestamp":1788889309468,"branch_sdk_request_unique_id":"f72b5703-3756-42bd-859f-a1cab3698391-2026090817","lat_val":0,"instrumentation":{"v3\/deeplink-brtt":"250"}} key: key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc
+posting to https://api2.branch.io/v3/events/open
+Post value = {"randomized_device_token":"1625923577356662009","randomized_bundle_token":"1625923577369313393","link_data":{"$keywords":["My_Keyword1","My_Keyword2"],"$og_title":"My Content Title","+link_click_id":1625926488941509795,"$product_variant":"3T","$address_postal_code":"postal_code","$image_captions":["my_img_caption1","my_img_caption_2"],"$longitude":-97.5,"$condition":"EXCELLENT","$rating_average":5,"$product_brand":"my_prod_Brand1","~feature":"my_feature_name","$canonical_identifier":"item\/12345","$address_country":"Country1","~id":1624542920470355945,"+is_first_session":false,"~channel":"Sharing_Channel_name","$latitude":12.07,"$product_name":"my_product_name1","$ios_url":"http:\/\/example.com\/ios","$currency":"USD","$address_city":"city1","$address_street":"Street_name1","$product_category":"Baby & Toddler","~creation_source":4,"$address_region":"Region1","Custom_Content_metadata_key1":"Custom_Content_metadata_val1","$og_description":"my_product_description1","$quantity":2,"+click_timestamp":1788889309,"$rating_max":7,"$content_schema":"COMMERCE_PRODUCT","$price":23.2,"$sku":"1994320302","$match_duration":100,"$og_image_url":"https:\/\/test_img_url","+match_guaranteed":true,"~tags":["Tag1"],"$android_deeplink_path":"custom\/path\/*","+clicked_branch_link":true,"$rating":6,"$canonical_url":"https:\/\/branch.io\/deepviews","~referring_link":"https:\/\/bnctestbed.test-app.link\/XcVyairAa6b","$rating_count":5},"hardware_id":"2d6296a62de5c841","is_hardware_id_real":true,"anon_id":"23d4c0e2-f416-4d01-a5c2-da2c5937b852","brand":"Google","model":"sdk_gphone64_arm64","screen_dpi":420,"screen_height":2205,"screen_width":1080,"wifi":true,"ui_mode":"UI_MODE_TYPE_NORMAL","os":"Android","os_version":34,"country":"US","language":"en","local_ip":"10.0.2.16","partner_data":{"fb":{"em":"194b86d986ad041666822dad7602f1a7bac1d9e286273e86141666ffb4b1909b","ph":"7cd2dfb0b893767d1b0a4cacd831f6f9cf0ace6b1fbfc616c313c672d08f6196"}},"app_version":"5.20.999","update":1,"latest_install_time":1788888603879,"latest_update_time":1788889277603,"first_install_time":1788888603879,"previous_update_time":1788889186011,"environment":"FULL_APP","identity":"Identity1","metadata":{},"branch_sdk_request_timestamp":1788889309468,"branch_sdk_request_unique_id":"f72b5703-3756-42bd-859f-a1cab3698391-2026090817","lat_val":0,"instrumentation":{"v3\/deeplink-brtt":"250"},"sdk":"android5.20.999","branch_key":"key_test_hdcBLUy1xZ1JD0tKg7qrLcgirFmPPVJc"}
+BranchRemoteInterfaceUrlConnection: Using async implementation for POST (no Thread.sleep)
+BranchRemoteInterfaceUrlConnectionAsync: Executing POST request using async layer (no Thread.sleep)
+BranchAsyncNetworkLayer: Starting POST request to https://api2.branch.io/v3/events/open with payload size 2450 chars
+BranchAsyncNetworkLayer: Starting request with retry limit 3
+BranchAsyncNetworkLayer: Executing request attempt #0
+Response: OK
+Branch Networking Success
+URL: https://api2.branch.io/v3/events/open
+Response Code: 200
+Response Message: OK
+Retry number: 0
+requestId: 1b2f4db0-8007-490b-b3b3-f4701fab9ba4-2026090817
+BranchAsyncNetworkLayer: Network execution completed on attempt #0 with response code 200
+BranchAsyncNetworkLayer: POST request completed successfully in 224ms with response code 200
+BranchRemoteInterfaceUrlConnectionAsync: POST request completed in 230ms using coroutine-based retry
+Server returned: [1b2f4db0-8007-490b-b3b3-f4701fab9ba4-2026090817] Status: [200]; Data: {"identity":"Identity1","link":"https://bnctestbed.test-app.link?%24randomized_bundle_token=1625923577369313393","randomized_bundle_token":"1625923577369313393","randomized_device_token":"1625923577356662009","session_id":"1625926490262815395","session_link_click_id":"1625926488941509795"}
+BranchRequestQueueAdapter.addExtraInstrumentationData called - key: v3/events/open-brtt, value: 245
+BranchRequestQueue.addExtraInstrumentationData called - key: v3/events/open-brtt, value: 245
+BranchRequestQueue.addExtraInstrumentationData completed
+BranchRequestQueueAdapter.addExtraInstrumentationData completed
+Handling response on main thread
+BranchRequestQueue.handleResponse called for: RequestOpen
+Response status code: 200
+Response successful, calling onRequestSucceeded
+*** SUCCESS: InitSession request completed successfully ***
+Processing init session response for: RequestOpen
+Set SessionID: 1625926490262815395
+Set RandomizedDeviceToken: 1625923577356662009
+Updating all requests in queue with new tokens
+BranchRequestQueue.updateAllRequestsInQueue called
+BranchRequestQueue.updateAllRequestsInQueue completed
+RequestOpen Succeeded. Response: {"identity":"Identity1","link":"https:\/\/bnctestbed.test-app.link?%24randomized_bundle_token=1625923577369313393","randomized_bundle_token":"1625923577369313393","randomized_device_token":"1625923577356662009","session_id":"1625926490262815395","session_link_click_id":"1625926488941509795"}
+Session state transition attempt: Uninitialized -> Initialized
+Invalid state transition from Uninitialized to Initialized
+onInitSessionCompleted on thread main
+Session initialization completed successfully, state set to INITIALISED
+After io.branch.referral.RequestOpen@b9c167d completion - LegacyState: Initialized, hasUser: true
+Request processing completed, network count: 0
+BranchProcessLifecycleObserver onStop: process backgrounded
