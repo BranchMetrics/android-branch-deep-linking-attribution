@@ -43,9 +43,9 @@ Test the edge the code exists to handle, not the happy path. A guard, a cap, a t
 
 | Workflow | Runs on this branch? | What it does |
 | --- | --- | --- |
-| `unit-and-instrumented-tests-action.yml` | yes, `on: push` | unit plus instrumented on API 21 and 34, then JaCoCo to Codecov |
-| `sdk-l1-validation.yml` | **no** | its `pull_request` trigger is scoped to `[master, main, feature/mobileboost-e2e-tests]`, so it does not gate PRs into `6.0.0-beta.0` despite the workflow name implying a general PR gate |
+| `unit-and-instrumented-tests-action.yml` | **no** | it is `disabled_manually` at repo level and has zero runs in its history, so nothing has ever exercised the suite in CI on any branch. Tracked as EMT-4261 |
+| `sdk-l1-validation.yml` | yes | EMT-4077 added `6.0.0-beta.0` to both triggers, so it runs on push to this branch and on PRs into it. A PR targeting a branch further up a stack is not covered, since only the listed bases match; use `workflow_dispatch` there |
 | `gptdriverautomation.yaml` | pushes to `Release-*`, or manual | drives the `:Branch-SDK-GPTDriver` MobileBoost E2E module |
 | `apiCompatibilityReport` | not a workflow at all | a Gradle task that diffs the public API against a pinned 5.x baseline. Report-only; pass `-PapiDiffStrict` to make a break fail the build |
 
-Because the L1 wire gate does not run here, the wire format on this branch is not automatically checked. If your change touches request bodies, verify it by hand: `./scripts/run_l1_instrumented.sh <your MobileBoost key>` installs both APKs, runs the test and pulls the log, then `python3 scripts/validate_l1_logs.py path/to/branchlogs.txt` checks it. Notes in `scripts/README.md`.
+The L1 wire gate does check the wire format here, and as of EMT-4081 it judges each capture against its scenario contract rather than on field presence alone. What is not checked is the unit and instrumented suite, since that workflow is disabled. To reproduce a wire check locally: `./scripts/run_l1_instrumented.sh <your MobileBoost key>` installs both APKs, runs `TEST_CLASS` and pulls the log, then `python3 scripts/validate_l1_logs.py path/to/branchlogs.txt --scenario <NAME>` judges it. Notes in `scripts/README.md`.
