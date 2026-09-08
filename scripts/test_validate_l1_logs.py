@@ -31,6 +31,7 @@ SCENARIO_FIXTURES = {
     "C3": "c3_first_install_link.txt",
     "C1": "c1_installed_link.txt",
     "LINK": "link_generation.txt",
+    "W1": "w1_warm_https.txt",
 }
 
 
@@ -266,7 +267,12 @@ class ContractRegistryTests(unittest.TestCase):
 
 class ScenarioContractTests(unittest.TestCase):
     """N1 is a measured capture less the EMT-4136 duplicate open. C3, C1 and
-    LINK are cold captures."""
+    LINK are cold captures.
+
+    W1 is a warm capture taken on 2026-09-08 against an API 34 emulator,
+    after EMT-4136 (PR 1392) merged. W1 carries three opens. The only thing a
+    warm launch does that a cold one does not is background and foreground the
+    app; that is a coincidence these fixtures record, not a cause they establish."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
@@ -345,6 +351,20 @@ class ScenarioContractTests(unittest.TestCase):
             errors = self._errors(capture, contract)
             with self.subTest(capture=capture, contract=contract):
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_an_install_fails_W1(self):
+        # The ticket's one explicit ask for this group: assert the absence of
+        # install, because a presence-only check would not catch a warm launch
+        # that emitted one. Zero in the contract is the assertion; this is the
+        # proof it can fail.
+        entries = self._entries("W1")
+        first = entries[0]
+        with_install = entries + [dict(first, uri="/v1/install")]
+        errors = v.assert_contract(with_install, v.contract_for("W1"))
+        self.assertTrue(
+            any("/v1/install" in e for e in errors),
+            f"an install in a warm capture must fail W1, got: {errors}",
+        )
 
     def test_hardware_id_on_link_creation_fails_LINK(self):
         # The EMT-4199 signal. /v1/url lives only in the generation capture.
