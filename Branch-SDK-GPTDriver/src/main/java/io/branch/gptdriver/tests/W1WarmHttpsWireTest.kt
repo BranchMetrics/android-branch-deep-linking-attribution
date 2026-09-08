@@ -70,14 +70,14 @@ class W1WarmHttpsWireTest {
     }
 
     private fun deliver(url: String) {
-        // An explicit component, not setPackage. The TestBed generates links on
-        // bnctestbed.test-app.link and its manifest does not declare that host, so a
-        // resolved VIEW intent raises ActivityNotFoundException. Naming the component
-        // skips resolution, which is what DeepLinkWarmOpenHybridTest does and what
-        // ActivityScenario.launch does for C1.
+        // setPackage, so the system still resolves the intent against the manifest.
+        // Naming the component explicitly would work too and would skip resolution,
+        // but then a manifest that no longer declares the generated link's host would
+        // not break this test. It did stop declaring it, unnoticed for a week, which
+        // is the argument for keeping resolution in the path.
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            setClassName(context, MainActivity::class.java.name)
+            setPackage(context.packageName)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         context.startActivity(intent)
