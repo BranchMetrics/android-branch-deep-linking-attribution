@@ -311,7 +311,7 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": 2,
             "/v3/events/open": 2,
             "/v1/url": 1,
-            "/v2/event/custom": 1,
+            "/v3/events/custom": 1,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
@@ -320,7 +320,7 @@ SCENARIO_CONTRACTS = {
         },
     },
     # C1 cold_https: a link opened on a device that already has the app. Both
-    # opens carry the token, and the capture holds a second /v2/event/custom
+    # opens carry the token, and the capture holds a second /v3/events/custom
     # that C3's does not. Two independent signals separate it from C3, which is
     # more than iOS has -- there only the field distinguishes them.
     "C1": {
@@ -328,7 +328,7 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": 2,
             "/v3/events/open": 2,
             "/v1/url": 1,
-            "/v2/event/custom": 2,
+            "/v3/events/custom": 2,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
