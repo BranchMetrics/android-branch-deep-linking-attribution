@@ -73,9 +73,12 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
       # Each scenario gets its own capture file, because CustomBranchApp appends
-      # to the capture and nothing truncates it. Every scenario starts from wiped
+      # to the capture and nothing truncates it. N1, C3 and C1 start from wiped
       # app data; C1's generation run makes the install its link then opens on.
       # wire-link.txt is C3's generation capture, where /v1/url is.
+      #
+      # W1 and W2 need an installed device and do not wipe, so they follow C1 and
+      # keep the install it established.
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
@@ -98,6 +101,8 @@ jobs:
             TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=wire-n1.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=C3 COLD_WIPE=1 OUTPUT_LOG=wire-c3.txt LINK_LOG=wire-link.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=C1 OUTPUT_LOG=wire-c1.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=io.branch.gptdriver.tests.W1WarmHttpsWireTest OUTPUT_LOG=wire-w1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=io.branch.gptdriver.tests.W2WarmUriSchemeWireTest OUTPUT_LOG=wire-w2.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -134,6 +139,8 @@ jobs:
           check LINK wire-link.txt
           check C3 wire-c3.txt
           check C1 wire-c1.txt
+          check W1 wire-w1.txt
+          check W2 wire-w2.txt
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
