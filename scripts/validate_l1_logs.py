@@ -301,6 +301,27 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"randomized_bundle_token": 0},
         },
     },
+    # W1 warm_https_onNewIntent: the app alive and backgrounded when the link
+    # arrives. Written from the capture, not from the ticket, which predicted one
+    # /v3/deeplink and exactly one /v3/events/open. Measured: two and three. The
+    # third open is the one C1 does not have, and the only thing W1 does that C1
+    # does not is background and foreground the app; that is a coincidence worth
+    # stating and not a mapping this contract proves. What the ticket asked for
+    # and the capture confirms is the absence of install, asserted at zero below.
+    "W1": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 2,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v1/url": {"hardware_id": 0},
+        },
+    },
     # C1 cold_https: the link starts the app on a device that already has it.
     # The open carries the token, which is what separates it from C3.
     # /v3/events/custom is not counted in either: the TestBed logs one from
