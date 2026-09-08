@@ -339,7 +339,7 @@ class ScenarioContractTests(unittest.TestCase):
         for capture, contract in (("C3", "C1"), ("C1", "C3")):
             errors = self._errors(capture, contract)
             with self.subTest(capture=capture, contract=contract):
-                self.assertTrue(any("/v2/event/custom" in e for e in errors), errors)
+                self.assertTrue(any("/v3/events/custom" in e for e in errors), errors)
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
 
     def test_hardware_id_on_link_creation_fails_the_cold_scenarios(self):
