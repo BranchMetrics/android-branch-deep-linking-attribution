@@ -31,7 +31,7 @@ cp local.properties.example local.properties   # then set sdk.dir, or export AND
 ./gradlew :Branch-SDK-TestBed:installDebug     # the sample app, on a device or emulator
 ```
 
-**The TestBed needs no Branch account.** It ships a test key in `Branch-SDK-TestBed/src/main/AndroidManifest.xml` with `io.branch.sdk.TestMode` set true. Turn on wire logging with `Branch.enableLogging()` to read what actually goes to the API.
+**The TestBed needs no Branch account.** `CustomBranchApp` selects the key with its `USE_TEST_KEY` flag and passes it to `BranchConfiguration.Builder`, because the SDK no longer infers one: the `io.branch.sdk.BranchKey` manifest entries are still in the file but nothing reads them. Wire logging comes from the same builder, via `setLogLevel`, which the TestBed already sets to `VERBOSE`.
 
 ## Commands
 

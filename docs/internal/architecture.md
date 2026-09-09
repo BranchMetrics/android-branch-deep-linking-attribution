@@ -69,7 +69,7 @@ Singleton wrapper over the `"branch_referral_shared_pref"` SharedPreferences fil
 
 Stores: branch key plus key **source**, randomized device and bundle tokens, identity, session params versus install params, link / app-link / push identifiers, install and referrer data, consent and DMA flags, tracking state, network tuning.
 
-**Branch key resolution precedence**: `branch.json`, then manifest meta-data (`io.branch.sdk.BranchKey` and `.test`), then string resources. Each source is persisted alongside a key-source string.
+**Branch key resolution**: `branch.json` only (`BranchUtil.readBranchKey`). The manifest meta-data and string-resource entry points were removed in 6.0, so pass the key to `BranchConfiguration.Builder`; `Branch.initialize` writes it to `PrefHelper` verbatim, with the source recorded as `init_function`. The same removal applies to test mode: `io.branch.sdk.TestMode` is no longer read, and `Builder.setTestMode` replaces it.
 
 **Tracking-disabled** (`TrackingController`, or attribution level `NONE`) blocks network calls except deep linking. Disabling clears session, link, and referrer prefs but **not** identity or the device and bundle tokens. Only requests whose `prepareExecuteWithoutTracking()` returns true pass through.
 
