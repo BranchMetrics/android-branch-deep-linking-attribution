@@ -462,6 +462,14 @@ public class Branch {
         } else {
             branchRemoteInterface_ = remoteInterface;
         }
+
+        // Generators capture the interface at construction; rebuild or link creation keeps
+        // posting through the replaced one.
+        if (modernLinkGenerator_ != null) {
+            modernLinkGenerator_.shutdown();
+        }
+        modernLinkGenerator_ = new ModernLinkGenerator(context_, branchRemoteInterface_, prefHelper_);
+        legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, branchRemoteInterface_);
     }
 
     public BranchRemoteInterface getBranchRemoteInterface() {
