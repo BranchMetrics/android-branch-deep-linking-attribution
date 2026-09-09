@@ -112,18 +112,21 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
 
         // Real dispatcher, not runTest's: the polling below blocks this thread.
         val job = launch(Dispatchers.IO) { Branch.getInstance().requestDeepLinkData(uri) }
-        val queuedWhileBlocked = awaitQueueSizeAtLeast(1)
-        assertTrue("the suspend call never reached the queue", queuedWhileBlocked)
+        try {
+            assertTrue("the suspend call never reached the queue", awaitQueueSizeAtLeast(1))
 
-        job.cancel()
-        job.join()
+            job.cancel()
+            job.join()
 
-        assertEquals(
-            "cancelling must remove the still-unsent request from the queue",
-            0,
-            Branch.getInstance().requestQueue_.getSize()
-        )
-        gated.gate.countDown()
+            assertEquals(
+                "cancelling must remove the still-unsent request from the queue",
+                0,
+                Branch.getInstance().requestQueue_.getSize()
+            )
+        } finally {
+            // A failed assertion would otherwise leave the consumer parked for the full 10s.
+            gated.gate.countDown()
+        }
     }
 
     private fun awaitQueueSizeAtLeast(target: Int): Boolean {
