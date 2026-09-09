@@ -6,9 +6,10 @@ Run from the repo root:
 """
 
 import io
+import json
 import os
+import re
 import sys
-import os
 import unittest
 from contextlib import redirect_stdout
 
@@ -30,6 +31,8 @@ SCENARIO_FIXTURES = {
     "N1": "n1_organic_open.txt",
     "C3": "c3_first_install_link.txt",
     "C1": "c1_installed_link.txt",
+    "W1": "w1_warm_https.txt",
+    "W2": "w2_warm_urischeme.txt",
 }
 
 
@@ -254,14 +257,101 @@ class ContractRegistryTests(unittest.TestCase):
             self.assertIn(name, v.SCENARIO_CONTRACTS, f"'{name}' maps a fixture to no contract")
 
 
-class ScenarioContractTests(unittest.TestCase):
-    """C1, C3 and N1, derived from run 33541932795.
+class ScenarioArtifactGuards(unittest.TestCase):
+    """Two mistakes this suite could have caught, turned into checks.
 
-    Each fixture reproduces that run's measured endpoint sequence and field
-    presence with one subtraction: the duplicate /v3/events/open that EMT-4136
-    describes and PR 1392 removes. So these assert the wire after that fix,
-    which is why the workflow does not yet pass --scenario. Measured N1 3, C3
-    7, C1 8; contracted 2, 6 and 7."""
+    A scenario fixture was once committed as the raw 658-line capture, carrying the
+    emulator's identifiers and a live-shaped branch key, and only the neighbouring files
+    revealed it. A scenario contract was once proposed identical to another's, which would
+    have shipped a capture that asserted nothing the other did not, and only asking what it
+    added revealed that. Neither needed a person.
+
+    Scoped to the scenario fixtures. The harness fixtures under the same directory are
+    hand-written inputs for the field-presence tests, not captures, and are deliberately
+    outside this shape."""
+
+    FIXTURE_BRANCH_KEY = "key_live_fixtureFixtureFixtureFi"
+
+    def _keep_set(self):
+        """Derived from the validator, not restated here, so the two cannot drift.
+
+        Plus the two documented additions: app_version, which the cold fixtures already
+        carried, and external_intent_uri, which is what lets W1 and W2 contract their entry
+        points in opposite directions."""
+        keep = set()
+        for name in dir(v):
+            if not name.startswith("REQUIRED"):
+                continue
+            value = getattr(v, name)
+            if isinstance(value, list):
+                keep |= {str(x) for x in value}
+            elif isinstance(value, dict):
+                for inner in value.values():
+                    if isinstance(inner, list):
+                        keep |= {str(x) for x in inner}
+        return keep | {"app_version", "external_intent_uri"}
+
+    def _payloads(self, fixture_name):
+        text = open(_fixture(fixture_name), encoding="utf-8").read()
+        return [json.loads(m.group(1)) for m in re.finditer(r"^Post value = (\{.*)$", text, re.M)]
+
+    def test_scenario_fixtures_hold_only_wire_pairs(self):
+        # What a raw capture fails: log lines the validator never reads.
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            lines = [l for l in open(_fixture(fixture), encoding="utf-8").read().splitlines() if l.strip()]
+            stray = [l for l in lines if not (l.startswith("posting to ") or l.startswith("Post value = "))]
+            with self.subTest(scenario=scenario):
+                self.assertEqual(stray, [], f"{fixture} holds lines that are not wire pairs")
+
+    def test_scenario_fixtures_carry_no_field_outside_the_keep_set(self):
+        keep = self._keep_set()
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            extra = set()
+            for payload in self._payloads(fixture):
+                extra |= set(payload) - keep
+            with self.subTest(scenario=scenario):
+                self.assertEqual(
+                    extra, set(), f"{fixture} carries fields the validator never reads: {sorted(extra)}"
+                )
+
+    def test_scenario_fixtures_carry_no_real_branch_key(self):
+        # The one that would have caught a test-mode key going into a public repo.
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            keys = {p["branch_key"] for p in self._payloads(fixture) if "branch_key" in p}
+            with self.subTest(scenario=scenario):
+                self.assertTrue(
+                    keys <= {self.FIXTURE_BRANCH_KEY},
+                    f"{fixture} carries a branch key that is not the fixture constant",
+                )
+
+    def test_no_two_scenarios_share_a_contract(self):
+        # A scenario whose contract equals another's asserts nothing that one does not,
+        # however different the driver looks. W1 and W2 are the near miss this exists for:
+        # same counts, same order, separated only by which field carries the URI.
+        names = sorted(v.SCENARIO_CONTRACTS)
+        for i, first in enumerate(names):
+            for second in names[i + 1:]:
+                with self.subTest(pair=f"{first}/{second}"):
+                    self.assertNotEqual(
+                        v.SCENARIO_CONTRACTS[first],
+                        v.SCENARIO_CONTRACTS[second],
+                        f"{first} and {second} carry the same contract",
+                    )
+
+
+class ScenarioContractTests(unittest.TestCase):
+    """N1, C3, C1 and W1.
+
+    C1, C3 and W1 are captures taken on 2026-09-08 against an API 34 emulator,
+    after EMT-4136 (PR 1392) merged. They are the wire as it stands, not the
+    wire as anticipated: an earlier revision of C1 and C3 carried one
+    /v3/events/open fewer than their run measured, because the duplicate the
+    fix removes had not been removed yet. Re-measured, C1 is 7 requests, C3 is
+    6 and N1 is 2, which is what these contracts say.
+
+    W1 is the outlier and deliberately so: three opens, where C1 has two. The
+    only thing W1 does that C1 does not is background and foreground the app.
+    That is a coincidence these fixtures record, not a cause they establish."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
@@ -273,7 +363,7 @@ class ScenarioContractTests(unittest.TestCase):
         )
 
     def test_each_fixture_satisfies_its_own_contract(self):
-        for scenario in ("N1", "C3", "C1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             with self.subTest(scenario=scenario):
                 errors = self._errors(scenario, scenario)
                 self.assertEqual(errors, [], f"{scenario}: {errors}")
@@ -281,7 +371,7 @@ class ScenarioContractTests(unittest.TestCase):
     def test_each_count_is_a_fact_about_its_fixture(self):
         # The check that would catch a contract written from the plan text
         # rather than from a capture.
-        for scenario in ("N1", "C3", "C1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             uris = [e["uri"] for e in self._entries(scenario)]
             for endpoint, expected in v.contract_for(scenario)["counts"].items():
                 with self.subTest(scenario=scenario, endpoint=endpoint):
@@ -292,7 +382,7 @@ class ScenarioContractTests(unittest.TestCase):
         # duplicate back is exactly the wire as it stands today, so each
         # contract must reject it. If one of these ever passes, the contract
         # has drifted back onto the defect.
-        for scenario in ("N1", "C3", "C1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             entries = self._entries(scenario)
             first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
             duplicated = entries + [dict(first_open, request=dict(first_open["request"]))]
@@ -307,7 +397,7 @@ class ScenarioContractTests(unittest.TestCase):
         # The counterpart to the duplicate-open case: too few is a defect the
         # same way too many is. Carried over from the harness contract's
         # coverage, which this class replaces.
-        for scenario in ("N1", "C3", "C1"):
+        for scenario in ("N1", "C3", "C1", "W1", "W2"):
             entries = [e for e in self._entries(scenario) if e["uri"] != "/v3/deeplink"]
             with self.subTest(scenario=scenario):
                 errors = v.assert_contract(entries, v.contract_for(scenario))
@@ -341,6 +431,20 @@ class ScenarioContractTests(unittest.TestCase):
             with self.subTest(capture=capture, contract=contract):
                 self.assertTrue(any("/v3/events/custom" in e for e in errors), errors)
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_an_install_fails_W1(self):
+        # The ticket's one explicit ask for this group: assert the absence of
+        # install, because a presence-only check would not catch a warm launch
+        # that emitted one. Zero in the contract is the assertion; this is the
+        # proof it can fail.
+        entries = self._entries("W1")
+        first = entries[0]
+        with_install = entries + [dict(first, uri="/v1/install")]
+        errors = v.assert_contract(with_install, v.contract_for("W1"))
+        self.assertTrue(
+            any("/v1/install" in e for e in errors),
+            f"an install in a warm capture must fail W1, got: {errors}",
+        )
 
     def test_hardware_id_on_link_creation_fails_the_cold_scenarios(self):
         # The EMT-4199 signal, moved off the harness contract onto the two

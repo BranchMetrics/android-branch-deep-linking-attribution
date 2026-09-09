@@ -284,12 +284,18 @@ SCENARIO_CONTRACTS = {
     # passes no --scenario. The self-test exercises them against fixtures. When
     # the fix merges, wiring enforcement is the only remaining change.
 
-    # N1 organic_open: a launch with no link. Android emits /v3/deeplink here
-    # where the iOS contract forbids it, because MainActivity.onCreate calls
+    # N1 organic_open: a launch with no link. MainActivity.onCreate calls
     # handleDeepLink unconditionally and RequestDeepLink guards only the
-    # parsing, so the request goes out carrying no link. That divergence is
-    # documented platform behaviour, tracked for EMT-4092's parity comparison,
-    # not a defect.
+    # parsing, so the resolution goes out carrying no link. That is the same
+    # unconditional launch-time resolve the iOS 4.0 integration guide requires,
+    # and it is what performs the deferred match.
+    #
+    # The iOS contract reads the other way -- it forbids /v3/deeplink on N1 --
+    # but that describes a TestBed that never calls
+    # requestDeepLinkDataWithLaunchOptions:, not a platform decision. EMT-4313.
+    # So the divergence to settle in EMT-4092 is the open, not the resolution:
+    # Android sends one here, and an iOS app integrated as documented sends
+    # none, because a response with no ~referring_link ends the path.
     #
     # No `fields` rule. The property this scenario is really about is that the
     # open carries no link data, and the measurement that produced these shapes
@@ -317,6 +323,52 @@ SCENARIO_CONTRACTS = {
         "fields": {
             "/v3/events/open": {"randomized_bundle_token": 1},
             "/v1/url": {"hardware_id": 0},
+        },
+    },
+    # W1 warm_https_onNewIntent: the app alive and backgrounded when the link
+    # arrives. Written from the capture, not from the ticket, which predicted one
+    # /v3/deeplink and exactly one /v3/events/open. Measured: two and three. The
+    # third open is the one C1 does not have, and the only thing W1 does that C1
+    # does not is background and foreground the app; that is a coincidence worth
+    # stating and not a mapping this contract proves. What the ticket asked for
+    # and the capture confirms is the absence of install, asserted at zero below.
+    "W1": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 2,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v1/url": {"hardware_id": 0},
+            # The entry point, asserted in both directions across W1 and W2. Without
+            # it the two warm captures are the same contract and W2 says nothing W1
+            # does not. What the field carries is a mapping, and that is tested on the
+            # JVM in RequestDeepLinkUriMappingTest, not here.
+            "/v3/deeplink": {"external_intent_uri": 0},
+        },
+    },
+    # W2 warm_uriScheme: W1's launch state entered through branchtest:// instead of
+    # https. Same counts and order as W1, measured, and deliberately so: what W2 adds
+    # is not a different wire shape but the proof that the manifest's branchtest
+    # filter matches and the OS hands a scheme intent to a backgrounded app. Neither
+    # is reachable from a JVM test.
+    "W2": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 2,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v1/url": {"hardware_id": 0},
+            "/v3/deeplink": {"external_intent_uri": 1},
         },
     },
     # C1 cold_https: a link opened on a device that already has the app. Both
