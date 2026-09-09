@@ -49,6 +49,8 @@ suspend fun Branch.requestDeepLinkData(uri: Uri): JSONObject =
             false
         )
 
-        continuation.invokeOnCancellation { requestQueue_.remove(request) }
+        // Enqueue first: invokeOnCancellation fires immediately for an already-cancelled
+        // continuation, and removing before enqueueing would let the request send anyway.
         requestQueue_.handleNewRequest(request)
+        continuation.invokeOnCancellation { requestQueue_.remove(request) }
     }

@@ -80,7 +80,7 @@ class BranchEventCoroutinesTest : BranchTestBase() {
         } catch (e: Exception) {
             assertTrue(
                 "expected the tracking-disabled error code, got: ${e.message}",
-                e.message!!.contains(BranchError.ERR_BRANCH_TRACKING_DISABLED.toString())
+                e.message?.contains(BranchError.ERR_BRANCH_TRACKING_DISABLED.toString()) == true
             )
         }
     }
@@ -103,7 +103,7 @@ class BranchEventCoroutinesTest : BranchTestBase() {
         } catch (e: Exception) {
             assertTrue(
                 "expected the callback's own message, got: ${e.message}",
-                e.message!!.contains("Failed logEvent server request: 500")
+                e.message?.contains("Failed logEvent server request: 500") == true
             )
         }
     }
