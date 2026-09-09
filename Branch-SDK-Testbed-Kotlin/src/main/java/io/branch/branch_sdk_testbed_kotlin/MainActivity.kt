@@ -20,6 +20,7 @@ import io.branch.referral.requestDeepLinkData
 import io.branch.referral.util.BRANCH_STANDARD_EVENT
 import io.branch.referral.util.BranchEvent
 import io.branch.referral.util.LinkProperties
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -104,6 +105,8 @@ class MainActivity : AppCompatActivity() {
         log("▶ $label")
         try {
             log("✓ $label\n   ${block()}")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: BranchException) {
             log("✗ $label\n   BranchException code=${e.branchError.errorCode} ${e.message}")
         } catch (e: Exception) {
