@@ -269,12 +269,18 @@ SCENARIO_CONTRACTS = {
     # Every contract is derived from a real capture. N1's is less the
     # duplicate /v3/events/open that EMT-4136 removed.
 
-    # N1 organic_open: a launch with no link. Android emits /v3/deeplink here
-    # where the iOS contract forbids it, because MainActivity.onCreate calls
+    # N1 organic_open: a launch with no link. MainActivity.onCreate calls
     # handleDeepLink unconditionally and RequestDeepLink guards only the
-    # parsing, so the request goes out carrying no link. That divergence is
-    # documented platform behaviour, tracked for EMT-4092's parity comparison,
-    # not a defect.
+    # parsing, so the resolution goes out carrying no link. That is the same
+    # unconditional launch-time resolve the iOS 4.0 integration guide requires,
+    # and it is what performs the deferred match.
+    #
+    # The iOS contract reads the other way -- it forbids /v3/deeplink on N1 --
+    # but that describes a TestBed that never calls
+    # requestDeepLinkDataWithLaunchOptions:, not a platform decision. EMT-4313.
+    # So the divergence to settle in EMT-4092 is the open, not the resolution:
+    # Android sends one here, and an iOS app integrated as documented sends
+    # none, because a response with no ~referring_link ends the path.
     #
     # No `fields` rule. The property this scenario is really about is that the
     # open carries no link data, and the measurement that produced these shapes
