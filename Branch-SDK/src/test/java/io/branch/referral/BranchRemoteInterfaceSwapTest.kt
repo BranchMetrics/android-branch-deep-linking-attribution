@@ -9,6 +9,7 @@ import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.robolectric.RuntimeEnvironment
@@ -81,7 +82,7 @@ class BranchRemoteInterfaceSwapTest : BranchTestBase() {
                 done.countDown()
             }
 
-        done.await(10, TimeUnit.SECONDS)
+        assertTrue("the link callback never fired", done.await(10, TimeUnit.SECONDS))
         runMainLooperTasks()
 
         assertNull(createError)
