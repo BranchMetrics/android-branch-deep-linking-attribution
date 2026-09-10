@@ -2,6 +2,9 @@ name: Unit tests
 
 on:
   push:
+    branches:
+      - master
+      - 6.0.0-beta.0
   pull_request:
     branches:
       - master
