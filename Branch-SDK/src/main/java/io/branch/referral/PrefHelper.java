@@ -56,9 +56,9 @@ public class PrefHelper {
      */
     private static final int MAX_RETRIES = 3; // Default retry count is 3
 
-    static final int TIMEOUT = 5500; // Default timeout is 5.5 sec
-    static final int CONNECT_TIMEOUT = 10000; // Default timeout is 10 seconds
-    static final int TASK_TIMEOUT = TIMEOUT+CONNECT_TIMEOUT; // Default timeout is 15.5 seconds
+    static final int TIMEOUT = 5000; // Default read timeout is 5 sec
+    static final int CONNECT_TIMEOUT = 3000; // Default connect timeout is 3 seconds
+    static final int TASK_TIMEOUT = TIMEOUT+CONNECT_TIMEOUT; // Default task timeout is 8 seconds
     static final long DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID = 2592000000L; // Default expiration is 30 days, in milliseconds
     static final long MAX_VALID_WINDOW_FOR_REFERRER_GCLID = 100000000000L; // Arbitrary maximum window to prevent overflow, 3 years, in milliseconds
     static final long MIN_VALID_WINDOW_FOR_REFERRER_GCLID = 0L; // Don't allow time set in the past , in milliseconds
