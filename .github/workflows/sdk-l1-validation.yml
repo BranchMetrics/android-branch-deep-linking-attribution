@@ -142,7 +142,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "### Layer 1 — SDK wire validation"
+            echo "### Layer 1: SDK wire validation"
             echo
             grep -h -o 'posting to https://[^ ]*' wire-n1.txt wire-link.txt wire-c3.txt wire-c1.txt 2>/dev/null \
               | sed 's|.*api2.branch.io||' | sort | uniq -c > /tmp/l1-endpoints.txt || true
@@ -160,13 +160,13 @@ jobs:
             echo "| --- | --- |"
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "| Cold (C1, C3) | 2 pass |"
-              echo "| Negative / guards (N1–N4) | N1 pass, N2 to N4 not implemented |"
+              echo "| Negative / guards (N1 to N4) | N1 pass, N2 to N4 not implemented |"
             else
               echo "| Cold (C1, C3) | see failures below |"
-              echo "| Negative / guards (N1–N4) | see failures below |"
+              echo "| Negative / guards (N1 to N4) | see failures below |"
             fi
-            echo "| Warm (W1–W2) | not implemented |"
-            echo "| Hot (H1–H2) | not implemented |"
+            echo "| Warm (W1 to W2) | not implemented |"
+            echo "| Hot (H1 to H2) | not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"

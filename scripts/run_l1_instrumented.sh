@@ -47,16 +47,10 @@ OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
 # WIPE_FIRST runs `pm clear`. `adb install -r` preserves app data, so on a
 # device that already holds state this is the only way to ask for a clean one.
 #
-# It is inert on CI, and that is measured rather than assumed: run 33446080403
-# drove the same class twice, the second with WIPE_FIRST=1, and the captures
-# were identical -- same count, same token sequence, first request carrying
-# none on both. The emulator is created fresh for every job, so the run before
-# the wipe was already a first install and there was nothing to clear.
-#
-# So this exists for local reproduction on a persistent emulator, not to
-# produce the first-install scenario in CI, which comes free. It removes the
-# log as a side effect, which is why the two are separate switches: a scenario
-# that must keep its install still needs a clean log.
+# CI creates a fresh emulator per job, so a lone scenario needs no wipe; it
+# matters between scenarios in one job and on a persistent emulator. It
+# removes the log as a side effect, which is why the two are separate
+# switches: a scenario that must keep its install still needs a clean log.
 CLEAR_LOG="${CLEAR_LOG:-0}"
 WIPE_FIRST="${WIPE_FIRST:-0}"
 

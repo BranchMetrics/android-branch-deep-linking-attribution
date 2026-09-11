@@ -265,8 +265,8 @@ class ContractRegistryTests(unittest.TestCase):
 
 
 class ScenarioContractTests(unittest.TestCase):
-    """N1 from run 33541932795, less the EMT-4136 duplicate open. C3, C1 and
-    LINK from cold captures on an API 34 emulator."""
+    """N1 is a measured capture less the EMT-4136 duplicate open. C3, C1 and
+    LINK are cold captures."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
