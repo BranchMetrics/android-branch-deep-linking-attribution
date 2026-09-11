@@ -333,13 +333,13 @@ public class Branch {
         // Initialize modern link generator with default parameters
         modernLinkGenerator_ = new ModernLinkGenerator(
             context,
-            branchRemoteInterface_,
+            () -> branchRemoteInterface_,
             prefHelper_
         );
         BranchLogger.v("Branch constructor - modern link generator initialized");
 
         // Initialize legacy link generator for fallback compatibility
-        legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, branchRemoteInterface_);
+        legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, () -> branchRemoteInterface_);
         BranchLogger.v("Branch constructor - legacy link generator initialized");
     }
 
@@ -452,9 +452,11 @@ public class Branch {
 
 
     /**
-     * Swaps the HTTP layer. Configured pre-init via
-     * {@link BranchConfiguration.Builder#setRemoteInterface}; package-private so tests can
-     * substitute a mock.
+     * Swaps the HTTP transport used by the request queue and by link generation. Configured
+     * pre-init via {@link BranchConfiguration.Builder#setRemoteInterface}; package-private so
+     * tests can substitute a mock.
+     *
+     * @param remoteInterface The transport to install, or null to restore the real one.
      */
     void setBranchRemoteInterface(BranchRemoteInterface remoteInterface) {
         if (remoteInterface == null) {
