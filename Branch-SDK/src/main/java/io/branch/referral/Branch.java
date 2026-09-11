@@ -1175,8 +1175,6 @@ public class Branch {
         BranchLogger.v("Session state set to INITIALISING");
 
         if (delay > 0) {
-            initRequest.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.USER_SET_WAIT_LOCK);
-            BranchLogger.v("Adding USER_SET_WAIT_LOCK with delay: " + delay);
             getStaticHandler().postDelayed(new SessionInitRunnable(initRequest), delay);
         } else {
             BranchLogger.v("No delay, processing session initialization immediately");
