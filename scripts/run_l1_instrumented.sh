@@ -35,22 +35,9 @@ RUNNER="androidx.test.runner.AndroidJUnitRunner"
 TEST_CLASS="${TEST_CLASS:-io.branch.gptdriver.tests.LinkCreationDeterministicTest}"
 OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
 
-# Both default off, so a caller that sets neither gets exactly the previous
-# behaviour. CI starts from a fresh emulator, so a single-scenario job has
-# nothing to inherit and needs neither.
-#
-# CLEAR_LOG truncates the capture file. It matters only when a job drives more
-# than one scenario: CustomBranchApp.saveLogToFile opens the file in append
-# mode and nothing truncates it, so the second scenario would be judged against
-# the first one's traffic as well.
-#
-# WIPE_FIRST runs `pm clear`. `adb install -r` preserves app data, so on a
-# device that already holds state this is the only way to ask for a clean one.
-#
-# CI creates a fresh emulator per job, so a lone scenario needs no wipe; it
-# matters between scenarios in one job and on a persistent emulator. It
-# removes the log as a side effect, which is why the two are separate
-# switches: a scenario that must keep its install still needs a clean log.
+# Both default off. CLEAR_LOG truncates the capture file, which the app only
+# ever appends to. WIPE_FIRST runs `pm clear`, since `adb install -r` keeps app
+# data; it also removes the capture file.
 CLEAR_LOG="${CLEAR_LOG:-0}"
 WIPE_FIRST="${WIPE_FIRST:-0}"
 
@@ -132,16 +119,9 @@ if [ -z "$LINK_URL" ]; then
   echo "ScenarioLinkGenerator reported no link." >&2
   exit 1
 fi
-if [ -n "$LINK_LOG" ]; then
-  pull_capture "$LINK_LOG"
-fi
 
-if [ "$COLD_WIPE" = "1" ]; then
-  echo "Wiping app data so the link arrives on a first install"
-  adb shell pm clear "$TARGET_PKG"
-else
-  adb shell "run-as $TARGET_PKG sh -c 'rm -f $CAPTURE'" || true
-fi
+# Stopped before the capture is read or cleared, so no write from the
+# generation run can land after it.
 adb shell am force-stop "$TARGET_PKG"
 
 app_pid() {
@@ -154,6 +134,17 @@ done
 if [ -n "$(app_pid)" ]; then
   echo "$TARGET_PKG is still running after force-stop." >&2
   exit 1
+fi
+
+if [ -n "$LINK_LOG" ]; then
+  pull_capture "$LINK_LOG"
+fi
+
+if [ "$COLD_WIPE" = "1" ]; then
+  echo "Wiping app data so the link arrives on a first install"
+  adb shell pm clear "$TARGET_PKG"
+else
+  adb shell "run-as $TARGET_PKG sh -c 'rm -f $CAPTURE'" || true
 fi
 
 # Resolved against the package, not a named component, so the manifest still
