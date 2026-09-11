@@ -23,7 +23,7 @@ import java.util.concurrent.TimeoutException
  * 
  * ## Usage Patterns
  * ```kotlin
- * val legacyGenerator = BranchLegacyLinkGenerator(prefHelper, networkInterface)
+ * val legacyGenerator = BranchLegacyLinkGenerator(prefHelper) { networkInterface }
  * 
  * // For AsyncTask compatibility (maintains original Branch SDK behavior)
  * val url = legacyGenerator.generateShortLinkSyncLegacy(request, linkCache)
@@ -43,14 +43,14 @@ import java.util.concurrent.TimeoutException
  * - Timeout exceptions are caught and logged with fallback behavior
  * 
  * @param prefHelper PrefHelper instance providing configuration values (timeouts, URLs, keys)
- * @param branchRemoteInterface Network interface for performing REST API calls to Branch servers
+ * @param branchRemoteInterface Supplies the network interface at call time, so a substitution made after this class is constructed is still honored
  * 
  * @since 5.3.0
  * @author Branch SDK Team
  */
 internal class BranchLegacyLinkGenerator(
     private val prefHelper: PrefHelper,
-    private val branchRemoteInterface: BranchRemoteInterface
+    private val branchRemoteInterface: () -> BranchRemoteInterface
 ) {
     
     /**
@@ -92,7 +92,7 @@ internal class BranchLegacyLinkGenerator(
         
         try {
             val timeOut = prefHelper.timeout + 2000 // Time out is set to slightly more than link creation time to prevent any edge case
-            response = LegacyAsyncTask(branchRemoteInterface, prefHelper)
+            response = LegacyAsyncTask(branchRemoteInterface(), prefHelper)
                 .execute(request)
                 .get(timeOut.toLong(), TimeUnit.MILLISECONDS)
         } catch (e: InterruptedException) {
@@ -120,7 +120,7 @@ internal class BranchLegacyLinkGenerator(
      * - Performance-critical paths where AsyncTask overhead should be avoided
      * 
      * ## Implementation Details
-     * - Makes direct synchronous call to `branchRemoteInterface.make_restful_post()`
+     * - Makes direct synchronous call to `branchRemoteInterface().make_restful_post()`
      * - Uses identical API endpoint and parameters as AsyncTask version
      * - Processes JSON response with same parsing logic
      * - Handles HTTP status codes identically to original implementation
@@ -155,7 +155,7 @@ internal class BranchLegacyLinkGenerator(
         
         try {
             // Direct network call similar to original AsyncTask doInBackground
-            response = branchRemoteInterface.make_restful_post(
+            response = branchRemoteInterface().make_restful_post(
                 linkData,
                 prefHelper.apiBaseUrl + Defines.RequestPath.GetURL.path,
                 Defines.RequestPath.GetURL.path,

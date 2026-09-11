@@ -1,4 +1,6 @@
 # Branch Android SDK change log
+- v6.0.0-beta.0
+  - `setBranchRemoteInterface` now substitutes the transport for link generation as well as for the request queue, so the documented test seam works for short link creation.
 - v5.20.3
 * _*Master Release*_ - Sep 24, 2025
   - Add some additional debug logging.

@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Internal coroutines use appropriate dispatchers for network and CPU-bound operations.
  * 
  * @param context Android context for application-level operations
- * @param branchRemoteInterface Network interface for Branch API communication
+ * @param branchRemoteInterface Supplies the network interface at call time, so a substitution made after this class is constructed is still honored
  * @param prefHelper Configuration helper for timeouts, URLs, and API keys
  * @param scope Coroutine scope for structured concurrency (defaults to IO scope)  
  * @param defaultTimeoutMs Default timeout for network operations in milliseconds
@@ -52,27 +52,25 @@ import java.util.concurrent.ConcurrentHashMap
  * @see BranchLegacyLinkGenerator for fallback compatibility
  * @see BranchLinkGenerationException for error types
  */
-class ModernLinkGenerator(
+class ModernLinkGenerator @JvmOverloads constructor(
     private val context: Context,
-    private val branchRemoteInterface: BranchRemoteInterface,
+    private val branchRemoteInterface: () -> BranchRemoteInterface,
     private val prefHelper: PrefHelper,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
     private val defaultTimeoutMs: Long = 10_000L
 ) {
-    
+
     // Legacy generator for fallback compatibility
     private val legacyGenerator = BranchLegacyLinkGenerator(prefHelper, branchRemoteInterface)
-    
-    /**
-     * Java-compatible constructor with default parameters
-     */
+
+    /** Java-compatible constructor for callers substituting a fixed interface instance rather than a provider. */
     constructor(
         context: Context,
         branchRemoteInterface: BranchRemoteInterface,
         prefHelper: PrefHelper
     ) : this(
         context,
-        branchRemoteInterface,
+        { branchRemoteInterface },
         prefHelper,
         CoroutineScope(SupervisorJob() + Dispatchers.IO),
         10_000L
@@ -304,7 +302,7 @@ class ModernLinkGenerator(
     private suspend fun performLinkRequest(linkData: BranchLinkData): ServerResponse {
         return withContext(Dispatchers.IO) {
             try {
-                branchRemoteInterface.make_restful_post(
+                branchRemoteInterface().make_restful_post(
                     linkData,
                     prefHelper.apiBaseUrl + Defines.RequestPath.GetURL.path,
                     Defines.RequestPath.GetURL.path,
