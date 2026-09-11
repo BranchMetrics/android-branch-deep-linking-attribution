@@ -1,0 +1,7 @@
+# Gradle / build artifacts for the standalone spike project.
+# The repo-root .gitignore anchors its patterns to the root, so this nested
+# project needs its own to keep build output out of git.
+.gradle/
+build/
+*.apk
+local.properties

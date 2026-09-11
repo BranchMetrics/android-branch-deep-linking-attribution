@@ -124,6 +124,24 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
         return shortUrl;
     }
 
+    /**
+     * Builds the long Branch URL for this builder's parameters without contacting the server.
+     *
+     * The link parameters, channel included, are encoded straight into the query string, so this
+     * costs no network call and cannot fail on connectivity.
+     *
+     * @return the long url, or null if no Branch instance is available
+     */
+    protected String getLongUrlInternal() {
+        if (branchReferral_ == null) {
+            return null;
+        }
+        ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
+                channel_, feature_, stage_, campaign_,
+                params_, null, false, true);
+        return req.getLongUrl();
+    }
+
     protected void generateUrlInternal(Branch.BranchLinkCreateListener callback) {
         if (branchReferral_ != null) {
             ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,

@@ -370,6 +370,21 @@ public class BranchUniversalObject implements Parcelable {
     public void generateShortUrl(@NonNull Context context, @NonNull LinkProperties linkProperties, @Nullable Branch.BranchLinkCreateListener callback, boolean defaultToLongUrl) {
         getLinkBuilder(context, linkProperties).setDefaultToLongUrl(defaultToLongUrl).generateShortUrl(callback);
     }
+
+    /**
+     * Builds the long Branch url for this BUO entirely on device.
+     *
+     * <p>Unlike {@link #getShortUrl(Context, LinkProperties)} this makes no server call, so it
+     * returns immediately and works with no connectivity. The link properties, channel included,
+     * are encoded into the query string.</p>
+     *
+     * @param context        {@link Context} instance
+     * @param linkProperties An object of {@link LinkProperties} specifying the properties of this link
+     * @return A {@link String} with the long url for this BUO. NULL if Branch is not initialised.
+     */
+    public String getLongUrl(@NonNull Context context, @NonNull LinkProperties linkProperties) {
+        return getLinkBuilder(context, linkProperties).getLongUrl();
+    }
     
     
     //------------------ Share sheet -------------------------------------//
