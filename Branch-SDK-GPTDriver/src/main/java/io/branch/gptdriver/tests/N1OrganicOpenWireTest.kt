@@ -6,7 +6,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * N1 organic_open — a launch with no link.
+ * N1 organic_open: a launch with no link.
  *
  * Deliberately not a BaseGptDriverTest subclass. That base supplies the AI
  * driver and fails without MOBILEBOOST_API_KEY, and L1 asserts the wire rather
