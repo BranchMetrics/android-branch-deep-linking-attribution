@@ -67,7 +67,7 @@ class ModernLinkGeneratorTest {
         
         linkGenerator = ModernLinkGenerator(
             context = mockContext,
-            branchRemoteInterface = mockBranchRemoteInterface,
+            branchRemoteInterface = { mockBranchRemoteInterface },
             prefHelper = mockPrefHelper,
             scope = CoroutineScope(testDispatcher + SupervisorJob()),
             defaultTimeoutMs = testTimeout

@@ -39,7 +39,7 @@ class LinkCacheKeyTest : BranchTestBase() {
         `when`(prefHelper.branchKey).thenReturn("key_live_test")
         generator = ModernLinkGenerator(
             context = RuntimeEnvironment.getApplication(),
-            branchRemoteInterface = remoteInterface,
+            branchRemoteInterface = { remoteInterface },
             prefHelper = prefHelper,
             scope = CoroutineScope(testDispatcher + SupervisorJob()),
             defaultTimeoutMs = 5_000L
@@ -78,7 +78,7 @@ class LinkCacheKeyTest : BranchTestBase() {
     fun `the direct path caches under the link attributes`() {
         `when`(remoteInterface.make_restful_post(any(), any(), any(), any()))
             .thenReturn(successResponse(URL))
-        val legacy = BranchLegacyLinkGenerator(prefHelper, remoteInterface)
+        val legacy = BranchLegacyLinkGenerator(prefHelper) { remoteInterface }
         val cache = ConcurrentHashMap<BranchLinkData, String>()
 
         val url = legacy.generateShortLinkSyncDirect(
