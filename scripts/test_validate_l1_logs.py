@@ -30,6 +30,7 @@ SCENARIO_FIXTURES = {
     "N1": "n1_organic_open.txt",
     "C3": "c3_first_install_link.txt",
     "C1": "c1_installed_link.txt",
+    "LINK": "link_generation.txt",
 }
 
 
@@ -255,17 +256,15 @@ class ContractRegistryTests(unittest.TestCase):
 
 
 class ScenarioContractTests(unittest.TestCase):
-    """C1, C3 and N1, derived from run 33541932795.
-
-    Each fixture reproduces that run's measured endpoint sequence and field
-    presence with one subtraction: the duplicate /v3/events/open that EMT-4136
-    describes and PR 1392 removes. So these assert the wire after that fix,
-    which is why the workflow does not yet pass --scenario. Measured N1 3, C3
-    7, C1 8; contracted 2, 6 and 7."""
+    """N1 from run 33541932795, less the EMT-4136 duplicate open. C3, C1 and
+    LINK from cold captures on an API 34 emulator."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
         return v.collapse_retries(v.parse_branch_logs(path))
+
+    def _resolved(self, scenario):
+        return v.parse_resolved_params(_fixture(SCENARIO_FIXTURES[scenario]))
 
     def _errors(self, capture_scenario, contract_scenario):
         return v.assert_contract(
@@ -342,17 +341,52 @@ class ScenarioContractTests(unittest.TestCase):
                 self.assertTrue(any("/v3/events/custom" in e for e in errors), errors)
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
 
-    def test_hardware_id_on_link_creation_fails_the_cold_scenarios(self):
-        # The EMT-4199 signal, moved off the harness contract onto the two
-        # scenarios that actually produce /v1/url.
+    def test_hardware_id_on_link_creation_fails_LINK(self):
+        # The EMT-4199 signal. /v1/url lives only in the generation capture.
+        entries = self._entries("LINK")
+        for e in entries:
+            if e["uri"] == "/v1/url":
+                e["request"]["hardware_id"] = "something"
+        errors = v.assert_contract(entries, v.contract_for("LINK"))
+        self.assertTrue(any("hardware_id" in e for e in errors), errors)
+
+    def test_link_generation_inside_a_cold_capture_fails(self):
+        # A /v1/url in C3 or C1 means the link was generated in the process it
+        # was delivered to, which is the warm shape these replaced.
+        link = next(e for e in self._entries("LINK") if e["uri"] == "/v1/url")
+        for scenario in ("C3", "C1"):
+            with self.subTest(scenario=scenario):
+                errors = v.assert_contract(self._entries(scenario) + [link], v.contract_for(scenario))
+                self.assertTrue(any("/v1/url" in e for e in errors), errors)
+
+    def test_a_link_that_never_reached_the_sdk_fails(self):
         for scenario in ("C3", "C1"):
             entries = self._entries(scenario)
             for e in entries:
-                if e["uri"] == "/v1/url":
-                    e["request"]["hardware_id"] = "something"
+                e["request"].pop("android_app_link_url", None)
             with self.subTest(scenario=scenario):
                 errors = v.assert_contract(entries, v.contract_for(scenario))
-                self.assertTrue(any("hardware_id" in e for e in errors), errors)
+                self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
+
+    def test_each_cold_scenario_resolves_its_own_link(self):
+        for scenario in ("C3", "C1"):
+            with self.subTest(scenario=scenario):
+                expected = v.contract_for(scenario)["resolved"]
+                self.assertEqual(v.assert_resolved(self._resolved(scenario), expected), [])
+
+    def test_a_shared_link_fails_the_resolved_rule(self):
+        # One scenario's resolution judged against the other's contract: what a
+        # link shared between the two would look like.
+        for capture, contract in (("C3", "C1"), ("C1", "C3")):
+            with self.subTest(capture=capture, contract=contract):
+                errors = v.assert_resolved(
+                    self._resolved(capture), v.contract_for(contract)["resolved"]
+                )
+                self.assertTrue(any("l1_scenario" in e for e in errors), errors)
+
+    def test_no_resolution_fails_the_resolved_rule(self):
+        errors = v.assert_resolved([], v.contract_for("C3")["resolved"])
+        self.assertTrue(any("none" in e for e in errors), errors)
 
     def test_N1_forbids_nothing_it_did_not_measure(self):
         # N1 carries no `fields` rule on purpose. The property the scenario is
