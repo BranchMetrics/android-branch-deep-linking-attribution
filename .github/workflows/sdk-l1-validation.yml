@@ -168,14 +168,17 @@ jobs:
             echo
             echo "Scenario coverage:"
             echo
-            echo "No scenario is authored yet, so the endpoint table above is the only assertion this gate makes."
-            echo
             echo "| scenario group | status |"
             echo "| --- | --- |"
-            echo "| Cold (C1–C3) | not implemented |"
+            if [ "${{ steps.validate.outcome }}" = "success" ]; then
+              echo "| Cold (C1, C3) | 2 pass |"
+              echo "| Negative / guards (N1–N4) | N1 pass, N2 to N4 not implemented |"
+            else
+              echo "| Cold (C1, C3) | see failures below |"
+              echo "| Negative / guards (N1–N4) | see failures below |"
+            fi
             echo "| Warm (W1–W2) | not implemented |"
             echo "| Hot (H1–H2) | not implemented |"
-            echo "| Negative / guards (N1–N4) | not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"
