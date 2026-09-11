@@ -68,12 +68,13 @@ class ServerRequestRegisterOpen extends ServerRequestInitSession {
                 branch.openBrowserExperience(invokeFeaturesJson);
             }
             else {
+                // Write the slot only when this response actually carries session data. The
+                // open response has no "data" key, link-driven or organic, so writing whatever
+                // it says always cleared the payload a deep link resolution had just persisted.
+                // A data-less response leaves the slot as it stands, mirroring RequestOpen.kt.
                 if (resp.getObject().has(Defines.Jsonkey.Data.getKey())) {
                     String params = resp.getObject().getString(Defines.Jsonkey.Data.getKey());
                     prefHelper_.setSessionParams(params);
-                }
-                else {
-                    prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
                 }
 
                 if (callback_ != null) {

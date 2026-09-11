@@ -50,8 +50,34 @@ class RequestOpenSessionParamsTest : BranchTestBase() {
         assertEquals(openPayload, prefHelper.sessionParams)
     }
 
+    @Test
+    fun legacyOpenWithoutSessionData_leavesTheResolvedPayloadIntact() {
+        processLegacyOpenResponse(JSONObject().put("invoke_register_app", true))
+
+        assertEquals(resolvedPayload, prefHelper.sessionParams)
+    }
+
+    @Test
+    fun legacyOpenWithSessionData_stillWritesIt() {
+        val openPayload = """{"~channel":"Organic"}"""
+
+        processLegacyOpenResponse(JSONObject().put("data", openPayload))
+
+        assertEquals(openPayload, prefHelper.sessionParams)
+    }
+
     private fun processOpenResponse(body: JSONObject) {
         val request = RequestOpen(RuntimeEnvironment.getApplication(), null, false, null)
+        val response = ServerResponse("open", HttpURLConnection.HTTP_OK, "req-1", "OK")
+        response.setPost(body)
+
+        // onInitSessionCompleted runs after the write and reaches collaborators this test does not
+        // stand up. The write is what is under test, and it has already happened by then.
+        runCatching { request.onRequestSucceeded(response, branch) }
+    }
+
+    private fun processLegacyOpenResponse(body: JSONObject) {
+        val request = ServerRequestRegisterOpen(RuntimeEnvironment.getApplication(), null, false)
         val response = ServerResponse("open", HttpURLConnection.HTTP_OK, "req-1", "OK")
         response.setPost(body)
 

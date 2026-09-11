@@ -1,12 +1,15 @@
 package io.branch.referral
 
 import androidx.lifecycle.LifecycleOwner
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
+import org.robolectric.RuntimeEnvironment
 
 /**
  * Unit tests for [BranchProcessLifecycleObserver].
@@ -19,9 +22,12 @@ import org.mockito.Mockito.verify
  */
 class BranchProcessLifecycleObserverTest : BranchTestBase() {
 
+    private val resolvedPayload = """{"~channel":"Distribution Channel","+clicked_branch_link":true}"""
+
     private lateinit var branch: Branch
     private lateinit var owner: LifecycleOwner
     private lateinit var observer: BranchProcessLifecycleObserver
+    private lateinit var prefHelper: PrefHelper
 
     @Before
     override fun setUpBase() {
@@ -29,6 +35,8 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
         branch = mock(Branch::class.java)
         owner = mock(LifecycleOwner::class.java)
         observer = BranchProcessLifecycleObserver(branch)
+        prefHelper = PrefHelper.getInstance(RuntimeEnvironment.getApplication())
+        `when`(branch.prefHelper).thenReturn(prefHelper)
     }
 
     @Test
@@ -67,5 +75,23 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
         observer.onStart(owner)
 
         verify(branch, times(3)).sendOpen()
+    }
+
+    @Test
+    fun onStop_clearsResolvedSessionParams() {
+        prefHelper.sessionParams = resolvedPayload
+
+        observer.onStop(owner)
+
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.sessionParams)
+    }
+
+    @Test
+    fun onStart_doesNotClearSessionParams() {
+        prefHelper.sessionParams = resolvedPayload
+
+        observer.onStart(owner)
+
+        assertEquals(resolvedPayload, prefHelper.sessionParams)
     }
 }

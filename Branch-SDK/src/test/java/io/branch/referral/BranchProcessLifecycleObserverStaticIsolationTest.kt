@@ -6,6 +6,8 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
+import org.robolectric.RuntimeEnvironment
 
 /**
  * Tests for static lifecycle isolation in BranchProcessLifecycleObserver.
@@ -27,6 +29,7 @@ class BranchProcessLifecycleObserverStaticIsolationTest : BranchTestBase() {
         super.setUpBase()
         branch = mock(Branch::class.java)
         owner = mock(LifecycleOwner::class.java)
+        `when`(branch.prefHelper).thenReturn(PrefHelper.getInstance(RuntimeEnvironment.getApplication()))
     }
 
     @Test
