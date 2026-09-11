@@ -24,9 +24,12 @@ class RequestOpenSessionParamsTest : BranchTestBase() {
 
     @Before
     fun setUpBranch() {
-        // With Config.NONE the manifest is absent; getAutoInstance handles that and gives the
-        // request a real DeviceInfo, which its constructor dereferences.
-        branch = Branch.getAutoInstance(RuntimeEnvironment.getApplication())
+        // Initializes Branch with a real DeviceInfo, which the request's constructor dereferences.
+        Branch.initialize(
+            RuntimeEnvironment.getApplication(),
+            BranchConfiguration.Builder("key_live_test123").build(),
+        )
+        branch = Branch.getInstance()
         prefHelper = PrefHelper.getInstance(RuntimeEnvironment.getApplication())
         prefHelper.sessionParams = resolvedPayload
     }
