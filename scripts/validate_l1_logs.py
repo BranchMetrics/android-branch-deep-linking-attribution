@@ -266,23 +266,9 @@ def collapse_retries(entries):
 # byte-compatible on purpose: a contract that reads differently per platform
 # is a parity gap wearing a helper's clothes.
 SCENARIO_CONTRACTS = {
-    # Derived from run 33541932795, which drove each
-    # scenario into its own capture and reported endpoint order plus the
-    # presence of randomized_bundle_token, hardware_id and the two request
-    # identifiers. One subtraction was applied to each measured shape: the
-    # duplicate /v3/events/open that EMT-4136 describes.
-    #
-    # That duplicate is real and currently on the wire, in all three captures,
-    # not only the organic one. `sendOpen` has two callers that both fire on a
-    # launch, BranchProcessLifecycleObserver and RequestDeepLink, and
-    # MainActivity.onCreate calls handleDeepLink unconditionally so the
-    # resolution runs even with no link. Measured: N1 3 requests, C3 7, C1 8;
-    # contracted here at 2, 6 and 7.
-    #
-    # So these contracts describe the wire after EMT-4136's fix lands, and they
-    # are deliberately not enforced against a live capture yet -- the workflow
-    # passes no --scenario. The self-test exercises them against fixtures. When
-    # the fix merges, wiring enforcement is the only remaining change.
+    # N1 is derived from run 33541932795, less the duplicate /v3/events/open
+    # that EMT-4136 removed. C3, C1 and LINK are derived from cold captures on
+    # an API 34 emulator, two runs with identical shapes.
 
     # N1 organic_open: a launch with no link. Android emits /v3/deeplink here
     # where the iOS contract forbids it, because MainActivity.onCreate calls
@@ -300,41 +286,49 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {},
     },
-    # C3 cold_firstInstall: a link opened on a device that does not have the
-    # app. Counts and order alone cannot tell this from C1 -- on 6.0 the
-    # install is a /v3/events/open like any other, decided client-side by
-    # randomizedBundleToken == nil -- so the token count is what separates
-    # them. Here the first open predates the install response and carries no
-    # token; the attributed one does.
+    # C3 cold_firstInstall: the link starts the app on a device with no prior
+    # install. The install is a /v3/events/open like any other on 6.0, decided
+    # by randomizedBundleToken == nil, so its missing token is what marks it.
+    # /v1/url is 0 because the link is generated outside this capture.
     "C3": {
         "counts": {
-            "/v3/deeplink": 2,
-            "/v3/events/open": 2,
-            "/v1/url": 1,
+            "/v3/deeplink": 1,
+            "/v3/events/open": 1,
+            "/v1/url": 0,
+            "/v3/events/custom": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/deeplink": {"android_app_link_url": 1},
+            "/v3/events/open": {"randomized_bundle_token": 0},
+        },
+        "resolved": {"l1_scenario": "C3"},
+    },
+    # C1 cold_https: the link starts the app on a device that already has it.
+    # The open carries the token, and the custom event MainActivity.onStart
+    # logs reaches the wire, which it does not on a first install: two
+    # independent signals separate it from C3.
+    "C1": {
+        "counts": {
+            "/v3/deeplink": 1,
+            "/v3/events/open": 1,
+            "/v1/url": 0,
             "/v3/events/custom": 1,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
+            "/v3/deeplink": {"android_app_link_url": 1},
             "/v3/events/open": {"randomized_bundle_token": 1},
-            "/v1/url": {"hardware_id": 0},
         },
+        "resolved": {"l1_scenario": "C1"},
     },
-    # C1 cold_https: a link opened on a device that already has the app. Both
-    # opens carry the token, and the capture holds a second /v3/events/custom
-    # that C3's does not. Two independent signals separate it from C3, which is
-    # more than iOS has -- there only the field distinguishes them.
-    "C1": {
-        "counts": {
-            "/v3/deeplink": 2,
-            "/v3/events/open": 2,
-            "/v1/url": 1,
-            "/v3/events/custom": 2,
-        },
+    # LINK: the generation run that precedes C3, judged on its own capture.
+    # It holds the only /v1/url, so it carries the EMT-4199 rule that
+    # /v1/url sends no hardware_id.
+    "LINK": {
+        "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {
-            "/v3/events/open": {"randomized_bundle_token": 2},
-            "/v1/url": {"hardware_id": 0},
-        },
+        "fields": {"/v1/url": {"hardware_id": 0}},
     },
 }
 
@@ -418,7 +412,43 @@ def assert_contract(entries, contract):
     return errors
 
 
-def validate_entries(entries, contract=None):
+RESOLVED_PREFIX = "Deep link params: "
+
+
+def parse_resolved_params(file_path):
+    """Return the link params the TestBed logged for each resolution, in order.
+
+    MainActivity.handleDeepLink logs them with RESOLVED_PREFIX. Lines that do
+    not parse as a JSON object are skipped."""
+    resolved = []
+    if not os.path.exists(file_path):
+        return resolved
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        for raw in f:
+            line = raw.rstrip("\n")
+            if not line.startswith(RESOLVED_PREFIX):
+                continue
+            try:
+                params = json.loads(line[len(RESOLVED_PREFIX):])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(params, dict):
+                resolved.append(params)
+    return resolved
+
+
+def assert_resolved(resolved, expected):
+    """Check that some resolution carries every `expected` key with its value.
+
+    Returns a list of error strings, empty when one does."""
+    for params in resolved:
+        if all(params.get(key) == value for key, value in expected.items()):
+            return []
+    seen = [{key: params.get(key) for key in expected} for params in resolved]
+    return [f"Expected a resolution carrying {expected}, got {seen or 'none'}."]
+
+
+def validate_entries(entries, contract=None, resolved=None):
     """Check every request's required fields, and the capture against
     `contract` when one is given. Returns aggregated errors."""
     errors = []
@@ -436,6 +466,8 @@ def validate_entries(entries, contract=None):
 
     if contract is not None:
         errors.extend(assert_contract(collapse_retries(entries), contract))
+        if contract.get("resolved"):
+            errors.extend(assert_resolved(resolved or [], contract["resolved"]))
 
     for i, entry in enumerate(entries, start=1):
         errors.extend(validate_request(entry, i, len(entries)))
@@ -479,7 +511,7 @@ def main():
         print(f"FAILED: {e}")
         sys.exit(1)
 
-    errors = validate_entries(entries, contract)
+    errors = validate_entries(entries, contract, parse_resolved_params(log_file_path))
 
     if errors:
         print("\n--- VALIDATION FAILED ---")
