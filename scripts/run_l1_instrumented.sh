@@ -60,6 +60,16 @@ OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
 CLEAR_LOG="${CLEAR_LOG:-0}"
 WIPE_FIRST="${WIPE_FIRST:-0}"
 
+# COLD_SCENARIO delivers that scenario's link cold: ScenarioLinkGenerator runs
+# in its own invocation, then the link starts the stopped app from the host.
+# COLD_WIPE=1 clears app data between the two, for a first install. LINK_LOG
+# keeps the generator's capture, which is where /v1/url now is.
+COLD_SCENARIO="${COLD_SCENARIO:-}"
+COLD_WIPE="${COLD_WIPE:-0}"
+COLD_SETTLE_S="${COLD_SETTLE_S:-12}"
+LINK_LOG="${LINK_LOG:-}"
+L1_RUN_ID="${L1_RUN_ID:-${GITHUB_RUN_ID:-local-$(date +%s)}}"
+
 adb wait-for-device
 adb shell input keyevent 82 || true
 
@@ -81,21 +91,72 @@ fi
 # -w = wait for completion and stream results to stdout
 # -r = raw output (parseable) so we can grep the final status
 INSTRUMENT_LOG=instrument.log
-adb shell am instrument -w -r \
-  -e class "$TEST_CLASS" \
-  -e MOBILEBOOST_API_KEY "$MOBILEBOOST_API_KEY" \
-  "$TEST_PKG/$RUNNER" | tee "$INSTRUMENT_LOG"
+CAPTURE="/data/user/0/$TARGET_PKG/files/branchlogs.txt"
 
-# `am instrument` exits 0 even when tests fail; inspect the output instead.
-if grep -qE "^INSTRUMENTATION_CODE: -1$" "$INSTRUMENT_LOG" && \
-   ! grep -qE "^INSTRUMENTATION_STATUS: stack=" "$INSTRUMENT_LOG"; then
-  echo "Instrumentation reported success."
+# Arguments: the test class, then any extra `-e key value` pairs.
+run_instrumented() {
+  local test_class="$1"
+  shift
+  adb shell am instrument -w -r \
+    -e class "$test_class" \
+    -e MOBILEBOOST_API_KEY "$MOBILEBOOST_API_KEY" \
+    "$@" \
+    "$TEST_PKG/$RUNNER" | tee "$INSTRUMENT_LOG"
+
+  # `am instrument` exits 0 even when tests fail; inspect the output instead.
+  if grep -qE "^INSTRUMENTATION_CODE: -1$" "$INSTRUMENT_LOG" && \
+     ! grep -qE "^INSTRUMENTATION_STATUS: stack=" "$INSTRUMENT_LOG"; then
+    echo "Instrumentation reported success."
+  else
+    echo "Instrumentation reported failures or did not complete cleanly."
+    cat "$INSTRUMENT_LOG"
+    exit 1
+  fi
+}
+
+# Pull logs while the target package is still installed.
+pull_capture() {
+  adb shell "run-as $TARGET_PKG cat $CAPTURE" > "$1"
+  wc -l "$1"
+}
+
+if [ -z "$COLD_SCENARIO" ]; then
+  run_instrumented "$TEST_CLASS"
+  pull_capture "$OUTPUT_LOG"
+  exit 0
+fi
+
+run_instrumented io.branch.gptdriver.tests.ScenarioLinkGenerator \
+  -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID"
+LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
+if [ -z "$LINK_URL" ]; then
+  echo "ScenarioLinkGenerator reported no link." >&2
+  exit 1
+fi
+if [ -n "$LINK_LOG" ]; then
+  pull_capture "$LINK_LOG"
+fi
+
+if [ "$COLD_WIPE" = "1" ]; then
+  echo "Wiping app data so the link arrives on a first install"
+  adb shell pm clear "$TARGET_PKG"
 else
-  echo "Instrumentation reported failures or did not complete cleanly."
-  cat "$INSTRUMENT_LOG"
+  adb shell "run-as $TARGET_PKG sh -c 'rm -f $CAPTURE'" || true
+fi
+adb shell am force-stop "$TARGET_PKG"
+
+# Resolved against the package, not a named component, so the manifest still
+# has to declare the link's host.
+echo "Delivering $LINK_URL cold for $COLD_SCENARIO"
+adb shell am start -W -a android.intent.action.VIEW -d "$LINK_URL" "$TARGET_PKG" \
+  | tr -d '\r' | tee am-start.log
+LAUNCH_STATE=$(sed -n 's/^LaunchState: //p' am-start.log)
+if [ -z "$LAUNCH_STATE" ]; then
+  echo "am start printed no LaunchState, so the launch cannot be confirmed cold."
+elif [ "$LAUNCH_STATE" != "COLD" ]; then
+  echo "Expected a cold launch, got $LAUNCH_STATE." >&2
   exit 1
 fi
 
-# Pull logs while the target package is still installed.
-adb shell "run-as $TARGET_PKG cat /data/user/0/$TARGET_PKG/files/branchlogs.txt" > "$OUTPUT_LOG"
-wc -l "$OUTPUT_LOG"
+sleep "$COLD_SETTLE_S"
+pull_capture "$OUTPUT_LOG"
