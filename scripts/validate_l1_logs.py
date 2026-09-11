@@ -301,7 +301,6 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": {"android_app_link_url": 1},
             "/v3/events/open": {"randomized_bundle_token": 0},
         },
-        "resolved": {"l1_scenario": "C3"},
     },
     # C1 cold_https: the link starts the app on a device that already has it.
     # The open carries the token, which is what separates it from C3.
@@ -318,7 +317,6 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": {"android_app_link_url": 1},
             "/v3/events/open": {"randomized_bundle_token": 1},
         },
-        "resolved": {"l1_scenario": "C1"},
     },
     # LINK: the generation run that precedes C3, judged on its own capture.
     # It holds the only /v1/url, so it carries the EMT-4199 rule that
@@ -328,6 +326,14 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {"/v1/url": {"hardware_id": 0}},
     },
+}
+
+# The link data each cold scenario's generator writes, checked against the
+# params the TestBed receives. Kept out of SCENARIO_CONTRACTS so the contracts
+# stay byte-compatible with iOS.
+SCENARIO_LINK_MARKERS = {
+    "C3": {"l1_scenario": "C3"},
+    "C1": {"l1_scenario": "C1"},
 }
 
 
@@ -446,9 +452,10 @@ def assert_resolved(resolved, expected):
     return [f"Expected a resolution carrying {expected}, got {seen or 'none'}."]
 
 
-def validate_entries(entries, contract=None, resolved=None):
-    """Check every request's required fields, and the capture against
-    `contract` when one is given. Returns aggregated errors."""
+def validate_entries(entries, contract=None, resolved=None, marker=None):
+    """Check every request's required fields, the capture against `contract`,
+    and the `resolved` params against `marker`, each when given. Returns
+    aggregated errors."""
     errors = []
 
     if not entries:
@@ -464,8 +471,9 @@ def validate_entries(entries, contract=None, resolved=None):
 
     if contract is not None:
         errors.extend(assert_contract(collapse_retries(entries), contract))
-        if contract.get("resolved"):
-            errors.extend(assert_resolved(resolved or [], contract["resolved"]))
+
+    if marker:
+        errors.extend(assert_resolved(resolved or [], marker))
 
     for i, entry in enumerate(entries, start=1):
         errors.extend(validate_request(entry, i, len(entries)))
@@ -509,7 +517,8 @@ def main():
         print(f"FAILED: {e}")
         sys.exit(1)
 
-    errors = validate_entries(entries, contract, parse_resolved_params(log_file_path))
+    marker = SCENARIO_LINK_MARKERS.get(args.scenario) if args.scenario else None
+    errors = validate_entries(entries, contract, parse_resolved_params(log_file_path), marker)
 
     if errors:
         print("\n--- VALIDATION FAILED ---")

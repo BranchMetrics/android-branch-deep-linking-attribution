@@ -254,6 +254,15 @@ class ContractRegistryTests(unittest.TestCase):
         for name in SCENARIO_FIXTURES:
             self.assertIn(name, v.SCENARIO_CONTRACTS, f"'{name}' maps a fixture to no contract")
 
+    def test_every_link_marker_names_a_contract(self):
+        for name in v.SCENARIO_LINK_MARKERS:
+            self.assertIn(name, v.SCENARIO_CONTRACTS, f"marker '{name}' has no contract")
+
+    def test_contracts_carry_only_the_keys_ios_has(self):
+        for name, contract in v.SCENARIO_CONTRACTS.items():
+            with self.subTest(scenario=name):
+                self.assertEqual(set(contract), {"counts", "order", "fields"})
+
 
 class ScenarioContractTests(unittest.TestCase):
     """N1 from run 33541932795, less the EMT-4136 duplicate open. C3, C1 and
@@ -367,21 +376,29 @@ class ScenarioContractTests(unittest.TestCase):
     def test_each_cold_scenario_resolves_its_own_link(self):
         for scenario in ("C3", "C1"):
             with self.subTest(scenario=scenario):
-                expected = v.contract_for(scenario)["resolved"]
+                expected = v.SCENARIO_LINK_MARKERS[scenario]
                 self.assertEqual(v.assert_resolved(self._resolved(scenario), expected), [])
 
     def test_a_shared_link_fails_the_resolved_rule(self):
-        # One scenario's resolution judged against the other's contract: what a
+        # One scenario's resolution judged against the other's marker: what a
         # link shared between the two would look like.
-        for capture, contract in (("C3", "C1"), ("C1", "C3")):
-            with self.subTest(capture=capture, contract=contract):
+        for capture, marker in (("C3", "C1"), ("C1", "C3")):
+            with self.subTest(capture=capture, marker=marker):
                 errors = v.assert_resolved(
-                    self._resolved(capture), v.contract_for(contract)["resolved"]
+                    self._resolved(capture), v.SCENARIO_LINK_MARKERS[marker]
                 )
                 self.assertTrue(any("l1_scenario" in e for e in errors), errors)
 
+    def test_a_shared_link_fails_validation(self):
+        # The same failure through validate_entries, the path main() takes.
+        errors = v.validate_entries(
+            self._entries("C1"), v.contract_for("C3"), self._resolved("C1"),
+            v.SCENARIO_LINK_MARKERS["C3"],
+        )
+        self.assertTrue(any("l1_scenario" in e for e in errors), errors)
+
     def test_no_resolution_fails_the_resolved_rule(self):
-        errors = v.assert_resolved([], v.contract_for("C3")["resolved"])
+        errors = v.assert_resolved([], v.SCENARIO_LINK_MARKERS["C3"])
         self.assertTrue(any("none" in e for e in errors), errors)
 
     def test_N1_forbids_nothing_it_did_not_measure(self):
