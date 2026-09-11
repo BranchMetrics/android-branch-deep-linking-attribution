@@ -68,7 +68,12 @@ COLD_SCENARIO="${COLD_SCENARIO:-}"
 COLD_WIPE="${COLD_WIPE:-0}"
 COLD_SETTLE_S="${COLD_SETTLE_S:-12}"
 LINK_LOG="${LINK_LOG:-}"
-L1_RUN_ID="${L1_RUN_ID:-${GITHUB_RUN_ID:-local-$(date +%s)}}"
+if [ -n "${GITHUB_RUN_ID:-}" ]; then
+  DEFAULT_RUN_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT:-1}"
+else
+  DEFAULT_RUN_ID="local-$(date +%s)"
+fi
+L1_RUN_ID="${L1_RUN_ID:-$DEFAULT_RUN_ID}"
 
 adb wait-for-device
 adb shell input keyevent 82 || true
@@ -145,14 +150,28 @@ else
 fi
 adb shell am force-stop "$TARGET_PKG"
 
+app_pid() {
+  adb shell pidof "$TARGET_PKG" | tr -d '\r' || true
+}
+for _ in 1 2 3 4 5; do
+  [ -z "$(app_pid)" ] && break
+  sleep 1
+done
+if [ -n "$(app_pid)" ]; then
+  echo "$TARGET_PKG is still running after force-stop." >&2
+  exit 1
+fi
+
 # Resolved against the package, not a named component, so the manifest still
-# has to declare the link's host.
+# has to declare the link's host. One quoted string, so the device shell
+# cannot split the URL.
 echo "Delivering $LINK_URL cold for $COLD_SCENARIO"
-adb shell am start -W -a android.intent.action.VIEW -d "$LINK_URL" "$TARGET_PKG" \
+adb shell "am start -W -a android.intent.action.VIEW -d '$LINK_URL' $TARGET_PKG" \
   | tr -d '\r' | tee am-start.log
 LAUNCH_STATE=$(sed -n 's/^LaunchState: //p' am-start.log)
 if [ -z "$LAUNCH_STATE" ]; then
-  echo "am start printed no LaunchState, so the launch cannot be confirmed cold."
+  echo "am start printed no LaunchState, so the launch cannot be confirmed cold." >&2
+  exit 1
 elif [ "$LAUNCH_STATE" != "COLD" ]; then
   echo "Expected a cold launch, got $LAUNCH_STATE." >&2
   exit 1
