@@ -535,6 +535,60 @@ class BranchInitializeTest : BranchTestBase() {
             singleEvent(logs, BranchConfiguration.EVENT_CONFIGURATION_APPLIED).getString("branchKey"))
     }
 
+    // -------------------------------------------------------------------------
+    // withDelay(n)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun initialize_withDelay_completesOnlyAfterDelayElapses() {
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        Branch.sessionBuilder(null).withDelay(200).init()
+        assertNull(
+            "a delayed init must not reach the queue before its own delay has elapsed",
+            Branch.getInstance().requestQueue_.peek()
+        )
+
+        advanceTimeBy(200)
+
+        val initRequest = Branch.getInstance().requestQueue_.peek()
+        assertNotNull("a delayed init must have reached the queue once its delay elapsed", initRequest)
+        assertFalse(
+            "a delayed init must not still be held on USER_SET_WAIT_LOCK once its own delay has " +
+                "elapsed, locks were: ${initRequest!!.printWaitLocks()}",
+            initRequest.printWaitLocks().contains("USER_SET_WAIT_LOCK")
+        )
+    }
+
+    @Test
+    fun initialize_noDelay_neverHoldsUserSetWaitLock() {
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        Branch.sessionBuilder(null).init()
+
+        val initRequest = Branch.getInstance().requestQueue_.peek()
+        assertNotNull("an init with no delay must reach the queue without advancing the clock", initRequest)
+        assertFalse(
+            "an init with no delay must never hold USER_SET_WAIT_LOCK, locks were: " +
+                initRequest!!.printWaitLocks(),
+            initRequest.printWaitLocks().contains("USER_SET_WAIT_LOCK")
+        )
+    }
+
+    @Test
+    fun initialize_withDelayZero_neverHoldsUserSetWaitLock() {
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        Branch.sessionBuilder(null).withDelay(0).init()
+
+        val initRequest = Branch.getInstance().requestQueue_.peek()
+        assertNotNull("withDelay(0) must reach the queue without advancing the clock", initRequest)
+        assertFalse(
+            "withDelay(0) must never hold USER_SET_WAIT_LOCK, locks were: " + initRequest!!.printWaitLocks(),
+            initRequest.printWaitLocks().contains("USER_SET_WAIT_LOCK")
+        )
+    }
+
     private companion object {
         const val TEST_KEY = "key_test_abcdefghijklmnop12345678"
     }

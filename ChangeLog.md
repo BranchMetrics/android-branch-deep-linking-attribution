@@ -1,4 +1,6 @@
 # Branch Android SDK change log
+- v6.0.0-beta.0
+  - Fix `withDelay(n)` on session init so it completes after the delay instead of hanging until the request timeout.
 - v5.20.3
 * _*Master Release*_ - Sep 24, 2025
   - Add some additional debug logging.
