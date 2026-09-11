@@ -143,6 +143,7 @@ jobs:
             echo "::endgroup::"
           }
           check N1 wire-n1.txt
+          check LINK wire-link.txt
           check C3 wire-c3.txt
           check C1 wire-c1.txt
           exit $rc
