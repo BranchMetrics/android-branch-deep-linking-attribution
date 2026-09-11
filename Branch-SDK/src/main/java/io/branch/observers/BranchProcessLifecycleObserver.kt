@@ -24,7 +24,10 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
 
     override fun onStop(owner: LifecycleOwner) {
         BranchLogger.v("BranchProcessLifecycleObserver onStop: process backgrounded")
-        // Session close on background is intentionally not triggered here. The pre-existing
+        // Clears the resolved deep link payload. This is a persisted string, not session state,
+        // and does not touch BranchSessionState or setInitState.
+        branchInstance.prefHelper.sessionParams = PrefHelper.NO_STRING_VALUE
+        // Session close on background is still intentionally not triggered here. The pre-existing
         // BranchOpenObserver also did not call closeSessionInternal on background — no regression.
         // When the beta session model is finalized, session-close logic belongs here.
     }
