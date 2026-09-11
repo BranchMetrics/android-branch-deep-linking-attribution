@@ -1,6 +1,8 @@
 package io.branch.indexing;
 
+import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchShortLinkBuilder;
 import io.branch.referral.BranchUtil;
@@ -27,6 +30,7 @@ import io.branch.referral.util.BranchEvent;
 import io.branch.referral.util.ContentMetadata;
 import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ShareSheetStyle;
 
 /**
  * <p>Class represents a single piece of content within your app, as well as any associated metadata.
@@ -374,8 +378,71 @@ public class BranchUniversalObject implements Parcelable {
     
     //------------------ Share sheet -------------------------------------//
 
+    /**
+     * Shares a Branch link for this object through the native Android share sheet.
+     *
+     * @param activity       Activity that presents the share sheet.
+     * @param linkProperties Properties of the generated link.
+     * @param style          Message title is used as the share sheet title, message body as the subject.
+     * @param callback       Optional listener that receives the chosen app's flattened ComponentName as the channel, or an error below API 22; onShareLinkDialogLaunched and onShareLinkDialogDismissed are not called.
+     * @deprecated Use {@link Branch#share(Activity, BranchUniversalObject, LinkProperties, Branch.BranchNativeLinkShareListener, String, String)}.
+     */
+    @Deprecated
+    public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
+            if (callback != null) {
+                callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
+            } else {
+                BranchLogger.v("Sharing error. The native share sheet requires API 22.");
+            }
+            return;
+        }
 
-    
+        Branch branch = Branch.getInstance();
+        if (branch == null) {  // Branch instance not created yet (missing initialisation).
+            if (callback != null) {
+                callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NOT_INSTANTIATED));
+            } else {
+                BranchLogger.v("Sharing error. Branch instance is not created yet. Make sure you have initialised Branch.");
+            }
+            return;
+        }
+
+        Branch.BranchNativeLinkShareListener nativeCallback = null;
+        if (callback != null) {
+            nativeCallback = new NativeShareListenerAdapter(callback);
+        }
+
+        branch.share(activity, this, linkProperties, nativeCallback, style.getMessageTitle(), style.getMessageBody());
+    }
+
+    /**
+     * Adapts the two-argument native share callbacks onto the three-argument
+     * {@link Branch.BranchLinkShareListener} that 5.x integrations implement.
+     */
+    /* package */ static class NativeShareListenerAdapter implements Branch.BranchNativeLinkShareListener {
+        private final Branch.BranchLinkShareListener delegate_;
+        private String channelSelected_;
+
+        NativeShareListenerAdapter(@NonNull Branch.BranchLinkShareListener delegate) {
+            delegate_ = delegate;
+        }
+
+        @Override
+        public void onLinkShareResponse(String sharedLink, BranchError error) {
+            delegate_.onLinkShareResponse(sharedLink, channelSelected_, error);
+        }
+
+        @Override
+        public void onChannelSelected(String channelName) {
+            // Held so onLinkShareResponse can report the app chosen before completion.
+            channelSelected_ = channelName;
+            delegate_.onChannelSelected(channelName);
+        }
+    }
+
+
+
     private BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         return getLinkBuilder(shortLinkBuilder, linkProperties);
