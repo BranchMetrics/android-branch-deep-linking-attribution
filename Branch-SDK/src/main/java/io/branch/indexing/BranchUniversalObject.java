@@ -384,7 +384,7 @@ public class BranchUniversalObject implements Parcelable {
      * @param activity       Activity that presents the share sheet.
      * @param linkProperties Properties of the generated link.
      * @param style          Message title is used as the share sheet title, message body as the subject.
-     * @param callback       Optional listener that receives the chosen app's flattened ComponentName as the channel, or an error below API 22.
+     * @param callback       Optional listener that receives the chosen app's flattened ComponentName as the channel, or an error below API 22; onShareLinkDialogLaunched and onShareLinkDialogDismissed are not called.
      * @deprecated Use {@link Branch#share(Activity, BranchUniversalObject, LinkProperties, Branch.BranchNativeLinkShareListener, String, String)}.
      */
     @Deprecated
