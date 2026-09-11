@@ -81,6 +81,10 @@ jobs:
       # launch on a device that already has the app, so it must follow C3 and
       # keep the install C3 established.
       #
+      # C3 and C1 are cold: the link is generated in its own invocation and then
+      # starts the stopped app from the host. wire-link.txt is C3's generation
+      # capture, which is where /v1/url now is.
+      #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
       # construct here would not survive.
@@ -100,8 +104,8 @@ jobs:
           # longer pass the secret as a positional argument (avoids argv leak).
           script: |
             TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=wire-n1.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
-            TEST_CLASS=io.branch.gptdriver.tests.C3FirstInstallLinkWireTest OUTPUT_LOG=wire-c3.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
-            TEST_CLASS=io.branch.gptdriver.tests.C1InstalledLinkWireTest OUTPUT_LOG=wire-c1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            COLD_SCENARIO=C3 COLD_WIPE=1 OUTPUT_LOG=wire-c3.txt LINK_LOG=wire-link.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            COLD_SCENARIO=C1 OUTPUT_LOG=wire-c1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -151,7 +155,7 @@ jobs:
           {
             echo "### Layer 1 — SDK wire validation"
             echo
-            grep -h -o 'posting to https://[^ ]*' wire-n1.txt wire-c3.txt wire-c1.txt 2>/dev/null \
+            grep -h -o 'posting to https://[^ ]*' wire-n1.txt wire-link.txt wire-c3.txt wire-c1.txt 2>/dev/null \
               | sed 's|.*api2.branch.io||' | sort | uniq -c > /tmp/l1-endpoints.txt || true
             if [ -s /tmp/l1-endpoints.txt ]; then
               echo "| endpoint | requests |"
@@ -184,7 +188,7 @@ jobs:
               echo "<details><summary>Captured wire log</summary>"
               echo
               echo '```'
-              cat wire-n1.txt wire-c3.txt wire-c1.txt > /tmp/l1-all.txt 2>/dev/null || true
+              cat wire-n1.txt wire-link.txt wire-c3.txt wire-c1.txt > /tmp/l1-all.txt 2>/dev/null || true
               if [ -s /tmp/l1-all.txt ]; then head -c 40000 /tmp/l1-all.txt; echo; else echo "(no capture was produced)"; fi
               echo '```'
               echo
@@ -202,6 +206,7 @@ jobs:
           name: branch-wire-logs
           path: |
             wire-n1.txt
+            wire-link.txt
             wire-c3.txt
             wire-c1.txt
 
