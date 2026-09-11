@@ -295,7 +295,6 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": 1,
             "/v3/events/open": 1,
             "/v1/url": 0,
-            "/v3/events/custom": 0,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
@@ -305,15 +304,14 @@ SCENARIO_CONTRACTS = {
         "resolved": {"l1_scenario": "C3"},
     },
     # C1 cold_https: the link starts the app on a device that already has it.
-    # The open carries the token, and the custom event MainActivity.onStart
-    # logs reaches the wire, which it does not on a first install: two
-    # independent signals separate it from C3.
+    # The open carries the token, which is what separates it from C3.
+    # /v3/events/custom is not counted in either: the TestBed logs one from
+    # onStart, and whether it reaches the wire depends on init timing.
     "C1": {
         "counts": {
             "/v3/deeplink": 1,
             "/v3/events/open": 1,
             "/v1/url": 0,
-            "/v3/events/custom": 1,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {

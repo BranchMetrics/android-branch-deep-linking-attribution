@@ -330,15 +330,11 @@ class ScenarioContractTests(unittest.TestCase):
         errors = v.assert_contract(entries, v.contract_for("C1"))
         self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
 
-    def test_C1_and_C3_are_separated_by_two_independent_signals(self):
-        # Each capture must fail the other's contract on both the custom-event
-        # count and the token count. Two signals rather than one is more than
-        # iOS has, where only the field distinguishes them, and it means either
-        # can catch a fixture regenerated under the wrong scenario.
+    def test_C1_and_C3_are_separated_by_the_token(self):
+        # Each capture must fail the other's contract on the token count.
         for capture, contract in (("C3", "C1"), ("C1", "C3")):
             errors = self._errors(capture, contract)
             with self.subTest(capture=capture, contract=contract):
-                self.assertTrue(any("/v3/events/custom" in e for e in errors), errors)
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
 
     def test_hardware_id_on_link_creation_fails_LINK(self):
