@@ -266,9 +266,8 @@ def collapse_retries(entries):
 # byte-compatible on purpose: a contract that reads differently per platform
 # is a parity gap wearing a helper's clothes.
 SCENARIO_CONTRACTS = {
-    # N1 is derived from run 33541932795, less the duplicate /v3/events/open
-    # that EMT-4136 removed. C3, C1 and LINK are derived from cold captures on
-    # an API 34 emulator, two runs with identical shapes.
+    # Every contract is derived from a real capture. N1's is less the
+    # duplicate /v3/events/open that EMT-4136 removed.
 
     # N1 organic_open: a launch with no link. Android emits /v3/deeplink here
     # where the iOS contract forbids it, because MainActivity.onCreate calls
