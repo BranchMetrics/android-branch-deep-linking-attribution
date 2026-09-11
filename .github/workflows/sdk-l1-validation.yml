@@ -72,18 +72,10 @@ jobs:
             :Branch-SDK-GPTDriver:assembleDebug \
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
-      # Three scenarios, three captures. Each needs its own file because
-      # CustomBranchApp.saveLogToFile opens the capture in append mode and
-      # nothing truncates it, so a shared path would judge scenario N against
-      # scenarios 1 through N. CLEAR_LOG truncates before each run.
-      #
-      # The order is load-bearing. N1 and C3 wipe app data first; C1 is the
-      # launch on a device that already has the app, so it must follow C3 and
-      # keep the install C3 established.
-      #
-      # C3 and C1 are cold: the link is generated in its own invocation and then
-      # starts the stopped app from the host. wire-link.txt is C3's generation
-      # capture, which is where /v1/url now is.
+      # Each scenario gets its own capture file, because CustomBranchApp appends
+      # to the capture and nothing truncates it. Every scenario starts from wiped
+      # app data; C1's generation run makes the install its link then opens on.
+      # wire-link.txt is C3's generation capture, where /v1/url is.
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
@@ -105,7 +97,7 @@ jobs:
           script: |
             TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=wire-n1.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=C3 COLD_WIPE=1 OUTPUT_LOG=wire-c3.txt LINK_LOG=wire-link.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
-            COLD_SCENARIO=C1 OUTPUT_LOG=wire-c1.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            COLD_SCENARIO=C1 OUTPUT_LOG=wire-c1.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -120,11 +112,7 @@ jobs:
       - name: Run L1 Validator Unit Tests
         run: python -m unittest scripts.test_validate_l1_logs -v
 
-      # Contracts are on. Until EMT-4136 merged, a real capture carried one
-      # /v3/events/open more than the fixtures did, so --scenario would have
-      # failed a healthy run and the check ran on field presence alone. That
-      # fix is in, and all three captures satisfy their own contracts, so the
-      # counts, ordering and absence assertions now reach CI.
+      # Each capture is judged against its own scenario's contract.
       #
       # continue-on-error so the summary below still runs on a failure -- the
       # job is failed explicitly at the end.
