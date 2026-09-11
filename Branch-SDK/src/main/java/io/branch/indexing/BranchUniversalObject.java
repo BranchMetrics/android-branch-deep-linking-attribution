@@ -2,6 +2,7 @@ package io.branch.indexing;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -383,11 +384,20 @@ public class BranchUniversalObject implements Parcelable {
      * @param activity       Activity that presents the share sheet.
      * @param linkProperties Properties of the generated link.
      * @param style          Message title is used as the share sheet title, message body as the subject.
-     * @param callback       Optional. Receives the chosen app's flattened ComponentName as the channel.
+     * @param callback       Optional listener that receives the chosen app's flattened ComponentName as the channel, or an error below API 22.
      * @deprecated Use {@link Branch#share(Activity, BranchUniversalObject, LinkProperties, Branch.BranchNativeLinkShareListener, String, String)}.
      */
     @Deprecated
     public void showShareSheet(@NonNull Activity activity, @NonNull LinkProperties linkProperties, @NonNull ShareSheetStyle style, @Nullable Branch.BranchLinkShareListener callback) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
+            if (callback != null) {
+                callback.onLinkShareResponse(null, null, new BranchError("Trouble sharing link. ", BranchError.ERR_BRANCH_NO_SHARE_OPTION));
+            } else {
+                BranchLogger.v("Sharing error. The native share sheet requires API 22.");
+            }
+            return;
+        }
+
         Branch branch = Branch.getInstance();
         if (branch == null) {  // Branch instance not created yet (missing initialisation).
             if (callback != null) {
