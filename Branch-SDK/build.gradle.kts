@@ -110,6 +110,7 @@ android {
     compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
     defaultConfig {
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
+        targetSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("proguard-consumer.txt")
     }

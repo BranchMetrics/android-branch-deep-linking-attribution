@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -21,6 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.branch.referral.Branch.BranchLinkCreateListener;
 
+// Every test here builds a BranchShortLinkBuilder, which reaches the live network regardless of
+// MockRemoteInterface, because the HTTP layer is frozen into the link generators at construction.
+// Lift once EMT-4288 makes the mock reach link generation.
+@Ignore("EMT-4288: link generation bypasses the mocked remote interface, so this class reaches the live network")
 @RunWith(AndroidJUnit4.class)
 public class BranchApiTests extends BranchTest {
     private static final String TAG = "BranchSDKTests";
