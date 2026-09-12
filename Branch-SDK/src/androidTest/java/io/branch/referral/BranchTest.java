@@ -85,16 +85,16 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
         BranchLogger.setLoggingEnabled(true);
 
-        if (branchKey == null) {
-            branch = Branch.getInstance();
-        } else {
-            branch = Branch.getInstance();
-        }
+        String key = branchKey == null ? TEST_KEY : branchKey;
+        BranchConfiguration config = new BranchConfiguration.Builder(key)
+                .setRemoteInterface(new MockRemoteInterface())
+                .setTestMode(true)
+                .build();
+        Branch.initialize(mContext, config);
+        branch = Branch.getInstance();
         Assert.assertEquals(branch, Branch.getInstance());
 
         activityScenario = ActivityScenario.launch(MockActivity.class);
-
-        branch.setBranchRemoteInterface(new MockRemoteInterface());
     }
 
     protected synchronized void initSessionResumeActivity(final Runnable pretest, final Runnable posttest) {
