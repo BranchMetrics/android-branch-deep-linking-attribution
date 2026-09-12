@@ -1,0 +1,471 @@
+
+io.branch.referral.AdvertisingIdTests:......
+io.branch.referral.BillingGooglePlayTests:
+Error in testCreateAndLogEventWithPurchase(io.branch.referral.BillingGooglePlayTests):
+java.lang.NullPointerException: Attempt to invoke virtual method 'org.json.JSONObject io.branch.referral.ServerRequest.getGetParams()' on a null object reference
+	at io.branch.referral.BillingGooglePlayTests.testCreateAndLogEventWithPurchase(BillingGooglePlayTests.kt:32)
+
+io.branch.referral.BranchCPIDTest:
+Error in testGetLATD(io.branch.referral.BranchCPIDTest):
+java.lang.AssertionError: expected:<1> but was:<0>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at org.junit.Assert.assertEquals(Assert.java:633)
+	at io.branch.referral.BranchCPIDTest.testGetLATD(BranchCPIDTest.java:23)
+.
+Error in testGetLATDAttributionWindowSetting(io.branch.referral.BranchCPIDTest):
+java.lang.AssertionError: expected:<1> but was:<0>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at org.junit.Assert.assertEquals(Assert.java:633)
+	at io.branch.referral.BranchCPIDTest.testGetLATDAttributionWindowSetting(BranchCPIDTest.java:63)
+
+io.branch.referral.BranchMigrationTest:.
+Error in testSessionManagement(io.branch.referral.BranchMigrationTest):
+java.lang.AssertionError: Should find install request
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertNotNull(Assert.java:713)
+	at io.branch.referral.BranchMigrationTest$testSessionManagement$1.invokeSuspend(BranchMigrationTest.kt:96)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:234)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:166)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:397)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl(CancellableContinuationImpl.kt:431)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$default(CancellableContinuationImpl.kt:420)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeUndispatched(CancellableContinuationImpl.kt:518)
+	at kotlinx.coroutines.test.CancellableContinuationRunnable.run(TestDispatcher.kt:50)
+	at kotlinx.coroutines.test.TestDispatcher.processEvent$kotlinx_coroutines_test(TestDispatcher.kt:28)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.tryRunNextTaskUnless$kotlinx_coroutines_test(TestCoroutineScheduler.kt:100)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdleOr$kotlinx_coroutines_test(TestCoroutineScheduler.kt:120)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdle(TestCoroutineScheduler.kt:113)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:237)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testSessionManagement(BranchMigrationTest.kt:89)
+
+Error in testRequestPriorities(io.branch.referral.BranchMigrationTest):
+java.lang.AssertionError: Install request should be first expected:<io.branch.referral.BranchMigrationTest$createInstallRequest$1@18b90b0> but was:<io.branch.referral.BranchMigrationTest$createUrlRequest$1@f5ae62>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at io.branch.referral.BranchMigrationTest$testRequestPriorities$1.invokeSuspend(BranchMigrationTest.kt:79)
+	at io.branch.referral.BranchMigrationTest$testRequestPriorities$1.invoke(Unknown Source:8)
+	at io.branch.referral.BranchMigrationTest$testRequestPriorities$1.invoke(Unknown Source:4)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invokeSuspend(TestBuilders.kt:212)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:10)
+	at kotlinx.coroutines.intrinsics.UndispatchedKt.startCoroutineUndispatched(Undispatched.kt:55)
+	at kotlinx.coroutines.CoroutineStart.invoke(CoroutineStart.kt:112)
+	at kotlinx.coroutines.AbstractCoroutine.start(AbstractCoroutine.kt:126)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:211)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testRequestPriorities(BranchMigrationTest.kt:68)
+
+Error in testErrorHandling(io.branch.referral.BranchMigrationTest):
+java.lang.AssertionError: Error should be caught and handled
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at io.branch.referral.BranchMigrationTest$testErrorHandling$1.invokeSuspend(BranchMigrationTest.kt:139)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:234)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:166)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:397)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl(CancellableContinuationImpl.kt:431)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$default(CancellableContinuationImpl.kt:420)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeUndispatched(CancellableContinuationImpl.kt:518)
+	at kotlinx.coroutines.test.CancellableContinuationRunnable.run(TestDispatcher.kt:50)
+	at kotlinx.coroutines.test.TestDispatcher.processEvent$kotlinx_coroutines_test(TestDispatcher.kt:28)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.tryRunNextTaskUnless$kotlinx_coroutines_test(TestCoroutineScheduler.kt:100)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdleOr$kotlinx_coroutines_test(TestCoroutineScheduler.kt:120)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdle(TestCoroutineScheduler.kt:113)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:237)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testErrorHandling(BranchMigrationTest.kt:125)
+
+Error in testQueueStateManagement(io.branch.referral.BranchMigrationTest):
+java.lang.AssertionError: Queue should start IDLE expected:<IDLE> but was:<PROCESSING>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at io.branch.referral.BranchMigrationTest$testQueueStateManagement$1.invokeSuspend(BranchMigrationTest.kt:115)
+	at io.branch.referral.BranchMigrationTest$testQueueStateManagement$1.invoke(Unknown Source:8)
+	at io.branch.referral.BranchMigrationTest$testQueueStateManagement$1.invoke(Unknown Source:4)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invokeSuspend(TestBuilders.kt:212)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:10)
+	at kotlinx.coroutines.intrinsics.UndispatchedKt.startCoroutineUndispatched(Undispatched.kt:55)
+	at kotlinx.coroutines.CoroutineStart.invoke(CoroutineStart.kt:112)
+	at kotlinx.coroutines.AbstractCoroutine.start(AbstractCoroutine.kt:126)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:211)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testQueueStateManagement(BranchMigrationTest.kt:113)
+
+io.branch.referral.BranchPluginSupportTest:
+Error in testOSVersion(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testModel(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testScreenHeight(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testLanguage(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testOS(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testHardwareIdDebug(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testScreenWidth(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testBranchPluginSupportExists(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testCountry(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testAppVersion(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testScreenDPI(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+Error in testAndroidID(io.branch.referral.BranchPluginSupportTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+
+io.branch.referral.BranchRequestQueueTest:.........
+io.branch.referral.DebugTest:..
+io.branch.referral.DeviceInfoTest:....
+Error in testHardwareIdSimulatedInstall(io.branch.referral.DeviceInfoTest):
+java.lang.AssertionError: Values should be different. Actual: io.branch.referral.SystemObserver$UniqueId@fafd8892
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failEquals(Assert.java:187)
+	at org.junit.Assert.assertNotEquals(Assert.java:163)
+	at org.junit.Assert.assertNotEquals(Assert.java:177)
+	at io.branch.referral.DeviceInfoTest.testHardwareIdSimulatedInstall(DeviceInfoTest.java:55)
+.
+io.branch.referral.KeyTest:
+Error in testManifestKeys(io.branch.referral.KeyTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'boolean java.lang.String.startsWith(java.lang.String)' on a null object reference
+	at io.branch.referral.KeyTest.testManifestKeys(KeyTest.java:17)
+.
+io.branch.referral.PrefHelperTest:......................
+io.branch.referral.ReferringUrlUtilityTests:......................
+io.branch.referral.SystemObserverTests:....
+io.branch.referral.UniversalResourceAnalyserSkipListUpgradeTests:...............
+
+Time: 214.466
+There were 21 failures:
+1) testCreateAndLogEventWithPurchase(io.branch.referral.BillingGooglePlayTests)
+java.lang.NullPointerException: Attempt to invoke virtual method 'org.json.JSONObject io.branch.referral.ServerRequest.getGetParams()' on a null object reference
+	at io.branch.referral.BillingGooglePlayTests.testCreateAndLogEventWithPurchase(BillingGooglePlayTests.kt:32)
+2) testGetLATD(io.branch.referral.BranchCPIDTest)
+java.lang.AssertionError: expected:<1> but was:<0>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at org.junit.Assert.assertEquals(Assert.java:633)
+	at io.branch.referral.BranchCPIDTest.testGetLATD(BranchCPIDTest.java:23)
+3) testGetLATDAttributionWindowSetting(io.branch.referral.BranchCPIDTest)
+java.lang.AssertionError: expected:<1> but was:<0>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at org.junit.Assert.assertEquals(Assert.java:633)
+	at io.branch.referral.BranchCPIDTest.testGetLATDAttributionWindowSetting(BranchCPIDTest.java:63)
+4) testSessionManagement(io.branch.referral.BranchMigrationTest)
+java.lang.AssertionError: Should find install request
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertNotNull(Assert.java:713)
+	at io.branch.referral.BranchMigrationTest$testSessionManagement$1.invokeSuspend(BranchMigrationTest.kt:96)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:234)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:166)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:397)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl(CancellableContinuationImpl.kt:431)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$default(CancellableContinuationImpl.kt:420)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeUndispatched(CancellableContinuationImpl.kt:518)
+	at kotlinx.coroutines.test.CancellableContinuationRunnable.run(TestDispatcher.kt:50)
+	at kotlinx.coroutines.test.TestDispatcher.processEvent$kotlinx_coroutines_test(TestDispatcher.kt:28)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.tryRunNextTaskUnless$kotlinx_coroutines_test(TestCoroutineScheduler.kt:100)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdleOr$kotlinx_coroutines_test(TestCoroutineScheduler.kt:120)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdle(TestCoroutineScheduler.kt:113)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:237)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testSessionManagement(BranchMigrationTest.kt:89)
+5) testRequestPriorities(io.branch.referral.BranchMigrationTest)
+java.lang.AssertionError: Install request should be first expected:<io.branch.referral.BranchMigrationTest$createInstallRequest$1@18b90b0> but was:<io.branch.referral.BranchMigrationTest$createUrlRequest$1@f5ae62>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at io.branch.referral.BranchMigrationTest$testRequestPriorities$1.invokeSuspend(BranchMigrationTest.kt:79)
+	at io.branch.referral.BranchMigrationTest$testRequestPriorities$1.invoke(Unknown Source:8)
+	at io.branch.referral.BranchMigrationTest$testRequestPriorities$1.invoke(Unknown Source:4)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invokeSuspend(TestBuilders.kt:212)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:10)
+	at kotlinx.coroutines.intrinsics.UndispatchedKt.startCoroutineUndispatched(Undispatched.kt:55)
+	at kotlinx.coroutines.CoroutineStart.invoke(CoroutineStart.kt:112)
+	at kotlinx.coroutines.AbstractCoroutine.start(AbstractCoroutine.kt:126)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:211)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testRequestPriorities(BranchMigrationTest.kt:68)
+6) testErrorHandling(io.branch.referral.BranchMigrationTest)
+java.lang.AssertionError: Error should be caught and handled
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at io.branch.referral.BranchMigrationTest$testErrorHandling$1.invokeSuspend(BranchMigrationTest.kt:139)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:234)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:166)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:397)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl(CancellableContinuationImpl.kt:431)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$default(CancellableContinuationImpl.kt:420)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeUndispatched(CancellableContinuationImpl.kt:518)
+	at kotlinx.coroutines.test.CancellableContinuationRunnable.run(TestDispatcher.kt:50)
+	at kotlinx.coroutines.test.TestDispatcher.processEvent$kotlinx_coroutines_test(TestDispatcher.kt:28)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.tryRunNextTaskUnless$kotlinx_coroutines_test(TestCoroutineScheduler.kt:100)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdleOr$kotlinx_coroutines_test(TestCoroutineScheduler.kt:120)
+	at kotlinx.coroutines.test.TestCoroutineScheduler.advanceUntilIdle(TestCoroutineScheduler.kt:113)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:237)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testErrorHandling(BranchMigrationTest.kt:125)
+7) testQueueStateManagement(io.branch.referral.BranchMigrationTest)
+java.lang.AssertionError: Queue should start IDLE expected:<IDLE> but was:<PROCESSING>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at io.branch.referral.BranchMigrationTest$testQueueStateManagement$1.invokeSuspend(BranchMigrationTest.kt:115)
+	at io.branch.referral.BranchMigrationTest$testQueueStateManagement$1.invoke(Unknown Source:8)
+	at io.branch.referral.BranchMigrationTest$testQueueStateManagement$1.invoke(Unknown Source:4)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invokeSuspend(TestBuilders.kt:212)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTestCoroutine$2.invoke(Unknown Source:10)
+	at kotlinx.coroutines.intrinsics.UndispatchedKt.startCoroutineUndispatched(Undispatched.kt:55)
+	at kotlinx.coroutines.CoroutineStart.invoke(CoroutineStart.kt:112)
+	at kotlinx.coroutines.AbstractCoroutine.start(AbstractCoroutine.kt:126)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTestCoroutine(TestBuilders.kt:211)
+	at kotlinx.coroutines.test.TestBuildersKt.runTestCoroutine(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invokeSuspend(TestBuilders.kt:167)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt$runTest$1$1.invoke(Unknown Source:10)
+	at kotlinx.coroutines.test.TestBuildersJvmKt$createTestResult$1.invokeSuspend(TestBuildersJvm.kt:13)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:284)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersJvmKt.createTestResult(TestBuildersJvm.kt:12)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:166)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest(TestBuilders.kt:154)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest(Unknown Source:1)
+	at kotlinx.coroutines.test.TestBuildersKt__TestBuildersKt.runTest$default(TestBuilders.kt:147)
+	at kotlinx.coroutines.test.TestBuildersKt.runTest$default(Unknown Source:1)
+	at io.branch.referral.BranchMigrationTest.testQueueStateManagement(BranchMigrationTest.kt:113)
+8) testOSVersion(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+9) testModel(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+10) testScreenHeight(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+11) testLanguage(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+12) testOS(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+13) testHardwareIdDebug(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+14) testScreenWidth(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+15) testBranchPluginSupportExists(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+16) testCountry(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+17) testAppVersion(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+18) testScreenDPI(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+19) testAndroidID(io.branch.referral.BranchPluginSupportTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'java.util.Map io.branch.referral.BranchPluginSupport.deviceDescription()' on a null object reference
+	at io.branch.referral.BranchPluginSupportTest.initializeValues(BranchPluginSupportTest.java:21)
+20) testHardwareIdSimulatedInstall(io.branch.referral.DeviceInfoTest)
+java.lang.AssertionError: Values should be different. Actual: io.branch.referral.SystemObserver$UniqueId@fafd8892
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failEquals(Assert.java:187)
+	at org.junit.Assert.assertNotEquals(Assert.java:163)
+	at org.junit.Assert.assertNotEquals(Assert.java:177)
+	at io.branch.referral.DeviceInfoTest.testHardwareIdSimulatedInstall(DeviceInfoTest.java:55)
+21) testManifestKeys(io.branch.referral.KeyTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'boolean java.lang.String.startsWith(java.lang.String)' on a null object reference
+	at io.branch.referral.KeyTest.testManifestKeys(KeyTest.java:17)
+
+FAILURES!!!
+Tests run: 109,  Failures: 21
+
+
