@@ -32,16 +32,23 @@ suspend fun BranchShortLinkBuilder.createLink(): String =
                 if (!resumed.compareAndSet(false, true)) return@BranchLinkCreateListener
                 when {
                     url != null -> continuation.resume(url)
-                    // Read via a throwaway request: `request.longUrl` would re-enter this listener on throw.
-                    // The guard above is already consumed, so any throw here must resume with it
-                    // rather than escape and leave the continuation hanging forever.
-                    request.isDefaultToLongUrl -> try {
-                        continuation.resume(
-                            createUrlRequest(Branch.BranchLinkCreateListener { _, _ -> }, true).longUrl
-                        )
-                    } catch (e: Exception) {
-                        continuation.resumeWithException(e)
-                    }
+                    // Throwaway request: `request.longUrl` would re-enter this listener on throw.
+                    // resume() stays outside runCatching so a throw from it can't double-resume.
+                    request.isDefaultToLongUrl -> runCatching {
+                        createUrlRequest(Branch.BranchLinkCreateListener { _, _ -> }, true).longUrl
+                    }.fold(
+                        onSuccess = { continuation.resume(it) },
+                        onFailure = {
+                            continuation.resumeWithException(
+                                BranchException(
+                                    BranchError(
+                                        "Failed generating the long URL fallback: ${it.message}",
+                                        BranchError.ERR_OTHER
+                                    )
+                                )
+                            )
+                        }
+                    )
                     error != null -> continuation.resumeWithException(BranchException(error))
                     else -> continuation.resumeWithException(
                         BranchException(
