@@ -17,7 +17,7 @@ python3 scripts/validate_l1_logs.py path/to/branchlogs.txt
 To run the validator's own test suite:
 
 ```bash
-python3 -m unittest scripts.test_validate_l1_logs -v
+python3 -m unittest discover -s scripts -p "test_*.py" -v
 ```
 
 ## What gets validated
