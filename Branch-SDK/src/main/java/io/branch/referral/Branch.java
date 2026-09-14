@@ -2136,7 +2136,7 @@ public class Branch {
                     BranchLogger.d("sendOpen skipped: an install or open is already pending");
                     return;
                 }
-                RequestOpen requestOpen = new RequestOpen(context_, null, false, null);
+                RequestOpen requestOpen = new RequestOpen(context_, null, false, null, true);
                 branchReferral_.requestQueue_.handleNewRequest(requestOpen);
             }
         }

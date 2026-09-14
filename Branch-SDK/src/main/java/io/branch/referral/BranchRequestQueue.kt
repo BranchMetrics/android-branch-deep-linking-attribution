@@ -864,6 +864,24 @@ class BranchRequestQueue private constructor(private val context: Context) {
         return executing
     }
 
+    /**
+     * Replaces the queued foreground open with [chainedOpen] at the same index, when that open is
+     * the only install or open queued or executing and carries no callback.
+     *
+     * @return whether the replacement happened
+     */
+    fun replaceQueuedForegroundOpen(chainedOpen: ServerRequest): Boolean {
+        synchronized(queueList) {
+            if (activeRequests.values.any { isInstallOrOpen(it) }) return false
+            val queued = queueList.withIndex().singleOrNull { isInstallOrOpen(it.value) } ?: return false
+            val open = queued.value as? RequestOpen ?: return false
+            if (!open.isForegroundOpen || open.callback_ != null) return false
+            queueList[queued.index] = chainedOpen
+        }
+        chainedOpen.onRequestQueued()
+        return true
+    }
+
     // RequestOpen is the beta's open. ServerRequestRegisterInstall is still reachable here:
     // getInstallOrOpenRequest builds one when there is no randomized bundle token, and
     // sessionBuilder().init() remains public API. ServerRequestRegisterOpen is not included —

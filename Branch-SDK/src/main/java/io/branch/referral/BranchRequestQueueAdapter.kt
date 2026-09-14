@@ -154,6 +154,12 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.containsInstallOrOpen result: $result")
         return result
     }
+    fun replaceQueuedForegroundOpen(chainedOpen: ServerRequest): Boolean {
+        BranchLogger.v("BranchRequestQueueAdapter.replaceQueuedForegroundOpen called")
+        val result = newQueue.replaceQueuedForegroundOpen(chainedOpen)
+        BranchLogger.v("BranchRequestQueueAdapter.replaceQueuedForegroundOpen result: $result")
+        return result
+    }
     fun peek(): ServerRequest? {
         BranchLogger.v("BranchRequestQueueAdapter.peek called")
         val result = newQueue.peek()
