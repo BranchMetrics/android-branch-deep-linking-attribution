@@ -90,9 +90,10 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
             Branch.getInstance().requestDeepLinkData(uri)
             fail("expected BranchException when the deep link cannot be resolved")
         } catch (e: BranchException) {
-            assertTrue(
-                "expected the server failure to be carried through, got: ${e.message}",
-                e.branchError.errorCode != 0
+            assertEquals(
+                "the BranchError the callback path would have delivered must survive intact",
+                500,
+                e.branchError.errorCode
             )
         }
     }

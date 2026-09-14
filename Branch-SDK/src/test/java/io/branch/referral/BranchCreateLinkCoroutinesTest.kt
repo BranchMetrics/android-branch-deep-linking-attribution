@@ -78,6 +78,21 @@ class BranchCreateLinkCoroutinesTest : BranchTestBase() {
     }
 
     @Test
+    fun fallsBackToTheLongUrlWhenGetLongUrlItselfThrows() = runTest {
+        // Tracking disabled + a user URL with no query is what makes getLongUrl() throw
+        // internally; this used to recurse into the listener until a StackOverflowError.
+        Branch.getInstance().disableTracking(true)
+        PrefHelper.getInstance(context).setUserURL("https://example.app.link/nosuchquery")
+        Branch.getInstance().setBranchRemoteInterface(
+            StubRemoteInterface(500, """{"error":"Internal server error"}""")
+        )
+
+        val url = buo.createLink(context, linkProperties, defaultToLongUrl = true)
+
+        assertTrue("expected a long URL fallback, got: $url", url.contains("example.app.link"))
+    }
+
+    @Test
     fun throwsWhenDefaultToLongUrlIsFalse() = runTest {
         Branch.getInstance().setBranchRemoteInterface(
             StubRemoteInterface(500, """{"error":"boom"}""")

@@ -6,6 +6,7 @@ import io.branch.coroutines.RequestDeepLink
 import io.branch.referral.util.BranchEvent
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONObject
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -17,13 +18,15 @@ import kotlin.coroutines.resumeWithException
  */
 suspend fun BranchEvent.awaitLogEvent(context: Context): Unit =
     suspendCancellableCoroutine { continuation ->
+        // Guards against a second callback resuming an already-resumed continuation.
+        val resumed = AtomicBoolean(false)
         logEvent(context, object : BranchEvent.BranchLogEventCallback {
             override fun onSuccess(responseCode: Int) {
-                continuation.resume(Unit)
+                if (resumed.compareAndSet(false, true)) continuation.resume(Unit)
             }
 
             override fun onFailure(e: Exception) {
-                continuation.resumeWithException(e)
+                if (resumed.compareAndSet(false, true)) continuation.resumeWithException(e)
             }
         })
     }
@@ -36,10 +39,13 @@ suspend fun BranchEvent.awaitLogEvent(context: Context): Unit =
  */
 suspend fun Branch.requestDeepLinkData(uri: Uri): JSONObject =
     suspendCancellableCoroutine { continuation ->
+        // Guards against a retry resuming an already-resumed continuation and killing the queue.
+        val resumed = AtomicBoolean(false)
         val request = RequestDeepLink(
             applicationContext,
             uri,
             Branch.BranchReferralInitListener { referringParams, error ->
+                if (!resumed.compareAndSet(false, true)) return@BranchReferralInitListener
                 when {
                     error != null -> continuation.resumeWithException(BranchException(error))
                     referringParams != null -> continuation.resume(referringParams)

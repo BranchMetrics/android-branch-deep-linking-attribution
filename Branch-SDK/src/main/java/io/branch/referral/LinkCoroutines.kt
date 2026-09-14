@@ -3,6 +3,7 @@ package io.branch.referral
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -24,11 +25,17 @@ suspend fun BranchShortLinkBuilder.createLink(): String =
 
         suspendCancellableCoroutine { continuation ->
             lateinit var request: ServerRequestCreateUrl
+            // Guards against a retry resuming an already-resumed continuation.
+            val resumed = AtomicBoolean(false)
 
             val listener = Branch.BranchLinkCreateListener { url, error ->
+                if (!resumed.compareAndSet(false, true)) return@BranchLinkCreateListener
                 when {
                     url != null -> continuation.resume(url)
-                    request.isDefaultToLongUrl -> continuation.resume(request.longUrl)
+                    // Read via a throwaway request: `request.longUrl` would re-enter this listener on throw.
+                    request.isDefaultToLongUrl -> continuation.resume(
+                        createUrlRequest(Branch.BranchLinkCreateListener { _, _ -> }, true).longUrl
+                    )
                     error != null -> continuation.resumeWithException(BranchException(error))
                     else -> continuation.resumeWithException(
                         BranchException(

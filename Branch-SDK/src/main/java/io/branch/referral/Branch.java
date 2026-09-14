@@ -470,6 +470,9 @@ public class Branch {
         }
         modernLinkGenerator_ = new ModernLinkGenerator(context_, branchRemoteInterface_, prefHelper_);
         legacyLinkGenerator_ = new BranchLegacyLinkGenerator(prefHelper_, branchRemoteInterface_);
+
+        // Cached links aren't keyed by interface; clear so old-interface entries don't leak through.
+        linkCache_.clear();
     }
 
     public BranchRemoteInterface getBranchRemoteInterface() {
