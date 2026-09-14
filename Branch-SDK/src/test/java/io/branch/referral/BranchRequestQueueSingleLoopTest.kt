@@ -75,7 +75,7 @@ class BranchRequestQueueSingleLoopTest : BranchTestBase() {
         assertTrue("r1 never reached the network", entered.getValue(R1).await(TIMEOUT_S, TimeUnit.SECONDS))
         queue.enqueue(createUrl(R2))
         // An idle second loop takes r2's trigger in milliseconds; the bound is what a passing run waits.
-        entered.getValue(R2).await(HOLD_MS, TimeUnit.MILLISECONDS)
+        entered.getValue(R2).await(SECOND_LOOP_RACE_WINDOW_MS, TimeUnit.MILLISECONDS)
 
         release.values.forEach { it.countDown() }
         assertTrue(
@@ -97,7 +97,7 @@ class BranchRequestQueueSingleLoopTest : BranchTestBase() {
 
     private companion object {
         const val TIMEOUT_S = 5L
-        const val HOLD_MS = 2_000L
+        const val SECOND_LOOP_RACE_WINDOW_MS = 2_000L
         const val TAG_KEY = "test_tag"
         const val R1 = "r1"
         const val R2 = "r2"
