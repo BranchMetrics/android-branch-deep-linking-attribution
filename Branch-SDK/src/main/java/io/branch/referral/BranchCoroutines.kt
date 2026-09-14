@@ -14,7 +14,7 @@ import kotlin.coroutines.resumeWithException
  * Logs this event and suspends until the server responds. Main-safe. Cancelling detaches
  * this caller but leaves the event queued. Not named `logEvent`: the member would shadow it.
  *
- * @throws Exception raw, as [BranchEvent.BranchLogEventCallback.onFailure] supplies it.
+ * @throws BranchException if the event could not be logged.
  */
 suspend fun BranchEvent.awaitLogEvent(context: Context): Unit =
     suspendCancellableCoroutine { continuation ->

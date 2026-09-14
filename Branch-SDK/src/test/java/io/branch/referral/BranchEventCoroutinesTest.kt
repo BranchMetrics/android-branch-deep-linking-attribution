@@ -11,7 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
@@ -77,34 +77,22 @@ class BranchEventCoroutinesTest : BranchTestBase() {
         try {
             BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE).awaitLogEvent(context)
             fail("expected the tracking-disabled rejection to propagate")
-        } catch (e: Exception) {
-            assertTrue(
-                "expected the tracking-disabled error code, got: ${e.message}",
-                e.message?.contains(BranchError.ERR_BRANCH_TRACKING_DISABLED.toString()) == true
-            )
+        } catch (e: BranchException) {
+            assertEquals(BranchError.ERR_BRANCH_TRACKING_DISABLED, e.branchError.errorCode)
         }
     }
 
-    /**
-     * `onFailure` hands back a raw [Exception], not a [BranchError], so the bridge rethrows
-     * as-is. The asymmetry with the other suspend variants is deliberate.
-     */
     @Test
-    fun rethrowsTheRawCallbackExceptionRatherThanWrappingIt() = runTest {
+    fun throwsBranchExceptionCarryingTheServerFailure() = runTest {
         Branch.getInstance().setBranchRemoteInterface(
-            StubRemoteInterface(500, """{"error":"boom"}""")
+            StubRemoteInterface(500, """{"error":"Internal server error"}""")
         )
 
         try {
             BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE).awaitLogEvent(context)
             fail("expected the logEvent failure to propagate")
         } catch (e: BranchException) {
-            fail("the raw callback exception must not be wrapped in BranchException")
-        } catch (e: Exception) {
-            assertTrue(
-                "expected the callback's own message, got: ${e.message}",
-                e.message?.contains("Failed logEvent server request: 500") == true
-            )
+            assertEquals(500, e.branchError.errorCode)
         }
     }
 }

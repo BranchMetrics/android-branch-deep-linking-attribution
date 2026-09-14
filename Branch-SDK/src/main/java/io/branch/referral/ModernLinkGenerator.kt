@@ -270,7 +270,7 @@ class ModernLinkGenerator(
                 }
                 
                 val result = generateShortLink(linkData)
-                
+
                 withContext(Dispatchers.Main) {
                     result.fold(
                         onSuccess = { url ->
@@ -283,7 +283,9 @@ class ModernLinkGenerator(
                     )
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
+                // NonCancellable: shutdown() cancelling this job mid-flight must still deliver
+                // the callback as an error rather than dropping it.
+                withContext(NonCancellable + Dispatchers.Main) {
                     callback?.onLinkCreate(
                         null,
                         BranchError(
