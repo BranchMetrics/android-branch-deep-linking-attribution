@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Branch-SDK-Testbed-Kotlin</string>
+    <string name="header">Kotlin suspend variants</string>
+    <string name="btn_buo_create_link">BUO.createLink(context, props)</string>
+    <string name="btn_builder_create_link">BranchShortLinkBuilder.createLink()</string>
+    <string name="btn_throws">alias conflict → defaultToLongUrl=false (throws)</string>
+    <string name="btn_long_url_fallback">alias conflict → defaultToLongUrl=true (long URL)</string>
+    <string name="btn_log_event">BranchEvent.awaitLogEvent(context)</string>
+    <string name="btn_request_deep_link">Branch.requestDeepLinkData(uri)</string>
+    <string name="btn_cancel_deep_link">requestDeepLinkData + cancel (de-queue)</string>
+    <string name="btn_clear">Clear log</string>
+</resources>
