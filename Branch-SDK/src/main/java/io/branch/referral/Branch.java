@@ -391,6 +391,9 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
+        // Clears a payload left by a process that died without onStop, whatever the automatic open setting.
+        branchReferral_.prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+
         if (config.getAutomaticOpenEvents()) {
             branchReferral_.setupProcessLifecycleObserver();
         } else {
