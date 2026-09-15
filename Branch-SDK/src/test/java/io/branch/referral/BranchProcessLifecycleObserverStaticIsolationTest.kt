@@ -30,6 +30,8 @@ class BranchProcessLifecycleObserverStaticIsolationTest : BranchTestBase() {
         branch = mock(Branch::class.java)
         owner = mock(LifecycleOwner::class.java)
         `when`(branch.prefHelper).thenReturn(PrefHelper.getInstance(RuntimeEnvironment.getApplication()))
+        Branch::class.java.getDeclaredField("requestQueue_").apply { isAccessible = true }
+            .set(branch, BranchRequestQueueAdapter.getInstance(RuntimeEnvironment.getApplication()))
     }
 
     @Test

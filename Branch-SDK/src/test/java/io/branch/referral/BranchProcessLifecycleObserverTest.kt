@@ -1,6 +1,9 @@
 package io.branch.referral
 
 import androidx.lifecycle.LifecycleOwner
+import io.branch.coroutines.RequestDeepLink
+import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -28,6 +31,7 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     private lateinit var owner: LifecycleOwner
     private lateinit var observer: BranchProcessLifecycleObserver
     private lateinit var prefHelper: PrefHelper
+    private lateinit var queue: BranchRequestQueue
 
     @Before
     override fun setUpBase() {
@@ -37,6 +41,18 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
         observer = BranchProcessLifecycleObserver(branch)
         prefHelper = PrefHelper.getInstance(RuntimeEnvironment.getApplication())
         `when`(branch.prefHelper).thenReturn(prefHelper)
+        // Request constructors need DeviceInfo, which initialize provides.
+        Branch.initialize(RuntimeEnvironment.getApplication(), BranchConfiguration.Builder("key_live_test123").build())
+        val adapter = BranchRequestQueueAdapter.getInstance(RuntimeEnvironment.getApplication())
+        Branch::class.java.getDeclaredField("requestQueue_").apply { isAccessible = true }.set(branch, adapter)
+        queue = BranchRequestQueueAdapter::class.java.getDeclaredField("newQueue")
+            .apply { isAccessible = true }.get(adapter) as BranchRequestQueue
+        runBlocking { queue.clear() }
+    }
+
+    @After
+    fun clearQueue() {
+        runBlocking { queue.clear() }
     }
 
     @Test
@@ -87,6 +103,49 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     }
 
     @Test
+    fun onStop_keepsPayloadWhileResolutionQueued() {
+        prefHelper.sessionParams = resolvedPayload
+        queue.insert(heldRequest(RequestDeepLink(RuntimeEnvironment.getApplication(), null, null, false)), 0)
+
+        observer.onStop(owner)
+
+        assertEquals(resolvedPayload, prefHelper.sessionParams)
+    }
+
+    // The resolution has written the payload on the main thread but has not left activeRequests yet.
+    @Test
+    fun onStop_keepsPayloadWhileResolutionExecuting() {
+        prefHelper.sessionParams = resolvedPayload
+        val resolution = RequestDeepLink(RuntimeEnvironment.getApplication(), null, null, false)
+        activeRequests()["RequestDeepLink_executing"] = resolution
+
+        observer.onStop(owner)
+
+        assertEquals(resolvedPayload, prefHelper.sessionParams)
+    }
+
+    // The chained open follows the resolution and its data-less response leaves the slot alone.
+    @Test
+    fun onStop_keepsPayloadWhileOpenQueued() {
+        prefHelper.sessionParams = resolvedPayload
+        queue.insert(heldRequest(RequestOpen(RuntimeEnvironment.getApplication(), null, false, null)), 0)
+
+        observer.onStop(owner)
+
+        assertEquals(resolvedPayload, prefHelper.sessionParams)
+    }
+
+    @Test
+    fun onStop_keepsPayloadWhileInstallQueued() {
+        prefHelper.sessionParams = resolvedPayload
+        queue.insert(heldRequest(ServerRequestRegisterInstall(RuntimeEnvironment.getApplication(), null, false)), 0)
+
+        observer.onStop(owner)
+
+        assertEquals(resolvedPayload, prefHelper.sessionParams)
+    }
+
+    @Test
     fun onStart_doesNotClearSessionParams() {
         prefHelper.sessionParams = resolvedPayload
 
@@ -94,4 +153,13 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
 
         assertEquals(resolvedPayload, prefHelper.sessionParams)
     }
+
+    // A wait lock keeps a live processing loop from dequeuing the request mid-test.
+    private fun heldRequest(request: ServerRequest): ServerRequest =
+        request.apply { addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK) }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun activeRequests(): MutableMap<String, ServerRequest> =
+        BranchRequestQueue::class.java.getDeclaredField("activeRequests")
+            .apply { isAccessible = true }.get(queue) as MutableMap<String, ServerRequest>
 }
