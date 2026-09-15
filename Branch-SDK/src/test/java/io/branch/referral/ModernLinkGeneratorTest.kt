@@ -13,6 +13,8 @@ import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.MockitoJUnitRunner
 import java.net.HttpURLConnection
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -259,49 +261,30 @@ class ModernLinkGeneratorTest {
         assertEquals(null, result)
     }
     
+    /**
+     * shutdown() cancels the scope for good, and setBranchRemoteInterface() shuts a generator
+     * down before replacing it, so a call can land on an already-cancelled scope.
+     */
     @Test
+    fun `async generation on an already-cancelled scope still delivers the callback`() {
+        val generator = ModernLinkGenerator(
+            context = mockContext,
+            branchRemoteInterface = mockBranchRemoteInterface,
+            prefHelper = mockPrefHelper,
+            scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+            defaultTimeoutMs = testTimeout
+        )
+        generator.shutdown()
 
-    fun `generateShortLinkAsync should handle async execution without throwing`() {
-        // Given
-        `when`(mockServerRequest.getLinkPost()).thenReturn(mockBranchLinkData)
-        
-        // When & Then - Should not throw exception
-        try {
-            linkGenerator.generateShortLinkAsync(mockServerRequest, mockCallback)
-            assertTrue("Async method should execute without exceptions", true)
-        } catch (e: Exception) {
-            fail("Should not throw exception: ${e.message}")
-        }
+        val delivered = CountDownLatch(1)
+        generator.generateShortLinkAsync(mockBranchLinkData) { _, _ -> delivered.countDown() }
+
+        assertTrue(
+            "a cancelled scope must deliver the callback as an error, not drop it",
+            delivered.await(5, TimeUnit.SECONDS)
+        )
     }
-    
-    @Test
-    fun `generateShortLinkAsync should handle errors without throwing`() {
-        // Given
-        `when`(mockServerRequest.getLinkPost()).thenReturn(mockBranchLinkData)
-        
-        // When & Then - Should not throw exception
-        try {
-            linkGenerator.generateShortLinkAsync(mockServerRequest, mockCallback)
-            assertTrue("Async method should handle errors gracefully", true)
-        } catch (e: Exception) {
-            fail("Should not throw exception during error handling: ${e.message}")
-        }
-    }
-    
-    @Test
-    fun `generateShortLinkAsync should handle null link data without throwing`() {
-        // Given
-        `when`(mockServerRequest.getLinkPost()).thenReturn(null)
-        
-        // When & Then - Should not throw exception
-        try {
-            linkGenerator.generateShortLinkAsync(mockServerRequest, mockCallback)
-            assertTrue("Async method should handle null data gracefully", true)
-        } catch (e: Exception) {
-            fail("Should not throw exception with null data: ${e.message}")
-        }
-    }
-    
+
     @Test
     fun `clearCache should empty the cache`() = testScope.runTest {
         // Given - Generate a link to populate cache
