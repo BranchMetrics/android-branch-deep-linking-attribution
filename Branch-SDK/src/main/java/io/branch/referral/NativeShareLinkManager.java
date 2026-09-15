@@ -2,6 +2,7 @@ package io.branch.referral;
 
 import android.app.Activity;
 import android.os.Build;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,7 +48,7 @@ public class NativeShareLinkManager {
                 @Override
                 public void onLinkCreate(String url, BranchError error) {
                     if (error == null) {
-                        SharingUtil.share(url, title, subject, activity);
+                        shareWithPerTargetChannel(activity, buo, linkProperties, url, title, subject);
                     } else {
 
                         if (callback != null) {
@@ -72,6 +73,35 @@ public class NativeShareLinkManager {
             } else {
                 BranchLogger.v("Unable to share link. " + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Opens the OS share sheet, attaching a channel-tagged link per target when per-target channel
+     * attribution is enabled.
+     *
+     * <p>[defaultUrl] is what every unmapped target receives, and what all of them receive when the
+     * feature is off or variant generation produced nothing. Generation failures degrade to today's
+     * behaviour instead of blocking the share.</p>
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
+    private void shareWithPerTargetChannel(@NonNull final Activity activity,
+                                           @NonNull BranchUniversalObject buo,
+                                           @NonNull LinkProperties linkProperties,
+                                           final String defaultUrl,
+                                           final String title,
+                                           final String subject) {
+        try {
+            PerTargetLinkGenerator.generate(activity, buo, linkProperties, new PerTargetLinkGenerator.Callback() {
+                @Override
+                public void onVariantsReady(Bundle replacementExtras) {
+                    SharingUtil.share(defaultUrl, title, subject, activity, replacementExtras);
+                }
+            });
+        } catch (Exception e) {
+            BranchLogger.e("Per-target channel link generation failed, sharing the default link: "
+                    + BranchLogger.stackTraceToString(e));
+            SharingUtil.share(defaultUrl, title, subject, activity);
         }
     }
 
