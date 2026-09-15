@@ -376,7 +376,7 @@ public class BranchUniversalObject implements Parcelable {
 
 
     
-    BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
+    private BranchShortLinkBuilder getLinkBuilder(@NonNull Context context, @NonNull LinkProperties linkProperties) {
         BranchShortLinkBuilder shortLinkBuilder = new BranchShortLinkBuilder(context);
         return getLinkBuilder(shortLinkBuilder, linkProperties);
     }

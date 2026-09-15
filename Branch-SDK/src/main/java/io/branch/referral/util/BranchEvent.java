@@ -13,8 +13,6 @@ import java.util.List;
 
 import io.branch.indexing.BranchUniversalObject;
 import io.branch.referral.Branch;
-import io.branch.referral.BranchError;
-import io.branch.referral.BranchException;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.Defines;
 import io.branch.referral.ServerRequest;
@@ -280,8 +278,8 @@ public class BranchEvent {
                 @Override
                 public void handleFailure(int statusCode, String causeMsg) {
                     if (callback != null) {
-                        BranchError error = new BranchError("Failed logEvent server request: " + statusCode + causeMsg, statusCode);
-                        callback.onFailure(new BranchException(error));
+                        Exception e = new Exception("Failed logEvent server request: " + statusCode + causeMsg);
+                        callback.onFailure(e);
                     }
                 }
             };
@@ -297,8 +295,8 @@ public class BranchEvent {
             isReqQueued = true;
         }
         else if (callback != null) {
-            BranchError error = new BranchError("Failed logEvent server request: The Branch instance was not available", BranchError.ERR_BRANCH_NOT_INSTANTIATED);
-            callback.onFailure(new BranchException(error));
+            Exception e = new Exception("Failed logEvent server request: The Branch instance was not available");
+            callback.onFailure(e);
         }
         return isReqQueued;
     }
