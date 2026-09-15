@@ -124,6 +124,18 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
         assertEquals(resolvedPayload, prefHelper.sessionParams)
     }
 
+    // The resolution has left both collections; only its chained open is still in flight.
+    @Test
+    fun onStop_keepsPayloadWhileChainedOpenExecuting() {
+        prefHelper.sessionParams = resolvedPayload
+        val chainedOpen = RequestOpen(RuntimeEnvironment.getApplication(), null, false, null)
+        activeRequests()["RequestOpen_executing"] = chainedOpen
+
+        observer.onStop(owner)
+
+        assertEquals(resolvedPayload, prefHelper.sessionParams)
+    }
+
     // The chained open follows the resolution and its data-less response leaves the slot alone.
     @Test
     fun onStop_keepsPayloadWhileOpenQueued() {
