@@ -298,6 +298,52 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"randomized_bundle_token": 0},
         },
     },
+    # W1 warm_https_onNewIntent: the app alive and backgrounded when the link
+    # arrives. Written from the capture, not from the ticket, which predicted one
+    # /v3/deeplink and exactly one /v3/events/open. Measured: two and three, two
+    # opens more than C1's one. The only thing W1 does that C1 does not is background
+    # and foreground the app; that is a coincidence worth stating and not a mapping
+    # this contract proves. What the ticket asked for and the capture confirms is
+    # the absence of install, asserted at zero below.
+    "W1": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 2,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v1/url": {"hardware_id": 0},
+            # The entry point, asserted in both directions across W1 and W2. Without
+            # it the two warm captures are the same contract and W2 says nothing W1
+            # does not. What the field carries is a mapping, and that is tested on the
+            # JVM in RequestDeepLinkUriMappingTest, not here.
+            "/v3/deeplink": {"external_intent_uri": 0},
+        },
+    },
+    # W2 warm_uriScheme: W1's launch state entered through branchtest:// instead of
+    # https. Same counts and order as W1, measured, and deliberately so: what W2 adds
+    # is not a different wire shape but the proof that the manifest's branchtest
+    # filter matches and the OS hands a scheme intent to a backgrounded app. Neither
+    # is reachable from a JVM test.
+    "W2": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 2,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v1/url": {"hardware_id": 0},
+            "/v3/deeplink": {"external_intent_uri": 1},
+        },
+    },
     # C1 cold_https: the link starts the app on a device that already has it.
     # The open carries the token, which is what separates it from C3.
     # /v3/events/custom is not counted in either: the TestBed logs one from
