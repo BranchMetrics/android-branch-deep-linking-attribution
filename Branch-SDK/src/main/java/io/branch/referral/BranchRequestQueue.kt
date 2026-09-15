@@ -865,10 +865,9 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
 
     /**
-     * Replaces the queued foreground open with [chainedOpen] at the same index, when that open is
-     * the only install or open queued or executing and carries no callback.
-     *
-     * @return whether the replacement happened
+     * Replaces the lone queued foreground open with [chainedOpen] in place; returns whether it did.
+     * Call only from the resolve's response while the single loop is suspended there; the queueList
+     * lock does not cover activeRequests. Tracking and wait-lock checks still apply at execution.
      */
     fun replaceQueuedForegroundOpen(chainedOpen: ServerRequest): Boolean {
         synchronized(queueList) {
