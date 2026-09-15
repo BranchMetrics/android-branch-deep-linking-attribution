@@ -24,7 +24,7 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
 
     override fun onStop(owner: LifecycleOwner) {
         BranchLogger.v("BranchProcessLifecycleObserver onStop: process backgrounded")
-        // Responses write sessionParams on the main thread too, so none lands between check and clear.
+        // Every response write that can race this runs on main; the IO tracking-disabled path writes nothing.
         if (!branchInstance.requestQueue_.containsInstallOpenOrResolution()) {
             branchInstance.prefHelper.sessionParams = PrefHelper.NO_STRING_VALUE
         }

@@ -391,10 +391,7 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
-        // Clears whatever the previous process left behind, so a process that died without
-        // onStop (force stop, OOM kill) does not leak a stale resolved payload into this run.
-        // Outside the automatic-open-events branch below, since that is the configuration with
-        // no onStop to fall back on.
+        // Clears a payload left by a process that died without onStop, whatever the automatic open setting.
         branchReferral_.prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
 
         if (config.getAutomaticOpenEvents()) {
