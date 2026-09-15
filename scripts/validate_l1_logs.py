@@ -309,11 +309,11 @@ SCENARIO_CONTRACTS = {
     },
     # W1 warm_https_onNewIntent: the app alive and backgrounded when the link
     # arrives. Written from the capture, not from the ticket, which predicted one
-    # /v3/deeplink and exactly one /v3/events/open. Measured: two and three. The
-    # third open is the one C1 does not have, and the only thing W1 does that C1
-    # does not is background and foreground the app; that is a coincidence worth
-    # stating and not a mapping this contract proves. What the ticket asked for
-    # and the capture confirms is the absence of install, asserted at zero below.
+    # /v3/deeplink and exactly one /v3/events/open. Measured: two and three, two
+    # opens more than C1's one. The only thing W1 does that C1 does not is background
+    # and foreground the app; that is a coincidence worth stating and not a mapping
+    # this contract proves. What the ticket asked for and the capture confirms is
+    # the absence of install, asserted at zero below.
     "W1": {
         "counts": {
             "/v3/deeplink": 2,
