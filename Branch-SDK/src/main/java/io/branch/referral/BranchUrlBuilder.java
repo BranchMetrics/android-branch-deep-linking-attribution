@@ -113,23 +113,23 @@ abstract class BranchUrlBuilder<T extends BranchUrlBuilder> {
 
     ///------------------------- Link Build methods---------------------------///
 
+    ServerRequestCreateUrl createUrlRequest(Branch.BranchLinkCreateListener callback, boolean async) {
+        return new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
+                channel_, feature_, stage_, campaign_,
+                params_, callback, async, defaultToLongUrl_);
+    }
+
     protected String getUrl() {
         String shortUrl = null;
         if (branchReferral_ != null) {
-            ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
-                    channel_, feature_, stage_, campaign_,
-                    params_, null, false, defaultToLongUrl_);
-            shortUrl = branchReferral_.generateShortLinkInternal(req);
+            shortUrl = branchReferral_.generateShortLinkInternal(createUrlRequest(null, false));
         }
         return shortUrl;
     }
 
     protected void generateUrlInternal(Branch.BranchLinkCreateListener callback) {
         if (branchReferral_ != null) {
-            ServerRequestCreateUrl req = new ServerRequestCreateUrl(context_, alias_, type_, duration_, tags_,
-                    channel_, feature_, stage_, campaign_,
-                    params_, callback, true, defaultToLongUrl_);
-            branchReferral_.generateShortLinkInternal(req);
+            branchReferral_.generateShortLinkInternal(createUrlRequest(callback, true));
         } else {
             if (callback != null) {
                 callback.onLinkCreate(null, new BranchError("session has not been initialized", BranchError.ERR_NO_SESSION));
