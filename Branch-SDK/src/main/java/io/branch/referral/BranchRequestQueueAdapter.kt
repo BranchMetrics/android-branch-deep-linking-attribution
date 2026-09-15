@@ -225,6 +225,16 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
 
     /**
+     * Whether an install, open or deep link resolution is queued or executing (delegates to the modern queue).
+     */
+    fun containsInstallOpenOrResolution(): Boolean {
+        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOpenOrResolution called")
+        val result = newQueue.containsInstallOpenOrResolution()
+        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOpenOrResolution result: $result")
+        return result
+    }
+
+    /**
      * Instrumentation and debugging
      */
     fun addExtraInstrumentationData(key: String, value: String) {
