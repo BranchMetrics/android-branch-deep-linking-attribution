@@ -149,55 +149,6 @@ class ModernLinkGenerator(
 
     
     /**
-     * Generate short link with callback for compatibility with existing async API.
-     * 
-     * @param request The ServerRequestCreateUrl containing link parameters
-     * @param callback Callback to receive the result
-     */
-    internal fun generateShortLinkAsync(
-        request: ServerRequestCreateUrl,
-        callback: Branch.BranchLinkCreateListener?
-    ) {
-        scope.launch {
-            try {
-                val linkData = request.getLinkPost()
-                if (linkData == null) {
-                    callback?.onLinkCreate(
-                        null,
-                        BranchError("Invalid link data", BranchError.ERR_BRANCH_INVALID_REQUEST)
-                    )
-                    return@launch
-                }
-                
-                val result = generateShortLink(linkData)
-                
-                // Switch to main thread for callback
-                withContext(Dispatchers.Main) {
-                    result.fold(
-                        onSuccess = { url ->
-                            callback?.onLinkCreate(url, null)
-                        },
-                        onFailure = { exception ->
-                            val branchError = convertToBranchError(exception)
-                            callback?.onLinkCreate(null, branchError)
-                        }
-                    )
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    callback?.onLinkCreate(
-                        null,
-                        BranchError(
-                            "Async link generation failed: ${e.message}",
-                            BranchError.ERR_OTHER
-                        )
-                    )
-                }
-            }
-        }
-    }
-    
-    /**
      * Clear the link cache.
      */
     fun clearCache() {
@@ -257,7 +208,8 @@ class ModernLinkGenerator(
         callback: Branch.BranchLinkCreateListener?
     ) {
         BranchLogger.v("MODERNIZATION_TRACE: ModernLinkGenerator.generateShortLinkAsyncFromJava called")
-        scope.launch {
+        // ATOMIC: an already-cancelled scope would otherwise never run the body, dropping the callback.
+        scope.launch(start = CoroutineStart.ATOMIC) {
             try {
                 if (linkData == null) {
                     withContext(Dispatchers.Main) {
@@ -270,7 +222,7 @@ class ModernLinkGenerator(
                 }
                 
                 val result = generateShortLink(linkData)
-                
+
                 withContext(Dispatchers.Main) {
                     result.fold(
                         onSuccess = { url ->
@@ -283,7 +235,9 @@ class ModernLinkGenerator(
                     )
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
+                // NonCancellable: shutdown() cancelling this job mid-flight must still deliver
+                // the callback as an error rather than dropping it.
+                withContext(NonCancellable + Dispatchers.Main) {
                     callback?.onLinkCreate(
                         null,
                         BranchError(
