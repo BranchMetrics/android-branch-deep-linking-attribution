@@ -4,11 +4,13 @@ import android.content.Context
 import org.json.JSONException
 import org.json.JSONObject
 
-internal class RequestOpen(
+internal class RequestOpen @JvmOverloads constructor(
     context: Context,
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean,
-    responseData: JSONObject?
+    responseData: JSONObject?,
+    // Set only by the foreground producer: the one open a chained open may replace.
+    val isForegroundOpen: Boolean = false
 ) : ServerRequestInitSession(context, Defines.RequestPath.EventsOpen, isAutoInitialization) {
 
     init {
