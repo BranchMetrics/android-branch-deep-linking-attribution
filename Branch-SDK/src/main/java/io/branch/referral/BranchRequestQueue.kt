@@ -1083,7 +1083,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Clear all requests from queue
      * Follows SRP - single responsibility for clearing queue state
      */
-    suspend fun clear() {
+    fun clear() {
         BranchLogger.v("BranchRequestQueue.clear called")
         synchronized(queueList) {
             queueList.clear()
