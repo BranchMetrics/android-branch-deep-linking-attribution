@@ -49,6 +49,18 @@ COLD_SCENARIO="${COLD_SCENARIO:-}"
 COLD_WIPE="${COLD_WIPE:-0}"
 COLD_SETTLE_S="${COLD_SETTLE_S:-12}"
 LINK_LOG="${LINK_LOG:-}"
+# L1_ATTRIBUTION_LEVEL makes the generator set that level after the link exists.
+# WIPE_AFTER=1 clears app data on exit, so no later scenario inherits it.
+L1_ATTRIBUTION_LEVEL="${L1_ATTRIBUTION_LEVEL:-}"
+WIPE_AFTER="${WIPE_AFTER:-0}"
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$COLD_WIPE" = "1" ]; then
+  echo "L1_ATTRIBUTION_LEVEL needs the generation run's tokens; COLD_WIPE would erase them" >&2
+  exit 1
+fi
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$WIPE_FIRST" != "1" ]; then
+  echo "L1_ATTRIBUTION_LEVEL needs WIPE_FIRST=1 so the level starts from a clean install" >&2
+  exit 1
+fi
 if [ -n "${GITHUB_RUN_ID:-}" ]; then
   DEFAULT_RUN_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT:-1}"
 else
@@ -112,8 +124,15 @@ if [ -z "$COLD_SCENARIO" ]; then
   exit 0
 fi
 
+LEVEL_ARGS=()
+if [ -n "$L1_ATTRIBUTION_LEVEL" ]; then
+  LEVEL_ARGS=(-e L1_ATTRIBUTION_LEVEL "$L1_ATTRIBUTION_LEVEL")
+fi
+if [ "$WIPE_AFTER" = "1" ]; then
+  trap 'adb shell pm clear "$TARGET_PKG" || true' EXIT
+fi
 run_instrumented io.branch.gptdriver.tests.ScenarioLinkGenerator \
-  -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID"
+  -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID" ${LEVEL_ARGS[@]+"${LEVEL_ARGS[@]}"}
 LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
 if [ -z "$LINK_URL" ]; then
   echo "ScenarioLinkGenerator reported no link." >&2
@@ -147,6 +166,7 @@ else
   adb shell "run-as $TARGET_PKG sh -c 'rm -f $CAPTURE'" || true
 fi
 
+# Explicit-package delivery bypasses App Link verification, so the API level does not change the receiver.
 # Resolved against the package, not a named component, so the manifest still
 # has to declare the link's host. One quoted string, so the device shell
 # cannot split the URL.
