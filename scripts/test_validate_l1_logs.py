@@ -407,3 +407,55 @@ class ScenarioContractTests(unittest.TestCase):
         # derived from reported the token rather than the link payload. The
         # counts still earn their place: they catch a second open reappearing.
         self.assertEqual(v.contract_for("N1")["fields"], {})
+
+
+def _quiet(fn, *args):
+    with redirect_stdout(io.StringIO()):
+        return fn(*args)
+
+
+class AttributionTierTests(unittest.TestCase):
+    """Required fields tiered by the request's own cpp_level, as on iOS.
+    At NONE the SDK strips the device identifiers before sending."""
+
+    NONE_FIXTURE = "n3_attribution_none.txt"
+    STRIPPED_AT_NONE = {"local_ip", "anon_id", "first_install_time", "is_hardware_id_real"}
+
+    def _deeplink(self, fixture):
+        entries = v.parse_branch_logs(_fixture(fixture))
+        return [e for e in entries if e["uri"] == "/v3/deeplink"]
+
+    def test_a_none_resolve_passes_required_fields(self):
+        errors, _ = _run_validation(self.NONE_FIXTURE)
+        self.assertEqual(errors, [], f"Unexpected errors: {errors}")
+
+    def test_every_other_level_still_requires_anon_id(self):
+        for level in ("FULL", "REDUCED", "MINIMAL", None):
+            with self.subTest(cpp_level=level):
+                entries = self._deeplink("c1_installed_link.txt")
+                entries[0]["request"].pop("anon_id")
+                if level is not None:
+                    entries[0]["request"]["cpp_level"] = level
+                errors = _quiet(v.validate_entries, entries)
+                self.assertTrue(any("'anon_id'" in e for e in errors), errors)
+
+    def test_none_drops_exactly_the_four_stripped_fields(self):
+        full = set(v.required_fields_for("/v3/deeplink", {"cpp_level": "FULL"}))
+        for level in ("NONE", "none"):
+            with self.subTest(cpp_level=level):
+                none = set(v.required_fields_for("/v3/deeplink", {"cpp_level": level}))
+                self.assertEqual(full - none, self.STRIPPED_AT_NONE)
+
+    def test_always_fields_survive_every_level(self):
+        for request in ({}, {"cpp_level": "FULL"}, {"cpp_level": "REDUCED"},
+                        {"cpp_level": "MINIMAL"}, {"cpp_level": "NONE"}):
+            with self.subTest(request=request):
+                fields = v.required_fields_for("/v3/deeplink", request)
+                for field in ("branch_key", "sdk", "wifi"):
+                    self.assertIn(field, fields)
+
+    def test_a_none_resolve_without_tracking_disabled_fails(self):
+        entries = self._deeplink(self.NONE_FIXTURE)
+        entries[0]["request"].pop("tracking_disabled")
+        errors = _quiet(v.validate_entries, entries)
+        self.assertTrue(any("'tracking_disabled'" in e for e in errors), errors)
