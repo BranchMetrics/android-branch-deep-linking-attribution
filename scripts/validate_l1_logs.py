@@ -338,6 +338,14 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {},
     },
+    # N3 attribution_none: design "Track Open after Deep Link", if CPP is NONE no
+    # /v3/events/open is sent; the resolve goes out stripped and marked.
+    "N3": {
+        "counts": {"/v3/deeplink": 1, "/v3/events/open": 0},
+        "order": (),
+        "fields": {"/v3/deeplink": {"tracking_disabled": 1, "randomized_device_token": 0,
+                   "randomized_bundle_token": 0, "hardware_id": 0, "anon_id": 0}},
+    },
     # C3 cold_firstInstall: the link starts the app on a device with no prior
     # install. The install is a /v3/events/open like any other on 6.0, decided
     # by randomizedBundleToken == nil, so its missing token is what marks it.
@@ -386,6 +394,7 @@ SCENARIO_CONTRACTS = {
 SCENARIO_LINK_MARKERS = {
     "C3": {"l1_scenario": "C3"},
     "C1": {"l1_scenario": "C1"},
+    "N3": {"l1_scenario": "N3"},
 }
 
 
