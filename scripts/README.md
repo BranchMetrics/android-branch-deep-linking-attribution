@@ -38,9 +38,9 @@ The required field list lives at the top of `validate_l1_logs.py`:
   `not_none` (`local_ip` and the `/v3` session fields) at every level except
   `NONE`, and `none_only` (`tracking_disabled` on `/v3`) at `NONE`.
 
-Required-field checks are scoped to `/v1/*` only. Captured non-v1
-endpoints (e.g. `/v3/events/*`) get their payload printed for visibility
-but do not fail the run — the L1 contract covers v1 only.
+Required-field checks apply to the endpoints in `REQUIRED_PER_ENDPOINT`:
+`/v1/*`, `/v3/deeplink` and `/v3/events/open`. Other captured endpoints get
+their payload printed for visibility but do not fail the run.
 
 Lookups tolerate `user_data` nesting so a future move from top-level to
 nested placement does not break the gate.
