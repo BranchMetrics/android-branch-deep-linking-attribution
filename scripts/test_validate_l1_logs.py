@@ -31,6 +31,7 @@ SCENARIO_FIXTURES = {
     "C3": "c3_first_install_link.txt",
     "C1": "c1_installed_link.txt",
     "LINK": "link_generation.txt",
+    "N3": "n3_attribution_none.txt",
 }
 
 
@@ -301,6 +302,8 @@ class ScenarioContractTests(unittest.TestCase):
         # contract must reject it. If one of these ever passes, the contract
         # has drifted back onto the defect.
         for scenario in SCENARIO_FIXTURES:
+            if v.contract_for(scenario)["counts"].get("/v3/events/open") == 0:
+                continue
             entries = self._entries(scenario)
             first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
             duplicated = entries + [dict(first_open, request=dict(first_open["request"]))]
@@ -374,7 +377,7 @@ class ScenarioContractTests(unittest.TestCase):
                 self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
 
     def test_each_cold_scenario_resolves_its_own_link(self):
-        for scenario in ("C3", "C1"):
+        for scenario in ("C3", "C1", "N3"):
             with self.subTest(scenario=scenario):
                 expected = v.SCENARIO_LINK_MARKERS[scenario]
                 self.assertEqual(v.assert_resolved(self._resolved(scenario), expected), [])
@@ -459,3 +462,30 @@ class AttributionTierTests(unittest.TestCase):
         entries[0]["request"].pop("tracking_disabled")
         errors = _quiet(v.validate_entries, entries)
         self.assertTrue(any("'tracking_disabled'" in e for e in errors), errors)
+
+
+class N3ContractTests(unittest.TestCase):
+    """N3 attribution_none: at level NONE the link resolve goes out stripped
+    and marked, and no open follows it."""
+
+    def _entries(self, fixture):
+        return v.collapse_retries(v.parse_branch_logs(_fixture(fixture)))
+
+    def test_an_open_fails_N3(self):
+        opened = next(e for e in self._entries("c1_installed_link.txt") if e["uri"] == "/v3/events/open")
+        entries = self._entries("n3_attribution_none.txt") + [opened]
+        errors = v.assert_contract(entries, v.contract_for("N3"))
+        self.assertIn("'/v3/events/open' must not be captured", " ".join(errors))
+
+    def test_a_resolve_that_keeps_the_device_token_fails_N3(self):
+        entries = self._entries("n3_attribution_none.txt")
+        entries[0]["request"]["randomized_device_token"] = "2222222222222222222"
+        errors = v.assert_contract(entries, v.contract_for("N3"))
+        self.assertIn("No '/v3/deeplink' request may carry 'randomized_device_token'", " ".join(errors))
+
+    def test_a_failed_resolve_fails_N3(self):
+        errors = _quiet(
+            v.validate_entries, self._entries("n3_attribution_none.txt"),
+            v.contract_for("N3"), [], v.SCENARIO_LINK_MARKERS.get("N3"),
+        )
+        self.assertTrue(any("none" in e for e in errors), errors)
