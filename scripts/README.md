@@ -34,6 +34,9 @@ The required field list lives at the top of `validate_l1_logs.py`:
   `randomized_device_token` and `randomized_bundle_token` on `/v1/open`;
   and `connection_type` on both `/v1/install` and `/v1/open` (only emitted
   on init/event requests, so `/v1/url` legitimately lacks it).
+- Tiers, per request by its own `cpp_level`: `always` at every level,
+  `not_none` (`local_ip` and the `/v3` session fields) at every level except
+  `NONE`, and `none_only` (`tracking_disabled` on `/v3`) at `NONE`.
 
 Required-field checks are scoped to `/v1/*` only. Captured non-v1
 endpoints (e.g. `/v3/events/*`) get their payload printed for visibility
