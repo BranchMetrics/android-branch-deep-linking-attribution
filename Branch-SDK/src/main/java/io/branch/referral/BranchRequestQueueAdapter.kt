@@ -238,10 +238,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     fun clear() {
         BranchLogger.v("BranchRequestQueueAdapter.clear called")
-        adapterScope.launch {
-            newQueue.clear()
-            BranchLogger.v("BranchRequestQueueAdapter.clear completed")
-        }
+        newQueue.clear()
+        BranchLogger.v("BranchRequestQueueAdapter.clear completed")
     }
     
     private fun requestNeedsSession(request: ServerRequest): Boolean {
