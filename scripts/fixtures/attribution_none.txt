@@ -1,0 +1,3 @@
+posting to https://api2.branch.io/v3/deeplink
+Post value = {"android_app_link_url":"https://bnctestbed.test-app.link/fixture-attribution_none","app_version":"5.20.999","branch_key":"key_live_fixtureFixtureFixtureFi","branch_sdk_request_timestamp":1789132932327,"branch_sdk_request_unique_id":"dd76ab18-8ba9-47d3-9371-41ada10d4039-2026091113","brand":"Google","country":"US","cpp_level":"NONE","language":"en","model":"sdk_gphone64_arm64","os":"Android","os_version":34,"screen_dpi":480,"screen_height":2769,"screen_width":1344,"sdk":"android5.20.999","tracking_disabled":true,"ui_mode":"UI_MODE_TYPE_NORMAL","wifi":false}
+Deep link params: {"+clicked_branch_link":true,"l1_run_id":"fixture-run","l1_scenario":"attribution_none"}
