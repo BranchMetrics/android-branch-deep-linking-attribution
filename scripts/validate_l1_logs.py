@@ -322,10 +322,13 @@ def collapse_retries(entries):
 # byte-compatible on purpose: a contract that reads differently per platform
 # is a parity gap wearing a helper's clothes.
 SCENARIO_CONTRACTS = {
-    # Every contract is derived from a real capture. N1's is less the
+    # Every contract is derived from a real capture. organic_open's is less the
     # duplicate /v3/events/open that EMT-4136 removed.
+    #
+    # Every entry below is a test-plan scenario except link_generation, which
+    # is the harness run that creates the link cold_firstInstall opens.
 
-    # N1 organic_open: a launch with no link. MainActivity.onCreate resolves
+    # organic_open: a launch with no link. MainActivity.onCreate resolves
     # unconditionally, so a /v3/deeplink with no link precedes the open, the
     # nil-input resolve the beta design uses as the deferred link check.
     #
@@ -333,24 +336,24 @@ SCENARIO_CONTRACTS = {
     # open carries no link data, and the measurement that produced these shapes
     # reported the token rather than the link payload. The exact counts still
     # earn their place: they are what catches a second open reappearing.
-    "N1": {
+    "organic_open": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {},
     },
-    # N3 attribution_none: design "Track Open after Deep Link", if CPP is NONE no
+    # attribution_none: design "Track Open after Deep Link", if CPP is NONE no
     # /v3/events/open is sent; the resolve goes out stripped and marked.
-    "N3": {
+    "attribution_none": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 0},
         "order": (),
         "fields": {"/v3/deeplink": {"tracking_disabled": 1, "randomized_device_token": 0,
                    "randomized_bundle_token": 0, "hardware_id": 0, "anon_id": 0}},
     },
-    # C3 cold_firstInstall: the link starts the app on a device with no prior
+    # cold_firstInstall: the link starts the app on a device with no prior
     # install. The install is a /v3/events/open like any other on 6.0, decided
     # by randomizedBundleToken == nil, so its missing token is what marks it.
     # /v1/url is 0 because the link is generated outside this capture.
-    "C3": {
+    "cold_firstInstall": {
         "counts": {
             "/v3/deeplink": 1,
             "/v3/events/open": 1,
@@ -362,11 +365,12 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"randomized_bundle_token": 0},
         },
     },
-    # C1 cold_https: the link starts the app on a device that already has it.
-    # The open carries the token, which is what separates it from C3.
+    # cold_https: the link starts the app on a device that already has it.
+    # The open carries the token, which is what separates it from
+    # cold_firstInstall.
     # /v3/events/custom is not counted in either: the TestBed logs one from
     # onStart, and whether it reaches the wire depends on init timing.
-    "C1": {
+    "cold_https": {
         "counts": {
             "/v3/deeplink": 1,
             "/v3/events/open": 1,
@@ -378,10 +382,10 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"randomized_bundle_token": 1},
         },
     },
-    # LINK: the generation run that precedes C3, judged on its own capture.
-    # It holds the only /v1/url, so it carries the EMT-4199 rule that
-    # /v1/url sends no hardware_id.
-    "LINK": {
+    # link_generation: the generation run that precedes
+    # cold_firstInstall, judged on its own capture. It holds the only /v1/url,
+    # so it carries the EMT-4199 rule that /v1/url sends no hardware_id.
+    "link_generation": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {"/v1/url": {"hardware_id": 0}},
@@ -392,9 +396,9 @@ SCENARIO_CONTRACTS = {
 # params the TestBed receives. Kept out of SCENARIO_CONTRACTS so the contracts
 # stay byte-compatible with iOS.
 SCENARIO_LINK_MARKERS = {
-    "C3": {"l1_scenario": "C3"},
-    "C1": {"l1_scenario": "C1"},
-    "N3": {"l1_scenario": "N3"},
+    "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
+    "cold_https": {"l1_scenario": "cold_https"},
+    "attribution_none": {"l1_scenario": "attribution_none"},
 }
 
 
