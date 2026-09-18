@@ -296,9 +296,11 @@ class ScenarioArtifactGuards(unittest.TestCase):
     def _keep_set(self):
         """Derived from the validator, not restated here, so the two cannot drift.
 
-        Plus the two documented additions: app_version, which the cold fixtures already
-        carried, and external_intent_uri, which is what lets the two warm scenarios
-        contract their entry points in opposite directions."""
+        Plus the three documented additions: app_version, which the cold fixtures already
+        carried, external_intent_uri, which is what lets the two warm scenarios
+        contract their entry points in opposite directions, and cpp_level, which
+        required_fields_for reads to pick a request's tier and which therefore appears
+        in no REQUIRED list for the derivation above to find."""
         keep = set()
         for name in dir(v):
             if not name.startswith("REQUIRED"):
@@ -313,7 +315,7 @@ class ScenarioArtifactGuards(unittest.TestCase):
         for contract in v.SCENARIO_CONTRACTS.values():
             for rules in contract["fields"].values():
                 keep |= set(rules)
-        return keep | {"app_version", "external_intent_uri"}
+        return keep | {"app_version", "external_intent_uri", "cpp_level"}
 
     def _payloads(self, fixture_name):
         text = open(_fixture(fixture_name), encoding="utf-8").read()
