@@ -34,6 +34,7 @@ SCENARIO_FIXTURES = {
     "link_generation": "link_generation.txt",
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
+    "attribution_none": "attribution_none.txt",
 }
 
 
@@ -403,6 +404,8 @@ class ScenarioContractTests(unittest.TestCase):
         # contract must reject it. If one of these ever passes, the contract
         # has drifted back onto the defect.
         for scenario in SCENARIO_FIXTURES:
+            if v.contract_for(scenario)["counts"].get("/v3/events/open") == 0:
+                continue
             entries = self._entries(scenario)
             first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
             duplicated = entries + [dict(first_open, request=dict(first_open["request"]))]
@@ -494,7 +497,7 @@ class ScenarioContractTests(unittest.TestCase):
                 self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
 
     def test_each_cold_scenario_resolves_its_own_link(self):
-        for scenario in ("cold_firstInstall", "cold_https"):
+        for scenario in ("cold_firstInstall", "cold_https", "attribution_none"):
             with self.subTest(scenario=scenario):
                 expected = v.SCENARIO_LINK_MARKERS[scenario]
                 self.assertEqual(v.assert_resolved(self._resolved(scenario), expected), [])
@@ -533,3 +536,82 @@ class ScenarioContractTests(unittest.TestCase):
         # payload. The counts still earn their place: they catch a second open
         # reappearing.
         self.assertEqual(v.contract_for("organic_open")["fields"], {})
+
+
+def _quiet(fn, *args):
+    with redirect_stdout(io.StringIO()):
+        return fn(*args)
+
+
+class AttributionTierTests(unittest.TestCase):
+    """Required fields tiered by the request's own cpp_level, as on iOS.
+    At NONE the SDK strips the device identifiers before sending."""
+
+    NONE_FIXTURE = "attribution_none.txt"
+    STRIPPED_AT_NONE = {"local_ip", "anon_id", "first_install_time", "is_hardware_id_real"}
+
+    def _deeplink(self, fixture):
+        entries = v.parse_branch_logs(_fixture(fixture))
+        return [e for e in entries if e["uri"] == "/v3/deeplink"]
+
+    def test_a_none_resolve_passes_required_fields(self):
+        errors, _ = _run_validation(self.NONE_FIXTURE)
+        self.assertEqual(errors, [], f"Unexpected errors: {errors}")
+
+    def test_every_other_level_still_requires_anon_id(self):
+        for level in ("FULL", "REDUCED", "MINIMAL", None):
+            with self.subTest(cpp_level=level):
+                entries = self._deeplink("cold_https.txt")
+                entries[0]["request"].pop("anon_id")
+                if level is not None:
+                    entries[0]["request"]["cpp_level"] = level
+                errors = _quiet(v.validate_entries, entries)
+                self.assertTrue(any("'anon_id'" in e for e in errors), errors)
+
+    def test_none_drops_exactly_the_four_stripped_fields(self):
+        full = set(v.required_fields_for("/v3/deeplink", {"cpp_level": "FULL"}))
+        for level in ("NONE", "none"):
+            with self.subTest(cpp_level=level):
+                none = set(v.required_fields_for("/v3/deeplink", {"cpp_level": level}))
+                self.assertEqual(full - none, self.STRIPPED_AT_NONE)
+
+    def test_always_fields_survive_every_level(self):
+        for request in ({}, {"cpp_level": "FULL"}, {"cpp_level": "REDUCED"},
+                        {"cpp_level": "MINIMAL"}, {"cpp_level": "NONE"}):
+            with self.subTest(request=request):
+                fields = v.required_fields_for("/v3/deeplink", request)
+                for field in ("branch_key", "sdk", "wifi"):
+                    self.assertIn(field, fields)
+
+    def test_a_none_resolve_without_tracking_disabled_fails(self):
+        entries = self._deeplink(self.NONE_FIXTURE)
+        entries[0]["request"].pop("tracking_disabled")
+        errors = _quiet(v.validate_entries, entries)
+        self.assertTrue(any("'tracking_disabled'" in e for e in errors), errors)
+
+
+class AttributionNoneContractTests(unittest.TestCase):
+    """attribution_none: at level NONE the link resolve goes out stripped and
+    marked, and no open follows it."""
+
+    def _entries(self, fixture):
+        return v.collapse_retries(v.parse_branch_logs(_fixture(fixture)))
+
+    def test_an_open_fails_attribution_none(self):
+        opened = next(e for e in self._entries("cold_https.txt") if e["uri"] == "/v3/events/open")
+        entries = self._entries("attribution_none.txt") + [opened]
+        errors = v.assert_contract(entries, v.contract_for("attribution_none"))
+        self.assertIn("'/v3/events/open' must not be captured", " ".join(errors))
+
+    def test_a_resolve_that_keeps_the_device_token_fails_attribution_none(self):
+        entries = self._entries("attribution_none.txt")
+        entries[0]["request"]["randomized_device_token"] = "2222222222222222222"
+        errors = v.assert_contract(entries, v.contract_for("attribution_none"))
+        self.assertIn("No '/v3/deeplink' request may carry 'randomized_device_token'", " ".join(errors))
+
+    def test_a_failed_resolve_fails_attribution_none(self):
+        errors = _quiet(
+            v.validate_entries, self._entries("attribution_none.txt"),
+            v.contract_for("attribution_none"), [], v.SCENARIO_LINK_MARKERS.get("attribution_none"),
+        )
+        self.assertTrue(any("none" in e for e in errors), errors)
