@@ -28,12 +28,12 @@ TEST_APK="Branch-SDK-GPTDriver/build/outputs/apk/debug/Branch-SDK-GPTDriver-debu
 TARGET_PKG="io.branch.branchandroidtestbed"
 TEST_PKG="io.branch.gptdriver"
 RUNNER="androidx.test.runner.AndroidJUnitRunner"
-# Both default to what this script did before they existed, so a caller that
-# sets neither is unaffected. TEST_CLASS selects the instrumented class to
-# drive; OUTPUT_LOG names where the pulled capture lands. One scenario per
-# invocation needs both, because the capture file accumulates across launches.
+# A caller that sets neither is unaffected: TEST_CLASS keeps its original
+# default, OUTPUT_LOG is defaulted below. TEST_CLASS selects the instrumented
+# class to drive; OUTPUT_LOG names where the pulled capture lands. One
+# scenario per invocation needs both: the capture accumulates across launches.
 TEST_CLASS="${TEST_CLASS:-io.branch.gptdriver.tests.LinkCreationDeterministicTest}"
-OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
+OUTPUT_LOG="${OUTPUT_LOG:-}"
 
 # Both default off. CLEAR_LOG truncates the capture file, which the app only
 # ever appends to. WIPE_FIRST runs `pm clear`, since `adb install -r` keeps app
@@ -49,6 +49,15 @@ COLD_SCENARIO="${COLD_SCENARIO:-}"
 COLD_WIPE="${COLD_WIPE:-0}"
 COLD_SETTLE_S="${COLD_SETTLE_S:-12}"
 LINK_LOG="${LINK_LOG:-}"
+
+# A cold run names its capture after its scenario, so a caller states the
+# name once. Anything else keeps this script's original default.
+if [ -n "$COLD_SCENARIO" ]; then
+  OUTPUT_LOG="${OUTPUT_LOG:-wire-$COLD_SCENARIO.txt}"
+else
+  OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
+fi
+
 if [ -n "${GITHUB_RUN_ID:-}" ]; then
   DEFAULT_RUN_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT:-1}"
 else
