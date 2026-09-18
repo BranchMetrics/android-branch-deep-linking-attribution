@@ -14,7 +14,8 @@ import io.branch.branchandroidtestbed.R
 import org.junit.Test
 
 /**
- * W2 warm_uriScheme — W1's launch state, entered through the URI scheme instead of https.
+ * warm_uriScheme: warm_https_onNewIntent's launch state, entered through the URI scheme
+ * instead of https.
  *
  * Same shape as W1WarmHttpsWireTest: launch, generate a link so the device is a returning
  * one, background, deliver, settle. Only the delivered URI differs.
@@ -29,8 +30,9 @@ import org.junit.Test
  * branchtest://?gclid=12345. The TestBed's button generates https links only, so there is no
  * scheme link with a real click id to deliver here.
  *
- * No ActivityScenarioRule, for the reason W1 documents: the rule's after() closes a scenario
- * that has lost lifecycle control once a new intent arrived through startActivity.
+ * No ActivityScenarioRule, for the reason W1WarmHttpsWireTest documents: the rule's after()
+ * closes a scenario that has lost lifecycle control once a new intent arrived through
+ * startActivity.
  *
  * Produces no assertion of its own. The capture is the output.
  */
@@ -54,7 +56,7 @@ class W2WarmUriSchemeWireTest {
         settle()
     }
 
-    /** Not read back: this exists so the device is a returning one, as in W1. */
+    /** Not read back: this exists so the device is a returning one, as in the https case. */
     private fun generateLink() {
         onView(withId(R.id.cmdRefreshShortURL)).perform(click())
         Thread.sleep(LINK_MS)
