@@ -40,13 +40,15 @@ REQUIRED_COMMON = [
     "os_version",
     "country",
     "language",
-    "local_ip",
     "screen_dpi",
     "screen_height",
     "screen_width",
     "wifi",
     "ui_mode",
 ]
+
+# Stripped at attribution level NONE, so required only at every other level.
+REQUIRED_COMMON_NOT_NONE = ["local_ip"]
 
 # hardware_id is deliberately not common. ServerRequestCreateUrl builds the
 # payload and then removes anon_id, is_hardware_id_real and hardware_id before
@@ -76,6 +78,9 @@ REQUIRED_COMMON = [
 #   connection_type       — in the iOS common list, absent from both /v3 payloads here.
 REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
 
+# Added by ServerRequestInitSession.prepareExecuteWithoutTracking at level NONE.
+REQUIRED_V3_NONE_ONLY = ["tracking_disabled"]
+
 # An endpoint absent from this table has no L1 contract yet: its payload is printed but nothing is
 # asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
 # PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
@@ -85,13 +90,41 @@ REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
 # lookup_field already resolves, but it carries no `wifi` — a REQUIRED_COMMON field — so a v2
 # contract cannot be expressed by extending the common list. iOS gives v2 its own complete list
 # instead. That mechanism change is out of scope here.
+#
+# Tiered by the request's own cpp_level, as on iOS: `always` at every level,
+# `not_none` at every level except NONE, `none_only` at NONE. /v1/* stay flat.
 REQUIRED_PER_ENDPOINT = {
-    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time", "hardware_id"],
-    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token", "hardware_id"],
-    "/v1/url": [],
-    "/v3/deeplink": REQUIRED_V3_SESSION,
-    "/v3/events/open": REQUIRED_V3_SESSION,
+    "/v1/install": {
+        "always": REQUIRED_COMMON + REQUIRED_COMMON_NOT_NONE
+        + ["connection_type", "is_hardware_id_real", "first_install_time", "hardware_id"],
+        "not_none": [],
+        "none_only": [],
+    },
+    "/v1/open": {
+        "always": REQUIRED_COMMON + REQUIRED_COMMON_NOT_NONE
+        + ["connection_type", "randomized_device_token", "randomized_bundle_token", "hardware_id"],
+        "not_none": [],
+        "none_only": [],
+    },
+    "/v1/url": {
+        "always": REQUIRED_COMMON + REQUIRED_COMMON_NOT_NONE,
+        "not_none": [],
+        "none_only": [],
+    },
+    "/v3/deeplink": {
+        "always": REQUIRED_COMMON,
+        "not_none": REQUIRED_COMMON_NOT_NONE + REQUIRED_V3_SESSION,
+        "none_only": REQUIRED_V3_NONE_ONLY,
+    },
+    "/v3/events/open": {
+        "always": REQUIRED_COMMON,
+        "not_none": REQUIRED_COMMON_NOT_NONE + REQUIRED_V3_SESSION,
+        "none_only": REQUIRED_V3_NONE_ONLY,
+    },
 }
+
+# Wire spelling of Defines.BranchAttributionLevel.NONE.
+ATTRIBUTION_LEVEL_NONE = "NONE"
 
 
 def parse_branch_logs(file_path):
@@ -164,6 +197,29 @@ def is_present(value):
     return True
 
 
+def attribution_level(request):
+    """Return the request's cpp_level uppercased, or None when it carries none.
+    The SDK writes cpp_level only once a level was set."""
+    value = lookup_field(request, "cpp_level")
+    if not isinstance(value, str) or value == "":
+        return None
+    return value.upper()
+
+
+def required_fields_for(uri, request):
+    """Return the required fields for one request at its own attribution
+    level, or None when the endpoint has no contract."""
+    contract = REQUIRED_PER_ENDPOINT.get(uri)
+    if contract is None:
+        return None
+    fields = list(contract["always"])
+    if attribution_level(request) == ATTRIBUTION_LEVEL_NONE:
+        fields.extend(contract["none_only"])
+    else:
+        fields.extend(contract["not_none"])
+    return fields
+
+
 def validate_request(entry, idx, total):
     """Print the full payload + per-field table for one request. Return a
     list of error strings (empty when everything required is present).
@@ -191,11 +247,11 @@ def validate_request(entry, idx, total):
     print(json.dumps(request, indent=2, sort_keys=True))
     print()
 
-    if uri not in REQUIRED_PER_ENDPOINT:
+    fields = required_fields_for(uri, request)
+    if fields is None:
         print(f"(No L1 contract for this endpoint; required-field checks skipped)")
         return errors
 
-    fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT[uri]
     print(f"Required fields ({len(fields)}):")
     for field in fields:
         value = lookup_field(request, field)
@@ -269,9 +325,8 @@ SCENARIO_CONTRACTS = {
     # Every contract is derived from a real capture. organic_open's is less the
     # duplicate /v3/events/open that EMT-4136 removed.
     #
-    # organic_open, cold_firstInstall and cold_https are test-plan scenarios.
-    # link_generation is not: it is the harness run that creates the link
-    # cold_firstInstall opens.
+    # Every entry below is a test-plan scenario except link_generation, which
+    # is the harness run that creates the link cold_firstInstall opens.
 
     # organic_open: a launch with no link. MainActivity.onCreate resolves
     # unconditionally, so a /v3/deeplink with no link precedes the open, the
@@ -285,6 +340,14 @@ SCENARIO_CONTRACTS = {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {},
+    },
+    # attribution_none: design "Track Open after Deep Link", if CPP is NONE no
+    # /v3/events/open is sent; the resolve goes out stripped and marked.
+    "attribution_none": {
+        "counts": {"/v3/deeplink": 1, "/v3/events/open": 0},
+        "order": (),
+        "fields": {"/v3/deeplink": {"tracking_disabled": 1, "randomized_device_token": 0,
+                   "randomized_bundle_token": 0, "hardware_id": 0, "anon_id": 0}},
     },
     # cold_firstInstall: the link starts the app on a device with no prior
     # install. The install is a /v3/events/open like any other on 6.0, decided
@@ -335,6 +398,7 @@ SCENARIO_CONTRACTS = {
 SCENARIO_LINK_MARKERS = {
     "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
     "cold_https": {"l1_scenario": "cold_https"},
+    "attribution_none": {"l1_scenario": "attribution_none"},
 }
 
 
