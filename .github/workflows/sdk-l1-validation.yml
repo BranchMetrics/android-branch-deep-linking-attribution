@@ -100,7 +100,7 @@ jobs:
           # block above; the script reads it from the environment, so we no
           # longer pass the secret as a positional argument (avoids argv leak).
           script: |
-            TEST_CLASS=io.branch.gptdriver.tests.N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
 

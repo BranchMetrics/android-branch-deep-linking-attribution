@@ -32,7 +32,15 @@ RUNNER="androidx.test.runner.AndroidJUnitRunner"
 # default, OUTPUT_LOG is defaulted below. TEST_CLASS selects the instrumented
 # class to drive; OUTPUT_LOG names where the pulled capture lands. One
 # scenario per invocation needs both: the capture accumulates across launches.
-TEST_CLASS="${TEST_CLASS:-io.branch.gptdriver.tests.LinkCreationDeterministicTest}"
+#
+# The L1 drivers share one package, so TEST_CLASS takes a bare class name. A
+# name that already carries a package is passed through untouched.
+TEST_CLASS_PACKAGE="${TEST_CLASS_PACKAGE:-$TEST_PKG.tests}"
+TEST_CLASS="${TEST_CLASS:-LinkCreationDeterministicTest}"
+case "$TEST_CLASS" in
+  *.*) ;;
+  *) TEST_CLASS="$TEST_CLASS_PACKAGE.$TEST_CLASS" ;;
+esac
 OUTPUT_LOG="${OUTPUT_LOG:-}"
 
 # Both default off. CLEAR_LOG truncates the capture file, which the app only
@@ -121,7 +129,7 @@ if [ -z "$COLD_SCENARIO" ]; then
   exit 0
 fi
 
-run_instrumented io.branch.gptdriver.tests.ScenarioLinkGenerator \
+run_instrumented "$TEST_CLASS_PACKAGE.ScenarioLinkGenerator" \
   -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID"
 LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
 if [ -z "$LINK_URL" ]; then
