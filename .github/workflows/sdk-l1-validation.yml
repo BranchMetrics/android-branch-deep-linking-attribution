@@ -10,9 +10,11 @@ on:
       - "Branch-SDK/src/main/**"
       - "Branch-SDK-TestBed/**"
       - "Branch-SDK-GPTDriver/**"
-      - "scripts/validate_l1_logs.py"
-      - "scripts/test_validate_l1_logs.py"
-      - "scripts/run_l1_instrumented.sh"
+      # scripts/** rather than naming each file: a named list goes stale silently the next time a
+      # file moves or a new one is added under scripts/, the same trap the unit-test invocation
+      # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
+      # costs a missed regression, which is the worse failure for a gate.
+      - "scripts/**"
       - ".github/workflows/sdk-l1-validation.yml"
   pull_request:
     branches: [master, main, feature/mobileboost-e2e-tests, "6.0.0-beta.0"]
@@ -22,9 +24,11 @@ on:
       - "Branch-SDK/src/main/**"
       - "Branch-SDK-TestBed/**"
       - "Branch-SDK-GPTDriver/**"
-      - "scripts/validate_l1_logs.py"
-      - "scripts/test_validate_l1_logs.py"
-      - "scripts/run_l1_instrumented.sh"
+      # scripts/** rather than naming each file: a named list goes stale silently the next time a
+      # file moves or a new one is added under scripts/, the same trap the unit-test invocation
+      # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
+      # costs a missed regression, which is the worse failure for a gate.
+      - "scripts/**"
       - ".github/workflows/sdk-l1-validation.yml"
   workflow_dispatch:
 
@@ -58,7 +62,7 @@ jobs:
       # modules using `ANDROIDX_TEST_ORCHESTRATOR` + `clearPackageData=true`, AGP's task
       # runner uninstalls the target package once the run finishes. The post-test
       # `adb shell run-as io.branch.branchandroidtestbed cat ...` then fails with
-      # `unknown package` and `branchlogs.txt` is never produced for L1 validation.
+      # `unknown package` and no capture is produced for L1 validation.
       - name: Build TestBed + GPTDriver APKs
         env:
           # Gradle maps ORG_GRADLE_PROJECT_<name> env vars to project properties,
@@ -72,6 +76,15 @@ jobs:
             :Branch-SDK-GPTDriver:assembleDebug \
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
+      # Each scenario gets its own capture file, because CustomBranchApp appends
+      # to the capture and nothing truncates it. Every scenario starts from wiped
+      # app data; the cold_https generation run makes the install its link then
+      # opens on. wire-link_generation.txt is cold_firstInstall's
+      # generation capture, where /v1/url is.
+      #
+      # One line per command: the emulator-runner action splits `script:` on
+      # newlines and runs each through its own `sh -c`, so a multi-line
+      # construct here would not survive.
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
         env:
@@ -86,7 +99,10 @@ jobs:
           # MOBILEBOOST_API_KEY is propagated to the script via the step `env:`
           # block above; the script reads it from the environment, so we no
           # longer pass the secret as a positional argument (avoids argv leak).
-          script: ./scripts/run_l1_instrumented.sh
+          script: |
+            TEST_CLASS=N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -96,11 +112,14 @@ jobs:
       # Self-test the validator first. A regression in validate_l1_logs.py
       # itself (wrong required field, broken parser) would otherwise
       # surface as a false PASS or a confusing failure on the real
-      # branchlogs.txt step. Unit tests run from the repo root so the
-      # `scripts.test_validate_l1_logs` module path resolves cleanly.
+      # branchlogs.txt step. Discovers every test_*.py under scripts/ rather
+      # than naming a module: a named list goes stale, silently, the next
+      # time a file is split for size -- discover cannot.
       - name: Run L1 Validator Unit Tests
-        run: python -m unittest scripts.test_validate_l1_logs -v
+        run: python -m unittest discover -s scripts -p "test_*.py" -v
 
+      # Each capture is judged against its own scenario's contract.
+      #
       # continue-on-error so the summary below still runs on a failure -- the
       # job is failed explicitly at the end.
       - name: Run L1 Validation Script
@@ -108,7 +127,20 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          python scripts/validate_l1_logs.py branchlogs.txt 2>&1 | tee /tmp/l1-output.txt
+          rc=0
+          check () {
+            echo "::group::$1"
+            if ! python scripts/validate_l1_logs.py "$2" --scenario "$1" 2>&1 \
+                 | sed "s/^FAILED:/FAILED: [$1]/" | tee -a /tmp/l1-output.txt; then
+              rc=1
+            fi
+            echo "::endgroup::"
+          }
+          check organic_open wire-organic_open.txt
+          check link_generation wire-link_generation.txt
+          check cold_firstInstall wire-cold_firstInstall.txt
+          check cold_https wire-cold_https.txt
+          exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
       # the job log.
@@ -116,9 +148,9 @@ jobs:
         if: always()
         run: |
           {
-            echo "### Layer 1 — SDK wire validation"
+            echo "### Layer 1: SDK wire validation"
             echo
-            grep -o 'posting to https://[^ ]*' branchlogs.txt 2>/dev/null \
+            grep -h -o 'posting to https://[^ ]*' wire-*.txt 2>/dev/null \
               | sed 's|.*api2.branch.io||' | sort | uniq -c > /tmp/l1-endpoints.txt || true
             if [ -s /tmp/l1-endpoints.txt ]; then
               echo "| endpoint | requests |"
@@ -130,14 +162,17 @@ jobs:
             echo
             echo "Scenario coverage:"
             echo
-            echo "No scenario is authored yet, so the endpoint table above is the only assertion this gate makes."
-            echo
             echo "| scenario group | status |"
             echo "| --- | --- |"
-            echo "| Cold (C1–C3) | not implemented |"
-            echo "| Warm (W1–W2) | not implemented |"
-            echo "| Hot (H1–H2) | not implemented |"
-            echo "| Negative / guards (N1–N4) | not implemented |"
+            if [ "${{ steps.validate.outcome }}" = "success" ]; then
+              echo "| Cold | cold_firstInstall and cold_https pass |"
+              echo "| Negative and guards | organic_open pass, no_stickiness, attribution_none and late_userActivity not implemented |"
+            else
+              echo "| Cold | see failures below |"
+              echo "| Negative and guards | see failures below |"
+            fi
+            echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
+            echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"
@@ -151,7 +186,8 @@ jobs:
               echo "<details><summary>Captured wire log</summary>"
               echo
               echo '```'
-              if [ -s branchlogs.txt ]; then head -c 40000 branchlogs.txt; echo; else echo "(branchlogs.txt is empty or missing)"; fi
+              cat wire-*.txt > /tmp/l1-all.txt 2>/dev/null || true
+              if [ -s /tmp/l1-all.txt ]; then head -c 40000 /tmp/l1-all.txt; echo; else echo "(no capture was produced)"; fi
               echo '```'
               echo
               echo "</details>"
@@ -166,7 +202,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: branch-wire-logs
-          path: branchlogs.txt
+          path: wire-*.txt
 
       - name: Fail the job if validation failed
         if: steps.validate.outcome == 'failure'
