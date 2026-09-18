@@ -10,9 +10,11 @@ on:
       - "Branch-SDK/src/main/**"
       - "Branch-SDK-TestBed/**"
       - "Branch-SDK-GPTDriver/**"
-      - "scripts/validate_l1_logs.py"
-      - "scripts/test_validate_l1_logs.py"
-      - "scripts/run_l1_instrumented.sh"
+      # scripts/** rather than naming each file: a named list goes stale silently the next time a
+      # file moves or a new one is added under scripts/, the same trap the unit-test invocation
+      # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
+      # costs a missed regression, which is the worse failure for a gate.
+      - "scripts/**"
       - ".github/workflows/sdk-l1-validation.yml"
   pull_request:
     branches: [master, main, feature/mobileboost-e2e-tests, "6.0.0-beta.0"]
@@ -22,9 +24,11 @@ on:
       - "Branch-SDK/src/main/**"
       - "Branch-SDK-TestBed/**"
       - "Branch-SDK-GPTDriver/**"
-      - "scripts/validate_l1_logs.py"
-      - "scripts/test_validate_l1_logs.py"
-      - "scripts/run_l1_instrumented.sh"
+      # scripts/** rather than naming each file: a named list goes stale silently the next time a
+      # file moves or a new one is added under scripts/, the same trap the unit-test invocation
+      # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
+      # costs a missed regression, which is the worse failure for a gate.
+      - "scripts/**"
       - ".github/workflows/sdk-l1-validation.yml"
   workflow_dispatch:
 
@@ -96,10 +100,11 @@ jobs:
       # Self-test the validator first. A regression in validate_l1_logs.py
       # itself (wrong required field, broken parser) would otherwise
       # surface as a false PASS or a confusing failure on the real
-      # branchlogs.txt step. Unit tests run from the repo root so the
-      # `scripts.test_validate_l1_logs` module path resolves cleanly.
+      # branchlogs.txt step. Discovers every test_*.py under scripts/ rather
+      # than naming a module: a named list goes stale, silently, the next
+      # time a file is split for size -- discover cannot.
       - name: Run L1 Validator Unit Tests
-        run: python -m unittest scripts.test_validate_l1_logs -v
+        run: python -m unittest discover -s scripts -p "test_*.py" -v
 
       # continue-on-error so the summary below still runs on a failure -- the
       # job is failed explicitly at the end.
@@ -134,10 +139,10 @@ jobs:
             echo
             echo "| scenario group | status |"
             echo "| --- | --- |"
-            echo "| Cold (C1–C3) | not implemented |"
-            echo "| Warm (W1–W2) | not implemented |"
-            echo "| Hot (H1–H2) | not implemented |"
-            echo "| Negative / guards (N1–N4) | not implemented |"
+            echo "| Cold | not implemented |"
+            echo "| Warm | not implemented |"
+            echo "| Hot | not implemented |"
+            echo "| Negative and guards | not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"

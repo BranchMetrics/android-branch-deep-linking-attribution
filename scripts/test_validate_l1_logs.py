@@ -1,4 +1,6 @@
-"""Unit tests for the L1 wire-validation script.
+"""Unit tests for the L1 wire-validation script: parsing, the assertion engine, and
+retry-collapse. Per-scenario contract tests (harness, hot_uriScheme, ...) live in
+test_validate_l1_logs_contracts.py, split out to stay under the file-size cap.
 
 Run from the repo root:
 
@@ -221,54 +223,3 @@ class RetryCollapseTests(unittest.TestCase):
         entries = [self._entry("/a", "id-1"), self._entry("/a", "id-1")]
         contract = {"counts": {"/a": 1}, "order": (), "fields": {}}
         self.assertTrue(v.assert_contract(entries, contract))
-
-
-class HarnessContractTests(unittest.TestCase):
-    """The one contract the available measurement sustains.
-
-    Asserted through assert_contract rather than the CLI on purpose: the
-    fixture is a real capture from before EMT-4198 stamped the request
-    identifiers, so it still fails the per-request field checks. Those
-    failures are the defect that ticket fixes, and they are not what this
-    contract is about."""
-
-    def _entries(self):
-        return v.collapse_retries(v.parse_branch_logs(_fixture("harness_mixed_session.txt")))
-
-    def test_the_measured_capture_satisfies_the_contract(self):
-        errors = v.assert_contract(self._entries(), v.contract_for("harness"))
-        self.assertEqual(errors, [], f"Unexpected errors: {errors}")
-
-    def test_the_contract_traces_to_the_capture_it_was_written_from(self):
-        # Every count in the contract must be a fact about the fixture, not a
-        # number someone liked. This is the check that would have caught a
-        # contract written from the ticket text.
-        entries = self._entries()
-        uris = [e["uri"] for e in entries]
-        for endpoint, expected in v.contract_for("harness")["counts"].items():
-            self.assertEqual(uris.count(endpoint), expected, endpoint)
-
-    def test_a_missing_deeplink_fails(self):
-        entries = [e for e in self._entries() if e["uri"] != "/v3/deeplink"]
-        errors = v.assert_contract(entries, v.contract_for("harness"))
-        self.assertTrue(any("/v3/deeplink" in e for e in errors), errors)
-
-    def test_hardware_id_appearing_on_link_creation_fails(self):
-        # The EMT-4199 signal. Android strips hardware_id on /v1/url today; if
-        # that changes the gate must notice rather than pass quietly.
-        entries = self._entries()
-        for e in entries:
-            if e["uri"] == "/v1/url":
-                e["request"]["hardware_id"] = "something"
-        errors = v.assert_contract(entries, v.contract_for("harness"))
-        self.assertTrue(any("hardware_id" in e for e in errors), errors)
-
-    def test_the_registry_holds_only_measured_contracts(self):
-        # Replaces the empty-registry pin, which died the moment a contract
-        # existed. Every entry must name a fixture that exists.
-        for name in v.SCENARIO_CONTRACTS:
-            self.assertTrue(
-                os.path.exists(_fixture(f"{name}_mixed_session.txt"))
-                or os.path.exists(_fixture(f"{name}.txt")),
-                f"contract '{name}' has no fixture backing it",
-            )
