@@ -1,4 +1,6 @@
-"""Unit tests for the L1 wire-validation script.
+"""Unit tests for the L1 wire-validation script: parsing, the assertion engine, and
+retry-collapse. Per-scenario contract tests (harness, hot_uriScheme, ...) live in
+test_validate_l1_logs_contracts.py, split out to stay under the file-size cap.
 
 Run from the repo root:
 
@@ -35,6 +37,7 @@ SCENARIO_FIXTURES = {
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
     "attribution_none": "attribution_none.txt",
+    "hot_uriScheme": "hot_uriScheme.txt",
 }
 
 
