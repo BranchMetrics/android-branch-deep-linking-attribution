@@ -28,12 +28,20 @@ TEST_APK="Branch-SDK-GPTDriver/build/outputs/apk/debug/Branch-SDK-GPTDriver-debu
 TARGET_PKG="io.branch.branchandroidtestbed"
 TEST_PKG="io.branch.gptdriver"
 RUNNER="androidx.test.runner.AndroidJUnitRunner"
-# Both default to what this script did before they existed, so a caller that
-# sets neither is unaffected. TEST_CLASS selects the instrumented class to
-# drive; OUTPUT_LOG names where the pulled capture lands. One scenario per
-# invocation needs both, because the capture file accumulates across launches.
-TEST_CLASS="${TEST_CLASS:-io.branch.gptdriver.tests.LinkCreationDeterministicTest}"
-OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
+# A caller that sets neither is unaffected: TEST_CLASS keeps its original
+# default, OUTPUT_LOG is defaulted below. TEST_CLASS selects the instrumented
+# class to drive; OUTPUT_LOG names where the pulled capture lands. One
+# scenario per invocation needs both: the capture accumulates across launches.
+#
+# The L1 drivers share one package, so TEST_CLASS takes a bare class name. A
+# name that already carries a package is passed through untouched.
+TEST_CLASS_PACKAGE="${TEST_CLASS_PACKAGE:-$TEST_PKG.tests}"
+TEST_CLASS="${TEST_CLASS:-LinkCreationDeterministicTest}"
+case "$TEST_CLASS" in
+  *.*) ;;
+  *) TEST_CLASS="$TEST_CLASS_PACKAGE.$TEST_CLASS" ;;
+esac
+OUTPUT_LOG="${OUTPUT_LOG:-}"
 
 # Both default off. CLEAR_LOG truncates the capture file, which the app only
 # ever appends to. WIPE_FIRST runs `pm clear`, since `adb install -r` keeps app
@@ -61,6 +69,15 @@ if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$WIPE_FIRST" != "1" ]; then
   echo "L1_ATTRIBUTION_LEVEL needs WIPE_FIRST=1 so the level starts from a clean install" >&2
   exit 1
 fi
+
+# A cold run names its capture after its scenario, so a caller states the
+# name once. Anything else keeps this script's original default.
+if [ -n "$COLD_SCENARIO" ]; then
+  OUTPUT_LOG="${OUTPUT_LOG:-wire-$COLD_SCENARIO.txt}"
+else
+  OUTPUT_LOG="${OUTPUT_LOG:-branchlogs.txt}"
+fi
+
 if [ -n "${GITHUB_RUN_ID:-}" ]; then
   DEFAULT_RUN_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT:-1}"
 else
@@ -131,7 +148,7 @@ fi
 if [ "$WIPE_AFTER" = "1" ]; then
   trap 'adb shell pm clear "$TARGET_PKG" || true' EXIT
 fi
-run_instrumented io.branch.gptdriver.tests.ScenarioLinkGenerator \
+run_instrumented "$TEST_CLASS_PACKAGE.ScenarioLinkGenerator" \
   -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID" ${LEVEL_ARGS[@]+"${LEVEL_ARGS[@]}"}
 LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
 if [ -z "$LINK_URL" ]; then
