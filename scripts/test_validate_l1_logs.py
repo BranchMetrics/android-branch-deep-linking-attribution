@@ -1,5 +1,5 @@
 """Unit tests for the L1 wire-validation script: parsing, the assertion engine, and
-retry-collapse. Per-scenario contract tests (harness, H2, ...) live in
+retry-collapse. Per-scenario contract tests (harness, hot_uriScheme, ...) live in
 test_validate_l1_logs_contracts.py, split out to stay under the file-size cap.
 
 Run from the repo root:

@@ -20,15 +20,16 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * H2 hot_uriScheme - W2WarmUriSchemeWireTest's shape minus its background() call, so the
+ * hot_uriScheme - W2WarmUriSchemeWireTest's shape minus its background() call, so the
  * activity never leaves RESUMED and the scheme link lands in onNewIntent hot rather than warm.
  *
  * Sets branchlogs.txt aside once the bare launch has settled, before delivering the scheme link,
  * per the capture convention: the contract asserts only this scenario's own pair, not the bare
  * launch's.
  *
- * No ActivityScenarioRule, for the reason W1/W2 document: the rule's after() closes a scenario
- * that has lost lifecycle control once a new intent arrived through startActivity.
+ * No ActivityScenarioRule, for the reason the warm scenarios' drivers document: the rule's
+ * after() closes a scenario that has lost lifecycle control once a new intent arrived through
+ * startActivity.
  *
  * Produces no assertion of its own. The capture is the output.
  */
@@ -62,7 +63,7 @@ class H2HotUriSchemeWireTest {
         settle()
     }
 
-    /** Not read back: this exists so the device is a returning one, as in W1/W2. */
+    /** Not read back: this exists so the device is a returning one, as in the warm scenarios. */
     private fun generateLink() {
         onView(withId(R.id.cmdRefreshShortURL)).perform(click())
         Thread.sleep(LINK_MS)
