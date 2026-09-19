@@ -35,7 +35,7 @@ object BranchLogger {
     // and that is the common case while debugging.
     //
     // Every chunk repeats the message's leading [tags] and is numbered. Emitting the chunks raw
-    // instead would put the tags on chunk 1 only, so filtering logcat on a tag (`[***Secure SDK Testing***]`)
+    // instead would put the tags on chunk 1 only, so filtering logcat on any leading tag
     // captures the first 3500 chars and silently drops the rest of the body — which is exactly
     // the part the backend needs. Reassemble by stripping the `…[chunk i/n] ` prefix and
     // concatenating in order; the payloads are verbatim substrings of the original.

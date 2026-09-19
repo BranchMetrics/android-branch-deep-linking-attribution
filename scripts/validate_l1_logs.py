@@ -13,21 +13,81 @@ the wire — no more silent passes when a value is wrong.
 Source of truth for the parser: the BranchLogger verbose sink emits paired
 lines for every wire request just before HTTP send:
 
-    posting to https://api2.branch.io/v1/install
+    posting to https://api2.branch.io/v3/events/open
     Post value = {"hardware_id":"...","sdk":"android5.21.1",...}
+
+Also asserts the Secure SDK's `branch_sdk_secure_context` block on the init
+request (EMT-4096). Presence and mutual exclusivity only — no signature or
+attestation is verified here; see tools/verify_android_key_attestation.py.
 """
 
 import json
 import os
+import re
 import sys
 from urllib.parse import urlparse
 
 POSTING_PREFIX = "posting to "
 POST_VALUE_PREFIX = "Post value = "
 
-# Required on every captured /v1/* request. Lookup tolerates v2 user_data
-# nesting (Android emits device fields top-level on v1, nested under
-# user_data on /v2/event/*; only /v1/* is in L1 scope today).
+# BranchLogger splits any message over MAX_LOG_CHUNK (3500) chars into
+# `[chunk i/n] <slice>` lines. It does this *before* choosing a sink
+# (BranchLogger.kt platformLog), so branchlogs.txt written through
+# Branch.enableLogging(callback, ...) is chunked exactly like logcat is —
+# this is not a logcat-only artifact. A `/v3/events/open` carrying an
+# attestation cert chain runs ~6 KB, so the init request is precisely the
+# one that splits, and reassembling it is what makes the L1 gate work at
+# all on the Secure SDK line.
+#
+# platformLog repeats the message's leading `[...]` run on every chunk, but
+# the two wire lines start with plain text, so there is nothing to repeat and
+# the marker leads the line. Anchored accordingly.
+CHUNK_RE = re.compile(r"\[chunk (\d+)/(\d+)\]\s?")
+
+# The init request. Every session starts here, fresh install included —
+# ServerRequestRegisterInstall (/v1/install) is no longer used for init, so a
+# capture lacking this endpoint means initialization never went out.
+MANDATORY_ENDPOINT = "/v3/events/open"
+
+# Endpoints whose required fields are enforced. /v3/events/open qualifies because
+# RequestOpen does not override getBranchRemoteAPIVersion(), so it uses the same
+# top-level V1 param layout. /v3/events/standard and /custom come from
+# ServerRequestLogEvent, which *is* V2 (device fields under user_data) — a
+# different schema, tracked separately.
+ENFORCED_PREFIXES = ("/v1/", "/v3/events/open")
+
+# Endpoints that carry branch_sdk_secure_context. These are the ones that opt into
+# signing by overriding ServerRequest.applySecureContext: RequestOpen,
+# ServerRequestLogEvent, ServerRequestGetLATD and ServerRequestCreateUrl.
+#
+# Separate from ENFORCED_PREFIXES on purpose. Device/SDK field checks are the L1
+# contract and only apply where that schema holds; the secure context is checked
+# wherever it is sent, whatever the surrounding payload looks like.
+SIGNED_ENDPOINTS = (
+    "/v3/events/open",
+    "/v3/events/standard",
+    "/v3/events/custom",
+    "/v1/url",
+    "/v1/cpid/latd",
+)
+
+# branch_sdk_secure_context keys — mirror of SecureContextFields in the secure SDK.
+SECURE_CONTEXT = "branch_sdk_secure_context"
+CONTEXT_KEY = "context_key"
+INITIALIZATION_CONTEXT = "initialization_context"
+ACTIVITY_CONTEXT = "activity_context"
+
+# Layer 1. Exactly one attestation form appears: attestation_object on a device
+# with hardware Key Attestation support, play_integrity_token otherwise.
+INIT_CONTEXT_REQUIRED = ["client_public_key", "challenge"]
+ATTESTATION_FORMS = ["attestation_object", "play_integrity_token"]
+
+# Layer 2 + 3, carried by every request once the device is registered.
+ACTIVITY_CONTEXT_REQUIRED = ["request_signature", "nonce"]
+
+# Required on every enforced request. Lookup tolerates user_data nesting
+# (device fields are top-level on /v1/* and /v3/events/open, nested under
+# user_data on /v3/events/standard and /custom).
 REQUIRED_COMMON = [
     "branch_key",
     "sdk",
@@ -55,6 +115,14 @@ REQUIRED_PER_ENDPOINT = {
     "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time"],
     "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token"],
     "/v1/url": [],
+    # Serves both a fresh install and a repeat open, so only the fields
+    # ServerRequestInitSession always writes are required. randomized_device_token
+    # and randomized_bundle_token are deliberately absent: the server mints them in
+    # the open *response* for a fresh install.
+    #
+    # connection_type is NOT required here despite being required on /v1/open.
+    # Verified against a real capture: v3/events/open does not carry it.
+    "/v3/events/open": ["is_hardware_id_real", "first_install_time"],
 }
 
 
@@ -69,11 +137,49 @@ def parse_branch_logs(file_path):
 
     entries = []
     pending_url = None
+    chunk_buf = None
+    chunk_next = 0
+    chunk_total = 0
 
     with open(file_path, "r", encoding="utf-8", errors="replace") as f:
         for line_no, raw in enumerate(f, start=1):
             line = raw.rstrip("\n")
 
+            # Reassemble a chunked message before matching anything on it.
+            # The `[chunk i/n] ` marker is dropped and the slices are
+            # concatenated in order, reproducing the original message byte
+            # for byte.
+            chunk = CHUNK_RE.match(line)
+            if chunk:
+                index, total = int(chunk.group(1)), int(chunk.group(2))
+                body = line[chunk.end():]
+
+                if index == 1:
+                    chunk_buf, chunk_next, chunk_total = body, 2, total
+                elif chunk_buf is not None and index == chunk_next and total == chunk_total:
+                    chunk_buf += body
+                    chunk_next += 1
+                else:
+                    # Out of order or interleaved with another message's
+                    # chunks. Dropping beats concatenating the wrong slices
+                    # into JSON that parses but describes no real request.
+                    print(
+                        f"Warning: line {line_no}: unexpected chunk "
+                        f"{index}/{total}; discarding partial message."
+                    )
+                    chunk_buf, chunk_next, chunk_total = None, 0, 0
+                    continue
+
+                if index < chunk_total:
+                    continue
+
+                line, chunk_buf, chunk_next, chunk_total = chunk_buf, None, 0, 0
+
+            # BranchRemoteInterface emits both wire lines unprefixed, and
+            # CustomBranchApp writes the message verbatim, so the marker is
+            # at the start of the line. Anything ahead of it means the format
+            # changed — fail loudly rather than parse a capture as zero
+            # requests, which reads identically to an SDK that sent nothing.
             if line.startswith(POSTING_PREFIX):
                 pending_url = line[len(POSTING_PREFIX):].strip()
                 continue
@@ -128,7 +234,86 @@ def is_present(value):
     return True
 
 
-def validate_request(entry, idx, total):
+def validate_secure_context(request, idx, uri, require_initialization):
+    """Check the `branch_sdk_secure_context` block. Presence and mutual
+    exclusivity only — nothing here verifies a signature or an attestation.
+
+    `require_initialization` is set for the first /v3/events/open in the capture:
+    that is the one request that must carry Layer 1. Later requests carry
+    activity_context instead, and the two are never sent together."""
+    errors = []
+    ctx = request.get(SECURE_CONTEXT)
+
+    if not isinstance(ctx, dict):
+        if require_initialization:
+            errors.append(
+                f"Request {idx} ({uri}): missing '{SECURE_CONTEXT}' — the init "
+                f"request must carry the device attestation"
+            )
+        else:
+            print(f"  (no {SECURE_CONTEXT}; not required on this request)")
+        return errors
+
+    print(f"{SECURE_CONTEXT}:")
+
+    present = is_present(ctx.get(CONTEXT_KEY))
+    print(f"  {'✓' if present else '✗'} {CONTEXT_KEY:<33} "
+          f"{ctx.get(CONTEXT_KEY) if present else 'MISSING'}")
+    if not present:
+        errors.append(f"Request {idx} ({uri}): missing '{SECURE_CONTEXT}.{CONTEXT_KEY}'")
+
+    init = ctx.get(INITIALIZATION_CONTEXT)
+    activity = ctx.get(ACTIVITY_CONTEXT)
+
+    if isinstance(init, dict) and isinstance(activity, dict):
+        errors.append(
+            f"Request {idx} ({uri}): carries both {INITIALIZATION_CONTEXT} and "
+            f"{ACTIVITY_CONTEXT}; exactly one is sent per request"
+        )
+
+    if require_initialization and not isinstance(init, dict):
+        errors.append(
+            f"Request {idx} ({uri}): missing '{INITIALIZATION_CONTEXT}' on the "
+            f"init request"
+        )
+
+    if isinstance(init, dict):
+        errors.extend(_check_block(init, INIT_CONTEXT_REQUIRED, idx, uri,
+                                   INITIALIZATION_CONTEXT))
+        forms = [f for f in ATTESTATION_FORMS if is_present(init.get(f))]
+        for f in ATTESTATION_FORMS:
+            hit = f in forms
+            print(f"  {'✓' if hit else '·'} {INITIALIZATION_CONTEXT}.{f:<12} "
+                  f"{'present' if hit else 'absent'}")
+        if len(forms) != 1:
+            errors.append(
+                f"Request {idx} ({uri}): expected exactly one of "
+                f"{'/'.join(ATTESTATION_FORMS)}, found {len(forms)}"
+            )
+
+    if isinstance(activity, dict):
+        errors.extend(_check_block(activity, ACTIVITY_CONTEXT_REQUIRED, idx, uri,
+                                   ACTIVITY_CONTEXT))
+
+    return errors
+
+
+def _check_block(block, required, idx, uri, label):
+    """Presence-check `required` keys inside one secure-context sub-block."""
+    errors = []
+    for field in required:
+        value = block.get(field)
+        ok = is_present(value)
+        shown = value if ok else "MISSING"
+        if isinstance(shown, str) and len(shown) > 40:
+            shown = shown[:37] + "..."
+        print(f"  {'✓' if ok else '✗'} {label}.{field:<20} {shown}")
+        if not ok:
+            errors.append(f"Request {idx} ({uri}): missing '{label}.{field}'")
+    return errors
+
+
+def validate_request(entry, idx, total, require_initialization=False):
     """Print the full payload + per-field table for one request. Return a
     list of error strings (empty when everything required is present).
 
@@ -155,21 +340,26 @@ def validate_request(entry, idx, total):
     print(json.dumps(request, indent=2, sort_keys=True))
     print()
 
-    if not uri.startswith("/v1/"):
-        print(f"(Non-v1 endpoint; required-field checks skipped per L1 scope)")
-        return errors
+    if uri.startswith(ENFORCED_PREFIXES):
+        fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT.get(uri, [])
+        print(f"Required fields ({len(fields)}):")
+        for field in fields:
+            value = lookup_field(request, field)
+            present = is_present(value)
+            marker = "✓" if present else "✗"
+            if present:
+                print(f"  {marker} {field:<35} {value}")
+            else:
+                print(f"  {marker} {field:<35} MISSING")
+                errors.append(f"Request {idx} ({uri}): missing required field '{field}'")
+        print()
+    else:
+        print("(Device/SDK field checks skipped: outside the L1 schema)")
 
-    fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT.get(uri, [])
-    print(f"Required fields ({len(fields)}):")
-    for field in fields:
-        value = lookup_field(request, field)
-        present = is_present(value)
-        marker = "✓" if present else "✗"
-        if present:
-            print(f"  {marker} {field:<35} {value}")
-        else:
-            print(f"  {marker} {field:<35} MISSING")
-            errors.append(f"Request {idx} ({uri}): missing required field '{field}'")
+    if uri in SIGNED_ENDPOINTS:
+        errors.extend(validate_secure_context(request, idx, uri, require_initialization))
+    else:
+        print("(Unsigned endpoint; no secure context expected)")
 
     return errors
 
@@ -186,17 +376,39 @@ def validate_entries(entries):
     print(f"Captured {len(entries)} Branch wire requests. Validating...")
 
     found_paths = [e["uri"] for e in entries]
-    if "/v1/install" not in found_paths:
-        errors.append("Mandatory endpoint '/v1/install' was not captured.")
+    if MANDATORY_ENDPOINT not in found_paths:
+        errors.append(f"Mandatory endpoint '{MANDATORY_ENDPOINT}' was not captured.")
 
-    if "/v1/open" not in found_paths:
+    if "/v1/install" in found_paths:
+        errors.append(
+            "'/v1/install' was captured. Init moved to "
+            f"'{MANDATORY_ENDPOINT}' for fresh installs too, so this endpoint "
+            "should no longer appear."
+        )
+
+    # Layer 1 is only expected on a fresh install. A device that is already
+    # registered sends activity_context on its opens instead, which is correct and
+    # must not fail the run. A fresh install is identifiable from the request alone:
+    # it has no randomized_bundle_token, because the server mints that in the open
+    # response.
+    first_init = next(
+        (i for i, e in enumerate(entries, start=1)
+         if e["uri"] == MANDATORY_ENDPOINT
+         and isinstance(e["request"], dict)
+         and "randomized_bundle_token" not in e["request"]),
+        None,
+    )
+    if first_init is None:
         print(
-            "Note: '/v1/open' not present in capture. Expected in a normal "
-            "install+open flow, but not enforced here."
+            "Note: no fresh-install open in this capture (every open carries a "
+            "randomized_bundle_token), so initialization_context is not required. "
+            "Reinstall the app to capture Layer 1."
         )
 
     for i, entry in enumerate(entries, start=1):
-        errors.extend(validate_request(entry, i, len(entries)))
+        errors.extend(
+            validate_request(entry, i, len(entries), require_initialization=(i == first_init))
+        )
 
     return errors
 
