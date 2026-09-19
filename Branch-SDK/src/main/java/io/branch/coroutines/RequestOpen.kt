@@ -67,12 +67,13 @@ internal class RequestOpen(
             try {
                 val trustFields = provider.addDeviceTrustParams(post)
                 if (trustFields != null) {
-                    // Not marked done here: the flag is what makes every later request use
-                    // Layer 2 instead, and the server can only verify those signatures once
-                    // it has actually received this initialization_context. Setting it at
-                    // build time strands the device if the open never lands.
-                    carriedInitializationContext = true
+                    // Only marked done once the copy onto post actually completes: the flag
+                    // is what makes every later request use Layer 2 instead, and the server
+                    // can only verify those signatures once it has actually received this
+                    // initialization_context. Setting it before apply() would strand the
+                    // device if apply() threw partway through the copy.
                     SecureContextApplier.apply(trustFields, post)
+                    carriedInitializationContext = true
                 }
             } catch (e: Exception) {
                 BranchLogger.w("Fraud defense failed for open: ${e.message}")
