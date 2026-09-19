@@ -37,10 +37,14 @@ class LatchReleaseConcurrencyTest : BranchTestBase() {
     @Before
     fun setUp() {
         // BranchTestBase.setUpBase() is itself @Before, so JUnit already runs it before this.
-        // Obtain a real Branch singleton via the standard factory — no mocking of Branch itself.
-        // With Config.NONE the manifest is absent; getAutoInstance handles that gracefully (logs a
-        // warning and sets NO_STRING_VALUE for the key).
-        branch = Branch.getAutoInstance(RuntimeEnvironment.getApplication())
+        // Obtain a real Branch singleton via the standard entry point — no mocking of Branch itself.
+        // The key is supplied explicitly because initialize() no longer discovers one from the
+        // manifest, which Config.NONE leaves absent anyway.
+        Branch.initialize(
+            RuntimeEnvironment.getApplication(),
+            BranchConfiguration.Builder("key_live_testing_only").build()
+        )
+        branch = Branch.getInstance()
     }
 
     @After

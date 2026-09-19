@@ -34,7 +34,7 @@ import org.junit.runner.RunWith
  * HYBRID — Tests deep link warm open (app already running → receives Branch link).
  *
  * Simulates:  App is in foreground → user taps a Branch link → system delivers
- *             new intent → onNewIntent() calls Branch.sessionBuilder().reInit()
+ *             new intent → onNewIntent() calls requestDeepLinkData(intent.getData())
  *
  * Does NOT extend BaseGptDriverTest to avoid ActivityScenarioRule lifecycle
  * conflicts when delivering new intents. Manages its own ActivityScenario.
@@ -139,9 +139,9 @@ class DeepLinkWarmOpenHybridTest {
         }
         InstrumentationRegistry.getInstrumentation().targetContext.startActivity(deepLinkIntent)
 
-        // Wait for Branch reInit to resolve the deep link.
+        // Wait for requestDeepLinkData to resolve the deep link.
         // Note: Thread.sleep is used because after startActivity with a new intent,
-        // the SDK reInit happens internally with no observable UI change to wait on.
+        // resolution happens internally with no observable UI change to wait on.
         Thread.sleep(8000)
 
         // PHASE 3: Verify deep link data via "Latest Referring Params"

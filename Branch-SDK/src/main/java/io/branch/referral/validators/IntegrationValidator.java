@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.Branch;
+import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchSessionState;
 import io.branch.referral.BranchSessionStateListener;
 
@@ -52,7 +53,11 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
             }
         };
 
-        Branch.enableLogging(iBranchLoggingCallbacks);
+        // Capture SDK logs for the validator report. Runtime-only, so it writes straight to
+        // the logger rather than through pre-init configuration.
+        BranchLogger.setLoggerCallback(iBranchLoggingCallbacks);
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
+        BranchLogger.setLoggingEnabled(true);
         instance.validateSDKIntegration(context);
         instance.integrationValidatorDialog = new IntegrationValidatorDialog(context);
     }

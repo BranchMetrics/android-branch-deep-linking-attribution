@@ -18,7 +18,7 @@ public class DebugTest extends BranchTest {
         Assert.assertFalse(BranchUtil.checkTestMode(getTestContext()));
 
         // Enable Test Mode after check
-        Branch.enableTestMode();
+        BranchUtil.setTestMode(true);
         Assert.assertTrue(BranchUtil.isTestModeEnabled());
 
         // Assert that checking for test mode is also now true
@@ -31,7 +31,7 @@ public class DebugTest extends BranchTest {
         Assert.assertFalse(BranchUtil.isTestModeEnabled());
 
         // Enable Test Mode before check
-        Branch.enableTestMode();
+        BranchUtil.setTestMode(true);
         Assert.assertTrue(BranchUtil.isTestModeEnabled());
 
         // Test Mode should still be on after this check (check has a side effect)
@@ -41,7 +41,7 @@ public class DebugTest extends BranchTest {
         Assert.assertTrue(BranchUtil.isTestModeEnabled());
 
         // Now turn off test mode and check
-        Branch.disableTestMode();
+        BranchUtil.setTestMode(false);
 
         Assert.assertFalse(BranchUtil.isTestModeEnabled());
         Assert.assertFalse(BranchUtil.checkTestMode(getTestContext()));

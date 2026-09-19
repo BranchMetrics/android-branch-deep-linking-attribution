@@ -144,9 +144,6 @@
         </activity>
 
         <meta-data
-            android:name="io.branch.sdk.TestMode"
-            android:value="true" /> <!-- Set to true to use Branch_Test_Key -->
-        <meta-data
             android:name="io.branch.sdk.BranchKey"
             android:value="key_live_hcnegAumkH7Kv18M8AOHhfgiohpXq5tB" />
         <meta-data

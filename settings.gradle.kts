@@ -16,3 +16,4 @@ pluginManagement {
         mavenCentral()
     }
 }
+include(":Branch-SDK-Testbed-Kotlin")

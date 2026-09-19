@@ -88,11 +88,60 @@ public class TraceLoggingTest {
     }
 
     @Test
-    public void enableLoggingDefaultsToDebug() {
-        // enableLogging() clears the logger callback (routes to android.util.Log), so assert the
-        // resulting level directly rather than through the capture callback.
-        Branch.enableLogging();
-        assertEquals("enableLogging() must default to DEBUG so it shows traffic, not the VERBOSE queue trace",
-                BranchLogger.BranchLogLevel.DEBUG, BranchLogger.getLoggingLevel());
+    public void noneLevel_silencesEveryLevel() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.NONE);
+
+        BranchLogger.e("error");
+        BranchLogger.w("warn");
+        BranchLogger.i("info");
+        BranchLogger.d("debug");
+        BranchLogger.v("verbose");
+
+        assertTrue("NONE must suppress every level, including ERROR", captured.isEmpty());
+    }
+
+    @Test
+    public void noneLevel_silencesLogAlways() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.NONE);
+
+        BranchLogger.logAlways("io.branch.sdk.android:library:6.0.0");
+
+        assertTrue("logAlways bypasses shouldLog, so NONE must gate it explicitly or init still "
+                + "emits one line per launch", captured.isEmpty());
+    }
+
+    @Test
+    public void errorLevel_stillShowsErrors() {
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.ERROR);
+
+        BranchLogger.e("error");
+        BranchLogger.w("warn");
+
+        assertTrue("ERROR must still emit at the ERROR level", captured.contains("error"));
+        assertFalse("WARN must not emit at the ERROR level", captured.contains("warn"));
+    }
+
+    @Test
+    public void configurationDefaultsToNoneLevel() {
+        BranchConfiguration config = new BranchConfiguration.Builder("key_live_x").build();
+        assertEquals("an unconfigured BranchConfiguration must emit nothing by default",
+                BranchLogger.BranchLogLevel.NONE, config.getLogLevel());
+    }
+
+    @Test
+    public void applyLogging_routesToCallerLevelBeforeAnyOtherInitWork() {
+        BranchLogger.setLoggingEnabled(false);
+        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.NONE);
+
+        new BranchConfiguration.Builder("key_live_x")
+                .setLogLevel(BranchLogger.BranchLogLevel.VERBOSE)
+                .setLoggingCallback((message, severity) -> captured.add(message))
+                .build()
+                .applyLogging();
+        BranchLogger.w("Warning: Please pass your Branch key to BranchConfiguration.Builder!");
+
+        assertTrue("warnings raised during construction and key resolution must be visible once "
+                        + "the caller has asked for them",
+                captured.contains("Warning: Please pass your Branch key to BranchConfiguration.Builder!"));
     }
 }

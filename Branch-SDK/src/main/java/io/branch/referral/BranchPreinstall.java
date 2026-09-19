@@ -99,12 +99,12 @@ class BranchPreinstall {
                         while (preinstallDataKeys.hasNext()) {
                             String datakey = preinstallDataKeys.next();
                             if (datakey.equals(PreinstallKey.campaign.getKey()) && TextUtils.isEmpty(PrefHelper.getInstance(context).getInstallMetaData(PreinstallKey.campaign.getKey()))) {
-                                branchInstance
+                                PrefHelper.getInstance(context)
                                         .setPreinstallCampaign(
                                                 branchPreinstallData.get(datakey)
                                                         .toString());
                             } else if (datakey.equals(PreinstallKey.partner.getKey()) && TextUtils.isEmpty(PrefHelper.getInstance(context).getInstallMetaData(PreinstallKey.partner.getKey()))) {
-                                branchInstance
+                                PrefHelper.getInstance(context)
                                         .setPreinstallPartner(
                                                 branchPreinstallData.get(datakey)
                                                         .toString());
@@ -122,18 +122,17 @@ class BranchPreinstall {
     }
 
     public static void setBranchPreInstallGoogleReferrer(Context context, HashMap<String, String> referrerMap){
-        Branch branchInstance = Branch.getInstance();
         PrefHelper prefHelper = PrefHelper.getInstance(context);
 
         // Set PreInstallData from GoogleReferrer api
         // only if PreInstallMetaData has not been updated by either of the methods(Manual setting or OS level)
         if((TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.partner.getKey())) && TextUtils.isEmpty(prefHelper.getInstallMetaData(PreinstallKey.campaign.getKey())))){
             if(!TextUtils.isEmpty(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey()))){
-                branchInstance.setPreinstallCampaign(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey()));
+                prefHelper.setPreinstallCampaign(referrerMap.get(Defines.Jsonkey.UTMCampaign.getKey()));
             }
 
             if(!TextUtils.isEmpty(referrerMap.get(Defines.Jsonkey.UTMMedium.getKey()))){
-                branchInstance.setPreinstallPartner(referrerMap.get(Defines.Jsonkey.UTMMedium.getKey()));
+                prefHelper.setPreinstallPartner(referrerMap.get(Defines.Jsonkey.UTMMedium.getKey()));
             }
         }
 

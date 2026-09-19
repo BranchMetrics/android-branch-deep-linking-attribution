@@ -139,7 +139,7 @@ public class ServerRequestTests extends BranchTest {
     }
 
     private void setTimeouts(int timeout, int connectTimeout){
-        branch.setNetworkTimeout(timeout);
-        branch.setNetworkConnectTimeout(connectTimeout);
+        branch.getPrefHelper().setTimeout(timeout);
+        branch.getPrefHelper().setConnectTimeout(connectTimeout);
     }
 }

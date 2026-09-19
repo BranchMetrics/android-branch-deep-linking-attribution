@@ -21,6 +21,7 @@ request (EMT-4096). Presence and mutual exclusivity only — no signature or
 attestation is verified here; see tools/verify_android_key_attestation.py.
 """
 
+import argparse
 import json
 import os
 import re
@@ -29,6 +30,7 @@ from urllib.parse import urlparse
 
 POSTING_PREFIX = "posting to "
 POST_VALUE_PREFIX = "Post value = "
+
 
 # BranchLogger splits any message over MAX_LOG_CHUNK (3500) chars into
 # `[chunk i/n] <slice>` lines. It does this *before* choosing a sink
@@ -105,24 +107,52 @@ REQUIRED_COMMON = [
     "screen_width",
     "wifi",
     "ui_mode",
-    "hardware_id",
 ]
+
+# hardware_id is deliberately not common. ServerRequestCreateUrl builds the
+# payload and then removes anon_id, is_hardware_id_real and hardware_id before
+# sending, so requiring it everywhere fails /v1/url on a correct SDK. Whether
+# that removal is right is EMT-4199, open with the server team: iOS sends all
+# three on the same endpoint, on both the beta and the release line. Until that
+# is answered this layer asserts the field only where both platforms agree it
+# belongs, rather than encoding one side of an undecided question.
 
 # Endpoint-specific additions on top of REQUIRED_COMMON.
 # connection_type is only emitted on init/event requests, so /v1/url
 # (a CreateUrl request) legitimately lacks it.
+# An endpoint absent from this table has no L1 contract yet: its payload is printed but nothing is
+# asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
+# PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
+# in a capture is not an error; what each scenario must emit belongs in a per-scenario contract.
+# The beta's two-request open flow: /v3/deeplink resolves the link, /v3/events/open attributes.
+# They share a contract because they carry the same device block; measured on 6.0.0-beta.0, these
+# three plus REQUIRED_COMMON are present in every occurrence of both, with and without a resolved
+# link.
+#
+# Deliberately not required:
+#   android_app_link_url  — only when the resolution was driven by a URL.
+#   link_data             — only on an open that follows a resolved link.
+#   randomized_device_token / randomized_bundle_token — the backend issues these once a device is
+#     known, so a first-ever open carries neither. iOS excludes them for the same reason.
+#   connection_type       — in the iOS common list, absent from both /v3 payloads here.
+REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
+
+# An endpoint absent from this table has no L1 contract yet: its payload is printed but nothing is
+# asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
+# PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
+# in a capture is not an error; what each scenario must emit belongs in a per-scenario contract.
+#
+# /v2/event/* is still uncontracted. Its schema nests the device block under user_data, which
+# lookup_field already resolves, but it carries no `wifi` — a REQUIRED_COMMON field — so a v2
+# contract cannot be expressed by extending the common list. iOS gives v2 its own complete list
+# instead. That mechanism change is out of scope here.
 REQUIRED_PER_ENDPOINT = {
-    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time"],
-    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token"],
+    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time", "hardware_id"],
+    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token", "hardware_id"],
     "/v1/url": [],
-    # Serves both a fresh install and a repeat open, so only the fields
-    # ServerRequestInitSession always writes are required. randomized_device_token
-    # and randomized_bundle_token are deliberately absent: the server mints them in
-    # the open *response* for a fresh install.
-    #
-    # connection_type is NOT required here despite being required on /v1/open.
-    # Verified against a real capture: v3/events/open does not carry it.
-    "/v3/events/open": ["is_hardware_id_real", "first_install_time"],
+    "/v3/deeplink": REQUIRED_V3_SESSION,
+    "/v3/events/open": REQUIRED_V3_SESSION,
+
 }
 
 
@@ -317,11 +347,11 @@ def validate_request(entry, idx, total, require_initialization=False):
     """Print the full payload + per-field table for one request. Return a
     list of error strings (empty when everything required is present).
 
-    Required-field checks are scoped to `/v1/*` endpoints — that's the L1
-    contract. Non-v1 endpoints (e.g. `/v2/event/*`) use a different schema
-    (device fields under `user_data`, different identity fields) and are
-    out of L1's enforcement scope; the validator still dumps their payload
-    for visibility but does not fail the run."""
+    Required-field checks apply to any endpoint with an entry in
+    REQUIRED_PER_ENDPOINT. The beta emits `/v3/deeplink` and
+    `/v3/events/open`, which the `/v1/*` scope skipped silently. An
+    endpoint absent from the table has no L1 contract yet; the validator
+    dumps its payload for visibility but does not fail the run."""
     errors = []
     uri = entry["uri"]
     url = entry["url"]
@@ -340,7 +370,7 @@ def validate_request(entry, idx, total, require_initialization=False):
     print(json.dumps(request, indent=2, sort_keys=True))
     print()
 
-    if uri.startswith(ENFORCED_PREFIXES):
+    if uri.startswith(ENFORCED_PREFIXES) or uri in REQUIRED_PER_ENDPOINT:
         fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT.get(uri, [])
         print(f"Required fields ({len(fields)}):")
         for field in fields:
@@ -364,9 +394,173 @@ def validate_request(entry, idx, total, require_initialization=False):
     return errors
 
 
-def validate_entries(entries):
-    """Run validate_request on every entry plus the top-level
-    /v1/install-must-be-present check. Returns aggregated errors."""
+# Set at construction and re-sent unchanged on every attempt, so a repeated
+# value marks a retry rather than a second logical request.
+REQUEST_ID_FIELD = "branch_sdk_request_unique_id"
+
+
+def collapse_retries(entries):
+    """Drop retry attempts so a capture holds one entry per logical request.
+
+    The capture line is written in `BranchRemoteInterface.makeRestfulPost`
+    (`posting to` / `Post value =`), which runs once per attempt, so a flaky
+    network inflates every count. That is the opposite of what exact counts
+    are for, and this runner currently fails with socket timeouts, which is
+    precisely the condition that produces retries.
+
+    iOS collapses on `retryNumber`. That field does not work here: it is
+    stamped in `BranchAsyncNetworkLayer`, while the captured line comes from
+    the legacy interface, so no payload in a real capture carries it —
+    verified against the capture from run 32502951452, 0 of 8 requests.
+    `branch_sdk_request_unique_id` is fixed at construction and re-sent
+    unchanged, so a repeat of it is a retry.
+
+    Entries without the field are kept: a request that predates EMT-4198's
+    stamping is not silently dropped."""
+    seen = set()
+    kept = []
+    for entry in entries:
+        request = entry.get("request")
+        request_id = request.get(REQUEST_ID_FIELD) if isinstance(request, dict) else None
+        if isinstance(request_id, str) and request_id:
+            if request_id in seen:
+                continue
+            seen.add(request_id)
+        kept.append(entry)
+    return kept
+
+
+# What the wire must look like after a scenario ran. All endpoint names live
+# here rather than in the checks, so the same checks serve this line's capture
+# and the iOS one.
+#
+#   counts  endpoint -> exact number of requests. 0 forbids the endpoint.
+#           An endpoint absent from counts is unconstrained.
+#   order   (earlier, later) pairs. Relative, not adjacency: a request
+#           between the two does not violate it.
+#   fields  endpoint -> field -> exact number of that endpoint's requests
+#           carrying the field. Same counting as `counts`, one level down;
+#           0 forbids. Presence only, never a value comparison.
+#           It exists because an endpoint count cannot see a request changing
+#           character: on 6.0.0-beta.0 the install is a /v3/events/open like
+#           any other, so a first install and a launch on an installed device
+#           put the same endpoints on the wire in the same order.
+#
+# Ported from the iOS line, where the same engine gates 4.0.0-beta.0. Kept
+# byte-compatible on purpose: a contract that reads differently per platform
+# is a parity gap wearing a helper's clothes.
+SCENARIO_CONTRACTS = {
+    # Not a test-plan scenario. This is what the harness drives today: one run
+    # that resolves two links, creates one, and fires a custom event. The plan
+    # scenarios (C1, C3, N1) need one capture each and the runner is not
+    # producing those yet, so contracting them would mean writing from the
+    # ticket text rather than from a measurement.
+    #
+    # Measured from run 32502951452 on 6.0.0-beta.0. It earns its place by
+    # pinning the shape the gate sees now: if the harness or the SDK changes
+    # what a run emits, this goes red and someone looks.
+    #
+    # hardware_id at 0 on /v1/url is the measured fact, not an omission.
+    # ServerRequestCreateUrl removes it, identically on beta and master, while
+    # iOS sends it on the same endpoint. Which platform is right is EMT-4199,
+    # open with the server team. Asserting the absence means the gate turns red
+    # the moment Android's behaviour changes, which a comment naming the ticket
+    # would not do.
+    "harness": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 4,
+            "/v1/url": 1,
+            "/v2/event/custom": 1,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {"/v1/url": {"hardware_id": 0}},
+    },
+}
+
+
+class UnknownScenario(Exception):
+    """Raised for a scenario name with no contract."""
+
+
+def contract_for(scenario):
+    """Return the contract for `scenario`, or raise UnknownScenario."""
+    try:
+        return SCENARIO_CONTRACTS[scenario]
+    except KeyError:
+        known = ", ".join(sorted(SCENARIO_CONTRACTS)) or "(none defined yet)"
+        raise UnknownScenario(
+            f"No contract for scenario '{scenario}'. Known scenarios: {known}"
+        )
+
+
+def occurs_after(uris, earlier, later):
+    """True when some `later` request appears after some `earlier` one.
+
+    Relative, not adjacency: unrelated traffic between the two does not
+    violate it. Deliberately not "the first `later` follows the first
+    `earlier`" — a launch open legitimately precedes a link resolution, so
+    that reading would fail a correct capture.
+
+    Fail-closed: if either endpoint is missing the order is not satisfied."""
+    for index, uri in enumerate(uris):
+        if uri == earlier and later in uris[index + 1:]:
+            return True
+    return False
+
+
+def assert_contract(entries, contract):
+    """Check a normalized capture against a scenario contract.
+
+    Returns a list of error strings, empty when the capture satisfies it.
+    Holds no endpoint name of its own: every value compared comes from the
+    contract, so the same checks serve either platform's capture."""
+    errors = []
+    uris = [entry["uri"] for entry in entries]
+
+    for endpoint, expected in sorted(contract["counts"].items()):
+        actual = uris.count(endpoint)
+        if actual == expected:
+            continue
+        if expected == 0:
+            errors.append(
+                f"'{endpoint}' must not be captured for this scenario, "
+                f"but appeared {actual} time(s)."
+            )
+        else:
+            errors.append(
+                f"Expected {expected} '{endpoint}' request(s), captured {actual}."
+            )
+
+    for earlier, later in contract["order"]:
+        if not occurs_after(uris, earlier, later):
+            errors.append(f"Expected a '{later}' request after a '{earlier}' one.")
+
+    for endpoint, fields in sorted(contract.get("fields", {}).items()):
+        matching = [e for e in entries if e["uri"] == endpoint]
+        for field, expected in sorted(fields.items()):
+            actual = sum(
+                1 for e in matching if is_present(lookup_field(e["request"], field))
+            )
+            if actual == expected:
+                continue
+            if expected == 0:
+                errors.append(
+                    f"No '{endpoint}' request may carry '{field}', "
+                    f"but {actual} of {len(matching)} did."
+                )
+            else:
+                errors.append(
+                    f"Expected {expected} of the '{endpoint}' request(s) to carry "
+                    f"'{field}', but {actual} of {len(matching)} did."
+                )
+
+    return errors
+
+
+def validate_entries(entries, contract=None):
+    """Check every request's required fields, and the capture against
+    `contract` when one is given. Returns aggregated errors."""
     errors = []
 
     if not entries:
@@ -375,10 +569,14 @@ def validate_entries(entries):
 
     print(f"Captured {len(entries)} Branch wire requests. Validating...")
 
+    # No endpoint is globally mandatory. A correct beta capture can contain no
+    # install and no /v3/events/open at all — e.g. a standalone link-creation
+    # call. What each scenario must emit belongs in a per-scenario contract
+    # (assert_contract below), not in a global rule.
     found_paths = [e["uri"] for e in entries]
-    if MANDATORY_ENDPOINT not in found_paths:
-        errors.append(f"Mandatory endpoint '{MANDATORY_ENDPOINT}' was not captured.")
 
+    # /v1/install is the one thing still forbidden everywhere: init moved to
+    # /v3/events/open for fresh installs too, so seeing it means the fix regressed.
     if "/v1/install" in found_paths:
         errors.append(
             "'/v1/install' was captured. Init moved to "
@@ -405,6 +603,9 @@ def validate_entries(entries):
             "Reinstall the app to capture Layer 1."
         )
 
+    if contract is not None:
+        errors.extend(assert_contract(collapse_retries(entries), contract))
+
     for i, entry in enumerate(entries, start=1):
         errors.extend(
             validate_request(entry, i, len(entries), require_initialization=(i == first_init))
@@ -414,7 +615,18 @@ def validate_entries(entries):
 
 
 def main():
-    log_file_path = sys.argv[1] if len(sys.argv) > 1 else "branchlogs.txt"
+    parser = argparse.ArgumentParser(description="Validate a Branch SDK wire capture.")
+    parser.add_argument(
+        "log_file", nargs="?", default="branchlogs.txt",
+        help="capture to validate (default: branchlogs.txt)",
+    )
+    parser.add_argument(
+        "--scenario", default=None,
+        help="which scenario produced this capture; selects its contract. "
+             "Omitted, only the per-request required fields are asserted.",
+    )
+    args = parser.parse_args()
+    log_file_path = args.log_file
 
     entries = parse_branch_logs(log_file_path)
 
@@ -431,7 +643,14 @@ def main():
     except OSError:
         pass
 
-    errors = validate_entries(entries)
+    try:
+        contract = contract_for(args.scenario) if args.scenario else None
+    except UnknownScenario as e:
+        print("\n--- VALIDATION FAILED ---")
+        print(f"FAILED: {e}")
+        sys.exit(1)
+
+    errors = validate_entries(entries, contract)
 
     if errors:
         print("\n--- VALIDATION FAILED ---")

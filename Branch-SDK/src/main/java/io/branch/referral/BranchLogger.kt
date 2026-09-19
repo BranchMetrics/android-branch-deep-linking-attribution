@@ -11,7 +11,7 @@ object BranchLogger {
     private const val TAG = "BranchSDK"
 
     enum class BranchLogLevel(val level: Int) {
-        ERROR(1), WARN(2), INFO(3), DEBUG(4), VERBOSE(5)
+        NONE(0), ERROR(1), WARN(2), INFO(3), DEBUG(4), VERBOSE(5)
     }
 
     @JvmStatic
@@ -24,6 +24,10 @@ object BranchLogger {
     var loggerCallback: IBranchLoggingCallbacks? = null
 
     private fun shouldLog(level: BranchLogLevel): Boolean = level.level <= loggingLevel.level
+
+    /** Whether a message at [level] would actually be emitted, so callers can skip building it. */
+    @JvmStatic
+    fun isLoggable(level: BranchLogLevel): Boolean = loggingEnabled && shouldLog(level)
 
     // android.util.Log truncates a single entry at ~4000 chars, which chops long messages
     // (e.g. a request body carrying an attestation cert chain). Split into chunks so the full
@@ -139,7 +143,7 @@ object BranchLogger {
 
     @JvmStatic
     fun logAlways(message: String) {
-        if (message.isNotEmpty()) {
+        if (loggingLevel != BranchLogLevel.NONE && message.isNotEmpty()) {
             platformLog(Log.INFO, "INFO", message)
         }
     }
