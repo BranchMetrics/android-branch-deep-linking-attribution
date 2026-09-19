@@ -46,9 +46,11 @@ POST_VALUE_PREFIX = "Post value = "
 # the marker leads the line. Anchored accordingly.
 CHUNK_RE = re.compile(r"\[chunk (\d+)/(\d+)\]\s?")
 
-# The init request. Every session starts here, fresh install included —
-# ServerRequestRegisterInstall (/v1/install) is no longer used for init, so a
-# capture lacking this endpoint means initialization never went out.
+# The init request when a session does init. ServerRequestRegisterInstall
+# (/v1/install) is no longer used for init, so seeing it is always an error —
+# but a capture is not required to contain an init at all (see
+# validate_entries): a standalone link-creation call, for one, correctly has
+# neither.
 MANDATORY_ENDPOINT = "/v3/events/open"
 
 # Endpoints whose required fields are enforced. /v3/events/open qualifies because
