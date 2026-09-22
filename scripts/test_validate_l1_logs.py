@@ -30,6 +30,7 @@ SCENARIO_FIXTURES = {
     "organic_open": "organic_open.txt",
     "cold_firstInstall": "cold_firstInstall.txt",
     "cold_https": "cold_https.txt",
+    "hot_https_foreground": "hot_https_foreground.txt",
     "link_generation": "link_generation.txt",
     "attribution_none": "attribution_none.txt",
 }
@@ -359,6 +360,15 @@ class ScenarioContractTests(unittest.TestCase):
             errors = self._errors(capture, contract)
             with self.subTest(capture=capture, contract=contract):
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_an_external_intent_uri_fails_hot_https_foreground(self):
+        # No other contract forbids external_intent_uri, so a hot scenario that resolved a scheme
+        # URL instead of an App Link would pass every field rule the other scenarios define.
+        entries = self._entries("hot_https_foreground")
+        deeplink = next(e for e in entries if e["uri"] == "/v3/deeplink")
+        deeplink["request"]["external_intent_uri"] = "https://bnctestbed.test-app.link/other"
+        errors = v.assert_contract(entries, v.contract_for("hot_https_foreground"))
+        self.assertTrue(any("external_intent_uri" in e for e in errors), errors)
 
     def test_hardware_id_on_link_creation_fails_link_generation(self):
         # The EMT-4199 signal. /v1/url lives only in the generation capture.
