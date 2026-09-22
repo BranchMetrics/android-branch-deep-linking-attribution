@@ -1,7 +1,10 @@
 package io.branch.gptdriver.tests
 
+import android.app.Activity
+import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -14,6 +17,7 @@ import io.branch.referral.util.LinkProperties
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -54,13 +58,44 @@ class H1HotAppLinkWireTest {
         scenario?.moveToState(Lifecycle.State.RESUMED)
         settleShort()
 
-        val link = generateLink()
-        settleShort()
+        val stoppedWatcher = StoppedWatcher()
+        val application = InstrumentationRegistry.getInstrumentation()
+            .targetContext.applicationContext as Application
+        application.registerActivityLifecycleCallbacks(stoppedWatcher)
+        try {
+            val link = generateLink()
+            settleShort()
 
-        clearCapturedLog()
+            clearCapturedLog()
 
-        deliver(link)
-        settle()
+            deliver(link)
+            settle()
+
+            assertTrue(
+                "MainActivity left the foreground during the scenario, so the delivery " +
+                    "was warm rather than hot",
+                !stoppedWatcher.stopped.get()
+            )
+        } finally {
+            application.unregisterActivityLifecycleCallbacks(stoppedWatcher)
+        }
+    }
+
+    /** Watches for onStop, not onPause: onPause fires on every hot redelivery to a resumed
+     * singleTop activity, but a true hot delivery never reaches STOPPED. */
+    private class StoppedWatcher : Application.ActivityLifecycleCallbacks {
+        val stopped = AtomicBoolean(false)
+
+        override fun onActivityStopped(activity: Activity) {
+            if (activity is MainActivity) stopped.set(true)
+        }
+
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+        override fun onActivityStarted(activity: Activity) {}
+        override fun onActivityResumed(activity: Activity) {}
+        override fun onActivityPaused(activity: Activity) {}
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+        override fun onActivityDestroyed(activity: Activity) {}
     }
 
     /** Generated and read back in-activity, since the delivered link is the resolved one. */
