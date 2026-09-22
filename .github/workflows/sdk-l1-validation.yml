@@ -103,6 +103,7 @@ jobs:
             TEST_CLASS=N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=H1HotAppLinkWireTest OUTPUT_LOG=wire-hot_https_foreground.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -140,6 +141,7 @@ jobs:
           check link_generation wire-link_generation.txt
           check cold_firstInstall wire-cold_firstInstall.txt
           check cold_https wire-cold_https.txt
+          check hot_https_foreground wire-hot_https_foreground.txt
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
@@ -172,7 +174,11 @@ jobs:
               echo "| Negative and guards | see failures below |"
             fi
             echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
-            echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
+            if [ "${{ steps.validate.outcome }}" = "success" ]; then
+              echo "| Hot | hot_https_foreground pass, hot_uriScheme not implemented |"
+            else
+              echo "| Hot | see failures below |"
+            fi
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"
