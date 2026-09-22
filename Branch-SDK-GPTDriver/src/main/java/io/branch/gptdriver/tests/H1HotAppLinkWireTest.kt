@@ -124,8 +124,8 @@ class H1HotAppLinkWireTest {
         return link
     }
 
-    /** Moves the bare launch's own traffic to a side file, so the contract measures only this
-     * scenario's delivery while the pre-clear capture stays readable for diagnosis. */
+    /** Moves everything captured before delivery (launch and link generation) to a side file, so
+     * the contract measures only this scenario's delivery. The side file stays for diagnosis. */
     private fun clearCapturedLog() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val liveLog = File(context.filesDir, LOG_FILE_NAME)
