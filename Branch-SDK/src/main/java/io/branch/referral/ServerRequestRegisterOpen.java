@@ -6,7 +6,6 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
 /**
  * * <p>
  * The server request for registering an app open event to Branch API. Handles request creation and execution.

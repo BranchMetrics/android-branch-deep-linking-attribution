@@ -3,11 +3,8 @@ package io.branch.referral;
 import android.app.Application;
 import android.content.Context;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Iterator;
 
 /**
  * * <p>
