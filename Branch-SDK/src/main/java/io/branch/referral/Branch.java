@@ -279,6 +279,13 @@ public class Branch {
 
     private final TrackingController trackingController;
 
+    /**
+     * Optional fraud defense provider for device integrity checks.
+     * If set, fraud defense fields are added to v1/install requests.
+     * If null, SDK functions normally without fraud defense (graceful degradation).
+     */
+    private BranchSecureSDKProvider fraudDefenseProvider = null;
+
     // Variables for reporting plugin type and version, plus helps us make data driven decisions.
     private static String pluginVersion = null;
     private static String pluginName = null;
@@ -648,6 +655,132 @@ public class Branch {
     /**
      * <p>Attaches additional metadata to every outgoing request. This is a runtime setting —
      * it may be changed at any point after initialization.</p>
+     *
+     * @param retryCount An {@link Integer} specifying the number of times to retry before giving
+     *                   up and declaring defeat.
+     */
+    public void setRetryCount(int retryCount) {
+        if (prefHelper_ != null && retryCount >= 0) {
+            prefHelper_.setRetryCount(retryCount);
+        }
+    }
+    
+    /**
+     * Sets the amount of time in milliseconds to wait before re-attempting a timed-out request
+     * to the Branch API. Default 1000 ms.
+     *
+     * @param retryInterval An {@link Integer} value specifying the number of milliseconds to
+     *                      wait before re-attempting a timed-out request.
+     */
+    public void setRetryInterval(int retryInterval) {
+        if (prefHelper_ != null && retryInterval > 0) {
+            prefHelper_.setRetryInterval(retryInterval);
+        }
+    }
+    
+    /**
+     * <p>Sets the duration in milliseconds that the system should wait for a response before timing
+     * out any Branch API. Default 5500 ms. Note that this is the total time allocated for all request
+     * retries as set in {@link #setRetryCount(int)}.
+     *
+     * @param timeout An {@link Integer} value specifying the number of milliseconds to wait before
+     *                considering the request to have timed out.
+     */
+    public void setNetworkTimeout(int timeout) {
+        if (prefHelper_ != null && timeout > 0) {
+            prefHelper_.setTimeout(timeout);
+        }
+    }
+
+    /**
+     * <p>Sets the duration in milliseconds that the system should wait for initializing a network
+     * * request.</p>
+     *
+     * @param connectTimeout An {@link Integer} value specifying the number of milliseconds to wait before
+     *                considering the initialization to have timed out.
+     */
+    public void setNetworkConnectTimeout(int connectTimeout) {
+        if (prefHelper_ != null && connectTimeout > 0) {
+            prefHelper_.setConnectTimeout(connectTimeout);
+        }
+    }
+
+    /**
+     * In cases of persistent no internet connection or offline modes,
+     * set a maximum number of attempts for the Branch Request to be tried.
+     *
+     * Must be greater than 0
+     * Defaults to 3
+     * @param retryMax
+     */
+    public void setNoConnectionRetryMax(int retryMax){
+        if(prefHelper_ != null && retryMax > 0){
+            prefHelper_.setNoConnectionRetryMax(retryMax);
+        }
+    }
+
+    /**
+     * Sets the fraud defense provider for device integrity checks.
+     *
+     * <p>When set, the provider is called during v1/install requests to add fraud defense fields.
+     * The provider must implement {@link BranchSecureSDKProvider} interface.</p>
+     *
+     * <p>Fraud defense includes multiple layers: device attestation, Play Integrity,
+     * and other security checks.</p>
+     *
+     * <p><strong>Optional:</strong> If not set, SDK functions normally without fraud defense.</p>
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * // In Application.onCreate()
+     * BranchSecureSDKProvider fraudDefense = BranchFraudDefense.getInstance(this);
+     * Branch.getInstance().setFraudDefenseProvider(fraudDefense);
+     * }</pre>
+     *
+     * @param provider Fraud defense provider implementing {@link BranchSecureSDKProvider}, or null to disable
+     */
+    public void setFraudDefenseProvider(BranchSecureSDKProvider provider) {
+        this.fraudDefenseProvider = provider;
+        BranchLogger.v("Fraud defense provider " + (provider != null ? "set" : "cleared"));
+        // Registering the provider starts the secure SDK (mirrors iOS setFraudDefenseHandler:).
+        if (provider != null) {
+            provider.initializeBranchSecureSDK(prefHelper_.getBranchKey());
+        }
+    }
+
+    /**
+     * Gets the current fraud defense provider.
+     *
+     * @return Current fraud defense provider, or null if not set
+     */
+    public BranchSecureSDKProvider getFraudDefenseProvider() {
+        return this.fraudDefenseProvider;
+    }
+
+    /**
+     * Enables or disables app tracking with Branch or any other third parties that Branch use internally
+     *
+     * @param isLimitFacebookTracking {@code true} to limit app tracking
+     */
+    public void setLimitFacebookTracking(boolean isLimitFacebookTracking) {
+        prefHelper_.setLimitFacebookTracking(isLimitFacebookTracking);
+    }
+
+    /**
+     * Sets the value of parameters required by Google Conversion APIs for DMA Compliance in EEA region.
+     *
+     * @param eeaRegion {@code true} If European regulations, including the DMA, apply to this user and conversion.
+     * @param adPersonalizationConsent {@code true} If End user has granted/denied ads personalization consent.
+     * @param adUserDataUsageConsent {@code true} If User has granted/denied consent for 3P transmission of user level data for ads.
+     */
+    public void setDMAParamsForEEA(boolean eeaRegion, boolean adPersonalizationConsent, boolean adUserDataUsageConsent) {
+        prefHelper_.setEEARegion(eeaRegion);
+        prefHelper_.setAdPersonalizationConsent(adPersonalizationConsent);
+        prefHelper_.setAdUserDataUsageConsent(adUserDataUsageConsent);
+    }
+
+    /**
+     * <p>Add key value pairs to all requests</p>
      *
      * @param key   A {@link String} key for the metadata entry.
      * @param value A {@link String} value for the metadata entry.
@@ -1273,6 +1406,13 @@ public class Branch {
              r.callback_ = request.callback_;
              BranchLogger.v(r + " now has callback " + request.callback_);
              BranchLogger.v("Updated existing request callback");
+             // The queued init request owns this initialization now; it already carries its own
+             // wait locks and will fire the callback we just handed it. Running initTasks() on the
+             // new instance would enqueue it as well and put a second v3/events/open on the wire —
+             // which is exactly what a host calling init() twice per foreground used to produce.
+             BranchLogger.v("Finished ordering init calls");
+             requestQueue_.printQueue();
+             return;
          }
          BranchLogger.v("Finished ordering init calls");
          requestQueue_.printQueue();
@@ -1294,10 +1434,16 @@ public class Branch {
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
 
-        if (request instanceof ServerRequestRegisterInstall) {
+        // Fresh install: the Play install referrer has to be fetched before the init request goes
+        // out, or install_referrer_extras / app_store / link_identifier (written by
+        // ServerRequestInitSession.updateLinkReferrerParams) are missing and the install is
+        // unattributed. Keyed on "no randomized bundle token yet" rather than on the request type,
+        // because a fresh install is now a RequestOpen (v3/events/open) too, not a
+        // ServerRequestRegisterInstall.
+        if (request instanceof ServerRequestInitSession && !requestQueue_.hasUser()) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
-            BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
+            BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK for fresh-install init request");
 
             deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
                 @Override
@@ -1325,6 +1471,16 @@ public class Branch {
         requestQueue_.handleNewRequest(request);
     }
 
+    /**
+     * Builds the request that initializes the session.
+     *
+     * <p>Every init — fresh install included — now goes out as a {@link RequestOpen} on
+     * {@code v3/events/open}. The legacy {@code v1/install} split is gone: the server tells a fresh
+     * install apart from a repeat open by the {@code update} state / {@code first_install_time} that
+     * {@link ServerRequestInitSession#setPost(JSONObject)} always writes, and it mints the
+     * randomized bundle token in the open response (persisted by the queue's init-response
+     * handling), so the SDK no longer needs a distinct install endpoint to acquire one.</p>
+     */
     ServerRequestInitSession getInstallOrOpenRequest(BranchReferralInitListener callback, boolean isAutoInitialization) {
         boolean hasUser = requestQueue_.hasUser();
         String bundleToken = prefHelper_.getRandomizedBundleToken();
@@ -1336,13 +1492,7 @@ public class Branch {
                 ", sessionId: " + (sessionId.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS") +
                 ", deviceToken: " + (deviceToken.equals(PrefHelper.NO_STRING_VALUE) ? "NO_VALUE" : "EXISTS"));
 
-        ServerRequestInitSession request;
-        if (hasUser) {
-            request = new io.branch.referral.RequestOpen(context_, callback, isAutoInitialization, null);
-        } else {
-            request = new ServerRequestRegisterInstall(context_, callback, isAutoInitialization);
-        }
-        return request;
+        return new io.branch.referral.RequestOpen(context_, callback, isAutoInitialization, null);
     }
     
     void onIntentReady(@NonNull Activity activity) {
@@ -2142,13 +2292,27 @@ public class Branch {
             if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
                 // The foreground observer and the deep link callback both reach here, and the
                 // first open is still queued when the second arrives. Without this the launch
-                // sends two.
+                // sends two. Matches the guard in sendOpen(JSONObject) below.
                 if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
                     BranchLogger.d("sendOpen skipped: an install or open is already pending");
                     return;
                 }
                 RequestOpen requestOpen = new RequestOpen(context_, null, false, null);
-                branchReferral_.requestQueue_.handleNewRequest(requestOpen);
+
+                if (!(getInitState() instanceof BranchSessionState.Initialized)) {
+                    // No session yet and no init queued, so this foreground open IS the session
+                    // initialization (a host that never calls init(), or a re-foreground after
+                    // executeClose() reset the state). It therefore has to wait on the same locks
+                    // as a normal init — above all the launch intent must be parsed before it goes
+                    // out, or the deep link is unattributed (EMT-3860). A host init() arriving
+                    // after this merges its callback into this request instead of queuing another
+                    // open.
+                    BranchLogger.v("sendOpen with no initialized session; routing through initTasks as the session init request");
+                    setInitState(BranchSessionState.Initializing.INSTANCE);
+                    initTasks(requestOpen);
+                } else {
+                    branchReferral_.requestQueue_.handleNewRequest(requestOpen);
+                }
             }
         }
     }

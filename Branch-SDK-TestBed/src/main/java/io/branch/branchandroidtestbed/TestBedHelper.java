@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import io.branch.referral.Branch;
 import io.branch.referral.BranchLogger;
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
 import io.branch.referral.util.BranchEvent;
 
 /**
@@ -37,6 +38,10 @@ public class TestBedHelper {
         for (int i = 0; i < eventCount; i++) {
             new BranchEvent("Event " + i).logEvent(activity);
         }
+        // Also one standard event, so a cold start covers all three signed
+        // endpoints. The Send Commerce/Content/Lifecycle buttons can't be
+        // tapped from a script where `adb shell input` is blocked.
+        new BranchEvent(BRANCH_STANDARD_EVENT.ADD_TO_CART).logEvent(activity);
     }
 
 }

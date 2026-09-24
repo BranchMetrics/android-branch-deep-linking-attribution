@@ -34,10 +34,22 @@ public class ServerRequestGetLATD extends ServerRequest {
         JSONObject reqBody = new JSONObject();
         try {
             setPost(reqBody);
+
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters();
+
+            // Layer 2 + 3 (HMAC signature + nonce) are attached by applySecureContext() below,
+            // from doFinalUpdateOnBackgroundThread — after updateEnvironment() below and the
+            // device/GAds params have settled.
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         updateEnvironment(context, reqBody);
+    }
+
+    @Override
+    protected void applySecureContext() {
+        applyLayer2SecureContext();
     }
 
     ServerRequestGetLATD(Context context, Defines.RequestPath requestPath, Branch.BranchLastAttributedTouchDataListener callback) {

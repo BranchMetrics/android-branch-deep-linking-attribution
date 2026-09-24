@@ -58,6 +58,12 @@ dependencies {
     // In app browser experience
     compileOnly("androidx.browser:browser:1.8.0")
 
+    // Google Play Integrity API (fallback when hardware attestation is unavailable).
+    // Marked optional in the POM so apps only pull it in if they explicitly declare it.
+    // compileOnly does not work with AAR artifacts — implementation is required for
+    // compile-time method resolution.
+    implementation("com.google.android.play:integrity:1.4.0")
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")

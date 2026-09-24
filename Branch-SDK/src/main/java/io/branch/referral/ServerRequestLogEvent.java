@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -48,10 +49,25 @@ public class ServerRequestLogEvent extends ServerRequest {
                 }
             }
             setPost(reqBody);
+
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters();
+
+            // Layer 2 + 3 (HMAC signature + nonce) are attached by applySecureContext() below,
+            // from doFinalUpdateOnBackgroundThread. Signing here would miss updateEnvironment()
+            // below, plus everything updateDeviceInfo() and updateGAdsParams() write later —
+            // user_data.environment, user_data.developer_identity, user_data.aaid,
+            // user_data.limit_ad_tracking, advertising_ids, hardware_id — and would hash a stale
+            // user_data.randomized_device_token.
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
         updateEnvironment(context, reqBody);
+    }
+
+    @Override
+    protected void applySecureContext() {
+        applyLayer2SecureContext();
     }
 
     @Override
