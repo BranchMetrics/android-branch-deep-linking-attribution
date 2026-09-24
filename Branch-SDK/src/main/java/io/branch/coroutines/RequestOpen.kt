@@ -100,12 +100,6 @@ internal class RequestOpen(
         try {
             val responseJson = response.`object`
 
-            // v3/events/open is now the init request for a fresh install too (v1/install is no
-            // longer sent), so the install-response bookkeeping that ServerRequestRegisterInstall
-            // used to own has to happen here. Note the session tokens themselves — session_id,
-            // randomized_device_token and the randomized_bundle_token the server mints for a fresh
-            // install — are persisted by BranchRequestQueue.processInitSessionResponse, which runs
-            // for every ServerRequestInitSession before this method.
             if (responseJson.has(Defines.Jsonkey.Link.key)) {
                 prefHelper_.setUserURL(responseJson.getString(Defines.Jsonkey.Link.key))
             }
