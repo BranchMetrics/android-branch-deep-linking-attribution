@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - master
-      - 6.0.0-beta.0
+      - "6.0.0-beta.*"
   pull_request:
     branches:
       - master
-      - 6.0.0-beta.0
+      - "6.0.0-beta.*"
 
 jobs:
   verify:
