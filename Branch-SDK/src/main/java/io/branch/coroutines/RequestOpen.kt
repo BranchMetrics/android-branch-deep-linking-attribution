@@ -67,11 +67,6 @@ internal class RequestOpen(
             try {
                 val trustFields = provider.addDeviceTrustParams(post)
                 if (trustFields != null) {
-                    // Only marked done once the copy onto post actually completes: the flag
-                    // is what makes every later request use Layer 2 instead, and the server
-                    // can only verify those signatures once it has actually received this
-                    // initialization_context. Setting it before apply() would strand the
-                    // device if apply() threw partway through the copy.
                     SecureContextApplier.apply(trustFields, post)
                     carriedInitializationContext = true
                 }
