@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="EMT-3881: EXTRA_REPLACEMENT_EXTRAS spike"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="1. Chooser test"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/fireChooserButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send with replacement extras" />
+
+        <TextView
+            android:id="@+id/chooserExpectationLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="monospace"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:background="#CCCCCC" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="2. N-parallel-link latency probe (proxy measurement)"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/latencyCountInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="N (default 8)"
+            android:inputType="number"
+            android:text="8" />
+
+        <EditText
+            android:id="@+id/latencyEndpointInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Endpoint URL"
+            android:inputType="textUri"
+            android:text="https://httpbin.org/get" />
+
+        <Button
+            android:id="@+id/runLatencyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Run latency probe" />
+
+        <TextView
+            android:id="@+id/latencyResultView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="monospace"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+</ScrollView>
