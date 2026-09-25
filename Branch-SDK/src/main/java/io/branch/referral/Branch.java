@@ -2147,7 +2147,7 @@ public class Branch {
                     BranchLogger.d("sendOpen skipped: an install or open is already pending");
                     return;
                 }
-                RequestOpen requestOpen = new RequestOpen(context_, null, false, null);
+                RequestOpen requestOpen = new RequestOpen(context_, null, false, null, true);
                 branchReferral_.requestQueue_.handleNewRequest(requestOpen);
             }
         }
@@ -2161,11 +2161,17 @@ public class Branch {
 
             BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
             if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
+                RequestOpen requestOpen = new RequestOpen(context_, null, false, responseData);
+                // Runs inside the resolve's response, so a foreground open queued during the resolve
+                // has not been sent yet. It carries no link_data, so this open takes its place.
+                if (branchReferral_.requestQueue_.replaceQueuedForegroundOpen(requestOpen)) {
+                    BranchLogger.v("sendOpen replaced the queued foreground open with the chained open");
+                    return;
+                }
                 if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
                     BranchLogger.d("sendOpen skipped: an install or open is already pending");
                     return;
                 }
-                RequestOpen requestOpen = new RequestOpen(context_, null, false, responseData);
                 branchReferral_.requestQueue_.handleNewRequest(requestOpen);
             }
         }
