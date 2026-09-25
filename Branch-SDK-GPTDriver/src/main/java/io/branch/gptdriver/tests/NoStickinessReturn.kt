@@ -83,11 +83,8 @@ class NoStickinessReturn {
         val returnMarker = NoStickinessSupport.currentLineCount(captureFile)
         tapExactlyOneRecentCard()
 
-        val signal = awaitForegroundSignal(returnMarker)
-        check(signal != null) {
-            "no foreground signal (open succeeded or onStart dispatch) since the return within ${RETURN_SIGNAL_MS}ms"
-        }
-        Log.i(TAG, "foreground signal since return: $signal")
+        val path = awaitReturnSettled(returnMarker)
+        Log.i(TAG, "foreground signal path since return: $path")
 
         val sinceReturn = NoStickinessSupport.linesSince(captureFile, returnMarker)
         val deeplinkPosts = sinceReturn.count { it.contains("posting to") && it.contains("/v3/deeplink") }
@@ -106,21 +103,26 @@ class NoStickinessReturn {
         Log.i(TAG, "diagnostic accessor after return: ${Branch.getInstance().getLatestReferringParams()}")
     }
 
-    private fun awaitForegroundSignal(fromLine: Int): String? {
-        val deadline = System.currentTimeMillis() + RETURN_SIGNAL_MS
-        while (System.currentTimeMillis() < deadline) {
-            foregroundSignalIn(fromLine)?.let { return it }
-            Thread.sleep(NoStickinessSupport.POLL_MS)
+    // Primary: the return's own open completing is the real signal. The onStart dispatch line
+    // logs before that open is even sent, so it is only trusted as a fallback, and only after a
+    // quiet window, so a delayed /v3/deeplink post still has time to land before the checks below.
+    private fun awaitReturnSettled(fromLine: Int): String {
+        if (NoStickinessSupport.awaitCaptureFrom(captureFile, NoStickinessSupport.REQUEST_OPEN_SUCCEEDED, fromLine, RETURN_SIGNAL_MS)) {
+            return "primary"
         }
-        return foregroundSignalIn(fromLine)
+        check(NoStickinessSupport.awaitCaptureFrom(captureFile, NoStickinessSupport.ONSTART_DISPATCH_LINE, fromLine, FALLBACK_SIGNAL_MS)) {
+            "no foreground signal (open succeeded or onStart dispatch) since the return within ${RETURN_SIGNAL_MS + FALLBACK_SIGNAL_MS}ms"
+        }
+        Log.i(TAG, "primary open signal never arrived; using the onStart dispatch fallback, then waiting for quiet")
+        awaitQuiescence(QUIESCENCE_MS)
+        return "fallback"
     }
 
-    private fun foregroundSignalIn(fromLine: Int): String? {
-        val lines = NoStickinessSupport.linesSince(captureFile, fromLine)
-        return when {
-            lines.any { it.contains(NoStickinessSupport.REQUEST_OPEN_SUCCEEDED) } -> "open_succeeded"
-            lines.any { it.contains(NoStickinessSupport.ONSTART_DISPATCH_LINE) } -> "onstart_dispatch"
-            else -> null
+    // Bounded settle, no condition to poll for: just lets a delayed post have time to appear.
+    private fun awaitQuiescence(windowMs: Long) {
+        val deadline = System.currentTimeMillis() + windowMs
+        while (System.currentTimeMillis() < deadline) {
+            Thread.sleep(NoStickinessSupport.POLL_MS)
         }
     }
 
@@ -200,6 +202,8 @@ class NoStickinessReturn {
         const val HOME_BACKGROUND_MS = 5_000L
         const val RECENTS_WAIT_MS = 5_000L
         const val RETURN_SIGNAL_MS = 15_000L
+        const val FALLBACK_SIGNAL_MS = 5_000L
+        const val QUIESCENCE_MS = 3_000L
         const val SETTINGS_VISIBLE_MS = 5_000L
         val SNAPSHOT_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/snapshot$"))
         val RECENT_HEADER = Regex("""Recent #\d+: Task\{\S+ #(\d+) type=(\S+)""")
