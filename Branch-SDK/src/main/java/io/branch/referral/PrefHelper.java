@@ -520,7 +520,7 @@ public class PrefHelper {
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      * <p>
-     * <p><b>Note: </b> Not to be confused with {@link #setUseAlias(String)} - the name of the user</p>
+     * <p><b>Note: </b> Not to be confused with {@link #setUserAlias(String)} - the alias for a user</p>
      *
      * @param randomized_bundle_token A {@link String} value containing the currently configured identity
      *                    within preferences.
