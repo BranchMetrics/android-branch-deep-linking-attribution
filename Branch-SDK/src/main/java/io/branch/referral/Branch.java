@@ -7,7 +7,6 @@ import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -34,7 +33,6 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -42,8 +40,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.branch.coroutines.RequestDeepLink;
 import io.branch.indexing.BranchUniversalObject;
-import io.branch.interfaces.IBranchLoggingCallbacks;
-import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
@@ -773,12 +769,12 @@ public class Branch {
      *
      * @param userId A {@link String} value containing the unique identifier of the user.
      */
-    public void setIdentity(@NonNull String userId) {
-        setIdentity(userId, null);
+    public void setUserAlias(@NonNull String userId) {
+        setUserAlias(userId, null);
     }
     
     /**
-     * <p>Identifies the current user to the Branch API by supplying a unique identifier as a
+     * <p>Sets a user alias to the Branch API by supplying a unique identifier as a
      * {@link String} value, with a callback specified to perform a defined action upon successful
      * response to request.</p>
      *
@@ -787,21 +783,21 @@ public class Branch {
      *                 the data associated with the user id being assigned, if available.
      */
 
-    public void setIdentity(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
-        this.requestQueue_.handleNewRequest(new QueueOperationSetIdentity(context_, Defines.RequestPath.SetIdentity, userId, callback));
+    public void setUserAlias(@NonNull String userId, @Nullable BranchReferralInitListener callback) {
+        this.requestQueue_.handleNewRequest(new QueueOperationSetUserAlias(context_, Defines.RequestPath.SetUserAlias, userId, callback));
     }
 
 
 
     /**
-     * Indicates whether or not this user has a custom identity specified for them. Note that this is independent of installs.
-     * If you call setIdentity, this device will have that identity associated with this user until logout is called.
+     * Indicates whether or not this user has a custom alias specified for them. Note that this is independent of installs.
+     * If you call setUserAlias, this device will have that alias associated with this user until logout is called.
      * This includes persisting through uninstalls, as we track device id.
      *
-     * @return A {@link Boolean} value that will return <i>true</i> only if user already has an identity.
+     * @return A {@link Boolean} value that will return <i>true</i> only if user already has an alias.
      */
     public boolean isUserIdentified() {
-        return !prefHelper_.getIdentity().equals(PrefHelper.NO_STRING_VALUE);
+        return !prefHelper_.getUserAlias().equals(PrefHelper.NO_STRING_VALUE);
     }
 
     /**
@@ -834,7 +830,7 @@ public class Branch {
      * <p>Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
      * It is also only set if isReferrable is equal to true, which by default is only true
-     * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the
+     * on a fresh install (not upgrade or reinstall). This will change on setUserAlias (if the
      * user already exists from a previous device) and logout.</p>
      *
      * @return A {@link JSONObject} containing the install-time parameters as configured
@@ -875,7 +871,7 @@ public class Branch {
      * Returns the parameters associated with the link that referred the user. This is only set once,
      * the first time the user is referred by a link. Think of this as the user referral parameters.
      * It is also only set if isReferrable is equal to true, which by default is only true
-     * on a fresh install (not upgrade or reinstall). This will change on setIdentity (if the
+     * on a fresh install (not upgrade or reinstall). This will change on setUserAlias (if the
      * user already exists from a previous device) and logout.</p>
      *
      * @return A {@link JSONObject} containing the install-time parameters as configured
