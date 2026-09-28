@@ -8,9 +8,6 @@ import android.provider.Settings
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitor
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
-import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
@@ -75,11 +72,21 @@ class NoStickinessReturn {
             launchSecondAppAndAwaitVisible()
         }
 
+        val preBackgroundMarker = NoStickinessSupport.currentLineCount(captureFile)
         uiDevice.pressHome()
-        // This step's own bounded background wait; the process stop-dispatch wait is added later.
-        check(waitForStopped(mainActivity, HOME_BACKGROUND_MS)) {
-            "activity did not reach STOPPED within ${HOME_BACKGROUND_MS}ms after pressHome"
+        check(
+            NoStickinessSupport.awaitCaptureFrom(
+                captureFile, NoStickinessSupport.ONSTOP_DISPATCH_LINE, preBackgroundMarker, STOP_DISPATCH_MS
+            )
+        ) {
+            "no stop-dispatch line within ${STOP_DISPATCH_MS}ms after pressHome"
         }
+        check(!Branch.getInstance().requestQueue_.containsInstallOpenOrResolution()) {
+            "queue held an install, open or resolution at the stop dispatch"
+        }
+        // Diagnostic only; the pass/fail verdict never reads this one.
+        Log.i(TAG, "diagnostic accessor after background: ${Branch.getInstance().getLatestReferringParams()}")
+
         val returnMarker = NoStickinessSupport.currentLineCount(captureFile)
         tapExactlyOneRecentCard()
 
@@ -146,23 +153,6 @@ class NoStickinessReturn {
         uiDevice.wait(Until.gone(SNAPSHOT_SELECTOR), RECENTS_WAIT_MS)
     }
 
-    private fun waitForStopped(activity: Activity, timeoutMs: Long): Boolean {
-        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
-        val deadline = System.currentTimeMillis() + timeoutMs
-        while (System.currentTimeMillis() < deadline) {
-            if (stageOnMainThread(monitor, activity) == Stage.STOPPED) return true
-            Thread.sleep(NoStickinessSupport.POLL_MS)
-        }
-        return stageOnMainThread(monitor, activity) == Stage.STOPPED
-    }
-
-    // The lifecycle monitor only allows reading stage from the main thread.
-    private fun stageOnMainThread(monitor: ActivityLifecycleMonitor, activity: Activity): Stage {
-        var stage = Stage.PRE_ON_CREATE
-        instrumentation.runOnMainSync { stage = monitor.getLifecycleStageOf(activity) }
-        return stage
-    }
-
     // dumpsys activity recents (not activities): the launcher renders cards from its whole
     // recents history, including tasks whose process already died, not just live ones. `am
     // task` has no remove subcommand on this image; `am stack remove` takes a task ID directly,
@@ -199,7 +189,7 @@ class NoStickinessReturn {
         const val ARG_FORCE_ZERO = "no_stickiness_force_zero_cards"
         const val ARG_FORCE_EXTRA = "no_stickiness_force_extra_card"
         const val DEFAULT_SETTINGS_PACKAGE = "com.android.settings"
-        const val HOME_BACKGROUND_MS = 5_000L
+        const val STOP_DISPATCH_MS = 5_000L
         const val RECENTS_WAIT_MS = 5_000L
         const val RETURN_SIGNAL_MS = 15_000L
         const val FALLBACK_SIGNAL_MS = 5_000L
