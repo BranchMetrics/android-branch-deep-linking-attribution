@@ -90,7 +90,7 @@ public class SettingsActivity extends Activity {
         strBuilder.append("\n\nApp Store Source: " + prefHelper.getAppStoreSource());
         strBuilder.append("\n\nBranch Key: " + prefHelper.getBranchKey());
         strBuilder.append("\n\nGoogle Search Install ID: " + prefHelper.getGoogleSearchInstallIdentifier());
-        strBuilder.append("\n\nIdentity: " + prefHelper.getIdentity());
+        strBuilder.append("\n\nIdentity: " + prefHelper.getUserAlias());
         strBuilder.append("\n\nInitial Referrer: " + prefHelper.getInitialReferrer());
         strBuilder.append("\n\nLink Click ID: " + prefHelper.getLinkClickID());
         strBuilder.append("\n\nRandomized Bundle Token: " + prefHelper.getRandomizedBundleToken());
