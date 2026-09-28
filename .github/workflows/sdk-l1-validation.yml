@@ -216,8 +216,15 @@ jobs:
         if: steps.validate.outcome == 'failure'
         run: exit 1
 
+      # Only upload from PRs originating in this repo, same as "Upload Logs on
+      # Failure" above. Forked PRs already have GITHUB_TOKEN write
+      # restrictions, so the raw artifacts never escape to fork uploads.
+      # Written with an explicit event_name check (rather than copying the
+      # adjacent step's condition verbatim) so the step still runs on
+      # workflow_dispatch and push, where github.event.pull_request is unset
+      # and a bare equality check would silently skip the step.
       - name: Upload no_stickiness failure artifacts
-        if: always() && steps.run_scenarios.outputs.result != 'pass'
+        if: always() && steps.run_scenarios.outputs.result != 'pass' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: actions/upload-artifact@v4
         with:
           name: no-stickiness-failure
