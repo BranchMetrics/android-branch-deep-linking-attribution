@@ -130,6 +130,20 @@ internal object NoStickinessSupport {
 
     fun currentLineCount(captureFile: File): Int = if (captureFile.exists()) captureFile.readLines().size else 0
 
+    // Bounded settle: waits for two consecutive equal line-count reads, mirroring stableCards();
+    // proceeds past the deadline and logs it, since a late post still fails a caller's absence check.
+    fun awaitQuiescentLineCount(captureFile: File, deadlineMs: Long) {
+        val deadline = System.currentTimeMillis() + deadlineMs
+        var last = currentLineCount(captureFile)
+        while (System.currentTimeMillis() < deadline) {
+            Thread.sleep(POLL_MS)
+            val next = currentLineCount(captureFile)
+            if (next == last) return
+            last = next
+        }
+        Log.i(TAG, "quiescence settle hit its deadline at line count $last")
+    }
+
     fun linesSince(captureFile: File, fromLine: Int): List<String> =
         if (captureFile.exists()) captureFile.readLines().drop(fromLine) else emptyList()
 
