@@ -216,6 +216,17 @@ jobs:
         if: steps.validate.outcome == 'failure'
         run: exit 1
 
+      - name: Upload no_stickiness failure artifacts
+        if: always() && steps.run_scenarios.outputs.result != 'pass'
+        uses: actions/upload-artifact@v4
+        with:
+          name: no-stickiness-failure
+          path: |
+            no-stickiness-artifacts/
+            no-stickiness-instrument.log
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Fail the job if no_stickiness did not pass
         if: always() && steps.run_scenarios.outputs.result != 'pass'
         run: exit 1
