@@ -161,7 +161,7 @@ class NoStickinessReturn {
         try {
             tapExactlyOneRecentCardOrThrow()
         } catch (e: Throwable) {
-            NoStickinessSupport.captureFailureArtifacts(uiDevice, context, TAG)
+            NoStickinessSupport.captureFailureArtifacts(uiDevice, TAG)
             throw e
         }
     }

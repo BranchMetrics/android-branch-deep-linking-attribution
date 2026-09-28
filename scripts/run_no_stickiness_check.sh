@@ -22,7 +22,7 @@ RUNNER="androidx.test.runner.AndroidJUnitRunner"
 TEST_CLASS="io.branch.gptdriver.tests.NoStickinessReturn"
 RUN_TIMEOUT_S="${RUN_TIMEOUT_S:-180}"
 INSTRUMENT_LOG="no-stickiness-instrument.log"
-REMOTE_ARTIFACTS_DIR="/sdcard/Android/data/${TARGET_PKG}/files/no_stickiness_artifacts"
+REMOTE_ARTIFACTS_DIR="/sdcard/Download/no_stickiness_artifacts"
 LOCAL_ARTIFACTS_DIR="no-stickiness-artifacts"
 
 emit() {
