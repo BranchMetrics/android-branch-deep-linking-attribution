@@ -65,3 +65,4 @@ if [ -z "$result" ]; then
 fi
 
 emit "$result" "${reason:-none}"
+exit 0
