@@ -178,20 +178,23 @@ class NoStickinessReturn {
             "expected exactly one live task in dumpsys activity recents, found $liveTasks; ${diagnostic()}"
         }
         var candidates = awaitRenderedCard()
-        // Launcher is foreground (the press took effect) but no card rendered yet: keep
-        // polling instead of re-pressing, since a second press on a slow Overview can
-        // toggle back to the prior app. Re-press stays reserved for stillInOwnApp().
+        // The liveTasks==1 check above already ruled out the forced-extra-card case, so the
+        // only two possible foreground packages here are our own app (a transient lag before
+        // Overview renders; re-press can help) or the launcher's Overview (the press took
+        // effect; keep polling instead, since a second press on a slow Overview can toggle
+        // back to the prior app instead of helping). PackageManager resolution of the HOME
+        // intent is not used to tell them apart: measured on-device, it can resolve to an
+        // unrelated system package instead of the real launcher, so "not our own app" is the
+        // only signal trusted here.
         var path = "immediate"
         if (candidates.isEmpty()) {
-            if (onLauncherForeground()) {
-                path = "launcher_extended_wait"
-                candidates = awaitRenderedCard(LAUNCHER_EXTENDED_WAIT_MS)
-            } else if (stillInOwnApp()) {
+            if (stillInOwnApp()) {
                 path = "re_press"
                 uiDevice.pressRecentApps()
                 candidates = awaitRenderedCard()
             } else {
-                path = "no_wait_available"
+                path = "launcher_extended_wait"
+                candidates = awaitRenderedCard(LAUNCHER_EXTENDED_WAIT_MS)
             }
         }
         Log.i(TAG, "recents path=$path cardWaitMs=${System.currentTimeMillis() - recentsPressedAt} found=${candidates.isNotEmpty()}")
@@ -202,16 +205,6 @@ class NoStickinessReturn {
     }
 
     private fun stillInOwnApp(): Boolean = uiDevice.currentPackageName == context.packageName
-
-    // Resolved, not hardcoded: the launcher package varies by device/skin (the evidence run's
-    // was com.google.android.apps.nexuslauncher). This is what the recents press actually
-    // brought to the foreground, so it is what decides whether the extended wait applies.
-    private fun onLauncherForeground(): Boolean {
-        val launcherPackage = context.packageManager
-            .resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)
-            ?.activityInfo?.packageName
-        return launcherPackage != null && uiDevice.currentPackageName == launcherPackage
-    }
 
     private fun diagnostic(): String =
         NoStickinessSupport.cardCountDiagnostic(uiDevice, instrumentation, SNAPSHOT_SELECTOR)
