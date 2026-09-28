@@ -158,6 +158,7 @@ class NoStickinessReturn {
     // one. `Activities=[]` on a task is authoritative on both API 30 and 34, ghost-proof, and
     // unaffected by which card the carousel currently has centered.
     private fun tapExactlyOneRecentCard() {
+        val recentsPressedAt = System.currentTimeMillis()
         uiDevice.pressRecentApps()
         uiDevice.wait(Until.hasObject(CARD_SELECTOR), RECENTS_WAIT_MS)
         if (forceZeroCards) {
@@ -168,12 +169,23 @@ class NoStickinessReturn {
             "expected exactly one live task in dumpsys activity recents, found $liveTasks; ${diagnostic()}"
         }
         var candidates = awaitRenderedCard()
-        // Re-press only while still on our own package; a second press on a slow
-        // Overview can toggle back to the prior app.
-        if (candidates.isEmpty() && stillInOwnApp()) {
-            uiDevice.pressRecentApps()
-            candidates = awaitRenderedCard()
+        // Launcher is foreground (the press took effect) but no card rendered yet: keep
+        // polling instead of re-pressing, since a second press on a slow Overview can
+        // toggle back to the prior app. Re-press stays reserved for stillInOwnApp().
+        var path = "immediate"
+        if (candidates.isEmpty()) {
+            if (onLauncherForeground()) {
+                path = "launcher_extended_wait"
+                candidates = awaitRenderedCard(LAUNCHER_EXTENDED_WAIT_MS)
+            } else if (stillInOwnApp()) {
+                path = "re_press"
+                uiDevice.pressRecentApps()
+                candidates = awaitRenderedCard()
+            } else {
+                path = "no_wait_available"
+            }
         }
+        Log.i(TAG, "recents path=$path cardWaitMs=${System.currentTimeMillis() - recentsPressedAt} found=${candidates.isNotEmpty()}")
         check(candidates.isNotEmpty()) {
             "one live task in recents but no rendered card matched the snapshot selector; ${diagnostic()}"
         }
@@ -182,14 +194,24 @@ class NoStickinessReturn {
 
     private fun stillInOwnApp(): Boolean = uiDevice.currentPackageName == context.packageName
 
+    // Resolved, not hardcoded: the launcher package varies by device/skin (the evidence run's
+    // was com.google.android.apps.nexuslauncher). This is what the recents press actually
+    // brought to the foreground, so it is what decides whether the extended wait applies.
+    private fun onLauncherForeground(): Boolean {
+        val launcherPackage = context.packageManager
+            .resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)
+            ?.activityInfo?.packageName
+        return launcherPackage != null && uiDevice.currentPackageName == launcherPackage
+    }
+
     private fun diagnostic(): String =
         NoStickinessSupport.cardCountDiagnostic(uiDevice, instrumentation, SNAPSHOT_SELECTOR)
 
     // dumpsys already proved exactly one live task exists; an empty stableCards() read here
     // is the launcher still animating the icon in, not a real zero, so this keeps sampling
     // past one stable-but-empty read instead of trusting it the way dismissAllRecentCards does.
-    private fun awaitRenderedCard(): List<UiObject2> {
-        val deadline = System.currentTimeMillis() + RECENTS_WAIT_MS
+    private fun awaitRenderedCard(timeoutMs: Long = RECENTS_WAIT_MS): List<UiObject2> {
+        val deadline = System.currentTimeMillis() + timeoutMs
         var candidates = stableCards()
         while (candidates.isEmpty() && System.currentTimeMillis() < deadline) {
             candidates = stableCards()
@@ -244,6 +266,7 @@ class NoStickinessReturn {
         const val DEFAULT_SETTINGS_PACKAGE = "com.android.settings"
         const val STOP_DISPATCH_MS = 5_000L
         const val RECENTS_WAIT_MS = 5_000L
+        const val LAUNCHER_EXTENDED_WAIT_MS = 10_000L
         const val STABLE_READ_MS = 1_500L
         const val STABLE_POLL_MS = 250L
         const val DISMISS_SETTLE_MS = 1_500L
