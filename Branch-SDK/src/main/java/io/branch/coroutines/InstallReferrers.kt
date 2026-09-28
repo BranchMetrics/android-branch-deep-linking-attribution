@@ -13,63 +13,139 @@ import io.branch.referral.util.classExists
 import io.branch.referral.util.huaweiInstallReferrerClass
 import io.branch.referral.util.samsungInstallReferrerClass
 import io.branch.referral.util.xiaomiInstallReferrerClass
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONException
 import org.json.JSONObject
 import java.net.URLDecoder
+import java.util.concurrent.Executor
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val installReferrer = "install_referrer"
 private const val isCt = "is_ct"
 private const val actualTimestamp = "actual_timestamp"
 
+// Reads off the setup callback's thread, which can be main. Returns null on failure.
+internal suspend fun <T> readInstallReferrer(
+    startConnection: (onSetupFinished: (Int) -> Unit, onDisconnected: () -> Unit) -> Unit,
+    isResponseOk: (Int) -> Boolean,
+    readReferrer: () -> T?,
+    endConnection: () -> Unit,
+    readExecutor: Executor = Dispatchers.IO.asExecutor()
+): T? {
+    val deferredReferrer = CompletableDeferred<T?>()
+    val callbackReceived = AtomicBoolean(false)
+
+    fun endConnectionQuietly() {
+        try {
+            endConnection()
+        }
+        catch (e: Exception) {
+            BranchLogger.w("Caught readInstallReferrer endConnection exception: $e")
+        }
+    }
+
+    fun runOffCallbackThread(task: () -> Unit) {
+        try {
+            readExecutor.execute { task() }
+        }
+        catch (e: Exception) {
+            BranchLogger.w("Caught readInstallReferrer executor exception: $e")
+            deferredReferrer.complete(null)
+            endConnectionQuietly()
+        }
+    }
+
+    val onSetupFinished: (Int) -> Unit = { responseCode ->
+        if (callbackReceived.compareAndSet(false, true)) {
+            runOffCallbackThread {
+                try {
+                    deferredReferrer.complete(if (isResponseOk(responseCode)) readReferrer() else null)
+                }
+                catch (e: Exception) {
+                    BranchLogger.w("Caught readInstallReferrer exception: $e")
+                }
+                finally {
+                    deferredReferrer.complete(null)
+                    endConnectionQuietly()
+                }
+            }
+        }
+    }
+
+    val onDisconnected: () -> Unit = {
+        if (callbackReceived.compareAndSet(false, true)) {
+            deferredReferrer.complete(null)
+            runOffCallbackThread { endConnectionQuietly() }
+        }
+    }
+
+    try {
+        startConnection(onSetupFinished, onDisconnected)
+    }
+    catch (e: Exception) {
+        BranchLogger.w("Caught readInstallReferrer startConnection exception: $e")
+        if (callbackReceived.compareAndSet(false, true)) {
+            endConnectionQuietly()
+        }
+        return null
+    }
+
+    return try {
+        deferredReferrer.await()
+    }
+    catch (e: CancellationException) {
+        // No setup callback yet, so nothing else ends the connection.
+        if (callbackReceived.compareAndSet(false, true)) {
+            endConnectionQuietly()
+        }
+        throw e
+    }
+}
+
 suspend fun getGooglePlayStoreReferrerDetails(context: Context): InstallReferrerResult? {
     return withContext(Dispatchers.Default) {
         try {
-            val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
             val client = InstallReferrerClient.newBuilder(context.applicationContext).build()
 
-            client.startConnection(object : InstallReferrerStateListener {
-                override fun onInstallReferrerSetupFinished(responseInt: Int) {
-                    BranchLogger.v("getGooglePlayStoreReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+            readInstallReferrer(
+                startConnection = { onSetupFinished, onDisconnected ->
+                    client.startConnection(object : InstallReferrerStateListener {
+                        override fun onInstallReferrerSetupFinished(responseInt: Int) {
+                            BranchLogger.v("getGooglePlayStoreReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+                            onSetupFinished(responseInt)
+                        }
 
-                    if (responseInt == InstallReferrerClient.InstallReferrerResponse.OK) {
-                        deferredReferrerDetails.complete(
-                            try {
-                                val result = client.installReferrer
-                                InstallReferrerResult(Jsonkey.Google_Play_Store.key,
-                                    result.installBeginTimestampSeconds,
-                                    result.installReferrer,
-                                    result.referrerClickTimestampSeconds,
-                                    result.installBeginTimestampServerSeconds,
-                                    result.referrerClickTimestampServerSeconds
-                                )
-                            }
-                            catch (e: Exception) {
-                                BranchLogger.w("Caught getGooglePlayStoreReferrerDetails installReferrer exception: $e")
-                                null
-                            }
+                        override fun onInstallReferrerServiceDisconnected() {
+                            onDisconnected()
+                        }
+                    })
+                },
+                isResponseOk = { it == InstallReferrerClient.InstallReferrerResponse.OK },
+                readReferrer = {
+                    try {
+                        val result = client.installReferrer
+                        InstallReferrerResult(Jsonkey.Google_Play_Store.key,
+                            result.installBeginTimestampSeconds,
+                            result.installReferrer,
+                            result.referrerClickTimestampSeconds,
+                            result.installBeginTimestampServerSeconds,
+                            result.referrerClickTimestampServerSeconds
                         )
                     }
-                    else {
-                        deferredReferrerDetails.complete(null)
+                    catch (e: Exception) {
+                        BranchLogger.w("Caught getGooglePlayStoreReferrerDetails installReferrer exception: $e")
+                        null
                     }
-
-                    client.endConnection()
-                }
-
-                override fun onInstallReferrerServiceDisconnected() {
-                    if (!deferredReferrerDetails.isCompleted) {
-                        deferredReferrerDetails.complete(null)
-                    }
-                }
-            })
-
-            deferredReferrerDetails.await()
+                },
+                endConnection = { client.endConnection() }
+            )
         }
         catch (exception: Exception) {
             BranchLogger.w("Caught getGooglePlayStoreReferrerDetails exception: $exception")
@@ -82,49 +158,47 @@ suspend fun getHuaweiAppGalleryReferrerDetails(context: Context): InstallReferre
     return withContext(Dispatchers.Default) {
         if(classExists(huaweiInstallReferrerClass)) {
             try {
-                val deferredReferrerDetails =
-                    CompletableDeferred<InstallReferrerResult?>()
                 val client =
                     com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.newBuilder(context)
                         .build()
 
-                client.startConnection(object :
-                    com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener {
-                    override fun onInstallReferrerSetupFinished(responseInt: Int) {
-                        BranchLogger.v("getHuaweiAppGalleryReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
+                readInstallReferrer(
+                    startConnection = { onSetupFinished, onDisconnected ->
+                        client.startConnection(object :
+                            com.huawei.hms.ads.installreferrer.api.InstallReferrerStateListener {
+                            override fun onInstallReferrerSetupFinished(responseInt: Int) {
+                                BranchLogger.v("getHuaweiAppGalleryReferrerDetails onInstallReferrerSetupFinished response code: $responseInt")
 
-                        if (responseInt == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
-                            deferredReferrerDetails.complete(
-                                try {
-                                    val result = client.installReferrer
-                                    InstallReferrerResult(
-                                        Jsonkey.Huawei_App_Gallery.key,
-                                        result.installBeginTimestampSeconds,
-                                        result.installReferrer,
-                                        result.referrerClickTimestampSeconds,
-                                        null,
-                                        null
-                                    )
-                                } catch (e: Exception) {
-                                    BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails exception: $e")
-                                    null
+                                if (responseInt != com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
+                                    BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails response code: $responseInt")
                                 }
+                                onSetupFinished(responseInt)
+                            }
+
+                            override fun onInstallReferrerServiceDisconnected() {
+                                onDisconnected()
+                            }
+                        })
+                    },
+                    isResponseOk = { it == com.huawei.hms.ads.installreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK },
+                    readReferrer = {
+                        try {
+                            val result = client.installReferrer
+                            InstallReferrerResult(
+                                Jsonkey.Huawei_App_Gallery.key,
+                                result.installBeginTimestampSeconds,
+                                result.installReferrer,
+                                result.referrerClickTimestampSeconds,
+                                null,
+                                null
                             )
-                        } else {
-                            BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails response code: $responseInt")
-                            deferredReferrerDetails.complete(null)
+                        } catch (e: Exception) {
+                            BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails exception: $e")
+                            null
                         }
-                        client.endConnection()
-                    }
-
-                    override fun onInstallReferrerServiceDisconnected() {
-                        if (!deferredReferrerDetails.isCompleted) {
-                            deferredReferrerDetails.complete(null)
-                        }
-                    }
-                })
-
-                deferredReferrerDetails.await()
+                    },
+                    endConnection = { client.endConnection() }
+                )
             } catch (exception: Exception) {
                 BranchLogger.w("Caught getHuaweiAppGalleryReferrerDetails exception: $exception")
                 null
@@ -140,51 +214,49 @@ suspend fun getSamsungGalaxyStoreReferrerDetails(context: Context): InstallRefer
     return withContext(Dispatchers.Default) {
         if(classExists(samsungInstallReferrerClass)) {
             try {
-                val deferredReferrerDetails =
-                    CompletableDeferred<InstallReferrerResult?>()
                 val client =
                     com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.newBuilder(
                         context
                     ).build()
 
-                client.startConnection(object :
-                    com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
-                    override fun onInstallReferrerSetupFinished(p0: Int) {
-                        BranchLogger.v("getSamsungGalaxyStoreReferrerDetails onInstallReferrerSetupFinished response code: $p0")
+                readInstallReferrer(
+                    startConnection = { onSetupFinished, onDisconnected ->
+                        client.startConnection(object :
+                            com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerStateListener {
+                            override fun onInstallReferrerSetupFinished(p0: Int) {
+                                BranchLogger.v("getSamsungGalaxyStoreReferrerDetails onInstallReferrerSetupFinished response code: $p0")
 
-                        if (p0 == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
-                            deferredReferrerDetails.complete(
-                                try {
-                                    val result = client.installReferrer
-                                    InstallReferrerResult(
-                                        Jsonkey.Samsung_Galaxy_Store.key,
-                                        result.installBeginTimestampSeconds,
-                                        result.installReferrer,
-                                        result.referrerClickTimestampSeconds,
-                                        null,
-                                        null
-                                    )
+                                if (p0 != com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK) {
+                                    BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails response code: $p0")
                                 }
-                                catch (e: Exception) {
-                                    BranchLogger.e("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
-                                    null
-                                }
+                                onSetupFinished(p0)
+                            }
+
+                            override fun onInstallReferrerServiceDisconnected() {
+                                onDisconnected()
+                            }
+                        })
+                    },
+                    isResponseOk = { it == com.samsung.android.sdk.sinstallreferrer.api.InstallReferrerClient.InstallReferrerResponse.OK },
+                    readReferrer = {
+                        try {
+                            val result = client.installReferrer
+                            InstallReferrerResult(
+                                Jsonkey.Samsung_Galaxy_Store.key,
+                                result.installBeginTimestampSeconds,
+                                result.installReferrer,
+                                result.referrerClickTimestampSeconds,
+                                null,
+                                null
                             )
-                        } else {
-                            BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails response code: $p0")
-                            deferredReferrerDetails.complete(null)
                         }
-                        client.endConnection()
-                    }
-
-                    override fun onInstallReferrerServiceDisconnected() {
-                        if (!deferredReferrerDetails.isCompleted) {
-                            deferredReferrerDetails.complete(null)
+                        catch (e: Exception) {
+                            BranchLogger.e("Caught getSamsungGalaxyStoreReferrerDetails exception: $e")
+                            null
                         }
-                    }
-                })
-
-                deferredReferrerDetails.await()
+                    },
+                    endConnection = { client.endConnection() }
+                )
             } catch (exception: Exception) {
                 BranchLogger.w("Caught getSamsungGalaxyStoreReferrerDetails exception: $exception")
                 null
@@ -201,44 +273,44 @@ suspend fun getXiaomiGetAppsReferrerDetails(context: Context): InstallReferrerRe
         // Install Referrer API availability varies between Xiaomi's MIUI and HyperOS
         if(classExists(xiaomiInstallReferrerClass)) {
             try {
-                val deferredReferrerDetails = CompletableDeferred<InstallReferrerResult?>()
                 val client = com.miui.referrer.api.GetAppsReferrerClient.newBuilder(context).build()
 
-                client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
-                    override fun onGetAppsReferrerSetupFinished(state: Int) {
-                        BranchLogger.v("getXiaomiGetAppsReferrerDetails onInstallReferrerSetupFinished response code: $state")
+                readInstallReferrer(
+                    startConnection = { onSetupFinished, onDisconnected ->
+                        client.startConnection(object : com.miui.referrer.api.GetAppsReferrerStateListener {
+                            override fun onGetAppsReferrerSetupFinished(state: Int) {
+                                BranchLogger.v("getXiaomiGetAppsReferrerDetails onInstallReferrerSetupFinished response code: $state")
 
-                        if (state == com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
-                            deferredReferrerDetails.complete(
-                                try {
-                                    val result = client.installReferrer
-                                    InstallReferrerResult(
-                                        Jsonkey.Xiaomi_Get_Apps.key,
-                                        result.installBeginTimestampSeconds,
-                                        result.installReferrer,
-                                        result.referrerClickTimestampSeconds,
-                                        result.installBeginTimestampServerSeconds,
-                                        result.referrerClickTimestampServerSeconds
-                                    )
-                                } catch (e: Exception) {
-                                    BranchLogger.e("Caught getXiaomiGetAppsReferrerDetails exception: $e")
-                                    null
+                                if (state != com.miui.referrer.annotation.GetAppsReferrerResponse.OK) {
+                                    BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails response code: $state")
                                 }
-                            )
-                        } else {
-                            BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails response code: $state")
-                            deferredReferrerDetails.complete(null)
-                        }
-                        client.endConnection()
-                    }
+                                onSetupFinished(state)
+                            }
 
-                    override fun onGetAppsServiceDisconnected() {
-                        if (!deferredReferrerDetails.isCompleted) {
-                            deferredReferrerDetails.complete(null)
+                            override fun onGetAppsServiceDisconnected() {
+                                onDisconnected()
+                            }
+                        })
+                    },
+                    isResponseOk = { it == com.miui.referrer.annotation.GetAppsReferrerResponse.OK },
+                    readReferrer = {
+                        try {
+                            val result = client.installReferrer
+                            InstallReferrerResult(
+                                Jsonkey.Xiaomi_Get_Apps.key,
+                                result.installBeginTimestampSeconds,
+                                result.installReferrer,
+                                result.referrerClickTimestampSeconds,
+                                result.installBeginTimestampServerSeconds,
+                                result.referrerClickTimestampServerSeconds
+                            )
+                        } catch (e: Exception) {
+                            BranchLogger.e("Caught getXiaomiGetAppsReferrerDetails exception: $e")
+                            null
                         }
-                    }
-                })
-                deferredReferrerDetails.await()
+                    },
+                    endConnection = { client.endConnection() }
+                )
             } catch (exception: Exception) {
                 BranchLogger.w("Caught getXiaomiGetAppsReferrerDetails exception: $exception")
                 null
