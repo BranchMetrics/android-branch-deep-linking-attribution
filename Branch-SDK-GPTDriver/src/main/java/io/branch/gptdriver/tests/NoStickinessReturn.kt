@@ -166,7 +166,7 @@ class NoStickinessReturn {
         }
         val liveTasks = liveNonHomeTaskCount()
         check(liveTasks == 1) {
-            "expected exactly one recents card matching the snapshot selector, found $liveTasks; ${cardCountDiagnostic()}"
+            "expected exactly one live task in dumpsys activity recents, found $liveTasks; ${cardCountDiagnostic()}"
         }
         val candidates = awaitRenderedCard()
         check(candidates.isNotEmpty()) {
