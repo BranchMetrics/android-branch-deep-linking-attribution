@@ -168,11 +168,8 @@ class NoStickinessReturn {
             "expected exactly one live task in dumpsys activity recents, found $liveTasks; ${diagnostic()}"
         }
         var candidates = awaitRenderedCard()
-        // CI (run 36460813271) saw one live task but zero rendered snapshot nodes anywhere,
-        // with no way to tell "Overview is slow to draw" from "the press never left this
-        // app" apart -- pkg= in diagnostic() now answers that. Only re-press when we are
-        // provably still on this app's own package: Overview showing but slow never re-fires,
-        // since a second press there risks toggling back to the prior app instead.
+        // Re-press only while still on our own package; a second press on a slow
+        // Overview can toggle back to the prior app.
         if (candidates.isEmpty() && stillInOwnApp()) {
             uiDevice.pressRecentApps()
             candidates = awaitRenderedCard()
