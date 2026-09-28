@@ -18,7 +18,6 @@ import io.branch.referral.Branch;
 import io.branch.referral.BranchConfiguration;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.IBranchRequestTracingCallback;
-import io.branch.referral.validators.IntegrationValidator;
 
 public final class CustomBranchApp extends Application {
 
@@ -59,7 +58,6 @@ public final class CustomBranchApp extends Application {
                 .setColorScheme(COLOR_SCHEME_DARK)
                 .build();
         Branch.getInstance().setCustomTabsIntent(customTabsIntent);
-        //IntegrationValidator.validate(CustomBranchApp.this);
     }
 
     private IBranchRequestTracingCallback tracingCallback() {
