@@ -199,7 +199,7 @@ class DeviceInfo {
                 if (!isNullOrEmptyOrBlank(prefHelper.getRandomizedDeviceToken())) {
                     userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper.getRandomizedDeviceToken());
                 }
-                String devId = prefHelper.getIdentity();
+                String devId = prefHelper.getUserAlias();
                 if (!isNullOrEmptyOrBlank(devId)) {
                     userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), devId);
                 }
