@@ -90,6 +90,9 @@ internal class RequestOpen(
         val serverErrorMessage = "Request Open failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
 
+        val error = BranchError("Trouble initializing Branch. $this failed. $causeMsg", statusCode)
+        onInitSessionFailed(error)
+
         if (callback_ != null) {
             val obj = JSONObject()
             try {
@@ -97,10 +100,7 @@ internal class RequestOpen(
             } catch (ex: Exception) {
                 BranchLogger.w("Caught JSONException ${ex.message}")
             }
-            callback_!!.onInitFinished(
-                obj,
-                BranchError("Trouble initializing Branch. $this failed. $causeMsg", statusCode)
-            )
+            callback_!!.onInitFinished(obj, error)
         }
     }
 

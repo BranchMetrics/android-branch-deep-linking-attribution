@@ -110,6 +110,19 @@ public abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     /**
+     * Marks the session state as failed for the v3 init path (RequestOpen / RequestDeepLink),
+     * so a failed init resolves the state machine immediately instead of leaving it in
+     * Initializing until a timeout elsewhere gives up on it.
+     */
+    protected void onInitSessionFailed(BranchError error) {
+        Branch branch = Branch.getInstance();
+        if (branch != null) {
+            branch.setInitState(new BranchSessionState.Failed(error));
+        }
+        BranchLogger.v("Session initialization failed, state set to Failed: " + error.getMessage());
+    }
+
+    /**
      * Update link referrer params.
      * For link clicked installs, link click id is updated via the Google Play Referrer lib.
      *

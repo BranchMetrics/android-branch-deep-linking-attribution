@@ -104,6 +104,9 @@ internal class RequestDeepLink(
         val serverErrorMessage = "Request DeepLink failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
 
+        val error = BranchError("Trouble initializing Branch. $this failed. $causeMsg", statusCode)
+        onInitSessionFailed(error)
+
         if (callback_ != null) {
             val obj = JSONObject()
             try {
@@ -111,10 +114,7 @@ internal class RequestDeepLink(
             } catch (ex: Exception) {
                 BranchLogger.w("Caught JSONException ${ex.message}")
             }
-            callback_!!.onInitFinished(
-                obj,
-                BranchError("Trouble initializing Branch. $this failed. $causeMsg", statusCode)
-            )
+            callback_!!.onInitFinished(obj, error)
         }
     }
 

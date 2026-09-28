@@ -345,14 +345,14 @@ public class Branch {
 
     /**
      * <p>Singleton method to return the pre-initialised object of the type {@link Branch}.
-     * Make sure your app is instantiating Branch before calling this method
-     * or you have created an instance of Branch already by calling getInstance(Context ctx).</p>
+     * Make sure your app has called {@link #initialize(Context, BranchConfiguration)}
+     * before calling this method.</p>
      *
      * @return An initialised singleton {@link Branch} object
      */
     synchronized public static Branch getInstance() {
         if (branchReferral_ == null) {
-            BranchLogger.v("Branch instance is not created yet. Make sure you call getInstance(Context).");
+            BranchLogger.v("Branch instance is not created yet. Make sure you call Branch.initialize(context, config).");
         }
         return branchReferral_;
     }
@@ -1151,6 +1151,8 @@ public class Branch {
                 sessionStateManager.initialize();
             } else if (initState instanceof BranchSessionState.Initialized) {
                 sessionStateManager.initializeComplete();
+            } else if (initState instanceof BranchSessionState.Failed) {
+                sessionStateManager.initializeFailed(((BranchSessionState.Failed) initState).getError());
             }
         } catch (Exception e) {
             BranchLogger.e("Error updating session state manager: " + e.getMessage());

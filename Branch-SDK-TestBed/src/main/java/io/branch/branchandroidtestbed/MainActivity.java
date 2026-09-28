@@ -801,7 +801,7 @@ public class MainActivity extends Activity {
         // IMP : Do not make this call in your production app
 
         // Enable integration validation to test modernized components
-        //IntegrationValidator.validate(MainActivity.this);
+        IntegrationValidator.validate(MainActivity.this);
     }
 
 
