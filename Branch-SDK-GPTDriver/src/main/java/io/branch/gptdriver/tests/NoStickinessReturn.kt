@@ -29,6 +29,11 @@ class NoStickinessReturn {
     private val uiDevice = UiDevice.getInstance(instrumentation)
     private var scenario: ActivityScenario<MainActivity>? = null
 
+    // Set once the recents tap decides which poll path it took; read back into the reported
+    // reason on both pass and fail, so CI output shows the path without a log pull.
+    private var recentsPath: String? = null
+    private var cardWaitMs: Long? = null
+
     // Test-only switches for the forced-mismatch runs; never set by the real gate.
     private val forceZeroCards = InstrumentationRegistry.getArguments().getString(ARG_FORCE_ZERO) == "true"
     private val forceExtraCard = InstrumentationRegistry.getArguments().getString(ARG_FORCE_EXTRA) == "true"
@@ -48,15 +53,20 @@ class NoStickinessReturn {
             if (NoStickinessSupport.isBranchApiReachable()) {
                 // The exception fired but a fresh independent check says the API answers: not an
                 // outage, so this is an ordinary failure, never not_run.
-                NoStickinessSupport.reportResult("fail", "link generation failed, api reachable: ${e.message}")
+                NoStickinessSupport.reportResult("fail", reasonWithPath("link generation failed, api reachable: ${e.message}"))
                 throw e
             }
             NoStickinessSupport.reportResult("not_run", "branch api unreachable: ${e.message}")
         } catch (e: Throwable) {
-            NoStickinessSupport.reportResult("fail", e.message ?: e.javaClass.simpleName)
+            NoStickinessSupport.reportResult("fail", reasonWithPath(e.message ?: e.javaClass.simpleName))
             throw e
         }
     }
+
+    // Appends the decided recents path only when one was reached; the failure reason stays
+    // first so the cap on reportResult never trims it away.
+    private fun reasonWithPath(reason: String): String =
+        recentsPath?.let { "$reason recents_path=$it" } ?: reason
 
     private fun runScenario(runId: String) {
         scenario = ActivityScenario.launch(MainActivity::class.java)
@@ -132,7 +142,7 @@ class NoStickinessReturn {
         val referring = Branch.getInstance().getLatestReferringParams()
         val survivors = NoStickinessSupport.STICKY_FIELDS.filter { referring.has(it) }
         check(survivors.isEmpty()) { "accessor after return carried ${survivors.joinToString(",")}" }
-        NoStickinessSupport.reportResult("pass", "none")
+        NoStickinessSupport.reportResult("pass", "recents_path=$recentsPath card_ms=$cardWaitMs")
     }
 
     // Primary: the return's own open completing is the real signal. The onStart dispatch line
@@ -197,7 +207,10 @@ class NoStickinessReturn {
                 candidates = awaitRenderedCard(LAUNCHER_EXTENDED_WAIT_MS)
             }
         }
-        Log.i(TAG, "recents path=$path cardWaitMs=${System.currentTimeMillis() - recentsPressedAt} found=${candidates.isNotEmpty()}")
+        val cardWaitElapsedMs = System.currentTimeMillis() - recentsPressedAt
+        recentsPath = path
+        cardWaitMs = cardWaitElapsedMs
+        Log.i(TAG, "recents path=$path cardWaitMs=$cardWaitElapsedMs found=${candidates.isNotEmpty()}")
         check(candidates.isNotEmpty()) {
             "one live task in recents but no rendered card matched the snapshot selector; ${diagnostic()}"
         }
