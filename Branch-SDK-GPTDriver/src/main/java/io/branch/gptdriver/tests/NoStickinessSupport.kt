@@ -229,14 +229,8 @@ internal object NoStickinessSupport {
     /** A genuinely unreachable Branch API, kept distinct so a later read can classify it apart from an ordinary failure. */
     class BranchApiUnreachableException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
-    // Best-effort only: a capture failure must never change a caller's verdict or propagate.
-    // Written under the public Downloads dir: the app's own external-files dir writes fine
-    // in-process, but on this AVD/API level `adb pull`, `adb shell ls` and even `run-as cat`
-    // all report Permission denied against Android/data/<pkg>/files, so a run's artifacts
-    // would be produced and never retrievable. Downloads is verified pullable (measured
-    // directly on this AVD), at the cost of the write needing no MANAGE_EXTERNAL_STORAGE
-    // grant here only because scoped storage enforcement is lenient on this image; do not
-    // assume that holds on a stricter device.
+    // Best-effort only, never affects the verdict. Written under Downloads: Android/data is
+    // not pullable on this AVD/API level.
     fun captureFailureArtifacts(uiDevice: UiDevice, tag: String) {
         try {
             val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -255,19 +249,14 @@ internal object NoStickinessSupport {
         return ParcelFileDescriptor.AutoCloseInputStream(pfd).use { it.readBytes().toString(Charsets.UTF_8) }
     }
 
-    // A task with an empty Activities list is a stale recents entry the launcher still
-    // remembers (a cleared or killed process outlives its card, on every API level tried);
-    // it never counts as a live "other" task.
+    // A task with an empty Activities list is a stale recents entry, never counted as live.
     fun liveNonHomeTaskCount(instrumentation: Instrumentation): Int =
         TASK_BLOCK.findAll(shellOutput(instrumentation, "dumpsys activity recents")).count { m ->
             val (_, type, activities) = m.destructured
             type != "home" && activities.isNotBlank()
         }
 
-    // Printed only on a card-count mismatch, folded into the check() message so it reaches
-    // the script's own result/reason output with no extra plumbing. Resource ids, content
-    // descriptions and the current foreground package only: no link tokens or keys ever
-    // appear in the recents tree, the task list, or a package name.
+    // Printed only on a mismatch; never includes link tokens or keys.
     fun cardCountDiagnostic(uiDevice: UiDevice, instrumentation: Instrumentation, snapshotSelector: BySelector): String {
         val nodes = uiDevice.findObjects(snapshotSelector).joinToString(";") { n ->
             "res=${n.resourceName ?: "none"} desc=${n.contentDescription ?: ""}"
@@ -279,11 +268,7 @@ internal object NoStickinessSupport {
         return "snapshots=[$nodes] tasks=[$tasks] pkg=${uiDevice.currentPackageName ?: "none"}"
     }
 
-    // Spans to the task's own `Activities=[...]` line (DOTALL), not just its header: a task
-    // whose process was cleared or killed keeps a recents entry with an empty activity list,
-    // on every API level tried, unlike `sz=`/`StackId=`, which API 34's dumpsys omits
-    // entirely. `.*?` before `type=` skips the `visible=<bool>` field API 30 inserts there
-    // and API 34 does not.
+    // DOTALL span to Activities=[...]: the one task field present on both API 30 and 34.
     private val TASK_BLOCK = Regex(
         """Recent #\d+: Task\{\S+ #(\d+) .*?type=(\S+).*?Activities=\[(.*?)\]""",
         RegexOption.DOT_MATCHES_ALL

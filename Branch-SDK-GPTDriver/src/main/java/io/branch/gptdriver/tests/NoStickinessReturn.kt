@@ -145,9 +145,8 @@ class NoStickinessReturn {
         NoStickinessSupport.reportResult("pass", "recents_path=$recentsPath card_ms=$cardWaitMs")
     }
 
-    // Primary: the return's own open completing is the real signal. The onStart dispatch line
-    // logs before that open is even sent, so it is only trusted as a fallback, and only after a
-    // quiet window, so a delayed /v3/deeplink post still has time to land before the checks below.
+    // Trusts the return's own open success first; falls back to the onStart dispatch line,
+    // then waits for quiet before the caller's checks run.
     private fun awaitReturnSettled(fromLine: Int): String {
         if (NoStickinessSupport.awaitCaptureFrom(captureFile, NoStickinessSupport.REQUEST_OPEN_SUCCEEDED, fromLine, RETURN_SIGNAL_MS)) {
             NoStickinessSupport.awaitQuiescentLineCount(captureFile, QUIESCENCE_MS)
@@ -161,12 +160,8 @@ class NoStickinessReturn {
         return "fallback"
     }
 
-    // The count that decides pass/fail comes from dumpsys, not from the launcher's card
-    // carousel: this narrow emulator skin only ever renders ONE card at full size with its
-    // icon at a time, live or not, so a second live task (the forceExtraCard path) peeks in
-    // as an icon-less sliver indistinguishable, in the accessibility tree alone, from a stale
-    // one. `Activities=[]` on a task is authoritative on both API 30 and 34, ghost-proof, and
-    // unaffected by which card the carousel currently has centered.
+    // Pass/fail on card count comes from dumpsys `Activities=[]`, never from the launcher's
+    // card carousel, which this emulator skin renders unreliably.
     private fun tapExactlyOneRecentCard() {
         try {
             tapExactlyOneRecentCardOrThrow()
@@ -188,14 +183,8 @@ class NoStickinessReturn {
             "expected exactly one live task in dumpsys activity recents, found $liveTasks; ${diagnostic()}"
         }
         var candidates = awaitRenderedCard()
-        // The liveTasks==1 check above already ruled out the forced-extra-card case, so the
-        // only two possible foreground packages here are our own app (a transient lag before
-        // Overview renders; re-press can help) or the launcher's Overview (the press took
-        // effect; keep polling instead, since a second press on a slow Overview can toggle
-        // back to the prior app instead of helping). PackageManager resolution of the HOME
-        // intent is not used to tell them apart: measured on-device, it can resolve to an
-        // unrelated system package instead of the real launcher, so "not our own app" is the
-        // only signal trusted here.
+        // liveTasks==1 already ruled out the extra-card case: an empty read here means either
+        // our own app (re-press) or the launcher (keep waiting).
         var path = "immediate"
         if (candidates.isEmpty()) {
             if (stillInOwnApp()) {
@@ -222,9 +211,7 @@ class NoStickinessReturn {
     private fun diagnostic(): String =
         NoStickinessSupport.cardCountDiagnostic(uiDevice, instrumentation, SNAPSHOT_SELECTOR)
 
-    // dumpsys already proved exactly one live task exists; an empty stableCards() read here
-    // is the launcher still animating the icon in, not a real zero, so this keeps sampling
-    // past one stable-but-empty read instead of trusting it the way dismissAllRecentCards does.
+    // An empty read here is not trusted as a real zero; keeps sampling until the deadline.
     private fun awaitRenderedCard(timeoutMs: Long = RECENTS_WAIT_MS): List<UiObject2> {
         val deadline = System.currentTimeMillis() + timeoutMs
         var candidates = stableCards()
@@ -234,9 +221,7 @@ class NoStickinessReturn {
         return candidates
     }
 
-    // This launcher's recents list rebinds its views on a timer even while idle, so a single
-    // point-in-time read can land in that gap and undercount. Two consecutive equal-sized reads
-    // are trusted; a read that keeps changing falls through to the last one, still bounded.
+    // Requires two consecutive equal-sized reads before trusting the count.
     private fun stableCards(): List<UiObject2> {
         var last = uiDevice.findObjects(CARD_SELECTOR)
         val deadline = System.currentTimeMillis() + STABLE_READ_MS
@@ -249,10 +234,7 @@ class NoStickinessReturn {
         return last
     }
 
-    // Test-only: swipes every visible card away, to exercise the zero-card fail path. A card
-    // swipe is the ordinary dismiss gesture, unlike pm clear, so the process survives it. Retried
-    // for the same rebind-gap reason as stableCards(): a swipe issued into an empty read is a
-    // silent no-op, so the loop keeps trying until nothing is left or the deadline passes.
+    // Test-only: swipes every visible card away; retries until none remain or the deadline passes.
     private fun dismissAllRecentCards() {
         val deadline = System.currentTimeMillis() + RECENTS_WAIT_MS
         while (System.currentTimeMillis() < deadline) {
@@ -291,10 +273,7 @@ class NoStickinessReturn {
         const val SETTINGS_VISIBLE_MS = 5_000L
         val SNAPSHOT_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/snapshot$"))
         val ICON_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/icon$"))
-        // Used only to find the card to tap once dumpsys has already decided pass/fail: a card
-        // with both a rendered snapshot and its icon, as opposed to a bare icon-less sliver
-        // (which this launcher also shows for the *current* card's own off-screen neighbours,
-        // live or not, so this selector alone cannot decide "exactly one").
+        // Matches only a fully-rendered card (snapshot + icon), never a bare icon-less sliver.
         val CARD_SELECTOR: BySelector = By.hasChild(SNAPSHOT_SELECTOR).hasChild(ICON_SELECTOR)
     }
 }
