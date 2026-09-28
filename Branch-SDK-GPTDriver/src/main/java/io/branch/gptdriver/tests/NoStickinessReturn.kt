@@ -3,7 +3,6 @@ package io.branch.gptdriver.tests
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.os.ParcelFileDescriptor
 import android.provider.Settings
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
@@ -164,16 +163,30 @@ class NoStickinessReturn {
         if (forceZeroCards) {
             dismissAllRecentCards()
         }
-        val liveTasks = liveNonHomeTaskCount()
+        val liveTasks = NoStickinessSupport.liveNonHomeTaskCount(instrumentation)
         check(liveTasks == 1) {
-            "expected exactly one live task in dumpsys activity recents, found $liveTasks; ${cardCountDiagnostic()}"
+            "expected exactly one live task in dumpsys activity recents, found $liveTasks; ${diagnostic()}"
         }
-        val candidates = awaitRenderedCard()
+        var candidates = awaitRenderedCard()
+        // CI (run 36460813271) saw one live task but zero rendered snapshot nodes anywhere,
+        // with no way to tell "Overview is slow to draw" from "the press never left this
+        // app" apart -- pkg= in diagnostic() now answers that. Only re-press when we are
+        // provably still on this app's own package: Overview showing but slow never re-fires,
+        // since a second press there risks toggling back to the prior app instead.
+        if (candidates.isEmpty() && stillInOwnApp()) {
+            uiDevice.pressRecentApps()
+            candidates = awaitRenderedCard()
+        }
         check(candidates.isNotEmpty()) {
-            "one live task in recents but no rendered card matched the snapshot selector; ${cardCountDiagnostic()}"
+            "one live task in recents but no rendered card matched the snapshot selector; ${diagnostic()}"
         }
         candidates[0].click()
     }
+
+    private fun stillInOwnApp(): Boolean = uiDevice.currentPackageName == context.packageName
+
+    private fun diagnostic(): String =
+        NoStickinessSupport.cardCountDiagnostic(uiDevice, instrumentation, SNAPSHOT_SELECTOR)
 
     // dumpsys already proved exactly one live task exists; an empty stableCards() read here
     // is the launcher still animating the icon in, not a real zero, so this keeps sampling
@@ -186,15 +199,6 @@ class NoStickinessReturn {
         }
         return candidates
     }
-
-    // A task with an empty Activities list is a stale recents entry the launcher still
-    // remembers (a cleared or killed process outlives its card, on every API level tried);
-    // it never counts as a live "other" task.
-    private fun liveNonHomeTaskCount(): Int =
-        TASK_BLOCK.findAll(shellOutput("dumpsys activity recents")).count { m ->
-            val (_, type, activities) = m.destructured
-            type != "home" && activities.isNotBlank()
-        }
 
     // This launcher's recents list rebinds its views on a timer even while idle, so a single
     // point-in-time read can land in that gap and undercount. Two consecutive equal-sized reads
@@ -225,20 +229,6 @@ class NoStickinessReturn {
         }
     }
 
-    // Printed only on a card-count mismatch, folded into the check() message so it reaches
-    // the script's own result/reason output with no extra plumbing. Resource ids and content
-    // descriptions only: no link tokens or keys ever appear in the recents tree or the task list.
-    private fun cardCountDiagnostic(): String {
-        val nodes = uiDevice.findObjects(SNAPSHOT_SELECTOR).joinToString(";") { n ->
-            "res=${n.resourceName ?: "none"} desc=${n.contentDescription ?: ""}"
-        }
-        val tasks = TASK_BLOCK.findAll(shellOutput("dumpsys activity recents")).joinToString(",") { m ->
-            val (taskId, type, activities) = m.destructured
-            "$taskId:$type:${if (activities.isNotBlank()) "live" else "dead"}"
-        }
-        return "snapshots=[$nodes] tasks=[$tasks]"
-    }
-
     // Test-only: leaves a second app's task in recents, to exercise the many-card fail path.
     private fun launchSecondAppAndAwaitVisible() {
         val intent = Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -248,11 +238,6 @@ class NoStickinessReturn {
         check(uiDevice.wait(Until.hasObject(By.pkg(settingsPackage)), SETTINGS_VISIBLE_MS)) {
             "Settings did not become visible within ${SETTINGS_VISIBLE_MS}ms"
         }
-    }
-
-    private fun shellOutput(command: String): String {
-        val pfd = instrumentation.uiAutomation.executeShellCommand(command)
-        return ParcelFileDescriptor.AutoCloseInputStream(pfd).use { it.readBytes().toString(Charsets.UTF_8) }
     }
 
     private companion object {
@@ -276,14 +261,5 @@ class NoStickinessReturn {
         // (which this launcher also shows for the *current* card's own off-screen neighbours,
         // live or not, so this selector alone cannot decide "exactly one").
         val CARD_SELECTOR: BySelector = By.hasChild(SNAPSHOT_SELECTOR).hasChild(ICON_SELECTOR)
-        // Spans to the task's own `Activities=[...]` line (DOTALL), not just its header: a task
-        // whose process was cleared or killed keeps a recents entry with an empty activity list,
-        // on every API level tried, unlike `sz=`/`StackId=`, which API 34's dumpsys omits
-        // entirely. `.*?` before `type=` skips the `visible=<bool>` field API 30 inserts there
-        // and API 34 does not.
-        val TASK_BLOCK = Regex(
-            """Recent #\d+: Task\{\S+ #(\d+) .*?type=(\S+).*?Activities=\[(.*?)\]""",
-            RegexOption.DOT_MATCHES_ALL
-        )
     }
 }
