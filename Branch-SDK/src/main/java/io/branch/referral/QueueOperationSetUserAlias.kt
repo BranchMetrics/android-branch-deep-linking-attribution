@@ -8,11 +8,11 @@ import io.branch.referral.Defines.RequestPath
 import org.json.JSONObject
 
 /**
- * This class implements the setIdentity feature through the legacy queueing system.
+ * This class implements the setUserAlias feature through the legacy queueing system.
  * To maintain queue compatibility and reduce complexity, do not invoke network task as operation is
  * completely client side.
  */
-class QueueOperationSetIdentity(
+class QueueOperationSetUserAlias(
     var context_: Context,
     requestPath: RequestPath?,
     var userId_: String?,
@@ -32,7 +32,7 @@ class QueueOperationSetIdentity(
             v("doFinalUpdateOnMainThread $this")
             if (userId_ != null) {
                 Branch.installDeveloperId = userId_
-                prefHelper_.identity = userId_
+                prefHelper_.userAlias = userId_
                 v("Identity is now set to: " + Branch.installDeveloperId)
             }
         } catch (e: Exception) {
@@ -58,11 +58,11 @@ class QueueOperationSetIdentity(
     }
 
     override fun handleFailure(statusCode: Int, causeMsg: String) {
-        v("QueueOperationSetIdentity handleFailure $this")
+        v("QueueOperationSetUserAlias handleFailure $this")
         if (callback_ != null) {
-            v("QueueOperationSetIdentity handleFailure $this")
-            val currentIdentity = prefHelper_.identity
-            val error = BranchError("Error in setIdentity method. Current identity value: $currentIdentity $causeMsg", -1)
+            v("QueueOperationSetUserAlias handleFailure $this")
+            val currentUserAlias = prefHelper_.userAlias
+            val error = BranchError("Error in setUserAlias method. Current user alias value: $currentUserAlias $causeMsg", -1)
             callback_!!.onInitFinished(JSONObject(), error)
         }
     }
