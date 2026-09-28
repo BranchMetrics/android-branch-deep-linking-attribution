@@ -20,7 +20,7 @@ import java.util.regex.Pattern
 import org.junit.After
 import org.junit.Test
 
-/** no_stickiness: backgrounds for real, returns through recents with no new intent, checks the return is clean. The accessor verdict is added separately. */
+/** no_stickiness: warm delivery, a real background, a recents return with no new intent, verdict from the accessor read after the return. Prints result/reason as an instrumentation status. */
 class NoStickinessReturn {
 
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -41,8 +41,25 @@ class NoStickinessReturn {
 
     @Test
     fun noStickinessAfterReturn() {
-        scenario = ActivityScenario.launch(MainActivity::class.java)
         val runId = System.currentTimeMillis().toString()
+        try {
+            runScenario(runId)
+        } catch (e: NoStickinessSupport.BranchApiUnreachableException) {
+            if (NoStickinessSupport.isBranchApiReachable()) {
+                // The exception fired but a fresh independent check says the API answers: not an
+                // outage, so this is an ordinary failure, never not_run.
+                NoStickinessSupport.reportResult("fail", "link generation failed, api reachable: ${e.message}")
+                throw e
+            }
+            NoStickinessSupport.reportResult("not_run", "branch api unreachable: ${e.message}")
+        } catch (e: Throwable) {
+            NoStickinessSupport.reportResult("fail", e.message ?: e.javaClass.simpleName)
+            throw e
+        }
+    }
+
+    private fun runScenario(runId: String) {
+        scenario = ActivityScenario.launch(MainActivity::class.java)
         Log.i(
             TAG,
             "apk_testbed=${NoStickinessSupport.apkIdentifier(context, context.packageName)} " +
@@ -106,8 +123,15 @@ class NoStickinessReturn {
             "activity intent data changed on return: was $intentSnapshot, now $dataAfterReturn"
         }
 
-        // Diagnostic only; the pass/fail verdict on this read is added separately.
-        Log.i(TAG, "diagnostic accessor after return: ${Branch.getInstance().getLatestReferringParams()}")
+        // Diagnostic only, per spec: the return's own open body never decides the verdict.
+        val openBody = NoStickinessSupport.openBodyDiagnosticSince(captureFile, returnMarker)
+        Log.i(TAG, "diagnostic return open body: $openBody")
+
+        // The verdict: the accessor read after the return, and nothing else.
+        val referring = Branch.getInstance().getLatestReferringParams()
+        val survivors = NoStickinessSupport.STICKY_FIELDS.filter { referring.has(it) }
+        check(survivors.isEmpty()) { "accessor after return carried ${survivors.joinToString(",")}" }
+        NoStickinessSupport.reportResult("pass", "none")
     }
 
     // Primary: the return's own open completing is the real signal. The onStart dispatch line

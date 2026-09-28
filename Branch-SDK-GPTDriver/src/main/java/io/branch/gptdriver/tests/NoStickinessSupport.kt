@@ -3,8 +3,10 @@ package io.branch.gptdriver.tests
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
+import androidx.test.platform.app.InstrumentationRegistry
 import io.branch.branchandroidtestbed.MainActivity
 import io.branch.indexing.BranchUniversalObject
 import io.branch.referral.Branch
@@ -13,6 +15,8 @@ import io.branch.referral.Defines
 import io.branch.referral.PrefHelper
 import io.branch.referral.util.LinkProperties
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -27,6 +31,13 @@ internal object NoStickinessSupport {
     const val ONSTOP_DISPATCH_LINE = "BranchProcessLifecycleObserver onStop: process backgrounded"
     const val POLL_MS = 200L
 
+    // The verdict fields (spec Definition): none of these may be present on the accessor read
+    // after a no-intent return. Prefixes are the server's own link-data convention, not ours.
+    val STICKY_FIELDS = listOf("l1_scenario", "l1_run_id", "~referring_link", "+link_click_id")
+
+    const val RESULT_KEY = "result"
+    const val REASON_KEY = "reason"
+
     private const val TAG = "NoStickinessSupport"
     private const val TOKEN_MS = 20_000L
     private const val TOKEN_POLL_MS = 250L
@@ -34,6 +45,9 @@ internal object NoStickinessSupport {
     private const val LINK_DELIVERY_MS = 20_000L
     private const val CHAINED_OPEN_MS = 20_000L
     private const val LINK_RETRIES = 3
+    private const val REACHABILITY_URL = "https://api2.branch.io/"
+    private const val REACHABILITY_TIMEOUT_MS = 5_000
+    private const val REASON_MAX_CHARS = 200
 
     fun hasTokens(context: Context): Boolean {
         val prefs = PrefHelper.getInstance(context)
@@ -142,6 +156,43 @@ internal object NoStickinessSupport {
         "$pkg:${info.versionName}:${info.lastUpdateTime}"
     } catch (e: Exception) {
         "$pkg:unavailable(${e.message})"
+    }
+
+    // Independent proof for not_run: a plain connection to the Branch API, apart from the SDK's
+    // own request path. Only when this also fails is an outage a fact, not a driver bug's guess.
+    fun isBranchApiReachable(): Boolean = try {
+        val connection = URL(REACHABILITY_URL).openConnection() as HttpURLConnection
+        connection.connectTimeout = REACHABILITY_TIMEOUT_MS
+        connection.readTimeout = REACHABILITY_TIMEOUT_MS
+        connection.requestMethod = "HEAD"
+        val reachable = connection.responseCode in 100..599
+        connection.disconnect()
+        reachable
+    } catch (e: Exception) {
+        false
+    }
+
+    // Diagnostic only, per spec: the return's own open body never decides the verdict.
+    fun openBodyDiagnosticSince(captureFile: File, fromLine: Int): String {
+        val lines = linesSince(captureFile, fromLine)
+        val postIndex = lines.indexOfFirst { it.contains("posting to") && it.contains("/v3/events/open") }
+        if (postIndex == -1) return "none"
+        val bodyLine = lines.drop(postIndex + 1).firstOrNull { it.contains("Post value = ") } ?: return "none"
+        return bodyLine.substringAfter("Post value = ")
+    }
+
+    // Single machine-readable result, sent as an instrumentation status so the harness reads it
+    // straight off the `am instrument -r` stream with no capture-file pull required.
+    fun reportResult(result: String, reason: String) {
+        val oneLineReason = reason.replace(Regex("\\s+"), " ").take(REASON_MAX_CHARS)
+        InstrumentationRegistry.getInstrumentation().sendStatus(
+            0,
+            Bundle().apply {
+                putString(RESULT_KEY, result)
+                putString(REASON_KEY, oneLineReason)
+            }
+        )
+        Log.i(TAG, "NO_STICKINESS $RESULT_KEY=$result $REASON_KEY=$oneLineReason")
     }
 
     /** A genuinely unreachable Branch API, kept distinct so a later read can classify it apart from an ordinary failure. */
