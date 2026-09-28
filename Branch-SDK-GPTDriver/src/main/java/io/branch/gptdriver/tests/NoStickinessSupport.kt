@@ -1,12 +1,16 @@
 package io.branch.gptdriver.tests
 
+import android.app.Instrumentation
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.UiDevice
 import io.branch.branchandroidtestbed.MainActivity
 import io.branch.indexing.BranchUniversalObject
 import io.branch.referral.Branch
@@ -222,4 +226,43 @@ internal object NoStickinessSupport {
 
     /** A genuinely unreachable Branch API, kept distinct so a later read can classify it apart from an ordinary failure. */
     class BranchApiUnreachableException(message: String, cause: Throwable?) : RuntimeException(message, cause)
+
+    fun shellOutput(instrumentation: Instrumentation, command: String): String {
+        val pfd = instrumentation.uiAutomation.executeShellCommand(command)
+        return ParcelFileDescriptor.AutoCloseInputStream(pfd).use { it.readBytes().toString(Charsets.UTF_8) }
+    }
+
+    // A task with an empty Activities list is a stale recents entry the launcher still
+    // remembers (a cleared or killed process outlives its card, on every API level tried);
+    // it never counts as a live "other" task.
+    fun liveNonHomeTaskCount(instrumentation: Instrumentation): Int =
+        TASK_BLOCK.findAll(shellOutput(instrumentation, "dumpsys activity recents")).count { m ->
+            val (_, type, activities) = m.destructured
+            type != "home" && activities.isNotBlank()
+        }
+
+    // Printed only on a card-count mismatch, folded into the check() message so it reaches
+    // the script's own result/reason output with no extra plumbing. Resource ids, content
+    // descriptions and the current foreground package only: no link tokens or keys ever
+    // appear in the recents tree, the task list, or a package name.
+    fun cardCountDiagnostic(uiDevice: UiDevice, instrumentation: Instrumentation, snapshotSelector: BySelector): String {
+        val nodes = uiDevice.findObjects(snapshotSelector).joinToString(";") { n ->
+            "res=${n.resourceName ?: "none"} desc=${n.contentDescription ?: ""}"
+        }
+        val tasks = TASK_BLOCK.findAll(shellOutput(instrumentation, "dumpsys activity recents")).joinToString(",") { m ->
+            val (taskId, type, activities) = m.destructured
+            "$taskId:$type:${if (activities.isNotBlank()) "live" else "dead"}"
+        }
+        return "snapshots=[$nodes] tasks=[$tasks] pkg=${uiDevice.currentPackageName ?: "none"}"
+    }
+
+    // Spans to the task's own `Activities=[...]` line (DOTALL), not just its header: a task
+    // whose process was cleared or killed keeps a recents entry with an empty activity list,
+    // on every API level tried, unlike `sz=`/`StackId=`, which API 34's dumpsys omits
+    // entirely. `.*?` before `type=` skips the `visible=<bool>` field API 30 inserts there
+    // and API 34 does not.
+    private val TASK_BLOCK = Regex(
+        """Recent #\d+: Task\{\S+ #(\d+) .*?type=(\S+).*?Activities=\[(.*?)\]""",
+        RegexOption.DOT_MATCHES_ALL
+    )
 }
