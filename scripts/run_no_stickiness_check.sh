@@ -47,7 +47,7 @@ pull_artifacts_if_failed() {
   if [ "$result" = "pass" ]; then
     return 0
   fi
-  if adb pull "$REMOTE_ARTIFACTS_DIR" "$LOCAL_ARTIFACTS_DIR" > /dev/null 2>&1; then
+  if timeout 30 adb pull "$REMOTE_ARTIFACTS_DIR" "$LOCAL_ARTIFACTS_DIR" > /dev/null 2>&1; then
     echo "Pulled failure artifacts from $REMOTE_ARTIFACTS_DIR into $LOCAL_ARTIFACTS_DIR/"
   else
     echo "No failure artifacts pulled from $REMOTE_ARTIFACTS_DIR"
@@ -59,6 +59,9 @@ echo "Installing target APK: $TARGET_APK"
 adb install -r -t "$TARGET_APK"
 echo "Installing test APK: $TEST_APK"
 adb install -r -t "$TEST_APK"
+
+echo "Clearing on-device artifacts dir: $REMOTE_ARTIFACTS_DIR"
+adb shell rm -rf "$REMOTE_ARTIFACTS_DIR" > /dev/null 2>&1 || true
 
 timeout "$RUN_TIMEOUT_S" adb shell am instrument -w -r \
   -e class "$TEST_CLASS" \
