@@ -158,6 +158,15 @@ class NoStickinessReturn {
     // one. `Activities=[]` on a task is authoritative on both API 30 and 34, ghost-proof, and
     // unaffected by which card the carousel currently has centered.
     private fun tapExactlyOneRecentCard() {
+        try {
+            tapExactlyOneRecentCardOrThrow()
+        } catch (e: Throwable) {
+            NoStickinessSupport.captureFailureArtifacts(uiDevice, context, TAG)
+            throw e
+        }
+    }
+
+    private fun tapExactlyOneRecentCardOrThrow() {
         val recentsPressedAt = System.currentTimeMillis()
         uiDevice.pressRecentApps()
         uiDevice.wait(Until.hasObject(CARD_SELECTOR), RECENTS_WAIT_MS)
