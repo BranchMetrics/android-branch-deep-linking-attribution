@@ -85,11 +85,13 @@ class NoStickinessReturn {
         val mainActivity = checkNotNull(activity) { "activity reference unavailable after delivery" }
 
         stopOtherApps(mainActivity.taskId)
+        // Marked before the forced-extra-card launch: that launch backgrounds this activity for
+        // real, so the stop dispatch it causes must still count as the one this poll waits for.
+        val preBackgroundMarker = NoStickinessSupport.currentLineCount(captureFile)
         if (forceExtraCard) {
             launchSecondAppAndAwaitVisible()
         }
 
-        val preBackgroundMarker = NoStickinessSupport.currentLineCount(captureFile)
         uiDevice.pressHome()
         check(
             NoStickinessSupport.awaitCaptureFrom(
