@@ -22,6 +22,8 @@ RUNNER="androidx.test.runner.AndroidJUnitRunner"
 TEST_CLASS="io.branch.gptdriver.tests.NoStickinessReturn"
 RUN_TIMEOUT_S="${RUN_TIMEOUT_S:-180}"
 INSTRUMENT_LOG="no-stickiness-instrument.log"
+REMOTE_ARTIFACTS_DIR="/sdcard/Android/data/${TARGET_PKG}/files/no_stickiness_artifacts"
+LOCAL_ARTIFACTS_DIR="no-stickiness-artifacts"
 
 emit() {
   local result="$1"
@@ -38,6 +40,20 @@ emit() {
   fi
 }
 
+# Best-effort, never fails the script: pulls whatever the on-device capture wrote,
+# even when the run crashed or timed out before a result line was ever parsed.
+pull_artifacts_if_failed() {
+  local result="$1"
+  if [ "$result" = "pass" ]; then
+    return 0
+  fi
+  if adb pull "$REMOTE_ARTIFACTS_DIR" "$LOCAL_ARTIFACTS_DIR" > /dev/null 2>&1; then
+    echo "Pulled failure artifacts from $REMOTE_ARTIFACTS_DIR into $LOCAL_ARTIFACTS_DIR/"
+  else
+    echo "No failure artifacts pulled from $REMOTE_ARTIFACTS_DIR"
+  fi
+}
+
 adb wait-for-device
 echo "Installing target APK: $TARGET_APK"
 adb install -r -t "$TARGET_APK"
@@ -51,6 +67,7 @@ instrument_rc=$?
 
 if [ "$instrument_rc" -eq 124 ]; then
   emit "fail" "am instrument did not complete within ${RUN_TIMEOUT_S}s"
+  pull_artifacts_if_failed "fail"
   exit 0
 fi
 
@@ -61,8 +78,10 @@ if [ -z "$result" ]; then
   echo "No result= status line in the instrument output:" >&2
   cat "$INSTRUMENT_LOG" >&2
   emit "fail" "no result line from the instrumented run"
+  pull_artifacts_if_failed "fail"
   exit 0
 fi
 
 emit "$result" "${reason:-none}"
+pull_artifacts_if_failed "$result"
 exit 0
