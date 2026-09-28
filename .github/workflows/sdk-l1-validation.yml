@@ -179,16 +179,16 @@ jobs:
               echo "| Cold | cold_firstInstall and cold_https pass |"
               # Three states from the driver's own step output: pass, fail, or not_run, each with its reason.
               ns_result="$NS_RESULT"
-              # Empty when the shared step aborted before this script ran,
-              # so the row would otherwise render "fail ()" with nothing
-              # inside the parens.
-              ns_reason="${NS_REASON:-step did not run}"
+              # Empty can mean the step never ran, or that it ran but the output didn't propagate -- the default must not claim either specifically.
+              ns_reason="${NS_REASON:-no result reported}"
+              # Escaped only for the table cell below; a `|` in the reason would otherwise open a new column.
+              ns_reason_cell="${ns_reason//|/\\|}"
               if [ "$ns_result" = "pass" ]; then
                 ns_text="no_stickiness pass"
               elif [ "$ns_result" = "not_run" ]; then
-                ns_text="no_stickiness not run ($ns_reason)"
+                ns_text="no_stickiness not run ($ns_reason_cell)"
               else
-                ns_text="no_stickiness fail ($ns_reason)"
+                ns_text="no_stickiness fail ($ns_reason_cell)"
               fi
               echo "| Negative and guards | organic_open and attribution_none pass, ${ns_text}, late_userActivity not implemented |"
             else
@@ -198,13 +198,18 @@ jobs:
             echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
             echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
             echo
-            if [ "${{ steps.validate.outcome }}" = "success" ]; then
+            if [ "${{ steps.validate.outcome }}" = "success" ] && [ "$ns_result" = "pass" ]; then
               echo "Result: **PASS**"
             else
               echo "Result: **FAIL**"
               echo
               echo '```'
-              grep '^FAILED:' /tmp/l1-output.txt || echo "(no FAILED lines; see the job log)"
+              if [ "${{ steps.validate.outcome }}" = "success" ]; then
+                # Validator passed; the failure is no_stickiness, so the FAILED-lines grep below has nothing to say.
+                echo "$ns_text"
+              else
+                grep '^FAILED:' /tmp/l1-output.txt || echo "(no FAILED lines; see the job log)"
+              fi
               echo '```'
               echo
               echo "<details><summary>Captured wire log</summary>"
