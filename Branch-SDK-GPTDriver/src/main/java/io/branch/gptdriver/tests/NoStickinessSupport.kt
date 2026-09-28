@@ -24,6 +24,7 @@ internal object NoStickinessSupport {
     const val KEY_RUN_ID = "l1_run_id"
     const val REQUEST_OPEN_SUCCEEDED = "RequestOpen Succeeded"
     const val ONSTART_DISPATCH_LINE = "BranchProcessLifecycleObserver onStart: process foregrounded"
+    const val ONSTOP_DISPATCH_LINE = "BranchProcessLifecycleObserver onStop: process backgrounded"
     const val POLL_MS = 200L
 
     private const val TAG = "NoStickinessSupport"
