@@ -141,22 +141,15 @@ class NoStickinessReturn {
     // quiet window, so a delayed /v3/deeplink post still has time to land before the checks below.
     private fun awaitReturnSettled(fromLine: Int): String {
         if (NoStickinessSupport.awaitCaptureFrom(captureFile, NoStickinessSupport.REQUEST_OPEN_SUCCEEDED, fromLine, RETURN_SIGNAL_MS)) {
+            NoStickinessSupport.awaitQuiescentLineCount(captureFile, QUIESCENCE_MS)
             return "primary"
         }
         check(NoStickinessSupport.awaitCaptureFrom(captureFile, NoStickinessSupport.ONSTART_DISPATCH_LINE, fromLine, FALLBACK_SIGNAL_MS)) {
             "no foreground signal (open succeeded or onStart dispatch) since the return within ${RETURN_SIGNAL_MS + FALLBACK_SIGNAL_MS}ms"
         }
         Log.i(TAG, "primary open signal never arrived; using the onStart dispatch fallback, then waiting for quiet")
-        awaitQuiescence(QUIESCENCE_MS)
+        NoStickinessSupport.awaitQuiescentLineCount(captureFile, QUIESCENCE_MS)
         return "fallback"
-    }
-
-    // Bounded settle, no condition to poll for: just lets a delayed post have time to appear.
-    private fun awaitQuiescence(windowMs: Long) {
-        val deadline = System.currentTimeMillis() + windowMs
-        while (System.currentTimeMillis() < deadline) {
-            Thread.sleep(NoStickinessSupport.POLL_MS)
-        }
     }
 
     // The count that decides pass/fail comes from dumpsys, not from the launcher's card
