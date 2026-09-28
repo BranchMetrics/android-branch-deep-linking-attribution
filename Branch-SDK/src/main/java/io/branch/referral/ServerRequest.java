@@ -577,7 +577,7 @@ public abstract class ServerRequest {
             JSONObject userDataObj = params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
             if (userDataObj != null) {
                 try {
-                    userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
+                    userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getUserAlias());
                     userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
                 } catch (JSONException e) {
                     BranchLogger.w("Caught JSONException " + e.getMessage());

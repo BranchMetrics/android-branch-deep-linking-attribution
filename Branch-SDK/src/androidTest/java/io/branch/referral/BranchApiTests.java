@@ -247,8 +247,8 @@ public class BranchApiTests extends BranchTest {
             @Override
             public void run() {
                 final CountDownLatch signal = new CountDownLatch(1);
-                prefHelper.setIdentity(PrefHelper.NO_STRING_VALUE);
-                branch.setIdentity("test_user_1", new Branch.BranchReferralInitListener() {
+                prefHelper.setUserAlias(PrefHelper.NO_STRING_VALUE);
+                branch.setUserAlias("test_user_1", new Branch.BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(JSONObject referringParams, BranchError error) {
                         Assert.assertNull(error);
