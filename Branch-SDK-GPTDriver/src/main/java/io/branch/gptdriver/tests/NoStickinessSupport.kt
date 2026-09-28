@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
@@ -229,11 +230,17 @@ internal object NoStickinessSupport {
     class BranchApiUnreachableException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
     // Best-effort only: a capture failure must never change a caller's verdict or propagate.
-    // Written to the target app's external files dir, which needs no runtime permission on
-    // any API level and is adb-pullable for a debuggable app.
-    fun captureFailureArtifacts(uiDevice: UiDevice, targetContext: Context, tag: String) {
+    // Written under the public Downloads dir: the app's own external-files dir writes fine
+    // in-process, but on this AVD/API level `adb pull`, `adb shell ls` and even `run-as cat`
+    // all report Permission denied against Android/data/<pkg>/files, so a run's artifacts
+    // would be produced and never retrievable. Downloads is verified pullable (measured
+    // directly on this AVD), at the cost of the write needing no MANAGE_EXTERNAL_STORAGE
+    // grant here only because scoped storage enforcement is lenient on this image; do not
+    // assume that holds on a stricter device.
+    fun captureFailureArtifacts(uiDevice: UiDevice, tag: String) {
         try {
-            val dir = File(targetContext.getExternalFilesDir(null), ARTIFACTS_DIR_NAME).apply { mkdirs() }
+            val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val dir = File(downloads, ARTIFACTS_DIR_NAME).apply { mkdirs() }
             val stamp = System.currentTimeMillis()
             val screenshotOk = uiDevice.takeScreenshot(File(dir, "recents-fail-$stamp.png"))
             uiDevice.dumpWindowHierarchy(File(dir, "recents-fail-$stamp.xml"))
