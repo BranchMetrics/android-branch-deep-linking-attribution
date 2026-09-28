@@ -445,8 +445,8 @@ class BranchRequestQueue private constructor(private val context: Context) {
                 return@withContext
             }
 
-            // TODO: Handle enqueuing setIdentity & Logout more elegantly
-            if(request is QueueOperationSetIdentity || request is QueueOperationLogout) {
+            // TODO: Handle enqueuing setUserAlias & Logout more elegantly
+            if(request is QueueOperationSetUserAlias || request is QueueOperationLogout) {
                 val response = ServerResponse("", 200, "", "")
                 withContext(Dispatchers.Main) {
                     BranchLogger.v("Handling response on main thread")
@@ -787,7 +787,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
             is ServerRequestInitSession -> false
             is ServerRequestCreateUrl -> false
             is QueueOperationLogout -> false
-            is QueueOperationSetIdentity -> false
+            is QueueOperationSetUserAlias -> false
             else -> true
         }
         BranchLogger.v("requestNeedsSession for ${request::class.simpleName} - result: $result")

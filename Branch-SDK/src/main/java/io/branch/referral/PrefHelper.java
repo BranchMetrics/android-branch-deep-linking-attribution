@@ -72,7 +72,7 @@ public class PrefHelper {
     private static final String KEY_SESSION_ID = "bnc_session_id";
     private static final String KEY_IDENTITY_ID = "bnc_identity_id";
     private static final String KEY_RANDOMIZED_BUNDLE_TOKEN = "bnc_randomized_bundle_token";
-    private static final String KEY_IDENTITY = "bnc_identity";
+    private static final String KEY_USER_ALIAS = "bnc_identity";
     private static final String KEY_LINK_CLICK_ID = "bnc_link_click_id";
     private static final String KEY_LINK_CLICK_IDENTIFIER = "bnc_link_click_identifier";
     private static final String KEY_GOOGLE_SEARCH_INSTALL_IDENTIFIER = "bnc_google_search_install_identifier";
@@ -520,7 +520,7 @@ public class PrefHelper {
      * <p>This is used to identify a specific <b>user ID</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      * <p>
-     * <p><b>Note: </b> Not to be confused with {@link #setIdentity(String)} - the name of the user</p>
+     * <p><b>Note: </b> Not to be confused with {@link #setUserAlias(String)} - the alias for a user</p>
      *
      * @param randomized_bundle_token A {@link String} value containing the currently configured identity
      *                    within preferences.
@@ -549,31 +549,31 @@ public class PrefHelper {
     }
     
     /**
-     * <p>Sets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
+     * <p>Sets the {@link #KEY_USER_ALIAS} {@link String} value that has been set via the Branch API.</p>
      * <p>
-     * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
+     * <p>This is used to identify a specific <b>user alias</b> and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      * <p>
      * <p><b>Note: </b> Not to be confused with {@link #setRandomizedBundleToken(String)} - the UID reference of the user</p>
      *
-     * @param identity A {@link String} value containing the currently configured identity
+     * @param userAlias A {@link String} value containing the currently configured alias
      *                 within preferences.
      */
-    public void setIdentity(String identity) {
-        BranchLogger.v("[Storage] setIdentity: " + identity);
-        setString(KEY_IDENTITY, identity);
+    public void setUserAlias(String userAlias) {
+        BranchLogger.v("[Storage] setUserAlias: " + userAlias);
+        setString(KEY_USER_ALIAS, userAlias);
     }
     
     /**
-     * <p>Gets the {@link #KEY_IDENTITY} {@link String} value that has been set via the Branch API.</p>
+     * <p>Gets the {@link #KEY_USER_ALIAS} {@link String} value that has been set via the Branch API.</p>
      * <p>
-     * <p>This is used to identify a specific <b>user identity</b> and link that to a current session. Useful both
+     * <p>This is used to set a user alias and link that to a current session. Useful both
      * for analytics and debugging purposes.</p>
      *
      * @return A {@link String} value containing the username assigned to the currentuser ID.
      */
-    public String getIdentity() {
-        return getString(KEY_IDENTITY);
+    public String getUserAlias() {
+        return getString(KEY_USER_ALIAS);
     }
     
     /**
