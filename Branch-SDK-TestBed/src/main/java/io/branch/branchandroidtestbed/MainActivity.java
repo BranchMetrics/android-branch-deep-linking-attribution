@@ -20,7 +20,6 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -59,7 +58,6 @@ import io.branch.referral.util.CurrencyType;
 import io.branch.referral.util.LinkProperties;
 import io.branch.referral.util.ProductCategory;
 import io.branch.referral.util.ShareSheetStyle;
-import io.branch.referral.validators.IntegrationValidator;
 
 public class MainActivity extends Activity {
     private EditText txtShortUrl;
@@ -131,14 +129,14 @@ public class MainActivity extends Activity {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 String userID = txtUrl.getText().toString();
 
-                                Branch.getInstance().setIdentity(userID, new BranchReferralInitListener() {
+                                Branch.getInstance().setUserAlias(userID, new BranchReferralInitListener() {
                                     @Override
                                     public void onInitFinished(JSONObject referringParams, BranchError error) {
-                                        BranchLogger.d("Identity set to " + userID + "\nInstall params = " + referringParams.toString());
+                                        BranchLogger.d("User alias set to " + userID + "\nInstall params = " + referringParams.toString());
                                         if (error != null) {
-                                            BranchLogger.d("branch set Identity failed. Caused by -" + error.getMessage());
+                                            BranchLogger.d("branch set user alias failed. Caused by -" + error.getMessage());
                                         }
-                                        Toast.makeText(getApplicationContext(), "Set Identity to " + userID, Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getApplicationContext(), "Set user alias to " + userID, Toast.LENGTH_LONG).show();
 
 
                                     }
@@ -158,7 +156,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.cmdClearUser).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                String currentUserId = PrefHelper.getInstance(MainActivity.this).getIdentity();
+                String currentUserId = PrefHelper.getInstance(MainActivity.this).getUserAlias();
                 Branch.getInstance().logout(new Branch.LogoutStatusListener() {
                     @Override
                     public void onLogoutFinished(boolean loggedOut, BranchError error) {
@@ -791,7 +789,7 @@ public class MainActivity extends Activity {
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
         BranchLogger.d("initSession");
 
-        Branch.getInstance().setIdentity("Identity1");
+        Branch.getInstance().setUserAlias("Identity1");
 
         userAgentTests(true, 1);
 
