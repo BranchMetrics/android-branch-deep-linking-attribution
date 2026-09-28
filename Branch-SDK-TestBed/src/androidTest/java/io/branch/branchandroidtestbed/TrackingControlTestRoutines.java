@@ -146,7 +146,7 @@ public class TrackingControlTestRoutines {
     }
     
     private void testBranchEvent(final int stateCnt) {
-        Branch.getInstance().setIdentity(UUID.randomUUID().toString(), new Branch.BranchReferralInitListener() {
+        Branch.getInstance().setUserAlias(UUID.randomUUID().toString(), new Branch.BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 boolean passed;
