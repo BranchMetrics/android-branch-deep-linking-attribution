@@ -179,7 +179,10 @@ jobs:
               echo "| Cold | cold_firstInstall and cold_https pass |"
               # Three states from the driver's own step output: pass, fail, or not_run, each with its reason.
               ns_result="$NS_RESULT"
-              ns_reason="$NS_REASON"
+              # Empty when the shared step aborted before this script ran,
+              # so the row would otherwise render "fail ()" with nothing
+              # inside the parens.
+              ns_reason="${NS_REASON:-step did not run}"
               if [ "$ns_result" = "pass" ]; then
                 ns_text="no_stickiness pass"
               elif [ "$ns_result" = "not_run" ]; then
