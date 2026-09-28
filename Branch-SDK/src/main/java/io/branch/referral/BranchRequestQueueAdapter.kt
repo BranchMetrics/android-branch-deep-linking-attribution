@@ -249,7 +249,7 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
             is ServerRequestInitSession -> false
             is ServerRequestCreateUrl -> false
             is QueueOperationLogout -> false
-            is QueueOperationSetIdentity -> false
+            is QueueOperationSetUserAlias -> false
             else -> true
         }
         BranchLogger.v("BranchRequestQueueAdapter.requestNeedsSession for ${request::class.simpleName} - result: $result")
