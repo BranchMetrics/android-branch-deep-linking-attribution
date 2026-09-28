@@ -12,6 +12,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import io.branch.branchandroidtestbed.MainActivity
 import io.branch.referral.Branch
@@ -82,9 +83,8 @@ class NoStickinessReturn {
             activity = it
             intentSnapshot = it.intent?.data
         }
-        val mainActivity = checkNotNull(activity) { "activity reference unavailable after delivery" }
+        checkNotNull(activity) { "activity reference unavailable after delivery" }
 
-        stopOtherApps(mainActivity.taskId)
         // Marked before the forced-extra-card launch: that launch backgrounds this activity for
         // real, so the stop dispatch it causes must still count as the one this poll waits for.
         val preBackgroundMarker = NoStickinessSupport.currentLineCount(captureFile)
@@ -159,39 +159,91 @@ class NoStickinessReturn {
         }
     }
 
+    // The count that decides pass/fail comes from dumpsys, not from the launcher's card
+    // carousel: this narrow emulator skin only ever renders ONE card at full size with its
+    // icon at a time, live or not, so a second live task (the forceExtraCard path) peeks in
+    // as an icon-less sliver indistinguishable, in the accessibility tree alone, from a stale
+    // one. `Activities=[]` on a task is authoritative on both API 30 and 34, ghost-proof, and
+    // unaffected by which card the carousel currently has centered.
     private fun tapExactlyOneRecentCard() {
         uiDevice.pressRecentApps()
-        uiDevice.wait(Until.hasObject(SNAPSHOT_SELECTOR), RECENTS_WAIT_MS)
+        uiDevice.wait(Until.hasObject(CARD_SELECTOR), RECENTS_WAIT_MS)
         if (forceZeroCards) {
             dismissAllRecentCards()
         }
-        val candidates = uiDevice.findObjects(SNAPSHOT_SELECTOR)
-        check(candidates.size == 1) {
-            "expected exactly one recents card matching the snapshot selector, found ${candidates.size}"
+        val liveTasks = liveNonHomeTaskCount()
+        check(liveTasks == 1) {
+            "expected exactly one recents card matching the snapshot selector, found $liveTasks; ${cardCountDiagnostic()}"
+        }
+        val candidates = awaitRenderedCard()
+        check(candidates.isNotEmpty()) {
+            "one live task in recents but no rendered card matched the snapshot selector; ${cardCountDiagnostic()}"
         }
         candidates[0].click()
     }
 
-    // Test-only: swipes every visible card away, to exercise the zero-card fail path. A card
-    // swipe is the ordinary dismiss gesture, unlike pm clear, so the process survives it.
-    private fun dismissAllRecentCards() {
-        uiDevice.findObjects(SNAPSHOT_SELECTOR).forEach { it.swipe(Direction.UP, 1.0f) }
-        uiDevice.wait(Until.gone(SNAPSHOT_SELECTOR), RECENTS_WAIT_MS)
+    // dumpsys already proved exactly one live task exists; an empty stableCards() read here
+    // is the launcher still animating the icon in, not a real zero, so this keeps sampling
+    // past one stable-but-empty read instead of trusting it the way dismissAllRecentCards does.
+    private fun awaitRenderedCard(): List<UiObject2> {
+        val deadline = System.currentTimeMillis() + RECENTS_WAIT_MS
+        var candidates = stableCards()
+        while (candidates.isEmpty() && System.currentTimeMillis() < deadline) {
+            candidates = stableCards()
+        }
+        return candidates
     }
 
-    // dumpsys activity recents (not activities): the launcher renders cards from its whole
-    // recents history, including tasks whose process already died, not just live ones. `am
-    // task` has no remove subcommand on this image; `am stack remove` takes a task ID directly,
-    // one call per single-task stack, no package name needed.
-    private fun stopOtherApps(keepTaskId: Int) {
-        val dump = shellOutput("dumpsys activity recents")
-        RECENT_HEADER.findAll(dump)
-            .mapNotNull { m ->
-                val (taskId, type) = m.destructured
-                if (type == "home" || taskId.toInt() == keepTaskId) null else taskId
-            }
-            .distinct()
-            .forEach { taskId -> shellOutput("am stack remove $taskId") }
+    // A task with an empty Activities list is a stale recents entry the launcher still
+    // remembers (a cleared or killed process outlives its card, on every API level tried);
+    // it never counts as a live "other" task.
+    private fun liveNonHomeTaskCount(): Int =
+        TASK_BLOCK.findAll(shellOutput("dumpsys activity recents")).count { m ->
+            val (_, type, activities) = m.destructured
+            type != "home" && activities.isNotBlank()
+        }
+
+    // This launcher's recents list rebinds its views on a timer even while idle, so a single
+    // point-in-time read can land in that gap and undercount. Two consecutive equal-sized reads
+    // are trusted; a read that keeps changing falls through to the last one, still bounded.
+    private fun stableCards(): List<UiObject2> {
+        var last = uiDevice.findObjects(CARD_SELECTOR)
+        val deadline = System.currentTimeMillis() + STABLE_READ_MS
+        while (System.currentTimeMillis() < deadline) {
+            Thread.sleep(STABLE_POLL_MS)
+            val next = uiDevice.findObjects(CARD_SELECTOR)
+            if (next.size == last.size) return next
+            last = next
+        }
+        return last
+    }
+
+    // Test-only: swipes every visible card away, to exercise the zero-card fail path. A card
+    // swipe is the ordinary dismiss gesture, unlike pm clear, so the process survives it. Retried
+    // for the same rebind-gap reason as stableCards(): a swipe issued into an empty read is a
+    // silent no-op, so the loop keeps trying until nothing is left or the deadline passes.
+    private fun dismissAllRecentCards() {
+        val deadline = System.currentTimeMillis() + RECENTS_WAIT_MS
+        while (System.currentTimeMillis() < deadline) {
+            val remaining = stableCards()
+            if (remaining.isEmpty()) return
+            remaining.forEach { it.swipe(Direction.UP, 1.0f) }
+            uiDevice.wait(Until.gone(CARD_SELECTOR), DISMISS_SETTLE_MS)
+        }
+    }
+
+    // Printed only on a card-count mismatch, folded into the check() message so it reaches
+    // the script's own result/reason output with no extra plumbing. Resource ids and content
+    // descriptions only: no link tokens or keys ever appear in the recents tree or the task list.
+    private fun cardCountDiagnostic(): String {
+        val nodes = uiDevice.findObjects(SNAPSHOT_SELECTOR).joinToString(";") { n ->
+            "res=${n.resourceName ?: "none"} desc=${n.contentDescription ?: ""}"
+        }
+        val tasks = TASK_BLOCK.findAll(shellOutput("dumpsys activity recents")).joinToString(",") { m ->
+            val (taskId, type, activities) = m.destructured
+            "$taskId:$type:${if (activities.isNotBlank()) "live" else "dead"}"
+        }
+        return "snapshots=[$nodes] tasks=[$tasks]"
     }
 
     // Test-only: leaves a second app's task in recents, to exercise the many-card fail path.
@@ -217,11 +269,28 @@ class NoStickinessReturn {
         const val DEFAULT_SETTINGS_PACKAGE = "com.android.settings"
         const val STOP_DISPATCH_MS = 5_000L
         const val RECENTS_WAIT_MS = 5_000L
+        const val STABLE_READ_MS = 1_500L
+        const val STABLE_POLL_MS = 250L
+        const val DISMISS_SETTLE_MS = 1_500L
         const val RETURN_SIGNAL_MS = 15_000L
         const val FALLBACK_SIGNAL_MS = 5_000L
         const val QUIESCENCE_MS = 3_000L
         const val SETTINGS_VISIBLE_MS = 5_000L
         val SNAPSHOT_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/snapshot$"))
-        val RECENT_HEADER = Regex("""Recent #\d+: Task\{\S+ #(\d+) type=(\S+)""")
+        val ICON_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/icon$"))
+        // Used only to find the card to tap once dumpsys has already decided pass/fail: a card
+        // with both a rendered snapshot and its icon, as opposed to a bare icon-less sliver
+        // (which this launcher also shows for the *current* card's own off-screen neighbours,
+        // live or not, so this selector alone cannot decide "exactly one").
+        val CARD_SELECTOR: BySelector = By.hasChild(SNAPSHOT_SELECTOR).hasChild(ICON_SELECTOR)
+        // Spans to the task's own `Activities=[...]` line (DOTALL), not just its header: a task
+        // whose process was cleared or killed keeps a recents entry with an empty activity list,
+        // on every API level tried, unlike `sz=`/`StackId=`, which API 34's dumpsys omits
+        // entirely. `.*?` before `type=` skips the `visible=<bool>` field API 30 inserts there
+        // and API 34 does not.
+        val TASK_BLOCK = Regex(
+            """Recent #\d+: Task\{\S+ #(\d+) .*?type=(\S+).*?Activities=\[(.*?)\]""",
+            RegexOption.DOT_MATCHES_ALL
+        )
     }
 }
