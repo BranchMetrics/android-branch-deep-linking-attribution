@@ -42,6 +42,7 @@ internal object NoStickinessSupport {
 
     const val RESULT_KEY = "result"
     const val REASON_KEY = "reason"
+    const val ARTIFACTS_DIR_NAME = "no_stickiness_artifacts"
 
     private const val TAG = "NoStickinessSupport"
     private const val TOKEN_MS = 20_000L
@@ -226,6 +227,21 @@ internal object NoStickinessSupport {
 
     /** A genuinely unreachable Branch API, kept distinct so a later read can classify it apart from an ordinary failure. */
     class BranchApiUnreachableException(message: String, cause: Throwable?) : RuntimeException(message, cause)
+
+    // Best-effort only: a capture failure must never change a caller's verdict or propagate.
+    // Written to the target app's external files dir, which needs no runtime permission on
+    // any API level and is adb-pullable for a debuggable app.
+    fun captureFailureArtifacts(uiDevice: UiDevice, targetContext: Context, tag: String) {
+        try {
+            val dir = File(targetContext.getExternalFilesDir(null), ARTIFACTS_DIR_NAME).apply { mkdirs() }
+            val stamp = System.currentTimeMillis()
+            val screenshotOk = uiDevice.takeScreenshot(File(dir, "recents-fail-$stamp.png"))
+            uiDevice.dumpWindowHierarchy(File(dir, "recents-fail-$stamp.xml"))
+            Log.i(tag, "captured failure artifacts dir=${dir.absolutePath} screenshot=$screenshotOk stamp=$stamp")
+        } catch (e: Throwable) {
+            Log.w(tag, "failure artifact capture skipped: ${e.message}")
+        }
+    }
 
     fun shellOutput(instrumentation: Instrumentation, command: String): String {
         val pfd = instrumentation.uiAutomation.executeShellCommand(command)
