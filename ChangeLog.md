@@ -1,4 +1,6 @@
 # Branch Android SDK change log
+- v6.0.0-beta.0
+  - Clear the resolved deep link payload at process start, and when the app goes to the background with no install, open or link resolution queued or executing, so a later organic launch no longer returns the previous link's data.
 - v5.20.3
 * _*Master Release*_ - Sep 24, 2025
   - Add some additional debug logging.
