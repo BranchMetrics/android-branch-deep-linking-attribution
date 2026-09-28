@@ -30,6 +30,7 @@ internal object NoStickinessSupport {
     const val ONSTART_DISPATCH_LINE = "BranchProcessLifecycleObserver onStart: process foregrounded"
     const val ONSTOP_DISPATCH_LINE = "BranchProcessLifecycleObserver onStop: process backgrounded"
     const val POLL_MS = 200L
+    private const val QUIET_WINDOW_MS = 1_500L
 
     // The verdict fields (spec Definition): none of these may be present on the accessor read
     // after a no-intent return. Prefixes are the server's own link-data convention, not ours.
@@ -130,18 +131,28 @@ internal object NoStickinessSupport {
 
     fun currentLineCount(captureFile: File): Int = if (captureFile.exists()) captureFile.readLines().size else 0
 
-    // Bounded settle: waits for two consecutive equal line-count reads, mirroring stableCards();
-    // proceeds past the deadline and logs it, since a late post still fails a caller's absence check.
+    // Bounded settle: waits for the capture file's length to hold steady for a full quiet
+    // window, so a delayed post has time to land before the caller's absence checks run.
     fun awaitQuiescentLineCount(captureFile: File, deadlineMs: Long) {
-        val deadline = System.currentTimeMillis() + deadlineMs
-        var last = currentLineCount(captureFile)
+        val start = System.currentTimeMillis()
+        val deadline = start + deadlineMs
+        var lastLength = captureFile.length()
+        var quietSince = start
         while (System.currentTimeMillis() < deadline) {
             Thread.sleep(POLL_MS)
-            val next = currentLineCount(captureFile)
-            if (next == last) return
-            last = next
+            val nextLength = captureFile.length()
+            val now = System.currentTimeMillis()
+            if (nextLength != lastLength) {
+                lastLength = nextLength
+                quietSince = now
+            } else if (now - quietSince >= QUIET_WINDOW_MS) {
+                val settleMs = now - start
+                Log.i(TAG, "quiescence path=quiet settleMs=$settleMs deadlineHit=false")
+                return
+            }
         }
-        Log.i(TAG, "quiescence settle hit its deadline at line count $last")
+        val settleMs = System.currentTimeMillis() - start
+        Log.i(TAG, "quiescence path=deadline settleMs=$settleMs deadlineHit=true length=$lastLength")
     }
 
     fun linesSince(captureFile: File, fromLine: Int): List<String> =

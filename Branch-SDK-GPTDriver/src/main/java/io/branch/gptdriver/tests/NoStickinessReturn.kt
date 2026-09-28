@@ -267,7 +267,7 @@ class NoStickinessReturn {
         const val DISMISS_SETTLE_MS = 1_500L
         const val RETURN_SIGNAL_MS = 15_000L
         const val FALLBACK_SIGNAL_MS = 5_000L
-        const val QUIESCENCE_MS = 3_000L
+        const val QUIESCENCE_MS = 5_000L
         const val SETTINGS_VISIBLE_MS = 5_000L
         val SNAPSHOT_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/snapshot$"))
         val ICON_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/icon$"))
