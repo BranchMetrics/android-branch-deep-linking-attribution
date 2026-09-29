@@ -29,9 +29,13 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
         private val responseCode: Int,
         private val body: String
     ) : BranchRemoteInterface() {
+        val openSent = CountDownLatch(1)
+
         override fun doRestfulGet(url: String?): BranchResponse = BranchResponse(body, responseCode)
-        override fun doRestfulPost(url: String?, payload: JSONObject?): BranchResponse =
-            BranchResponse(body, responseCode)
+        override fun doRestfulPost(url: String?, payload: JSONObject?): BranchResponse {
+            if (url.orEmpty().endsWith("v3/events/open")) openSent.countDown()
+            return BranchResponse(body, responseCode)
+        }
     }
 
     /** Blocks the single queue consumer so a following request stays queued and unsent. */
@@ -70,21 +74,20 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
 
     @Test
     fun returnsTheReferringParams() = runTest {
-        Branch.getInstance().setBranchRemoteInterface(
-            StubRemoteInterface(200, """{"data":"{\"~channel\":\"email\",\"foo\":\"bar\"}"}""")
-        )
+        val remote = StubRemoteInterface(200, """{"data":"{\"~channel\":\"email\",\"foo\":\"bar\"}"}""")
+        Branch.getInstance().setBranchRemoteInterface(remote)
 
         val params = Branch.getInstance().requestDeepLinkData(uri)
 
         assertEquals("bar", params.optString("foo"))
         assertEquals("email", params.optString("~channel"))
+        awaitTheLaunchOpen(remote)
     }
 
     @Test
     fun throwsBranchExceptionCarryingTheServerFailure() = runTest {
-        Branch.getInstance().setBranchRemoteInterface(
-            StubRemoteInterface(500, """{"error":"boom"}""")
-        )
+        val remote = StubRemoteInterface(500, """{"error":"boom"}""")
+        Branch.getInstance().setBranchRemoteInterface(remote)
 
         try {
             Branch.getInstance().requestDeepLinkData(uri)
@@ -96,6 +99,7 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
                 e.branchError.errorCode
             )
         }
+        awaitTheLaunchOpen(remote)
     }
 
     /**
@@ -128,6 +132,11 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
             // A failed assertion would otherwise leave the consumer parked for the full 10s.
             gated.gate.countDown()
         }
+    }
+
+    /** The resolve's open is sent after its callback; left in flight, it lands in the next test's queue. */
+    private fun awaitTheLaunchOpen(remote: StubRemoteInterface) {
+        assertTrue("the launch's open never went out", remote.openSent.await(10, TimeUnit.SECONDS))
     }
 
     private fun awaitQueueSizeAtLeast(target: Int): Boolean {
