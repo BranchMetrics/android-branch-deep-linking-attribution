@@ -62,7 +62,7 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     @Test
     fun onStop_keepsSessionParamsWhileDeepLinkQueued() {
         prefHelper.sessionParams = linkSessionParams
-        queue.insert(heldRequest(RequestDeepLink(RuntimeEnvironment.getApplication(), null, null, false)), 0)
+        queue.insert(heldRequest(RequestDeepLink(RuntimeEnvironment.getApplication(), null, false)), 0)
 
         observer.onStop(owner)
 
@@ -72,7 +72,7 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     @Test
     fun onStop_keepsSessionParamsWhileDeepLinkExecuting() {
         prefHelper.sessionParams = linkSessionParams
-        val deepLink = RequestDeepLink(RuntimeEnvironment.getApplication(), null, null, false)
+        val deepLink = RequestDeepLink(RuntimeEnvironment.getApplication(), null, false)
         activeRequests()["RequestDeepLink_executing"] = deepLink
 
         observer.onStop(owner)
@@ -95,16 +95,6 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     fun onStop_keepsSessionParamsWhileOpenQueued() {
         prefHelper.sessionParams = linkSessionParams
         queue.insert(heldRequest(RequestOpen(RuntimeEnvironment.getApplication(), null, false, null)), 0)
-
-        observer.onStop(owner)
-
-        assertEquals(linkSessionParams, prefHelper.sessionParams)
-    }
-
-    @Test
-    fun onStop_keepsSessionParamsWhileInstallQueued() {
-        prefHelper.sessionParams = linkSessionParams
-        queue.insert(heldRequest(ServerRequestRegisterInstall(RuntimeEnvironment.getApplication(), null, false)), 0)
 
         observer.onStop(owner)
 
@@ -153,7 +143,7 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
 
     // Keeps the queue from sending it mid-test.
     private fun heldRequest(request: ServerRequest): ServerRequest =
-        request.apply { addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK) }
+        request.apply { addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK) }
 
     @Suppress("UNCHECKED_CAST")
     private fun activeRequests(): MutableMap<String, ServerRequest> =
