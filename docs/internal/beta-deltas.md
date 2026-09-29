@@ -29,14 +29,8 @@ Constants (`BranchRequestQueue.kt:66-72`): `MAX_ITEMS = 25`, `MAX_RETRY_ATTEMPTS
 
 Both were broken once already. `git log` carries the detail.
 
-- `eb040576`: `onIntentReady()` must read and persist intent params (`readAndStripParam`) **before** releasing `INTENT_PENDING_WAIT_LOCK`, or cold-start deep-link attribution is dropped.
-- `e7e46854`: the retry-count ceiling must apply **only** to requests that are not waiting on a lock. Lock-waiters may fail only via the 30s timeout. `tryResolveStuckLocks` can force-remove a lock at roughly the 10s window; if that was the request's last lock, the retry ceiling applies again. It does not cover `USER_SET_WAIT_LOCK`. `shouldFailRequest()` (`BranchRequestQueue.kt:376+`) encodes this. Without it, 5 attempts at 100 ms force-fails a waiting request after roughly 500 ms.
-
-### Known live bug: `withDelay()`
-
-`USER_SET_WAIT_LOCK` is added by `withDelay()` (`Branch.java:1394`) but has **no removal site** anywhere in `src/main`. `removeSessionInitializationDelay()`, its historical owner, no longer exists on this branch (`git grep` returns zero hits in `Branch-SDK/src`). No stuck-lock resolver handles it either.
-
-Net effect: a delayed `init()` hangs until the 30s timeout, then fails. `withDelay()` is effectively broken here. A fix needs to give the lock a real owner, or model the delay without a dangling lock.
+- The launch request must be enqueued only after `readLaunchLink()` has written the link to `PrefHelper`, or the request goes out without it.
+- `e7e46854`: the retry-count ceiling must apply **only** to requests that are not waiting on a lock. Lock-waiters may fail only via the 30s timeout. `tryResolveStuckLocks` can force-remove a lock at roughly the 10s window; if that was the request's last lock, the retry ceiling applies again. `shouldFailRequest()` (`BranchRequestQueue.kt:376+`) encodes this. Without it, 5 attempts at 100 ms force-fails a waiting request after roughly 500 ms.
 
 ## New request paths
 

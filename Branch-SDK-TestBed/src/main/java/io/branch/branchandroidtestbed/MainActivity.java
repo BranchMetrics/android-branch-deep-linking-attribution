@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
-        handleDeepLink(this.getIntent().getData());
+        handleDeepLink();
 
         txtShortUrl = findViewById(R.id.editReferralShortUrl);
 
@@ -819,16 +819,14 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         this.setIntent(intent);
 
-        handleDeepLink(intent.getData());
+        handleDeepLink();
     }
 
     /**
-     * Resolves Branch data for a launch or new intent.
-     *
-     * @param data the intent's URI, or null when the app was not opened from a link
+     * Resolves Branch data for the launch or new intent.
      */
-    private void handleDeepLink(Uri data) {
-        Branch.getInstance().requestDeepLinkData(data, new BranchReferralInitListener() {
+    private void handleDeepLink() {
+        Branch.getInstance().requestDeepLinkData(this, new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 if (error != null) {

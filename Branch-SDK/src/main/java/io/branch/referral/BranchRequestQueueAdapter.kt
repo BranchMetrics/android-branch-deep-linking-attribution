@@ -207,10 +207,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     fun postInitClear() {
         BranchLogger.v("BranchRequestQueueAdapter.postInitClear called")
-        adapterScope.launch {
-            newQueue.clearDeepLinkStorage()
-            BranchLogger.v("BranchRequestQueueAdapter.postInitClear completed")
-        }
+        newQueue.clearDeepLinkStorage()
+        BranchLogger.v("BranchRequestQueueAdapter.postInitClear completed")
     }
     
     /**
@@ -246,10 +244,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     fun clear() {
         BranchLogger.v("BranchRequestQueueAdapter.clear called")
-        adapterScope.launch {
-            newQueue.clear()
-            BranchLogger.v("BranchRequestQueueAdapter.clear completed")
-        }
+        newQueue.clear()
+        BranchLogger.v("BranchRequestQueueAdapter.clear completed")
     }
     
     private fun requestNeedsSession(request: ServerRequest): Boolean {
