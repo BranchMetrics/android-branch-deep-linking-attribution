@@ -33,7 +33,7 @@ Code spans several `io/branch/*` packages, not just `referral/`.
 
 | Task | Start here |
 | --- | --- |
-| Session init, deep-link callbacks, intent parsing | mechanism in `Branch.java` (`initializeSession`, `registerAppInit`, `readAndStripParam`, `onIntentReady`); new entry point in `modernization/core/ModernBranchCore.kt` (`SessionManager.initSession`). The legacy `sessionBuilder`/`InitSessionBuilder` is being retired, do not extend it |
+| Launch, deep-link callbacks, intent parsing | `Branch.requestDeepLinkData` (Activity, Uri, and the `suspend` variants in `BranchCoroutines.kt`), then `readLaunchLink`/`readAndStripParam` and `enqueueLaunchRequest`/`initTasks` in `Branch.java` |
 | OPEN, attribution gating | `Branch.sendOpen(JSONObject)`, sent once per `requestDeepLinkData`, unless one is already waiting, from `coroutines/RequestDeepLink.kt`; `Branch.sendHeldOpen` sends, on opt-in, the open a link check held while attribution was off; request in `coroutines/RequestOpen.kt` |
 | Manual deep-link resolution (`v3/deeplink`) | `Branch.requestDeepLinkData(...)` plus `coroutines/RequestDeepLink.kt` |
 | Request queueing, wait locks, retry behavior | `BranchRequestQueue.kt` and `BranchRequestQueueAdapter.kt`. **Not** `ServerRequestQueue.java`, which is orphaned |

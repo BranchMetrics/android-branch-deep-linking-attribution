@@ -509,12 +509,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     
                     // Enhanced debugging for init session requests
                     if (request is ServerRequestInitSession) {
-                        val requestType = when (request) {
-                            is ServerRequestRegisterInstall -> "RegisterInstall"
-                            is ServerRequestRegisterOpen -> "RegisterOpen"
-                            else -> "InitSession"
-                        }
-                        BranchLogger.v("*** SUCCESS: $requestType request completed successfully ***")
+                        BranchLogger.v("*** SUCCESS: ${request::class.simpleName} request completed successfully ***")
                     }
                     
                     // Process ServerRequestInitSession response data before calling onRequestSucceeded
@@ -557,8 +552,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         val sessionInitialized = branch.initState is BranchSessionState.Initialized
         val canPerformOperations = branch.canPerformOperations()
         
-        return (sessionInitialized || canPerformOperations) && hasSession && hasDeviceToken && 
-               (request !is ServerRequestRegisterInstall || hasUser)
+        return (sessionInitialized || canPerformOperations) && hasSession && hasDeviceToken
     }
     
     /**
@@ -585,14 +579,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
         if (waitLocks.contains("INSTALL_REFERRER_FETCH_WAIT_LOCK")) {
             BranchLogger.v("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INSTALL_REFERRER_FETCH_WAIT_LOCK")
             request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK)
-        }
-
-        // EMT-3860: the intent-pending lock is live again. If onActivityResumed / onIntentReady
-        // never fires (e.g. a headless cold start), force-resolve it after the stuck window so the
-        // init request is not held for the full 30s timeout.
-        if (waitLocks.contains("INTENT_PENDING_WAIT_LOCK")) {
-            BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INTENT_PENDING_WAIT_LOCK")
-            request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK)
         }
     }
     
@@ -809,10 +795,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
         
-        val result = when (request) {
-            is ServerRequestRegisterInstall -> hasSession && hasDeviceToken
-            else -> hasSession && hasDeviceToken && hasUser
-        }
+        val result = hasSession && hasDeviceToken && hasUser
         
         BranchLogger.v("hasValidSession - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, result: $result")
         return result
@@ -865,13 +848,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         return executing
     }
 
-    // RequestOpen is the beta's open. ServerRequestRegisterInstall is still reachable here:
-    // getInstallOrOpenRequest builds one when there is no randomized bundle token, and
-    // sessionBuilder().init() remains public API. ServerRequestRegisterOpen is not included —
-    // its only construction site is the queue-restore path in ServerRequest, and nothing on this
-    // line restores a persisted queue.
-    private fun isInstallOrOpen(request: ServerRequest): Boolean =
-        request is ServerRequestRegisterInstall || request is RequestOpen
+    private fun isInstallOrOpen(request: ServerRequest): Boolean = request is RequestOpen
 
     /** Whether a deep link or open request is queued or executing. */
     fun containsDeepLinkOrOpen(): Boolean {
@@ -1020,7 +997,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     /**
      * Clear init data after initialization
      */
-    suspend fun clearDeepLinkStorage() {
+    fun clearDeepLinkStorage() {
         BranchLogger.v("BranchRequestQueue.clearDeepLinkStorage called")
         synchronized(queueList) {
             val prefHelper_ = Branch.getInstance().prefHelper
@@ -1070,7 +1047,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Clear all requests from queue
      * Follows SRP - single responsibility for clearing queue state
      */
-    suspend fun clear() {
+    fun clear() {
         BranchLogger.v("BranchRequestQueue.clear called")
         synchronized(queueList) {
             queueList.clear()

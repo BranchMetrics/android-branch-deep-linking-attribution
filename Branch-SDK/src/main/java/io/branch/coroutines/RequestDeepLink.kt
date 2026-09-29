@@ -1,7 +1,6 @@
 package io.branch.coroutines
 
 import android.content.Context
-import android.net.Uri
 import io.branch.referral.Branch
 import io.branch.referral.BranchError
 import io.branch.referral.BranchLogger
@@ -14,7 +13,6 @@ import org.json.JSONObject
 
 internal class RequestDeepLink(
     context: Context,
-    uri: Uri?,
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean
 ) : ServerRequestInitSession(context, Defines.RequestPath.Deeplink, isAutoInitialization) {
@@ -23,23 +21,6 @@ internal class RequestDeepLink(
         callback_ = callback
         try {
             val deepLinkPost = JSONObject()
-
-            uri?.let {
-                // Extract link_click_id from URI if present and set as link_identifier
-                val linkClickId = it.getQueryParameter("link_click_id")
-                if (linkClickId != null) {
-                    deepLinkPost.put(Defines.Jsonkey.LinkIdentifier.key, linkClickId)
-                }
-
-                // Set the appropriate URI field based on scheme
-                if (it.scheme?.equals("https", ignoreCase = true) == true || it.scheme?.equals("http", ignoreCase = true) == true) {
-                    // App links use android_app_link_url
-                    deepLinkPost.put(Defines.Jsonkey.AndroidAppLinkURL.key, it.toString())
-                } else {
-                    // URI schemes (like branchtest://) use external_intent_uri
-                    deepLinkPost.put(Defines.Jsonkey.External_Intent_URI.key, it.toString())
-                }
-            }
 
             val rdt = prefHelper_.randomizedDeviceToken
             if(rdt != PrefHelper.NO_STRING_VALUE) {
@@ -79,6 +60,11 @@ internal class RequestDeepLink(
             if (responseJson.has(Defines.Jsonkey.Data.key)) {
                 val params = responseJson.getString(Defines.Jsonkey.Data.key)
                 prefHelper_.sessionParams = params
+                // An install from a link keeps that link's params as the first referring params.
+                if (isInstallLaunch() && prefHelper_.installParams == PrefHelper.NO_STRING_VALUE &&
+                    JSONObject(params).optBoolean(Defines.Jsonkey.Clicked_Branch_Link.key)) {
+                    prefHelper_.installParams = params
+                }
             } else {
                 prefHelper_.sessionParams = PrefHelper.NO_STRING_VALUE
             }

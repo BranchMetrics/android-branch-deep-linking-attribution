@@ -31,8 +31,8 @@ import java.util.UUID;
 public abstract class ServerRequest {
 
     private static final Defines.RequestPath[] initializationAndEventRoutes = new Defines.RequestPath[]{
-            Defines.RequestPath.RegisterInstall,
-            Defines.RequestPath.RegisterOpen,
+            Defines.RequestPath.Deeplink,
+            Defines.RequestPath.EventsOpen,
             Defines.RequestPath.ContentEvent,
             Defines.RequestPath.TrackStandardEvent,
             Defines.RequestPath.TrackCustomEvent};
@@ -50,7 +50,7 @@ public abstract class ServerRequest {
 
     // Various process wait locks for Branch server request
     public enum PROCESS_WAIT_LOCK {
-        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INTENT_PENDING_WAIT_LOCK, USER_SET_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK, USER_AGENT_STRING_LOCK
+        SDK_INIT_WAIT_LOCK, GAID_FETCH_WAIT_LOCK, INSTALL_REFERRER_FETCH_WAIT_LOCK, USER_AGENT_STRING_LOCK
     }
     
     // Set for holding any active wait locks
@@ -457,10 +457,6 @@ public abstract class ServerRequest {
 
         if (requestPath.equalsIgnoreCase(Defines.RequestPath.GetURL.getPath())) {
             extendedReq = new ServerRequestCreateUrl(Defines.RequestPath.GetURL, post, context);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterInstall.getPath())) {
-            extendedReq = new ServerRequestRegisterInstall(Defines.RequestPath.RegisterInstall, post, context, initiatedByClient);
-        } else if (requestPath.equalsIgnoreCase(Defines.RequestPath.RegisterOpen.getPath())) {
-            extendedReq = new ServerRequestRegisterOpen(Defines.RequestPath.RegisterOpen, post, context, initiatedByClient);
         }
         return extendedReq;
     }
@@ -610,7 +606,7 @@ public abstract class ServerRequest {
                 }
             }
             // Install metadata need to be send only with Install request
-            if ((this instanceof ServerRequestRegisterInstall) && prefHelper_.getInstallMetadata().length() > 0) {
+            if ((this instanceof ServerRequestInitSession) && ((ServerRequestInitSession) this).isInstallLaunch() && prefHelper_.getInstallMetadata().length() > 0) {
                 Iterator<String> postIterInstallMetaData = prefHelper_.getInstallMetadata().keys();
                 while (postIterInstallMetaData.hasNext()) {
                     String key = postIterInstallMetaData.next();
@@ -802,7 +798,7 @@ public abstract class ServerRequest {
      */
     public void onPreExecute() {
         BranchLogger.v("onPreExecute " + this);
-        if (this instanceof ServerRequestRegisterOpen || this instanceof ServerRequestLogEvent) {
+        if (this instanceof RequestOpen || this instanceof ServerRequestLogEvent) {
             try {
                 ReferringUrlUtility utility = new ReferringUrlUtility(prefHelper_);
                 String externalIntentUri = prefHelper_.getExternalIntentUri();

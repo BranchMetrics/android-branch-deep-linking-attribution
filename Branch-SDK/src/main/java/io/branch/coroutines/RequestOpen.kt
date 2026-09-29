@@ -29,7 +29,6 @@ internal class RequestOpen(
                     Defines.Jsonkey.RandomizedBundleToken.key,
                     rbt)
             }
-            // TODO: Move registerAppInit tasks here
             if(responseData != null && responseData.has("data")){
                 val dataString = responseData.getString("data")
                 val dataJSON = JSONObject(dataString)
@@ -51,6 +50,10 @@ internal class RequestOpen(
 
         try {
             val responseJson = response.`object`
+
+            if (responseJson.has(Defines.Jsonkey.Link.key)) {
+                prefHelper_.userURL = responseJson.getString(Defines.Jsonkey.Link.key)
+            }
 
             // TODO: Should be put under v3/deeplink
             // Check for enhanced web link UX override
@@ -85,6 +88,9 @@ internal class RequestOpen(
         } catch (ex: Exception) {
             BranchLogger.w("Caught Exception processing RequestOpen response: ${ex.message}")
         }
+
+        // The launch is counted: its install and intent data must not ride the next launch.
+        branch.requestQueue_.postInitClear()
 
         onInitSessionCompleted(response, branch)
     }
