@@ -392,6 +392,14 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
+        // The last process may have died without a background.
+        branchReferral_.prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+        try {
+            BranchProcessLifecycleObserver.register(branchReferral_);
+        } catch (Exception | LinkageError e) {
+            BranchLogger.w("Could not register the process lifecycle observer: " + e);
+        }
+
         logInitializeComplete(branchReferral_, config);
     }
 
@@ -515,6 +523,16 @@ public class Branch {
         }
 
         // Legacy link generator doesn't need explicit shutdown (no coroutines)
+
+        try {
+            if (isTestModeEnabled()) {
+                BranchProcessLifecycleObserver.shutDownForTesting();
+            } else {
+                BranchProcessLifecycleObserver.unregister();
+            }
+        } catch (Exception | LinkageError e) {
+            BranchLogger.w("Could not unregister the process lifecycle observer: " + e);
+        }
 
         BranchRequestQueueAdapter.shutDown();
         BranchRequestQueue.shutDown();

@@ -97,6 +97,19 @@ class BranchInitializeTest : BranchTestBase() {
         assertEquals(4, PrefHelper.getInstance(context).getNoConnectionRetryMax())
     }
 
+    @Test
+    fun initialize_clearsSessionParamsLeftByPreviousProcess() {
+        // Same key, so the key-change reset doesn't clear it instead.
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+        Branch.shutDown()
+        PrefHelper.getInstance(context).sessionParams =
+            """{"~channel":"Distribution Channel","+clicked_branch_link":true}"""
+
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        assertEquals(PrefHelper.NO_STRING_VALUE, PrefHelper.getInstance(context).sessionParams)
+    }
+
     // -------------------------------------------------------------------------
     // Request tracing callback
     // -------------------------------------------------------------------------

@@ -23,6 +23,7 @@ Code spans several `io/branch/*` packages, not just `referral/`.
   - `referral/validators/`, `referral/QRCode/`
   - `referral/modernization/` `BranchApiPreservationManager.kt`, `registry/PublicApiRegistry.kt`, `wrappers/PreservedBranchApi.kt` and `LegacyBranchWrapper.kt` (legacy API shims), `core/ModernBranchCore.kt` (the new reactive session entry point), `adapters/CallbackAdapterRegistry.kt`, `analytics/ApiUsageAnalytics.kt`
 - **`coroutines/`** async fetch entry points (`AdvertisingIds`, `DeviceSignals`, `InstallReferrers`) **and** the newer coroutine request classes `RequestOpen.kt` (`v3/events/open`) and `RequestDeepLink.kt` (`v3/deeplink`)
+- **`observers/`** (a directory under `io.branch`, but the classes declare `package io.branch.referral`) `BranchProcessLifecycleObserver.kt`, process-level background detection that clears `sessionParams`; it sends no requests
 - **`indexing/`** `BranchUniversalObject`, the BUO content model
 - **`data/`** `InstallReferrerResult`
 - **`interfaces/`** public callback interfaces, for example `IBranchLoggingCallbacks`
