@@ -332,6 +332,36 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     // -------------------------------------------------------------------------
+    // Process-start clear (EMT-4334): a process that died without onStop must not leak the
+    // previous run's resolved payload into a cold start.
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun initialize_clearsSessionParamsLeftByPreviousProcess() {
+        PrefHelper.getInstance(context).sessionParams =
+            """{"~channel":"Distribution Channel","+clicked_branch_link":true}"""
+
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        assertEquals(PrefHelper.NO_STRING_VALUE, PrefHelper.getInstance(context).sessionParams)
+    }
+
+    @Test
+    fun initialize_automaticOpenEventsFalse_stillClearsSessionParams() {
+        PrefHelper.getInstance(context).sessionParams =
+            """{"~channel":"Distribution Channel","+clicked_branch_link":true}"""
+
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setAutomaticOpenEvents(false)
+                .build()
+        )
+
+        assertEquals(PrefHelper.NO_STRING_VALUE, PrefHelper.getInstance(context).sessionParams)
+    }
+
+    // -------------------------------------------------------------------------
     // Singleton guard — second initialize() call is a no-op
     // -------------------------------------------------------------------------
 

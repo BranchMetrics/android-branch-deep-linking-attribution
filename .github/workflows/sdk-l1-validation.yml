@@ -88,6 +88,7 @@ jobs:
       # newlines and runs each through its own `sh -c`, so a multi-line
       # construct here would not survive.
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
+        id: run_scenarios
         uses: reactivecircus/android-emulator-runner@v2
         env:
           MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
@@ -101,11 +102,14 @@ jobs:
           # MOBILEBOOST_API_KEY is propagated to the script via the step `env:`
           # block above; the script reads it from the environment, so we no
           # longer pass the secret as a positional argument (avoids argv leak).
+          #
+          # no_stickiness runs here too, so this step's own emulator boot is reused.
           script: |
             TEST_CLASS=N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=attribution_none L1_ATTRIBUTION_LEVEL=NONE CLEAR_LOG=1 WIPE_FIRST=1 WIPE_AFTER=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            ./scripts/run_no_stickiness_check.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -210,4 +214,20 @@ jobs:
 
       - name: Fail the job if validation failed
         if: steps.validate.outcome == 'failure'
+        run: exit 1
+
+      # Same-repo PRs only, like the wire-log upload; event_name keeps it on dispatch and push.
+      - name: Upload no_stickiness failure artifacts
+        if: always() && steps.run_scenarios.outputs.result != 'pass' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: actions/upload-artifact@v4
+        with:
+          name: no-stickiness-failure
+          path: |
+            no-stickiness-artifacts/
+            no-stickiness-instrument.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Fail the job if no_stickiness did not pass
+        if: always() && steps.run_scenarios.outputs.result != 'pass'
         run: exit 1
