@@ -33,7 +33,8 @@ suspend fun BranchEvent.awaitLogEvent(context: Context): Unit =
 
 /**
  * Resolves [uri] against `v3/deeplink` and suspends until the referring params arrive.
- * Main-safe. Cancelling de-queues the request if it has not been sent yet.
+ * Main-safe. Cancelling de-queues the request if it has not been sent yet. Each resolve also
+ * sends one open event; while attribution is off, it is sent when the user opts in.
  *
  * @throws BranchException if the deep link could not be resolved.
  */

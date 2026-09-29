@@ -34,7 +34,6 @@ class BranchConfiguration private constructor(
     val referringLinkAttributionForPreinstalledApps: Boolean,
     val whitelistedSchemes: List<String>,
     val uriHostsToSkip: List<String>,
-    val automaticOpenEvents: Boolean,
     val userAgentFetchSync: Boolean
 ) {
 
@@ -163,7 +162,6 @@ class BranchConfiguration private constructor(
         lit("referringLinkAttributionForPreinstalledApps", referringLinkAttributionForPreinstalledApps)
         raw("whitelistedSchemes", whitelistedSchemes.joinToString(",", "[", "]") { JSONObject.quote(it) })
         raw("uriHostsToSkip", uriHostsToSkip.joinToString(",", "[", "]") { JSONObject.quote(it) })
-        lit("automaticOpenEvents", automaticOpenEvents)
         lit("userAgentFetchSync", userAgentFetchSync)
 
         return json.append('}').toString()
@@ -203,7 +201,6 @@ class BranchConfiguration private constructor(
         if (referringLinkAttributionForPreinstalledApps) nonDefaults.add("referringLinkAttributionForPreinstalledApps=true")
         if (whitelistedSchemes.isNotEmpty()) nonDefaults.add("whitelistedSchemes=$whitelistedSchemes")
         if (uriHostsToSkip.isNotEmpty()) nonDefaults.add("uriHostsToSkip=$uriHostsToSkip")
-        if (!automaticOpenEvents) nonDefaults.add("automaticOpenEvents=false")
         if (userAgentFetchSync) nonDefaults.add("userAgentFetchSync=true")
         return "BranchConfiguration(${nonDefaults.joinToString(", ")})"
     }
@@ -240,7 +237,6 @@ class BranchConfiguration private constructor(
         private var referringLinkAttributionForPreinstalledApps: Boolean = false
         private val whitelistedSchemes: MutableList<String> = mutableListOf()
         private val uriHostsToSkip: MutableList<String> = mutableListOf()
-        private var automaticOpenEvents: Boolean = true
         private var userAgentFetchSync: Boolean = false
 
         // Identity & environment
@@ -282,8 +278,6 @@ class BranchConfiguration private constructor(
         fun addUriHostToSkip(host: String) = apply { uriHostsToSkip.add(host) }
 
         // Open tracking
-        /** When false, [ProcessLifecycleOwner] won't call [Branch.sendOpen] automatically on ON_START. */
-        fun setAutomaticOpenEvents(enabled: Boolean) = apply { automaticOpenEvents = enabled }
         fun setUserAgentFetchSync(sync: Boolean) = apply { userAgentFetchSync = sync }
 
         /**
@@ -340,7 +334,6 @@ class BranchConfiguration private constructor(
                 referringLinkAttributionForPreinstalledApps = referringLinkAttributionForPreinstalledApps,
                 whitelistedSchemes = whitelistedSchemes.toList(),
                 uriHostsToSkip = uriHostsToSkip.toList(),
-                automaticOpenEvents = automaticOpenEvents,
                 userAgentFetchSync = userAgentFetchSync
             )
         }

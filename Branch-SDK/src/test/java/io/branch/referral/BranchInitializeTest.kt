@@ -1,9 +1,5 @@
 package io.branch.referral
 
-import android.os.Looper
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.ProcessLifecycleOwner
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,7 +10,6 @@ import org.junit.Before
 import org.junit.Test
 import org.json.JSONObject
 import org.robolectric.RuntimeEnvironment
-import org.robolectric.Shadows
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -41,10 +36,6 @@ class BranchInitializeTest : BranchTestBase() {
     override fun tearDownBase() {
         super.tearDownBase()
         Branch.shutDown()
-        // ProcessLifecycleOwner is process-global; leaving it STARTED makes every later
-        // initialize() register an observer that fires OPEN immediately.
-        (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState =
-            Lifecycle.State.CREATED
     }
 
     // -------------------------------------------------------------------------
@@ -104,53 +95,6 @@ class BranchInitializeTest : BranchTestBase() {
         Branch.initialize(context, config)
 
         assertEquals(4, PrefHelper.getInstance(context).getNoConnectionRetryMax())
-    }
-
-    // -------------------------------------------------------------------------
-    // Automatic open events / process lifecycle observer
-    // -------------------------------------------------------------------------
-
-    /**
-     * Adding an observer to an already-STARTED lifecycle dispatches onStart synchronously, so
-     * registering-then-unregistering still emits the OPEN it was meant to suppress. Driving the
-     * process lifecycle to STARTED before initialize() is what exposes that.
-     */
-    private fun startProcessLifecycle() {
-        (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState =
-            Lifecycle.State.STARTED
-    }
-
-    private val openEmitted = "process foregrounded, sending OPEN"
-
-    @Test
-    fun initialize_automaticOpenEventsFalse_emitsNoOpenWhenAlreadyForegrounded() {
-        startProcessLifecycle()
-
-        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
-            setAutomaticOpenEvents(false)
-        }
-        Shadows.shadowOf(Looper.getMainLooper()).idle()
-
-        assertFalse(
-            "automaticOpenEvents=false must not emit an OPEN, even when the process is already " +
-                "foregrounded at initialize()",
-            logs.any { it.contains(openEmitted) }
-        )
-    }
-
-    @Test
-    fun initialize_automaticOpenEventsDefault_emitsOpenWhenAlreadyForegrounded() {
-        startProcessLifecycle()
-
-        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
-        // register() posts to the main looper when off-thread; drain it so the assertion does not
-        // depend on which path was taken.
-        Shadows.shadowOf(Looper.getMainLooper()).idle()
-
-        assertTrue(
-            "the default must still emit an OPEN when the process is already foregrounded",
-            logs.any { it.contains(openEmitted) }
-        )
     }
 
     // -------------------------------------------------------------------------
@@ -408,14 +352,13 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     // -------------------------------------------------------------------------
-    // Attribution level wired to PrefHelper, without sendOpen()'s side effect
+    // Attribution level wired to PrefHelper, without sending an open
     // -------------------------------------------------------------------------
 
     @Test
     fun initialize_attributionLevel_appliesWithoutCallingSendOpen() {
         val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
             setAttributionLevel(Defines.BranchAttributionLevel.FULL)
-            setAutomaticOpenEvents(false) // isolates this from the unrelated foreground-OPEN path
         }
 
         assertTrue(
@@ -482,7 +425,7 @@ class BranchInitializeTest : BranchTestBase() {
         "attributionLevel", "dmaParameters", "limitFacebookAttribution",
         "adNetworkCalloutsDisabled", "facebookAppId", "preinstallCampaign", "preinstallPartner",
         "installMetadata", "referringLinkAttributionForPreinstalledApps", "whitelistedSchemes",
-        "uriHostsToSkip", "automaticOpenEvents", "userAgentFetchSync"
+        "uriHostsToSkip", "userAgentFetchSync"
     )
 
     /**
@@ -588,18 +531,6 @@ class BranchInitializeTest : BranchTestBase() {
             complete.getString("apiUrl").isNotEmpty())
         assertTrue("completion must report the SDK version",
             complete.getString("sdkVersion").isNotEmpty())
-        assertTrue("completion must report whether auto-open is on",
-            complete.getBoolean("automaticOpenEvents"))
-    }
-
-    @Test
-    fun initialize_completionJson_reportsAutomaticOpenEventsDisabled() {
-        val complete = singleEvent(
-            captureInitLogs { setAutomaticOpenEvents(false) },
-            Branch.EVENT_INITIALIZE_COMPLETE
-        )
-
-        assertFalse(complete.getBoolean("automaticOpenEvents"))
     }
 
     @Test
