@@ -6,4 +6,7 @@
 
 -dontwarn com.google.android.gms.**
 
+# Keep the class name so the SDK's check for the Google advertising ID library finds it in minified apps.
+-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient
+
 -dontwarn com.android.billingclient.**
