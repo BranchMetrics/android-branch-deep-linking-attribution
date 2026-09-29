@@ -29,8 +29,8 @@ class QueueOperationLogout(
         try {
             v("doFinalUpdateOnMainThread $this")
             val prefHelper_ = PrefHelper.getInstance(context_)
-            prefHelper_.identity = PrefHelper.NO_STRING_VALUE
-            v("Identity set to: " + prefHelper_.identity)
+            prefHelper_.userAlias = PrefHelper.NO_STRING_VALUE
+            v("Identity set to: " + prefHelper_.userAlias)
             prefHelper_.clearUserValues()
         } catch (e: Exception) {
             e("Caught Exception: doFinalUpdateOnMainThread " + this + " " + e.message)
@@ -55,7 +55,7 @@ class QueueOperationLogout(
         v("QueueOperationLogout handleFailure $this")
         if (callback_ != null) {
             v("QueueOperationLogout handleFailure $this")
-            val currentIdentity = prefHelper_.identity
+            val currentIdentity = prefHelper_.userAlias
             val error = BranchError("Error in logout method. Current identity value: $currentIdentity $causeMsg", -1)
             callback_!!.onLogoutFinished(true, error)
         }
