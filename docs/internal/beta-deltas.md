@@ -36,7 +36,7 @@ Both were broken once already. `git log` carries the detail.
 
 Know these before touching OPEN or attribution behavior.
 
-**`sendOpen(JSONObject responseData)`** enqueues a `RequestOpen` targeting `v3/events/open` (`Defines.RequestPath.EventsOpen`, `coroutines/RequestOpen.kt`). This is not the legacy `v1/open` `RegisterOpen` path, which still exists separately. It runs after every `RequestDeepLink`: on success with `link_data` when the resolve matched a link (`+clicked_branch_link`), on failure without it. While attribution is off (level `NONE` or tracking disabled) it sends nothing and holds the open, with that check's response.
+**`sendOpen(JSONObject responseData)`** enqueues a `RequestOpen` targeting `v3/events/open` (`Defines.RequestPath.EventsOpen`, `coroutines/RequestOpen.kt`). The legacy `v1/open` path was removed. It runs after every `RequestDeepLink`: on success with `link_data` when the resolve matched a link (`+clicked_branch_link`), on failure without it. While attribution is off (level `NONE` or tracking disabled) it sends nothing and holds the open, with that check's response.
 
 **Opting in sends the held open.** When tracking goes from off to on (`setConsumerProtectionAttributionLevel` leaving `NONE`, or the deprecated `disableTracking(false)`), `TrackingController` calls `Branch.sendHeldOpen(callback)`:
 - if an open is held, it sends it. It carries `link_data` when the held check matched a link, which a check made with a link URI resolves even while attribution is off. The open's result goes to the consent callback;

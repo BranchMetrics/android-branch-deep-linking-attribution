@@ -848,14 +848,10 @@ public class Branch {
 
     
     /**
-     * <p>Returns the parameters associated with the link that referred the session. If a user
-     * clicks a link, and then opens the app, initSession will return the parameters of the link
-     * and then set them in as the latest parameters to be retrieved by this method. By default,
-     * sessions persist for the duration of time that the app is in focus. For example, if you
-     * minimize the app, these parameters will be cleared when closeSession is called.</p>
+     * Returns the parameters of the link that opened the app, as saved by the latest
+     * {@link #requestDeepLinkData} call. They are cleared when the app goes to the background.
      *
-     * @return A {@link JSONObject} containing the latest referring parameters as
-     * configured locally.
+     * @return A {@link JSONObject} containing the latest referring parameters.
      */
     public JSONObject getLatestReferringParams() {
         String storedParam = prefHelper_.getSessionParams();

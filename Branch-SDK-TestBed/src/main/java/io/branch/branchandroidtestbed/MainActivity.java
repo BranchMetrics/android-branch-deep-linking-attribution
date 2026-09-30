@@ -787,7 +787,6 @@ public class MainActivity extends Activity {
 
         Branch.getInstance().addFacebookPartnerParameterWithName("em", getHashedValue("sdkadmin@branch.io"));
         Branch.getInstance().addFacebookPartnerParameterWithName("ph", getHashedValue("6516006060"));
-        BranchLogger.d("initSession");
 
         Branch.getInstance().setUserAlias("Identity1");
 

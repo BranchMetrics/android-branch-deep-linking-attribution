@@ -45,7 +45,7 @@ public class TrackingController {
                 callback.onTrackingStateChanged(true, null, null);
             }
         } else {
-            BranchLogger.v("Tracking enabled. Registering app init");
+            BranchLogger.v("Tracking enabled. Sending the held open");
             onTrackingEnabled((referringParams, error) -> {
                 if (callback != null) {
                     callback.onTrackingStateChanged(false, referringParams, error);
