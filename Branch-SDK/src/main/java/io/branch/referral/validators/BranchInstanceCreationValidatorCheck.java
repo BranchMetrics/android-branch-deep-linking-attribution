@@ -9,7 +9,7 @@ import io.branch.referral.Branch;
 public class BranchInstanceCreationValidatorCheck extends IntegrationValidatorCheck {
 
     String name = "Branch instance";
-    String errorMessage = "Branch is not initialised from your Application class. Please add `Branch.getInstance();` to your Application#onCreate() method.";
+    String errorMessage = "Branch is not initialised from your Application class. Please call `Branch.initialize(context, config)` in your Application#onCreate() method.";
     String moreInfoLink = branchInstanceCreationMoreInfoDocsLink;
 
     public BranchInstanceCreationValidatorCheck() {

@@ -46,17 +46,25 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
             instance = new IntegrationValidator(context);
         }
         
+        final IBranchLoggingCallbacks previousLoggerCallback = BranchLogger.getLoggerCallback();
         IBranchLoggingCallbacks iBranchLoggingCallbacks = new IBranchLoggingCallbacks() {
             @Override
             public void onBranchLog(String logMessage, String severityConstantName) {
+                if (previousLoggerCallback != null) {
+                    previousLoggerCallback.onBranchLog(logMessage, severityConstantName);
+                }
                 instance.branchLogsStringBuilder.append(logMessage);
             }
         };
 
         // Capture SDK logs for the validator report. Runtime-only, so it writes straight to
-        // the logger rather than through pre-init configuration.
+        // the logger rather than through pre-init configuration. Chain to whatever logger
+        // callback the integrator already configured instead of replacing it, and never lower
+        // an already-configured log level (e.g. VERBOSE) down to DEBUG.
         BranchLogger.setLoggerCallback(iBranchLoggingCallbacks);
-        BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
+        if (BranchLogger.getLoggingLevel().getLevel() < BranchLogger.BranchLogLevel.DEBUG.getLevel()) {
+            BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.DEBUG);
+        }
         BranchLogger.setLoggingEnabled(true);
         instance.validateSDKIntegration(context);
         instance.integrationValidatorDialog = new IntegrationValidatorDialog(context);
@@ -69,12 +77,20 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
     private void validateSDKIntegration(final Context context) {
         final Branch branch = Branch.getInstance();
 
+        // Under the new architecture, Branch.getInstance() no longer auto-creates the
+        // singleton; it returns null if Branch.initialize(context, config) hasn't run yet.
+        // Surface that as a diagnostic instead of NPE'ing on canPerformOperations() below.
+        if (branch == null) {
+            logIntegrationError("Branch is not initialised from your Application class. Please call `Branch.initialize(context, config)` in your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
+            return;
+        }
+
         // EMT-3862: ServerRequestGetAppConfig needs a session. On a first cold launch, with init
         // still in flight, enqueuing it immediately fails it with ERR_NO_SESSION and the failure
         // path (onAppConfigAvailable(null)) never shows the validator dialog. Defer the request
         // until the session is initialized. Dev-only diagnostic; it does not change
         // BranchRequestQueue failure semantics.
-        if (branch.canPerformOperations()) {
+        if (branch.canPerformOperations() || branch.getInitState() instanceof BranchSessionState.Initialized) {
             enqueueGetAppConfigRequest(context);
             return;
         }
@@ -135,7 +151,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
         BranchInstanceCreationValidatorCheck branchInstanceCreationValidatorCheck = new BranchInstanceCreationValidatorCheck();
         boolean result = branchInstanceCreationValidatorCheck.RunTests(context);
         integrationValidatorDialog.SetTestResultForRowItem(1, branchInstanceCreationValidatorCheck.GetTestName(), result, branchInstanceCreationValidatorCheck.GetOutput(context, result), branchInstanceCreationValidatorCheck.GetMoreInfoLink());
-        logOutputForTest(result, "1. Verifying Branch instance creation", "Branch is not initialised from your Application class. Please add `Branch.getInstance();` to your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
+        logOutputForTest(result, "1. Verifying Branch instance creation", "Branch is not initialised from your Application class. Please call `Branch.initialize(context, config)` in your Application#onCreate() method.", "https://help.branch.io/developers-hub/docs/android-basic-integration#section-load-branch");
 
         // 2. Verify Branch Keys
         BranchKeysValidatorCheck branchKeysValidatorCheck = new BranchKeysValidatorCheck();
@@ -195,7 +211,7 @@ public class IntegrationValidator implements ServerRequestGetAppConfig.IGetAppCo
             hasRan = true;
             doValidateWithAppConfig(branchAppConfig);
         } else if(branchAppConfig == null){
-            logIntegrationError("Unable to read Dashboard config. Please confirm that your Branch key is properly added to the manifest. Please fix your Dashboard settings.", "https://branch.app.link/link-settings-page");
+            logIntegrationError("Unable to read Dashboard config. Please confirm that the Branch key passed to BranchConfiguration.Builder / Branch.initialize(context, config) is correct. Please fix your Dashboard settings.", "https://branch.app.link/link-settings-page");
         }
     }
 

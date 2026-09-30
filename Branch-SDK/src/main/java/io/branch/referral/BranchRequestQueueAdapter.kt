@@ -78,6 +78,17 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
             return
         }
         
+        // Drive the StateFlow-based session state for the v3 init path (RequestOpen /
+        // RequestDeepLink). These never call the legacy sessionBuilder(...).init() entry
+        // points that set Initializing, so without this, a successful init leaves
+        // canPerformOperations()/getSessionStateFlow() stuck at Uninitialized forever even
+        // though the legacy initState_ field reports Initialized. Initializing -> Initializing
+        // is a harmless no-op if open + deeplink both enqueue on one launch.
+        if (request is ServerRequestInitSession && Branch.getInstance().currentSessionState is BranchSessionState.Uninitialized) {
+            BranchLogger.v("Driving session state to Initializing for init request: ${request::class.simpleName}")
+            Branch.getInstance().setInitState(BranchSessionState.Initializing)
+        }
+
         // Enhanced session validation with fallback to legacy system
         val needsSession = requestNeedsSession(request)
         val canPerformOperations = Branch.getInstance().canPerformOperations()

@@ -1,8 +1,6 @@
 package io.branch.referral.validators;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,15 +17,15 @@ import java.util.concurrent.TimeoutException;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchUtil;
 import io.branch.referral.Defines;
+import io.branch.referral.PrefHelper;
 
 class BranchIntegrationModel {
     JSONObject deeplinkUriScheme;
-    private final String branchKeyTest;
-    private final String branchKeyLive;
+    final String branchKey;
     final List<String> applinkScheme;
     final String packageName;
     boolean appSettingsAvailable = false;
-    
+
     private static final ExecutorService executor = Executors.newCachedThreadPool(r -> {
         Thread t = new Thread(r, "BranchIntegration-Worker");
         t.setDaemon(true);
@@ -36,23 +34,9 @@ class BranchIntegrationModel {
 
 
     public BranchIntegrationModel(Context context) {
-        String liveKey = null, testKey = null;
-        ApplicationInfo appInfo;
         applinkScheme = new ArrayList<>();
         packageName = context.getPackageName();
-
-        try {
-            appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (appInfo.metaData != null) {
-                liveKey = appInfo.metaData.getString("io.branch.sdk.BranchKey");
-                testKey = appInfo.metaData.getString("io.branch.sdk.BranchKey.test");
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        branchKeyLive = liveKey;
-        branchKeyTest = testKey;
+        branchKey = PrefHelper.getInstance(context).getBranchKey();
         updateDeepLinkSchemes(context);
     }
 
