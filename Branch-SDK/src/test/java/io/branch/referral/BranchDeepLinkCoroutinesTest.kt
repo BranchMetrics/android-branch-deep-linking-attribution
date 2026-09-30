@@ -1,6 +1,8 @@
 package io.branch.referral
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
@@ -13,10 +15,12 @@ import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
 import java.util.concurrent.CountDownLatch
@@ -81,6 +85,42 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
 
         assertEquals("bar", params.optString("foo"))
         assertEquals("email", params.optString("~channel"))
+        awaitTheLaunchOpen(remote)
+    }
+
+    /** `intent?.data` is a `Uri?`; the suspend call must take it as is, with no Java shim. */
+    @Test
+    fun acceptsTheLaunchIntentsNullableUri() = runTest {
+        val remote = StubRemoteInterface(200, """{"data":"{\"+clicked_branch_link\":false}"}""")
+        Branch.getInstance().setBranchRemoteInterface(remote)
+        val launchUri: Uri? = Intent(Intent.ACTION_MAIN).data
+
+        val params = Branch.getInstance().requestDeepLinkData(launchUri)
+
+        assertFalse(params.optBoolean("+clicked_branch_link", true))
+        awaitTheLaunchOpen(remote)
+    }
+
+    @Test
+    fun acceptsANullUri() = runTest {
+        val remote = StubRemoteInterface(200, """{"data":"{\"+clicked_branch_link\":false}"}""")
+        Branch.getInstance().setBranchRemoteInterface(remote)
+
+        val params = Branch.getInstance().requestDeepLinkData(null)
+
+        assertFalse(params.optBoolean("+clicked_branch_link", true))
+        awaitTheLaunchOpen(remote)
+    }
+
+    @Test
+    fun resolvesTheLinkInTheActivitysLaunchIntent() = runTest {
+        val remote = StubRemoteInterface(200, """{"data":"{\"+clicked_branch_link\":true,\"foo\":\"bar\"}"}""")
+        Branch.getInstance().setBranchRemoteInterface(remote)
+        val activity = Robolectric.buildActivity(Activity::class.java, Intent(Intent.ACTION_VIEW, uri)).get()
+
+        val params = Branch.getInstance().requestDeepLinkData(activity)
+
+        assertEquals("bar", params.optString("foo"))
         awaitTheLaunchOpen(remote)
     }
 
