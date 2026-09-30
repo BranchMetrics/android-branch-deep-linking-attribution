@@ -10,7 +10,7 @@ How the SDK behaves at runtime on this branch, and the invariants a change must 
 | Term | What it means |
 | --- | --- |
 | **install** / **open** | the first app launch after installation, versus every later launch. The choice decides whether a new user is tied back to the link that brought them |
-| **OPEN** (as a noun) | a request to `v3/events/open` reporting a foreground launch for attribution. Distinct from the legacy `v1/open` `RegisterOpen` path, which still exists |
+| **OPEN** (as a noun) | a request to `v3/events/open` reporting a foreground launch for attribution. The legacy `v1/open` path was removed |
 | **randomized bundle token** / **randomized device token** | opaque identifiers the Branch API assigns on a successful init and the SDK persists. The bundle token is per app install, the device token per device |
 | **session params** / **install params** | the link data returned by init. Session params are from the most recent init; install params are frozen from the first-ever one |
 | **wait lock** | a `PROCESS_WAIT_LOCK` on a queued request. While any lock is attached the queue will not send that request |
