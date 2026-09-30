@@ -1,4 +1,7 @@
 # Branch Android SDK change log
+- v5.21.3
+  - Add ProGuard rule to keep `AdvertisingIdClient` class name for referencing. Removes need for developer to add this rule.
+
 - v5.21.2
   - Updated Google Play Billing library to 8.0.0
   - Fixed logging bug
