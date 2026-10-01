@@ -405,6 +405,31 @@ class BranchInitializeTest : BranchTestBase() {
         assertEquals(5_000, PrefHelper.getInstance(context).getTimeout())
     }
 
+    @Test
+    fun initialize_calledTwice_atNoneLevel_logsReinitializationWarning() {
+        val captured = CopyOnWriteArrayList<String>()
+        val first = BranchConfiguration.Builder("key_live_first")
+            .setLogLevel(BranchLogger.BranchLogLevel.NONE)
+            .setLoggingCallback { message, _ -> captured.add(message) }
+            .build()
+        val second = BranchConfiguration.Builder("key_live_second").build()
+
+        Branch.initialize(context, first)
+        Branch.initialize(context, second) // ignored, but must still warn
+
+        assertTrue(
+            "the reinitialization warning must not be silenced at log level NONE, got: $captured",
+            captured.any { it.contains("attempted to reinitialize Branch SDK singleton") }
+        )
+    }
+
+    @Test
+    fun initialize_atNoneLevel_logsNothing() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.NONE)
+
+        assertTrue("a correctly configured initialize() at NONE must be silent, got: $logs", logs.isEmpty())
+    }
+
     // -------------------------------------------------------------------------
     // getInstance returns the singleton after initialize
     // -------------------------------------------------------------------------

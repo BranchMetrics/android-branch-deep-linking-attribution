@@ -109,13 +109,17 @@ object BranchLogger {
         }
     }
 
+    /**
+     * Logs a warning regardless of [loggingLevel], including [BranchLogLevel.NONE]. For warnings
+     * an integrator must see even if they never turned logging on.
+     */
     @JvmStatic
     fun logAlways(message: String) {
-        if (loggingLevel != BranchLogLevel.NONE && message.isNotEmpty()) {
+        if (message.isNotEmpty()) {
             if (useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "INFO")
+                loggerCallback?.onBranchLog(message, "WARN")
             } else {
-                Log.i(TAG, message)
+                Log.w(TAG, message)
             }
         }
     }

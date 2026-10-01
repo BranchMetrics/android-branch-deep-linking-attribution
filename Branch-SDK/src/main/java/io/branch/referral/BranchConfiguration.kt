@@ -58,7 +58,7 @@ class BranchConfiguration private constructor(
         val context = branch.applicationContext
         val prefHelper = branch.prefHelper
 
-        BranchLogger.logAlways(Branch.GOOGLE_VERSION_TAG)
+        BranchLogger.i(Branch.GOOGLE_VERSION_TAG)
         if (BranchLogger.isLoggable(BranchLogger.BranchLogLevel.DEBUG)) BranchLogger.d(toJson())
         requestTracingCallback?.let { Branch._iBranchRequestTracingCallback = it }
 
