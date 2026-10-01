@@ -126,11 +126,10 @@ class BranchConfigurationBuilderTest {
 
     @Test
     fun `setDMAParameters is stored`() {
-        val dma = DMAParameters(
-            eeaRegion = true,
-            adPersonalizationConsent = false,
-            adUserDataUsageConsent = true
-        )
+        val dma = DMAParameters.Builder()
+            .setEeaRegion(true)
+            .setAdUserDataUsageConsent(true)
+            .build()
         val config = BranchConfiguration.Builder("key_live_x").setDMAParameters(dma).build()
         assertNotNull(config.dmaParameters)
         assertEquals(dma, config.dmaParameters)
@@ -390,6 +389,39 @@ class BranchConfigurationBuilderTest {
     }
 
     // -----------------------------------------------------------------------------------------
+    // build() reports every failure at once
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun `build reports every invalid field in one exception`() {
+        val ex = runCatching {
+            BranchConfiguration.Builder("")
+                .setNetworkTimeout(-1)
+                .setRetryInterval(0)
+                .build()
+        }.exceptionOrNull() as? IllegalArgumentException
+
+        assertNotNull(ex)
+        val message = ex!!.message!!
+        assertTrue("branch key failure missing: $message", message.contains("Branch key cannot be empty"))
+        assertTrue("timeout failure missing: $message", message.contains("Network timeout"))
+        assertTrue("retry interval failure missing: $message", message.contains("Retry interval"))
+    }
+
+    @Test
+    fun `build reports a single failure without listing others`() {
+        val ex = runCatching {
+            BranchConfiguration.Builder("key_live_x").setRetryInterval(0).build()
+        }.exceptionOrNull() as? IllegalArgumentException
+
+        assertNotNull(ex)
+        val message = ex!!.message!!
+        assertTrue(message.contains("Retry interval"))
+        assertFalse(message.contains("Network timeout"))
+        assertFalse(message.contains("Branch key"))
+    }
+
+    // -----------------------------------------------------------------------------------------
     // Builder chaining
     // -----------------------------------------------------------------------------------------
 
@@ -408,7 +440,7 @@ class BranchConfigurationBuilderTest {
             .setRetryInterval(1_500)
             .setNoConnectionRetryMax(2)
             .setAttributionLevel(Defines.BranchAttributionLevel.FULL)
-            .setDMAParameters(DMAParameters(eeaRegion = true, adPersonalizationConsent = true, adUserDataUsageConsent = false))
+            .setDMAParameters(DMAParameters.Builder().setEeaRegion(true).setAdPersonalizationConsent(true).build())
             .setLimitFacebookAttribution(true)
             .setAdNetworkCalloutsDisabled(false)
             .setFacebookAppId("fb999")
