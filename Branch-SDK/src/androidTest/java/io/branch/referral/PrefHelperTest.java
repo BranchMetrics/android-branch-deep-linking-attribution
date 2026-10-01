@@ -118,6 +118,43 @@ public class PrefHelperTest extends BranchTest {
     }
 
     @Test
+    public void testSetTimeoutSetsBothConnectAndRead(){
+        int TEST_UNIFIED_TIMEOUT = 3000;
+
+        // Reset to known state
+        prefHelper.setTimeout(PrefHelper.TIMEOUT);
+        prefHelper.setConnectTimeout(PrefHelper.CONNECT_TIMEOUT);
+
+        // Simulate what Branch.setNetworkTimeout(int) does
+        prefHelper.setTimeout(TEST_UNIFIED_TIMEOUT);
+        prefHelper.setConnectTimeout(TEST_UNIFIED_TIMEOUT);
+
+        Assert.assertEquals(TEST_UNIFIED_TIMEOUT, prefHelper.getTimeout());
+        Assert.assertEquals(TEST_UNIFIED_TIMEOUT, prefHelper.getConnectTimeout());
+        Assert.assertEquals(TEST_UNIFIED_TIMEOUT + TEST_UNIFIED_TIMEOUT, prefHelper.getTaskTimeout());
+    }
+
+    @Test
+    public void testSetTimeoutIndependentConnectAndRead(){
+        int TEST_CONNECT_TIMEOUT = 3000;
+        int TEST_READ_TIMEOUT = 5000;
+
+        prefHelper.setConnectTimeout(TEST_CONNECT_TIMEOUT);
+        prefHelper.setTimeout(TEST_READ_TIMEOUT);
+
+        Assert.assertEquals(TEST_READ_TIMEOUT, prefHelper.getTimeout());
+        Assert.assertEquals(TEST_CONNECT_TIMEOUT, prefHelper.getConnectTimeout());
+        Assert.assertEquals(TEST_READ_TIMEOUT + TEST_CONNECT_TIMEOUT, prefHelper.getTaskTimeout());
+    }
+
+    @Test
+    public void testDefaultTimeoutValues(){
+        Assert.assertEquals(5000, PrefHelper.TIMEOUT);
+        Assert.assertEquals(3000, PrefHelper.CONNECT_TIMEOUT);
+        Assert.assertEquals(8000, PrefHelper.TASK_TIMEOUT);
+    }
+
+    @Test
     public void testSetReferrerGclidValidForWindow(){
         long testValidForWindow = 1L;
 
