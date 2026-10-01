@@ -89,6 +89,22 @@ class ServerRequestCreateUrl extends ServerRequest {
             linkPost_.remove("is_hardware_id_real");
             linkPost_.remove("hardware_id");
 
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters();
+
+            // Signed here rather than from doFinalUpdateOnBackgroundThread, unlike every other
+            // request. BranchLegacyLinkGenerator's synchronous path posts getPost() directly from an
+            // AsyncTask and never runs doFinalUpdateOnBackgroundThread, so a link created via
+            // getShortUrl() would otherwise go out unsigned. The guard in applySecureContextOnce()
+            // makes the later call from doFinalUpdateOnBackgroundThread a no-op.
+            //
+            // Cost of signing early: on the queued path updateGAdsParams() still adds
+            // advertising_ids / google_advertising_id afterwards, so /v1/url keeps the
+            // signed-before-mutation mismatch this class of bug is about. Fixing it means either
+            // teaching the sync path to run the final update, or excluding those two keys from the
+            // canonical on iOS + Android + Gateway together.
+            applySecureContextOnce();
+
         } catch (JSONException ex) {
             BranchLogger.w("Caught JSONException " + ex.getMessage());
             constructError_ = true;
@@ -97,6 +113,11 @@ class ServerRequestCreateUrl extends ServerRequest {
 
     public ServerRequestCreateUrl(Defines.RequestPath requestPath, JSONObject post, Context context) {
         super(requestPath, post, context);
+    }
+
+    @Override
+    protected void applySecureContext() {
+        applyLayer2SecureContext();
     }
 
     public BranchLinkData getLinkPost() {

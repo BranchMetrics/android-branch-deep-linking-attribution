@@ -128,7 +128,7 @@ public abstract class BranchRemoteInterface {
         if (!addCommonParams(body, branchKey)) {
             return new ServerResponse(tag, BranchError.ERR_BRANCH_KEY_INVALID, "", "Failed to set common parameters, body: " + body + " key: " + branchKey);
         }
-        BranchLogger.d("posting to " + url);
+        BranchLogger.v("posting to " + url);
         BranchLogger.v("Post value = " + body.toString());
 
         try {

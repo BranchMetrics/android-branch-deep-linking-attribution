@@ -11,6 +11,9 @@ internal class RequestOpen(
     responseData: JSONObject?
 ) : ServerRequestInitSession(context, Defines.RequestPath.EventsOpen, isAutoInitialization) {
 
+    /** True when this request carries an initialization_context that the server has yet to ack. */
+    private var carriedInitializationContext = false
+
     init {
         callback_ = callback
         try {
@@ -36,9 +39,50 @@ internal class RequestOpen(
                 openPost.put("link_data", dataJSON)
             }
             setPost(openPost)
+
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters()
+
+            // The secure context is attached in applySecureContext(), not here — see there for why.
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")
             constructError_ = true
+        }
+    }
+
+    /**
+     * First open carries initialization_context only; every later open carries activity_context
+     * only. The two are never sent together.
+     *
+     * Runs from [doFinalUpdateOnBackgroundThread], after the host has finished writing
+     * `hardware_id`, `advertising_ids`, `install_referrer_extras`, `app_store` and the rest — so the
+     * canonical hashed here is the canonical the Gateway will rebuild from the posted bytes. It also
+     * means Layer 1 no longer blocks the main thread: attestation can cost ~10s on the first Play
+     * Integrity call after process start.
+     */
+    override fun applySecureContext() {
+        val provider = Branch.getInstance()?.fraudDefenseProvider ?: return
+        if (!prefHelper_.getBool("bnc_device_trust_checked")) {
+            // Layer 1: attestation. Retried on the next open if it fails.
+            try {
+                val trustFields = provider.addDeviceTrustParams(post)
+                if (trustFields != null) {
+                    SecureContextApplier.apply(trustFields, post)
+                    carriedInitializationContext = true
+                }
+            } catch (e: Exception) {
+                BranchLogger.w("Fraud defense failed for open: ${e.message}")
+            }
+        } else {
+            // Layer 2 + 3: HMAC + nonce
+            try {
+                val sigFields = provider.addSignatureAndNonceForParams(post)
+                if (sigFields != null) {
+                    SecureContextApplier.apply(sigFields, post)
+                }
+            } catch (e: Exception) {
+                BranchLogger.w("Fraud defense signature failed for open: ${e.message}")
+            }
         }
     }
 
@@ -46,8 +90,37 @@ internal class RequestOpen(
         super.onRequestSucceeded(response, branch)
         BranchLogger.v("RequestOpen Succeeded. Response: ${response.`object`}")
 
+        // The server has the initialization_context now, so later requests can switch to Layer 2.
+        if (carriedInitializationContext) {
+            prefHelper_.setBool("bnc_device_trust_checked", true)
+            Branch.getInstance()?.fraudDefenseProvider?.releaseAttestationClaim()
+            BranchLogger.v("Device trust attestation acknowledged by the server")
+        }
+
         try {
             val responseJson = response.`object`
+
+            if (responseJson.has(Defines.Jsonkey.Link.key)) {
+                prefHelper_.setUserURL(responseJson.getString(Defines.Jsonkey.Link.key))
+            }
+
+            // Install params are the first-ever referring params: written once, only for a
+            // link-attributed open, and only while still unset — so a later open cannot clobber
+            // them. Backs getFirstReferringParams().
+            if (responseJson.has(Defines.Jsonkey.Data.key) &&
+                prefHelper_.installParams == PrefHelper.NO_STRING_VALUE) {
+                val params = responseJson.getString(Defines.Jsonkey.Data.key)
+                val dataObj = JSONObject(params)
+                if (dataObj.optBoolean(Defines.Jsonkey.Clicked_Branch_Link.key)) {
+                    prefHelper_.installParams = params
+                }
+            }
+
+            if (responseJson.has(Defines.Jsonkey.LinkClickID.key)) {
+                prefHelper_.setLinkClickID(responseJson.getString(Defines.Jsonkey.LinkClickID.key))
+            } else {
+                prefHelper_.setLinkClickID(PrefHelper.NO_STRING_VALUE)
+            }
 
             // TODO: Should be put under v3/deeplink
             // Check for enhanced web link UX override
@@ -89,6 +162,13 @@ internal class RequestOpen(
     override fun handleFailure(statusCode: Int, causeMsg: String) {
         val serverErrorMessage = "Request Open failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
+
+        // shouldRetryOnFail is false, so this attestation is spent. Hand the claim back or no
+        // later open can attest and the device never registers.
+        if (carriedInitializationContext) {
+            Branch.getInstance()?.fraudDefenseProvider?.releaseAttestationClaim()
+            BranchLogger.v("Open carrying the initialization_context failed; attestation will be retried on the next open")
+        }
 
         if (callback_ != null) {
             val obj = JSONObject()

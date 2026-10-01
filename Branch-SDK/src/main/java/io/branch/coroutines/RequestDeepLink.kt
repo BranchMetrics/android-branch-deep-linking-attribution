@@ -8,6 +8,7 @@ import io.branch.referral.BranchLogger
 import io.branch.referral.Defines
 import io.branch.referral.PrefHelper
 import io.branch.referral.ServerRequestInitSession
+import io.branch.referral.SecureContextApplier
 import io.branch.referral.ServerResponse
 import org.json.JSONException
 import org.json.JSONObject
@@ -57,6 +58,21 @@ internal class RequestDeepLink(
                 )
             }
             setPost(deepLinkPost)
+
+            // Cover branch_sdk_request_timestamp / branch_sdk_request_unique_id in the signature.
+            addClientRequestParameters()
+
+            val provider = Branch.getInstance()?.fraudDefenseProvider
+            if (provider != null) {
+                try {
+                    val sigFields = provider.addSignatureAndNonceForParams(post)
+                    if (sigFields != null) {
+                        SecureContextApplier.apply(sigFields, post)
+                    }
+                } catch (e: Exception) {
+                    BranchLogger.w("Fraud defense signature failed for deeplink: ${e.message}")
+                }
+            }
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")
             constructError_ = true

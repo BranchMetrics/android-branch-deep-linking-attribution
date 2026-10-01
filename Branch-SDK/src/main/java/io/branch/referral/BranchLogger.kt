@@ -29,6 +29,58 @@ object BranchLogger {
     @JvmStatic
     fun isLoggable(level: BranchLogLevel): Boolean = loggingEnabled && shouldLog(level)
 
+    // android.util.Log truncates a single entry at ~4000 chars, which chops long messages
+    // (e.g. a request body carrying an attestation cert chain). Split into chunks so the full
+    // message survives.
+    //
+    // Chunking happens here, before the sink is chosen, so it applies to the custom logger too.
+    // Hosts typically forward onBranchLog() straight into android.util.Log, so chunking only the
+    // logcat path still lost the tail for anyone calling Branch.enableLogging(callback, level) --
+    // and that is the common case while debugging.
+    //
+    // Every chunk repeats the message's leading [tags] and is numbered. Emitting the chunks raw
+    // instead would put the tags on chunk 1 only, so filtering logcat on any leading tag
+    // captures the first 3500 chars and silently drops the rest of the body — which is exactly
+    // the part the backend needs. Reassemble by stripping the `…[chunk i/n] ` prefix and
+    // concatenating in order; the payloads are verbatim substrings of the original.
+    private const val MAX_LOG_CHUNK = 3500
+    private val LEADING_TAGS = Regex("^(?:\\[[^\\]]*\\])+")
+
+    /**
+     * Routes one message to the active sink, splitting it first if it exceeds what a single
+     * android.util.Log entry can hold. If an implementation of IBranchLoggingCallbacks was passed,
+     * logging messages are forwarded to the callback; else the original behavior of
+     * Branch.enableLogging() is maintained.
+     */
+    private fun platformLog(priority: Int, severityConstantName: String, message: String) {
+        // Read once: clearing the callback mid-message would otherwise split one message's
+        // chunks across both sinks.
+        val callback = loggerCallback
+
+        if (message.length <= MAX_LOG_CHUNK) {
+            emit(callback, priority, severityConstantName, message)
+            return
+        }
+        val tags = LEADING_TAGS.find(message)?.value ?: ""
+        val total = (message.length + MAX_LOG_CHUNK - 1) / MAX_LOG_CHUNK
+        var start = 0
+        var index = 1
+        while (start < message.length) {
+            val end = minOf(start + MAX_LOG_CHUNK, message.length)
+            emit(callback, priority, severityConstantName, "$tags[chunk $index/$total] ${message.substring(start, end)}")
+            start = end
+            index++
+        }
+    }
+
+    private fun emit(callback: IBranchLoggingCallbacks?, priority: Int, severityConstantName: String, message: String) {
+        if (callback != null) {
+            callback.onBranchLog(message, severityConstantName)
+        } else {
+            Log.println(priority, TAG, message)
+        }
+    }
+
     /**
      * <p>Creates a <b>Error</b> message in the debugger. If debugging is disabled, this will fail silently.</p>
      *
@@ -37,11 +89,7 @@ object BranchLogger {
     @JvmStatic
     fun e(message: String) {
         if (loggingEnabled && shouldLog(BranchLogLevel.ERROR) && message.isNotEmpty()) {
-            if (useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "ERROR")
-            } else {
-                Log.e(TAG, message)
-            }
+            platformLog(Log.ERROR, "ERROR", message)
         }
     }
 
@@ -53,11 +101,7 @@ object BranchLogger {
     @JvmStatic
     fun w(message: String) {
         if (loggingEnabled && shouldLog(BranchLogLevel.WARN) && message.isNotEmpty()) {
-            if (useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "WARN")
-            } else {
-                Log.w(TAG, message)
-            }
+            platformLog(Log.WARN, "WARN", message)
         }
     }
 
@@ -69,11 +113,7 @@ object BranchLogger {
     @JvmStatic
     fun i(message: String) {
         if (loggingEnabled && shouldLog(BranchLogLevel.INFO) && message.isNotEmpty()) {
-            if(useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "INFO")
-            } else {
-                Log.i(TAG, message)
-            }
+            platformLog(Log.INFO, "INFO", message)
         }
     }
 
@@ -85,11 +125,7 @@ object BranchLogger {
     @JvmStatic
     fun d(message: String?) {
         if (loggingEnabled && shouldLog(BranchLogLevel.DEBUG) && message?.isNotEmpty() == true) {
-            if (useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "DEBUG")
-            } else {
-                Log.d(TAG, message)
-            }
+            platformLog(Log.DEBUG, "DEBUG", message)
         }
     }
 
@@ -101,31 +137,15 @@ object BranchLogger {
     @JvmStatic
     fun v(message: String) {
         if (loggingEnabled && shouldLog(BranchLogLevel.VERBOSE) && message.isNotEmpty()) {
-            if (useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "VERBOSE")
-            } else {
-                Log.v(TAG, message)
-            }
+            platformLog(Log.VERBOSE, "VERBOSE", message)
         }
     }
 
     @JvmStatic
     fun logAlways(message: String) {
         if (loggingLevel != BranchLogLevel.NONE && message.isNotEmpty()) {
-            if (useCustomLogger()) {
-                loggerCallback?.onBranchLog(message, "INFO")
-            } else {
-                Log.i(TAG, message)
-            }
+            platformLog(Log.INFO, "INFO", message)
         }
-    }
-
-    /**
-     * If an implementation of IBranchLoggingCallbacks is passed, forward logging messages to callback
-     * Else, maintain the original behavior of Branch.enableLogging().
-     */
-    private fun useCustomLogger(): Boolean {
-        return loggerCallback != null
     }
 
     @JvmStatic

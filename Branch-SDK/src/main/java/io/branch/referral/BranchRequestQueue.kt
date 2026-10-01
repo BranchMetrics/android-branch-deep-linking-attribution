@@ -167,7 +167,27 @@ class BranchRequestQueue private constructor(private val context: Context) {
         
         BranchLogger.v("Enqueuing request: $request")
         BranchLogger.v("Adding request to queue list")
-        
+
+        // A request instance may reach here twice: Branch.registerAppInit() force-inserts the init
+        // request at the front of the queue and then initTasks() routes the SAME instance through
+        // handleNewRequest(). ServerRequest has no equals(), so the list would hold two references
+        // to one object and the consumer would send it over the wire twice (processNextRequest
+        // removes only the first occurrence). Dedupe by identity: already queued or already in
+        // flight means nothing to add, only processing to trigger.
+        val alreadyPending = synchronized(queueList) { queueList.any { it === request } } ||
+                activeRequests.containsKey(generateRequestId(request))
+        if (alreadyPending) {
+            BranchLogger.v("Request already queued or in flight, not enqueuing again: $request")
+            queueScope.launch {
+                try {
+                    processingTrigger.send(Unit)
+                } catch (e: Exception) {
+                    BranchLogger.e("Failed to trigger processing: ${e.message}")
+                }
+            }
+            return
+        }
+
         synchronized(queueList) {
             // Apply MAX_ITEMS limit like original ServerRequestQueue
             queueList.add(request)

@@ -10,6 +10,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     implementation(project(":Branch-SDK"))
+    implementation(project(":securesdk"))
     implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
     implementation("com.huawei.hms:ads-identifier:3.4.62.300")
 
@@ -35,8 +36,10 @@ android {
     compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
     defaultConfig {
         applicationId = "io.branch.branchandroidtestbed"
-        minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
-        targetSdk = 34
+        // :securesdk declares minSdk 24 (hardware Key Attestation); the shared
+        // ANDROID_BUILD_SDK_VERSION_MINIMUM is 21, which would fail manifest merge.
+        minSdk = 24
+        targetSdk = 35
         versionName = VERSION_NAME
         versionCode = VERSION_CODE.toInt()
 
