@@ -6,9 +6,10 @@ Run from the repo root:
 """
 
 import io
+import json
 import os
+import re
 import sys
-import os
 import unittest
 from contextlib import redirect_stdout
 
@@ -33,6 +34,9 @@ SCENARIO_FIXTURES = {
     "hot_https_foreground": "hot_https_foreground.txt",
     "link_generation": "link_generation.txt",
     "attribution_none": "attribution_none.txt",
+    "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
+    "warm_uriScheme": "warm_uriScheme.txt",
+    "hot_uriScheme": "hot_uriScheme.txt",
 }
 
 
@@ -273,10 +277,102 @@ class ContractRegistryTests(unittest.TestCase):
                 self.assertEqual(set(contract), {"counts", "order", "fields"})
 
 
+class ScenarioArtifactGuards(unittest.TestCase):
+    """Two mistakes this suite could have caught, turned into checks.
+
+    A scenario fixture was once committed as the raw 658-line capture, carrying the
+    emulator's identifiers and a live-shaped branch key, and only the neighbouring files
+    revealed it. A scenario contract was once proposed identical to another's, which would
+    have shipped a capture that asserted nothing the other did not, and only asking what it
+    added revealed that. Neither needed a person.
+
+    Scoped to the scenario fixtures. The harness fixtures under the same directory are
+    hand-written inputs for the field-presence tests, not captures, and are deliberately
+    outside this shape."""
+
+    FIXTURE_BRANCH_KEY = "key_live_fixtureFixtureFixtureFi"
+
+    def _keep_set(self):
+        """Derived from the validator, not restated here, so the two cannot drift.
+
+        Plus the documented additions: app_version, which the cold fixtures already
+        carried, external_intent_uri, which is what lets the two warm scenarios
+        contract their entry points in opposite directions, and cpp_level, which the
+        required-field tiers read."""
+        keep = set()
+        for name in dir(v):
+            if not name.startswith("REQUIRED"):
+                continue
+            value = getattr(v, name)
+            if isinstance(value, list):
+                keep |= {str(x) for x in value}
+            elif isinstance(value, dict):
+                for inner in value.values():
+                    if isinstance(inner, list):
+                        keep |= {str(x) for x in inner}
+        for contract in v.SCENARIO_CONTRACTS.values():
+            for rules in contract["fields"].values():
+                keep |= set(rules)
+        return keep | {"app_version", "external_intent_uri", "cpp_level"}
+
+    def _payloads(self, fixture_name):
+        text = open(_fixture(fixture_name), encoding="utf-8").read()
+        return [json.loads(m.group(1)) for m in re.finditer(r"^Post value = (\{.*)$", text, re.M)]
+
+    def test_scenario_fixtures_hold_only_wire_pairs(self):
+        # What a raw capture fails: log lines the validator never reads.
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            lines = [l for l in open(_fixture(fixture), encoding="utf-8").read().splitlines() if l.strip()]
+            stray = [l for l in lines if not l.startswith(("posting to ", "Post value = ", v.RESOLVED_PREFIX))]
+            with self.subTest(scenario=scenario):
+                self.assertEqual(stray, [], f"{fixture} holds lines that are not wire pairs")
+
+    def test_scenario_fixtures_carry_no_field_outside_the_keep_set(self):
+        keep = self._keep_set()
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            extra = set()
+            for payload in self._payloads(fixture):
+                extra |= set(payload) - keep
+            with self.subTest(scenario=scenario):
+                self.assertEqual(
+                    extra, set(), f"{fixture} carries fields the validator never reads: {sorted(extra)}"
+                )
+
+    def test_scenario_fixtures_carry_no_real_branch_key(self):
+        # The one that would have caught a test-mode key going into a public repo.
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            keys = {p["branch_key"] for p in self._payloads(fixture) if "branch_key" in p}
+            with self.subTest(scenario=scenario):
+                self.assertTrue(
+                    keys <= {self.FIXTURE_BRANCH_KEY},
+                    f"{fixture} carries a branch key that is not the fixture constant",
+                )
+
+    def test_no_two_scenarios_share_a_contract(self):
+        # A scenario whose contract equals another's asserts nothing that one does not,
+        # however different the driver looks. The two warm scenarios are the near miss
+        # this exists for: same counts, same order, separated only by which field
+        # carries the URI.
+        names = sorted(v.SCENARIO_CONTRACTS)
+        for i, first in enumerate(names):
+            for second in names[i + 1:]:
+                with self.subTest(pair=f"{first}/{second}"):
+                    self.assertNotEqual(
+                        v.SCENARIO_CONTRACTS[first],
+                        v.SCENARIO_CONTRACTS[second],
+                        f"{first} and {second} carry the same contract",
+                    )
+
+
 class ScenarioContractTests(unittest.TestCase):
     """organic_open is a measured capture less the EMT-4136 duplicate open.
-    cold_firstInstall, cold_https and link_generation are cold
-    captures."""
+    cold_firstInstall, cold_https and link_generation are cold captures.
+
+    The two warm captures were taken on 2026-09-08 against an API 34 emulator,
+    after EMT-4136 (PR 1392) merged. warm_https_onNewIntent carries three opens.
+    The only thing a warm launch does that a cold one does not is background and
+    foreground the app; that is a coincidence these fixtures record, not a cause
+    they establish."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
@@ -369,6 +465,20 @@ class ScenarioContractTests(unittest.TestCase):
         deeplink["request"]["external_intent_uri"] = "https://bnctestbed.test-app.link/other"
         errors = v.assert_contract(entries, v.contract_for("hot_https_foreground"))
         self.assertTrue(any("external_intent_uri" in e for e in errors), errors)
+
+    def test_an_install_fails_warm_https_onNewIntent(self):
+        # The ticket's one explicit ask for this group: assert the absence of
+        # install, because a presence-only check would not catch a warm launch
+        # that emitted one. Zero in the contract is the assertion; this is the
+        # proof it can fail.
+        entries = self._entries("warm_https_onNewIntent")
+        first = entries[0]
+        with_install = entries + [dict(first, uri="/v1/install")]
+        errors = v.assert_contract(with_install, v.contract_for("warm_https_onNewIntent"))
+        self.assertTrue(
+            any("/v1/install" in e for e in errors),
+            f"an install in a warm capture must fail the contract, got: {errors}",
+        )
 
     def test_hardware_id_on_link_creation_fails_link_generation(self):
         # The EMT-4199 signal. /v1/url lives only in the generation capture.
