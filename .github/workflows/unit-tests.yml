@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - master
-      - 6.0.0-beta.0
+      - "6.0.0-beta.*"
   pull_request:
     branches:
       - master
-      - 6.0.0-beta.0
+      - "6.0.0-beta.*"
 
 jobs:
   verify:
@@ -27,6 +27,9 @@ jobs:
 
       - name: Run unit tests
         run: ./gradlew :Branch-SDK:testDebugUnitTest
+
+      - name: Build Kotlin testbed
+        run: ./gradlew :Branch-SDK-Testbed-Kotlin:assembleDebug
 
       - name: Save test report
         if: success() || failure()

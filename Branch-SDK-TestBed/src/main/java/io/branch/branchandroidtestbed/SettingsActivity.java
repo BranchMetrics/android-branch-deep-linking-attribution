@@ -23,6 +23,7 @@ public class SettingsActivity extends Activity {
         setContentView(R.layout.activity_settings);
 
         setupDisableAdNetworkCalloutsSwitch();
+        setupEnableDmaParamsSwitch();
         setupPrepHelperView();
         setupRetryEditText();
         setupApiUrlText();
@@ -90,7 +91,7 @@ public class SettingsActivity extends Activity {
         strBuilder.append("\n\nApp Store Source: " + prefHelper.getAppStoreSource());
         strBuilder.append("\n\nBranch Key: " + prefHelper.getBranchKey());
         strBuilder.append("\n\nGoogle Search Install ID: " + prefHelper.getGoogleSearchInstallIdentifier());
-        strBuilder.append("\n\nIdentity: " + prefHelper.getIdentity());
+        strBuilder.append("\n\nIdentity: " + prefHelper.getUserAlias());
         strBuilder.append("\n\nInitial Referrer: " + prefHelper.getInitialReferrer());
         strBuilder.append("\n\nLink Click ID: " + prefHelper.getLinkClickID());
         strBuilder.append("\n\nRandomized Bundle Token: " + prefHelper.getRandomizedBundleToken());
@@ -129,5 +130,26 @@ public class SettingsActivity extends Activity {
             }
         });
 
+    }
+
+    void setupEnableDmaParamsSwitch() {
+        final Switch enableDmaParamsSwitch = findViewById(R.id.enable_dma_params);
+
+        /*
+         * Applied at next launch by CustomBranchApp, not immediately — DMA consent is a pre-init
+         * decision, same as the API URL below.
+         */
+        enableDmaParamsSwitch.setChecked(TestBedSettings.isDmaParamsEnabled(this));
+
+        enableDmaParamsSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TestBedSettings.setDmaParamsEnabled(SettingsActivity.this, enableDmaParamsSwitch.isChecked());
+                Toast.makeText(SettingsActivity.this,
+                        "DMA params " + (enableDmaParamsSwitch.isChecked() ? "enabled" : "disabled")
+                                + " — restart the app to apply",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
