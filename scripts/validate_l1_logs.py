@@ -365,6 +365,54 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"randomized_bundle_token": 0},
         },
     },
+    # warm_https_onNewIntent: the app alive and backgrounded when the link
+    # arrives. Written from the capture, not from the ticket, which predicted one
+    # /v3/deeplink and exactly one /v3/events/open. Measured: two and three, two
+    # opens more than cold_https's one. The only thing this scenario does that
+    # cold_https does not is background and foreground the app; that is a
+    # coincidence worth stating and not a mapping this contract proves. What the
+    # ticket asked for and the capture confirms is the absence of install,
+    # asserted at zero below.
+    "warm_https_onNewIntent": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 2,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v1/url": {"hardware_id": 0},
+            # The entry point, asserted in both directions across the two warm
+            # scenarios. Without it the two warm captures are the same contract
+            # and warm_uriScheme says nothing warm_https_onNewIntent does not.
+            # What the field carries is a mapping, and that is tested on the JVM
+            # in RequestDeepLinkUriMappingTest, not here.
+            "/v3/deeplink": {"external_intent_uri": 0},
+        },
+    },
+    # warm_uriScheme: warm_https_onNewIntent's launch state entered through
+    # branchtest:// instead of https. Same counts and order, measured, and
+    # deliberately so: what it adds is not a different wire shape but the proof
+    # that the manifest's branchtest filter matches and the OS hands a scheme
+    # intent to a backgrounded app. Neither is reachable from a JVM test.
+    "warm_uriScheme": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 2,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v1/url": {"hardware_id": 0},
+            "/v3/deeplink": {"external_intent_uri": 1},
+        },
+    },
     # cold_https: the link starts the app on a device that already has it.
     # The open carries the token, which is what separates it from
     # cold_firstInstall.
@@ -389,6 +437,23 @@ SCENARIO_CONTRACTS = {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {"/v1/url": {"hardware_id": 0}},
+    },
+
+    # hot_uriScheme: a scheme link delivered via onNewIntent while MainActivity is already
+    # RESUMED, no backgrounding step. Measured from a real run of H2HotUriSchemeWireTest against
+    # 6.0.0-beta.0 at 3fe6a6f9, after the driver clears branchlogs.txt once the bare launch has
+    # settled -- the capture convention this repo now follows, so these counts are this
+    # scenario's own delivery, not the bare launch that precedes it in the driver.
+    #
+    # external_intent_uri at 1 on /v3/deeplink is what separates a scheme delivery from an https
+    # one, same field warm_https_onNewIntent and warm_uriScheme use for the same purpose.
+    "hot_uriScheme": {
+        "counts": {
+            "/v3/deeplink": 1,
+            "/v3/events/open": 1,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {"/v3/deeplink": {"external_intent_uri": 1}},
     },
 }
 
