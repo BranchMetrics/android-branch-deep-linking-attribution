@@ -53,7 +53,6 @@ class BranchRequestQueueSingleLoopTest : BranchTestBase() {
         Branch.initialize(
             RuntimeEnvironment.getApplication(),
             BranchConfiguration.Builder("key_live_test123")
-                .setAutomaticOpenEvents(false)
                 .setRemoteInterface(remote)
                 .build(),
         )
