@@ -52,7 +52,7 @@ No deferred deep link is looked up while attribution is off: a check with no URI
 
 Consent never sends an OPEN of its own, and changing between non-`NONE` levels sends none.
 
-Nothing sends an OPEN when the process comes to the foreground (EMT-4479). Each `requestDeepLinkData` call is one launch's OPEN, whenever the app makes it.
+Nothing sends an OPEN when the process comes to the foreground (EMT-4479). Each `requestDeepLinkData` call is one launch's OPEN, unless an OPEN is already waiting to be sent, whenever the app makes it.
 
 **`sessionParams` is cleared at a process background and at `Branch.initialize`**, as on iOS. `BranchProcessLifecycleObserver.onStop` (`ProcessLifecycleOwner`, so not on rotation) skips the clear while `containsDeepLinkOrOpen()` finds a request queued or executing. The observer sends no requests.
 
