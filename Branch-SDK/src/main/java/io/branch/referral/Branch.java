@@ -363,7 +363,7 @@ public class Branch {
      */
     synchronized public static void initialize(@NonNull Context context, @NonNull BranchConfiguration config) {
         if (branchReferral_ != null) {
-            BranchLogger.w("Warning, attempted to reinitialize Branch SDK singleton!");
+            BranchLogger.logAlways("Warning, attempted to reinitialize Branch SDK singleton!");
             return;
         }
 
