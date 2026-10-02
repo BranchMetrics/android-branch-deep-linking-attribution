@@ -2434,7 +2434,7 @@ public class Branch {
      * This is coroutine-friendly when called within a LifecycleScope or specialized dispatcher.
      * Each call also sends one open event, unless one is already waiting to be sent;
      * while attribution is off, it is sent when the user opts in.
-     * * @param uri The URI (App Link or Scheme) to resolve.
+     * @param uri The URI (App Link or Scheme) to resolve.
      * @param callback A {@link BranchReferralInitListener} to receive the params.
      */
     public void requestDeepLinkData(@NonNull Uri uri, @Nullable BranchReferralInitListener callback) {
