@@ -141,7 +141,7 @@ class BranchMigrationTest : BranchTest() {
 
     // Helper methods to create different types of requests
     private fun createInstallRequest(): ServerRequestInitSession {
-        return object : ServerRequestInitSession(RequestPath.RegisterInstall, JSONObject(), testContext, true) {
+        return object : ServerRequestInitSession(RequestPath.Deeplink, JSONObject(), testContext, true) {
             override fun onRequestSucceeded(resp: ServerResponse, branch: Branch) {}
             override fun handleFailure(statusCode: Int, error: String) {}
             override fun handleErrors(context: Context): Boolean = false
@@ -152,7 +152,7 @@ class BranchMigrationTest : BranchTest() {
     }
 
     private fun createOpenRequest(): ServerRequestInitSession {
-        return object : ServerRequestInitSession(RequestPath.RegisterOpen, JSONObject(), testContext, true) {
+        return object : ServerRequestInitSession(RequestPath.EventsOpen, JSONObject(), testContext, true) {
             override fun onRequestSucceeded(resp: ServerResponse, branch: Branch) {}
             override fun handleFailure(statusCode: Int, error: String) {}
             override fun handleErrors(context: Context): Boolean = false
