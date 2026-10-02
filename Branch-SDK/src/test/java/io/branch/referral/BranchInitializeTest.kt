@@ -1,20 +1,17 @@
 package io.branch.referral
 
-import android.os.Looper
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.ProcessLifecycleOwner
+import io.branch.interfaces.IBranchLoggingCallbacks
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.json.JSONObject
 import org.robolectric.RuntimeEnvironment
-import org.robolectric.Shadows
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -35,16 +32,21 @@ class BranchInitializeTest : BranchTestBase() {
     override fun setUpBase() {
         super.setUpBase()
         Branch.shutDown()
+        resetLogger()
     }
 
     @After
     override fun tearDownBase() {
         super.tearDownBase()
         Branch.shutDown()
-        // ProcessLifecycleOwner is process-global; leaving it STARTED makes every later
-        // initialize() register an observer that fires OPEN immediately.
-        (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState =
-            Lifecycle.State.CREATED
+        resetLogger()
+    }
+
+    // initialize() no longer resets a logger the config leaves alone, so state must not leak between tests.
+    private fun resetLogger() {
+        BranchLogger.loggingEnabled = true
+        BranchLogger.loggingLevel = BranchLogger.BranchLogLevel.DEBUG
+        BranchLogger.loggerCallback = null
     }
 
     // -------------------------------------------------------------------------
@@ -106,51 +108,17 @@ class BranchInitializeTest : BranchTestBase() {
         assertEquals(4, PrefHelper.getInstance(context).getNoConnectionRetryMax())
     }
 
-    // -------------------------------------------------------------------------
-    // Automatic open events / process lifecycle observer
-    // -------------------------------------------------------------------------
-
-    /**
-     * Adding an observer to an already-STARTED lifecycle dispatches onStart synchronously, so
-     * registering-then-unregistering still emits the OPEN it was meant to suppress. Driving the
-     * process lifecycle to STARTED before initialize() is what exposes that.
-     */
-    private fun startProcessLifecycle() {
-        (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState =
-            Lifecycle.State.STARTED
-    }
-
-    private val openEmitted = "process foregrounded, sending OPEN"
-
     @Test
-    fun initialize_automaticOpenEventsFalse_emitsNoOpenWhenAlreadyForegrounded() {
-        startProcessLifecycle()
+    fun initialize_clearsSessionParamsLeftByPreviousProcess() {
+        // Same key, so the key-change reset doesn't clear it instead.
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+        Branch.shutDown()
+        PrefHelper.getInstance(context).sessionParams =
+            """{"~channel":"Distribution Channel","+clicked_branch_link":true}"""
 
-        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
-            setAutomaticOpenEvents(false)
-        }
-        Shadows.shadowOf(Looper.getMainLooper()).idle()
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
 
-        assertFalse(
-            "automaticOpenEvents=false must not emit an OPEN, even when the process is already " +
-                "foregrounded at initialize()",
-            logs.any { it.contains(openEmitted) }
-        )
-    }
-
-    @Test
-    fun initialize_automaticOpenEventsDefault_emitsOpenWhenAlreadyForegrounded() {
-        startProcessLifecycle()
-
-        val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
-        // register() posts to the main looper when off-thread; drain it so the assertion does not
-        // depend on which path was taken.
-        Shadows.shadowOf(Looper.getMainLooper()).idle()
-
-        assertTrue(
-            "the default must still emit an OPEN when the process is already foregrounded",
-            logs.any { it.contains(openEmitted) }
-        )
+        assertEquals(PrefHelper.NO_STRING_VALUE, PrefHelper.getInstance(context).sessionParams)
     }
 
     // -------------------------------------------------------------------------
@@ -238,13 +206,122 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun initialize_defaultLogLevel_setsNone() {
-        // initialize() must always own the logger state — no inherited ambient level.
-        BranchLogger.loggingLevel = BranchLogger.BranchLogLevel.VERBOSE // simulate prior state
+    fun enableLogging_beforeInitialize_survivesAConfigWithoutLogging() {
+        Branch.enableLogging()
 
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
 
-        assertEquals(BranchLogger.BranchLogLevel.NONE, BranchLogger.loggingLevel)
+        assertTrue(BranchLogger.loggingEnabled)
+        assertEquals(BranchLogger.BranchLogLevel.DEBUG, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_beforeInitialize_isOverriddenByConfigLogLevel() {
+        Branch.enableLogging()
+
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLogLevel(BranchLogger.BranchLogLevel.WARN)
+                .build()
+        )
+
+        assertEquals(BranchLogger.BranchLogLevel.WARN, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_beforeInitialize_isOverriddenByConfigLoggingCallback() {
+        val callback = IBranchLoggingCallbacks { _, _ -> }
+        Branch.enableLogging(BranchLogger.BranchLogLevel.WARN)
+
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLoggingCallback(callback)
+                .build()
+        )
+
+        assertSame(callback, BranchLogger.loggerCallback)
+        assertEquals(BranchLogger.BranchLogLevel.VERBOSE, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_withCallbackOnly_isVerbose() {
+        Branch.enableLogging(IBranchLoggingCallbacks { _, _ -> })
+
+        assertEquals(BranchLogger.BranchLogLevel.VERBOSE, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_afterInitialize_overridesConfigLogLevel() {
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLogLevel(BranchLogger.BranchLogLevel.NONE)
+                .build()
+        )
+
+        Branch.enableLogging(BranchLogger.BranchLogLevel.WARN)
+
+        assertEquals(BranchLogger.BranchLogLevel.WARN, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_withLevelOnly_afterInitialize_keepsTheConfigLoggingCallback() {
+        val captured = CopyOnWriteArrayList<String>()
+        val callback = IBranchLoggingCallbacks { message, _ -> captured.add(message) }
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLoggingCallback(callback)
+                .build()
+        )
+
+        Branch.enableLogging(BranchLogger.BranchLogLevel.WARN)
+        BranchLogger.w("warn line")
+
+        assertSame(callback, BranchLogger.loggerCallback)
+        assertTrue(captured.contains("warn line"))
+    }
+
+    @Test
+    fun enableLogging_withCallbackAndLevel_routesMessagesAtOrAboveTheLevel() {
+        val captured = CopyOnWriteArrayList<String>()
+
+        Branch.enableLogging({ message, _ -> captured.add(message) }, BranchLogger.BranchLogLevel.WARN)
+        BranchLogger.w("warn line")
+        BranchLogger.i("info line")
+
+        assertTrue(captured.contains("warn line"))
+        assertFalse(captured.contains("info line"))
+    }
+
+    @Test
+    fun enableLogging_belowInfo_doesNotLogTheVersionLine() {
+        val captured = CopyOnWriteArrayList<String>()
+
+        Branch.enableLogging({ message, _ -> captured.add(message) }, BranchLogger.BranchLogLevel.WARN)
+
+        assertFalse(captured.contains(Branch.GOOGLE_VERSION_TAG))
+    }
+
+    @Test
+    fun enableLogging_atInfo_logsTheVersionLine() {
+        val captured = CopyOnWriteArrayList<String>()
+
+        Branch.enableLogging({ message, _ -> captured.add(message) }, BranchLogger.BranchLogLevel.INFO)
+
+        assertTrue(captured.contains(Branch.GOOGLE_VERSION_TAG))
+    }
+
+    @Test
+    fun disableLogging_turnsLoggingOffAndClearsTheCallback() {
+        Branch.enableLogging(IBranchLoggingCallbacks { _, _ -> })
+
+        Branch.disableLogging()
+
+        assertFalse(BranchLogger.loggingEnabled)
+        assertNull(BranchLogger.loggerCallback)
     }
 
     // -------------------------------------------------------------------------
@@ -408,14 +485,13 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     // -------------------------------------------------------------------------
-    // Attribution level wired to PrefHelper, without sendOpen()'s side effect
+    // Attribution level wired to PrefHelper, without sending an open
     // -------------------------------------------------------------------------
 
     @Test
     fun initialize_attributionLevel_appliesWithoutCallingSendOpen() {
         val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE) {
             setAttributionLevel(Defines.BranchAttributionLevel.FULL)
-            setAutomaticOpenEvents(false) // isolates this from the unrelated foreground-OPEN path
         }
 
         assertTrue(
@@ -447,6 +523,31 @@ class BranchInitializeTest : BranchTestBase() {
         // First call's key and timeout must survive.
         assertEquals("key_live_first", PrefHelper.getInstance(context).getBranchKey())
         assertEquals(5_000, PrefHelper.getInstance(context).getTimeout())
+    }
+
+    @Test
+    fun initialize_calledTwice_atNoneLevel_logsReinitializationWarning() {
+        val captured = CopyOnWriteArrayList<String>()
+        val first = BranchConfiguration.Builder("key_live_first")
+            .setLogLevel(BranchLogger.BranchLogLevel.NONE)
+            .setLoggingCallback { message, _ -> captured.add(message) }
+            .build()
+        val second = BranchConfiguration.Builder("key_live_second").build()
+
+        Branch.initialize(context, first)
+        Branch.initialize(context, second) // ignored, but must still warn
+
+        assertTrue(
+            "the reinitialization warning must not be silenced at log level NONE, got: $captured",
+            captured.any { it.contains("attempted to reinitialize Branch SDK singleton") }
+        )
+    }
+
+    @Test
+    fun initialize_atNoneLevel_logsNothing() {
+        val logs = captureInitLogs(BranchLogger.BranchLogLevel.NONE)
+
+        assertTrue("a correctly configured initialize() at NONE must be silent, got: $logs", logs.isEmpty())
     }
 
     // -------------------------------------------------------------------------
@@ -482,7 +583,7 @@ class BranchInitializeTest : BranchTestBase() {
         "attributionLevel", "dmaParameters", "limitFacebookAttribution",
         "adNetworkCalloutsDisabled", "facebookAppId", "preinstallCampaign", "preinstallPartner",
         "installMetadata", "referringLinkAttributionForPreinstalledApps", "whitelistedSchemes",
-        "uriHostsToSkip", "automaticOpenEvents", "userAgentFetchSync"
+        "uriHostsToSkip", "userAgentFetchSync"
     )
 
     /**
@@ -588,18 +689,6 @@ class BranchInitializeTest : BranchTestBase() {
             complete.getString("apiUrl").isNotEmpty())
         assertTrue("completion must report the SDK version",
             complete.getString("sdkVersion").isNotEmpty())
-        assertTrue("completion must report whether auto-open is on",
-            complete.getBoolean("automaticOpenEvents"))
-    }
-
-    @Test
-    fun initialize_completionJson_reportsAutomaticOpenEventsDisabled() {
-        val complete = singleEvent(
-            captureInitLogs { setAutomaticOpenEvents(false) },
-            Branch.EVENT_INITIALIZE_COMPLETE
-        )
-
-        assertFalse(complete.getBoolean("automaticOpenEvents"))
     }
 
     @Test

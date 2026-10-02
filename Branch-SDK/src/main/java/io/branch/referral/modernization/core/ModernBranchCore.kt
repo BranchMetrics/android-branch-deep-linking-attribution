@@ -4,9 +4,6 @@ import android.content.Context
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
-import io.branch.referral.Branch
-import io.branch.referral.RequestOpen
-import io.branch.referral.Defines
 
 /**
  * Modern Branch SDK core implementation using reactive architecture.
@@ -115,7 +112,6 @@ interface SessionManager {
     val sessionState: StateFlow<SessionState>
 
     suspend fun initialize(context: Context)
-    suspend fun initSession(activity: android.app.Activity): Result<BranchSession>
     suspend fun resetSession(): Result<Unit>
     fun isSessionActive(): Boolean
 }
@@ -258,50 +254,12 @@ private class SessionManagerImpl(private val scope: CoroutineScope) : SessionMan
         _sessionState.value = SessionState.ACTIVE
     }
 
-    override suspend fun initSession(activity: android.app.Activity): Result<BranchSession> {
-        return try {
-            _sessionState.value = SessionState.INITIALIZING
-
-            val openRequest = RequestOpen(
-                activity.applicationContext,
-                null,
-                false,
-                null
-            )
-
-            // FIX: Use the queue instead of calling executeAsync
-            val branch = Branch.getInstance()
-            branch?.requestQueue_?.handleNewRequest(openRequest)
-
-            val responseJson = branch?.latestReferringParams ?: JSONObject()
-
-            // Map the JSON response to your new BranchSession data class
-            val session = BranchSession(
-                sessionId = responseJson.optString(Defines.Jsonkey.SessionID.key, generateSessionId()),
-                userId = responseJson.optString(Defines.Jsonkey.Identity.key),
-                referringParams = responseJson,
-                startTime = System.currentTimeMillis(),
-                isNew = false
-            )
-
-            _currentSession.value = session
-            _sessionState.value = SessionState.ACTIVE
-            Result.success(session)
-
-        } catch (e: Exception) {
-            _sessionState.value = SessionState.ERROR
-            Result.failure(e)
-        }
-    }
-
     override suspend fun resetSession(): Result<Unit> {
         _currentSession.value = null
         return Result.success(Unit)
     }
 
     override fun isSessionActive(): Boolean = _currentSession.value != null
-
-    private fun generateSessionId(): String = "session_${System.currentTimeMillis()}"
 }
 
 private class IdentityManagerImpl(private val scope: CoroutineScope) : IdentityManager {

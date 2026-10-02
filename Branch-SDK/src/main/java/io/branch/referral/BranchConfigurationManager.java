@@ -79,10 +79,6 @@ public class BranchConfigurationManager {
     private static void loadPluginRuntimeConfiguration(@NonNull Context context) {
         boolean deferInitForPluginRuntime = BranchUtil.getDeferInitForPluginRuntimeConfig(context);
         Branch.deferInitForPluginRuntime(deferInitForPluginRuntime);
-        
-        if (deferInitForPluginRuntime) {
-            BranchLogger.v("Plugin runtime initialization deferred from configuration");
-        }
     }
     
     /**
