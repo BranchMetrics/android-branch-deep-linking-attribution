@@ -278,6 +278,8 @@ public class Branch {
     private final Object heldOpenLock_ = new Object();
     private boolean openHeld_;
     @Nullable private JSONObject heldOpenResponse_;
+    // Set when a background could not clear the saved launch link because a launch request was still in the queue.
+    volatile boolean launchLinkClearOwed_;
 
     private int networkCount_ = 0;
     private ServerResponse serverResponse_;
@@ -1955,6 +1957,10 @@ public class Branch {
 
     /** Saves the launch link and, with an Activity, its intent's context for this launch's requests. */
     void readLaunchLink(@Nullable Uri uri, @Nullable Activity activity) {
+        if (launchLinkClearOwed_) {
+            launchLinkClearOwed_ = false;
+            prefHelper_.clearLaunchLink();
+        }
         if (activity != null) {
             currentActivityReference_ = new WeakReference<>(activity);
         }

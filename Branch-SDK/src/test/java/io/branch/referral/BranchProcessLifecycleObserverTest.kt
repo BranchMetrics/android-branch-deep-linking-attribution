@@ -9,6 +9,8 @@ import io.branch.coroutines.RequestDeepLink
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -67,6 +69,32 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
         observer.onStop(owner)
 
         assertEquals(linkSessionParams, prefHelper.sessionParams)
+    }
+
+    @Test
+    fun onStop_clearsTheSavedLaunchLink() {
+        saveLaunchLink()
+
+        observer.onStop(owner)
+
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.linkClickIdentifier)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.appLink)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.pushIdentifier)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.externalIntentUri)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.externalIntentExtra)
+        assertFalse(branch.launchLinkClearOwed_)
+    }
+
+    @Test
+    fun onStop_keepsTheSavedLaunchLinkWhileDeepLinkQueued() {
+        saveLaunchLink()
+        queue.insert(heldRequest(RequestDeepLink(RuntimeEnvironment.getApplication(), null, false)), 0)
+
+        observer.onStop(owner)
+
+        assertEquals("https://example.app.link/abc123", prefHelper.appLink)
+        assertEquals("myapp://product/1", prefHelper.externalIntentUri)
+        assertTrue("the next launch must clear it instead", branch.launchLinkClearOwed_)
     }
 
     @Test
@@ -134,6 +162,14 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
         setProcessState(Lifecycle.State.CREATED)
 
         assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.sessionParams)
+    }
+
+    private fun saveLaunchLink() {
+        prefHelper.linkClickIdentifier = "123"
+        prefHelper.appLink = "https://example.app.link/abc123"
+        prefHelper.pushIdentifier = "https://example.app.link/push"
+        prefHelper.externalIntentUri = "myapp://product/1"
+        prefHelper.externalIntentExtra = """{"key":"value"}"""
     }
 
     private fun setProcessState(state: Lifecycle.State) {
