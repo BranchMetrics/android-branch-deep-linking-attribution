@@ -103,7 +103,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
         activityScenario.onActivity(new ActivityScenario.ActivityAction<MockActivity>() {
             @Override
             public void perform(final MockActivity activity) {
-                Branch.sessionBuilder(activity).withCallback(new Branch.BranchReferralInitListener() {
+                branch.requestDeepLinkData(activity, new Branch.BranchReferralInitListener() {
                     @Override
                     public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
                         // this isn't really a test, just makes sure that we are indeed using `MockRemoteInterface` and getting success responses
@@ -116,7 +116,7 @@ abstract public class BranchTest extends BranchTestRequestUtil {
                         }
                         sessionLatch.countDown();
                     }
-                }).withData(activity.getIntent() == null ? null : activity.getIntent().getData()).init();
+                });
 
                 // `pretest`s, are typically gonna test request post body. The request is retrieved from the queue while it's
                 // waiting for session to be initialized. MockRemoteInterface will purposefully delay session initialization

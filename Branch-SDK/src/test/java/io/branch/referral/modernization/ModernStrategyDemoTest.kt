@@ -1,6 +1,7 @@
 package io.branch.referral.modernization
 
 import io.branch.referral.BranchLogger
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -97,7 +98,7 @@ class ModernStrategyDemoTest {
         val methods = wrapperClass.declaredMethods
         val methodNames = methods.map { it.name }.toSet()
         
-        assertTrue("Should preserve initSession", methodNames.contains("initSession"))
+        assertFalse("initSession was removed", methodNames.contains("initSession"))
         assertTrue("Should preserve setIdentity", methodNames.contains("setIdentity"))
         assertTrue("Should preserve userCompletedAction", methodNames.contains("userCompletedAction"))
         

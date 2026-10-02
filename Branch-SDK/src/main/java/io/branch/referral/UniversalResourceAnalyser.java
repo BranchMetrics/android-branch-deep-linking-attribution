@@ -56,6 +56,11 @@ class UniversalResourceAnalyser {
         }
         return instance;
     }
+
+    // For unit tests: the next getInstance starts from the default URL formats.
+    static void shutDown() {
+        instance = null;
+    }
     
     private UniversalResourceAnalyser(Context context) {
         DEFAULT_SKIP_URL_LIST = new JSONObject();
