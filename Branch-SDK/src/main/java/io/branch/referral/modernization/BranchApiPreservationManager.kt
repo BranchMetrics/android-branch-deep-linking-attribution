@@ -96,20 +96,6 @@ class BranchApiPreservationManager private constructor(
             
 
             
-            // Session Management APIs - Critical but complex migration
-            registerApi(
-                methodName = "initSession",
-                signature = "Branch.initSession(Activity, BranchReferralInitListener)",
-                usageImpact = UsageImpact.CRITICAL,
-                complexity = MigrationComplexity.MEDIUM,
-                removalTimeline = "Q3 2025",
-                modernReplacement = "sessionManager.initSession()",
-                deprecationVersion = "5.0.0", // Standard deprecation
-                removalVersion = "6.5.0" // Extended due to complexity
-            )
-            
-
-            
             // User Identity APIs - High impact, standard timeline
             registerApi(
                 methodName = "setIdentity",
