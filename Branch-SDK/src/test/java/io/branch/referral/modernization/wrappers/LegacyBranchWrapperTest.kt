@@ -1,6 +1,7 @@
 package io.branch.referral.modernization.wrappers
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -23,7 +24,7 @@ class LegacyBranchWrapperTest {
         val methods = LegacyBranchWrapper::class.java.declaredMethods
         val methodNames = methods.map { it.name }.toSet()
         
-        assertTrue("Should have initSession method", methodNames.contains("initSession"))
+        assertFalse("initSession was removed", methodNames.contains("initSession"))
         assertTrue("Should have setIdentity method", methodNames.contains("setIdentity"))
         assertTrue("Should have userCompletedAction method", methodNames.contains("userCompletedAction"))
         assertTrue("Should have getLatestReferringParams method", methodNames.contains("getLatestReferringParams"))
@@ -34,9 +35,6 @@ class LegacyBranchWrapperTest {
     fun `test wrapper method signatures`() {
         // Test that method signatures match expected legacy API
         val methods = LegacyBranchWrapper::class.java.declaredMethods
-        
-        val initSessionMethods = methods.filter { it.name == "initSession" }
-        assertTrue("Should have initSession methods", initSessionMethods.isNotEmpty())
         
         val setIdentityMethods = methods.filter { it.name == "setIdentity" }
         assertTrue("Should have setIdentity methods", setIdentityMethods.isNotEmpty())
@@ -67,19 +65,6 @@ class LegacyBranchWrapperTest {
         
         assertTrue("Should have multiple public methods", publicMethods.size >= 5)
         assertTrue("Should not have too many methods", publicMethods.size <= 30)
-    }
-    
-    @Test
-    fun `test wrapper has Session method overloads`() {
-        // Test that initSession has multiple overloads for legacy compatibility
-        val methods = LegacyBranchWrapper::class.java.declaredMethods
-        val initSessionMethods = methods.filter { it.name == "initSession" }
-        
-        assertTrue("Should have multiple initSession overloads", initSessionMethods.size >= 2)
-        
-        // Check for different parameter combinations
-        val parameterCounts = initSessionMethods.map { it.parameterCount }.toSet()
-        assertTrue("Should have different parameter counts", parameterCounts.size > 1)
     }
     
     @Test

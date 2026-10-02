@@ -1,6 +1,5 @@
 package io.branch.referral.modernization.wrappers
 
-import android.app.Activity
 import android.content.Context
 import io.branch.referral.Branch
 import io.branch.referral.BranchError
@@ -44,72 +43,6 @@ class LegacyBranchWrapper private constructor() {
                 instance ?: LegacyBranchWrapper().also { instance = it }
             }
         }
-    }
-    
-    /**
-     * Legacy initSession wrapper with activity.
-     */
-    @Deprecated(
-        message = "Use sessionManager.initSession() instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().sessionManager.initSession(activity)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun initSession(activity: Activity): Boolean {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "initSession",
-            parameters = arrayOf(activity)
-        )
-        return result as? Boolean ?: false
-    }
-    
-    /**
-     * Legacy initSession wrapper with callback.
-     */
-    @Deprecated(
-        message = "Use sessionManager.initSession() instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().sessionManager.initSession(activity)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun initSession(
-        callback: Branch.BranchReferralInitListener?,
-        activity: Activity
-    ): Boolean {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "initSession",
-            parameters = arrayOf(callback, activity)
-        )
-        
-        // Handle callback asynchronously
-        if (callback != null) {
-            callbackRegistry.adaptInitSessionCallback(callback, result, null)
-        }
-        
-        return result as? Boolean ?: false
-    }
-    
-    /**
-     * Legacy initSession wrapper with URI data.
-     */
-    @Deprecated(
-        message = "Use sessionManager.initSession() with link data instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().sessionManager.initSession(activity)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun initSession(
-        callback: Branch.BranchReferralInitListener?,
-        data: android.net.Uri?,
-        activity: Activity
-    ): Boolean {
-        val result = preservationManager.handleLegacyApiCall(
-            methodName = "initSession",
-            parameters = arrayOf(callback, data, activity)
-        )
-        
-        if (callback != null) {
-            callbackRegistry.adaptInitSessionCallback(callback, result, null)
-        }
-        
-        return result as? Boolean ?: false
     }
     
     /**

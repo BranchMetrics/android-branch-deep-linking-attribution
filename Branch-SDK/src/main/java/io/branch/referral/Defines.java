@@ -264,8 +264,6 @@ public class Defines {
     public enum RequestPath {
         GetURL("v1/url"),
         GetApp("v1/app-link-settings"),
-        RegisterInstall("v1/install"),
-        RegisterOpen("v1/open"),
         ContentEvent("v1/content-events"),
         TrackStandardEvent("v3/events/standard"),
         TrackCustomEvent("v3/events/custom"),

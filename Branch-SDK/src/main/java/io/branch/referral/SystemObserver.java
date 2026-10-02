@@ -461,6 +461,7 @@ abstract class SystemObserver {
     private void fetchHuaweiAdId(Context context, AdsParamsFetchEvents callback) {
         BranchLogger.v("Begin fetchHuaweiAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.huaweiAdvertisingIdClientClass)) {
+            // TODO: the return value is ignored. A suspend call that finishes without suspending returns its result here and never calls resumeWith, so the callback never fires.
             AdvertisingIdsKt.getHuaweiAdvertisingInfoObject(context, new Continuation<com.huawei.hms.ads.identifier.AdvertisingIdClient.Info>() {
                 @NonNull
                 @Override
@@ -511,6 +512,7 @@ abstract class SystemObserver {
     private void fetchGoogleAdId(Context context, AdsParamsFetchEvents callback) {
         BranchLogger.v("Begin fetchGoogleAdId");
         if(DependencyUtilsKt.classExists(DependencyUtilsKt.playStoreAdvertisingIdClientClass)) {
+            // TODO: the return value is ignored. A suspend call that finishes without suspending returns its result here and never calls resumeWith, so the callback never fires.
             AdvertisingIdsKt.getGoogleAdvertisingInfoObject(context, new Continuation<AdvertisingIdClient.Info>() {
                 @NonNull
                 @Override
@@ -558,6 +560,7 @@ abstract class SystemObserver {
 
     private void setFireAdId(Context context, AdsParamsFetchEvents callback) {
         BranchLogger.v("Begin setFireAdId");
+        // TODO: the return value is ignored. A suspend call that finishes without suspending returns its result here and never calls resumeWith, so the callback never fires.
         AdvertisingIdsKt.getAmazonFireAdvertisingInfoObject(context, new Continuation<Pair<? extends Integer, ? extends String>>() {
             @NonNull
             @Override
@@ -594,6 +597,7 @@ abstract class SystemObserver {
     public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
         BranchLogger.v("Begin fetchInstallReferrer");
         try {
+            // TODO: the return value is ignored. A suspend call that finishes without suspending returns its result here and never calls resumeWith, so the callback never fires.
             InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
                 @NonNull
                 @Override
@@ -605,6 +609,7 @@ abstract class SystemObserver {
                 public void resumeWith(@NonNull Object o) {
                     if (o != null) {
                         BranchLogger.v("fetchInstallReferrer resumeWith got result: " + o);
+                        // TODO: o can be a Result.Failure; check it before the cast.
                         InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
                         AppStoreReferrer.processReferrerInfo(context_,
                                 latestReferrer.getInstallReferrer(),

@@ -923,7 +923,16 @@ public class PrefHelper {
     public String getPushIdentifier() {
         return getString(KEY_PUSH_IDENTIFIER);
     }
-    
+
+    /** Clears the link the last launch saved: link click identifier, app link, push identifier, external intent URI and extras. */
+    void clearLaunchLink() {
+        setLinkClickIdentifier(NO_STRING_VALUE);
+        setAppLink(NO_STRING_VALUE);
+        setPushIdentifier(NO_STRING_VALUE);
+        setExternalIntentUri(NO_STRING_VALUE);
+        setExternalIntentExtra(NO_STRING_VALUE);
+    }
+
     /**
      * <p>Gets the session parameters as currently set in preferences.</p>
      * <p>
