@@ -1957,7 +1957,8 @@ public class Branch {
 
     /** Saves the launch link and, with an Activity, its intent's context for this launch's requests. */
     void readLaunchLink(@Nullable Uri uri, @Nullable Activity activity) {
-        if (launchLinkClearOwed_) {
+        // Not while an earlier launch's request still waits to send: it reads the link at send time.
+        if (launchLinkClearOwed_ && (requestQueue_ == null || !requestQueue_.containsDeepLinkOrOpen())) {
             launchLinkClearOwed_ = false;
             prefHelper_.clearLaunchLink();
         }
@@ -2041,7 +2042,8 @@ public class Branch {
      * This is coroutine-friendly when called within a LifecycleScope or specialized dispatcher.
      * Each call also sends one open event, unless one is already waiting to be sent;
      * while attribution is off, it is sent when the user opts in.
-     * @param uri The URI (App Link or Scheme) to resolve, or null to look up a deferred deep link.
+     * @param uri The URI (App Link or Scheme) to resolve, or null to look up a deferred deep link;
+     *            from Java, pass {@code (Uri) null}.
      * @param callback A {@link BranchReferralInitListener} to receive the params.
      */
     public void requestDeepLinkData(@Nullable Uri uri, @Nullable BranchReferralInitListener callback) {

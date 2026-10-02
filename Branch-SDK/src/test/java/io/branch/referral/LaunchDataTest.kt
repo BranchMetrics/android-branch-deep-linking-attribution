@@ -5,6 +5,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Looper
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ProcessLifecycleOwner
 import io.branch.data.InstallReferrerResult
 import io.branch.referral.network.BranchRemoteInterface
 import org.json.JSONObject
@@ -74,6 +78,7 @@ class LaunchDataTest : BranchTestBase() {
 
     @After
     override fun tearDownBase() {
+        setProcessState(Lifecycle.State.CREATED)
         super.tearDownBase()
         Branch.shutDown()
         Branch._userAgentString = ""
@@ -140,6 +145,23 @@ class LaunchDataTest : BranchTestBase() {
 
         assertEquals(GAID, remote.deepLinks[0].optString(Defines.Jsonkey.GoogleAdvertisingID.key))
         assertEquals(GAID, remote.opens[0].optString(Defines.Jsonkey.GoogleAdvertisingID.key))
+    }
+
+    /** A background while a launch still waits on its reads must not let the next launch wipe that launch's link. */
+    @Test
+    fun backgroundWhileALaunchWaitsOnItsReads_thenNextLaunch_firstLaunchKeepsItsLink() {
+        adId = Pair(0, GAID)
+        readDelayMs = 1_000
+        val link = "https://example.app.link/abc"
+        setProcessState(Lifecycle.State.RESUMED)
+        Branch.getInstance().requestDeepLinkData(Uri.parse(link)) { _, _ -> }
+
+        setProcessState(Lifecycle.State.CREATED)
+        setProcessState(Lifecycle.State.RESUMED)
+        Branch.getInstance().requestDeepLinkData(null) { _, _ -> }
+        awaitDeepLinks(1)
+
+        assertEquals("the first launch's link was wiped before it was sent", link, remote.deepLinks[0].optString(Defines.Jsonkey.AndroidAppLinkURL.key))
     }
 
     @Test
@@ -367,6 +389,11 @@ class LaunchDataTest : BranchTestBase() {
 
     private fun playReferrer() =
         InstallReferrerResult(Defines.Jsonkey.Google_Play_Store.key, 1_700_000_100, PLAY_REFERRER_WITH_CLICK, 1_700_000_000, 1_700_000_101, 1_700_000_001)
+
+    private fun setProcessState(state: Lifecycle.State) {
+        (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState = state
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+    }
 
     private fun awaitOpens(count: Int) = awaitCount(count) { remote.opens.size }
 
