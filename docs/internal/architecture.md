@@ -10,7 +10,7 @@ How the SDK behaves at runtime on this branch, and the invariants a change must 
 | Term | What it means |
 | --- | --- |
 | **install** / **open** | the first app launch after installation, versus every later launch. The choice decides whether a new user is tied back to the link that brought them |
-| **OPEN** (as a noun) | a request to `v3/events/open` reporting a foreground launch for attribution. Distinct from the legacy `v1/open` `RegisterOpen` path, which still exists |
+| **OPEN** (as a noun) | a request to `v3/events/open` reporting a foreground launch for attribution. The legacy `v1/open` path was removed |
 | **randomized bundle token** / **randomized device token** | opaque identifiers the Branch API assigns on a successful init and the SDK persists. The bundle token is per app install, the device token per device |
 | **session params** / **install params** | the link data returned by init. Session params are from the most recent init; install params are frozen from the first-ever one |
 | **wait lock** | a `PROCESS_WAIT_LOCK` on a queued request. While any lock is attached the queue will not send that request |
@@ -53,7 +53,7 @@ Each call drives this sequence:
 
 `ServerRequest` (abstract) is the base for every API call. It owns the POST/GET body (`params_`), a `Defines.RequestPath`, its wait-lock set, and a retry count.
 
-`BRANCH_API_VERSION` has three values: `V1`, `V1_LATD`, `V2`. `setPost()` branches on `V1`: **V1** (`v1/install`, `v1/open`, `v1/url`) puts device fields at the top level, while **V2** (`v3/events/standard`, `v3/events/custom`) and **`V1_LATD`** nest them under `user_data`.
+`BRANCH_API_VERSION` has three values: `V1`, `V1_LATD`, `V2`. `setPost()` branches on `V1`: **V1**, the default (`v3/deeplink`, `v3/events/open`, `v1/url`), puts device fields at the top level, while **V2** (`v3/events/standard`, `v3/events/custom`) and **`V1_LATD`** nest them under `user_data`.
 
 Subclasses: `ServerRequestInitSession` leading to `RequestDeepLink` and `RequestOpen`; `ServerRequestLogEvent` (V2); `ServerRequestCreateUrl`; `ServerRequestGetLATD`; plus the client-only queue operations `QueueOperationSetIdentity` and `QueueOperationLogout`, which are enqueued for ordering but skip the network.
 
