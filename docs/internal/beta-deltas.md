@@ -50,13 +50,13 @@ Know these before touching OPEN or attribution behavior.
 
 No deferred deep link is looked up while attribution is off: a check with no URI fails at once with `ERR_BRANCH_TRACKING_DISABLED`, and its held open carries no link.
 
-Consent never sends an OPEN of its own, and changing between non-`NONE` levels sends none.
+Consent never sends an OPEN of its own: opting in sends only the OPEN a link check held while attribution was off, and changing between non-`NONE` levels sends none.
 
 Nothing sends an OPEN when the process comes to the foreground (EMT-4479). Each `requestDeepLinkData` call is one launch's OPEN, unless an OPEN is already waiting to be sent, whenever the app makes it.
 
 **`sessionParams` is cleared at a process background and at `Branch.initialize`**, as on iOS. `BranchProcessLifecycleObserver.onStop` (`ProcessLifecycleOwner`, so not on rotation) skips the clear while `containsDeepLinkOrOpen()` finds a request queued or executing. The observer sends no requests.
 
-**`requestDeepLinkData(uri, callback)`** (`Branch.java:2726`, public) manually resolves a URI. It builds a `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, a `ServerRequestInitSession` subclass) hitting the new `v3/deeplink` endpoint (`Defines.RequestPath.Deeplink`) and routes it through `requestQueue_.handleNewRequest(...)`. It maps `link_click_id`, app-link-url, and scheme-uri into the POST. On success it writes `sessionParams`, fires the callback with `latestReferringParams`, and, when attribution is not `NONE`, chains a `sendOpen(response)`. On failure it sends the OPEN without `link_data`. It is coroutine-friendly and intended to be called from a `LifecycleScope`.
+**`requestDeepLinkData(uri, callback)`** (`Branch.java`, public) manually resolves a URI. It builds a `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, a `ServerRequestInitSession` subclass) hitting the new `v3/deeplink` endpoint (`Defines.RequestPath.Deeplink`) and routes it through `requestQueue_.handleNewRequest(...)`. It maps `link_click_id`, app-link-url, and scheme-uri into the POST. On success it writes `sessionParams`, fires the callback with `latestReferringParams`, and chains a `sendOpen(response)`, which holds the OPEN while attribution is off. On failure it sends the OPEN without `link_data`. It is coroutine-friendly and intended to be called from a `LifecycleScope`.
 
 ## Other beta subsystems
 

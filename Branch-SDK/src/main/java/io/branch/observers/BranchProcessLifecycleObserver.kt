@@ -66,7 +66,7 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
             instance = null
         }
 
-        // A missing lifecycle-process, or any failure here, only skips the clear.
+        // Any failure here only skips the clear.
         private inline fun guarded(action: String, block: () -> Unit) {
             try {
                 block()
