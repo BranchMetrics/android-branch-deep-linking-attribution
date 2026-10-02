@@ -2160,15 +2160,20 @@ public class Branch {
         PrefHelper prefHelper = PrefHelper.getInstance(context_);
 
         if(prefHelper != null) {
-            Defines.BranchAttributionLevel branchAttributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
-
-            BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
-            if (branchAttributionLevel == Defines.BranchAttributionLevel.NONE || trackingController.isTrackingDisabled()) {
-                BranchLogger.d("sendOpen held until the user opts in: attribution is off");
-                synchronized (heldOpenLock_) {
+            boolean hold;
+            // Checked under the lock: opt-in saves the level before sendHeldOpen takes it, so an open
+            // either sees attribution on here or is already held when sendHeldOpen runs.
+            synchronized (heldOpenLock_) {
+                Defines.BranchAttributionLevel branchAttributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
+                BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
+                hold = branchAttributionLevel == Defines.BranchAttributionLevel.NONE || trackingController.isTrackingDisabled();
+                if (hold) {
                     openHeld_ = true;
                     heldOpenResponse_ = responseData;
                 }
+            }
+            if (hold) {
+                BranchLogger.d("sendOpen held until the user opts in: attribution is off");
             } else {
                 if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
                     BranchLogger.d("sendOpen skipped: an install or open is already pending");
