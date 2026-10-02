@@ -30,8 +30,7 @@ dependencies {
     implementation("androidx.annotation:annotation:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    // App foreground/background detection at the process level (SDK-2463): ProcessLifecycleOwner.
-    // Floor is 2.4.1: DefaultLifecycleObserver available since 2.4.0, compatible with Kotlin 1.6.21.
+    // ProcessLifecycleOwner; 2.4.1 is compatible with Kotlin 1.6.21.
     implementation("androidx.lifecycle:lifecycle-process:2.4.1")
 
     // --- optional dependencies -----

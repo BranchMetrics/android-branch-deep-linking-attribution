@@ -23,7 +23,7 @@ Code spans several `io/branch/*` packages, not just `referral/`.
   - `referral/validators/`, `referral/QRCode/`
   - `referral/modernization/` `BranchApiPreservationManager.kt`, `registry/PublicApiRegistry.kt`, `wrappers/PreservedBranchApi.kt` and `LegacyBranchWrapper.kt` (legacy API shims), `core/ModernBranchCore.kt` (the new reactive session entry point), `adapters/CallbackAdapterRegistry.kt`, `analytics/ApiUsageAnalytics.kt`
 - **`coroutines/`** async fetch entry points (`AdvertisingIds`, `DeviceSignals`, `InstallReferrers`) **and** the newer coroutine request classes `RequestOpen.kt` (`v3/events/open`) and `RequestDeepLink.kt` (`v3/deeplink`)
-- **`observers/`** (a directory under `io.branch`, but the classes declare `package io.branch.referral`) `BranchProcessLifecycleObserver.kt`, process-level foreground detection driving OPEN
+- **`observers/`** (a directory under `io.branch`, but the classes declare `package io.branch.referral`) `BranchProcessLifecycleObserver.kt`, process-level background detection that clears `sessionParams` and the saved launch link; it sends no requests
 - **`indexing/`** `BranchUniversalObject`, the BUO content model
 - **`data/`** `InstallReferrerResult`
 - **`interfaces/`** public callback interfaces, for example `IBranchLoggingCallbacks`
@@ -33,8 +33,8 @@ Code spans several `io/branch/*` packages, not just `referral/`.
 
 | Task | Start here |
 | --- | --- |
-| Session init, deep-link callbacks, intent parsing | mechanism in `Branch.java` (`initializeSession`, `registerAppInit`, `readAndStripParam`, `onIntentReady`); new entry point in `modernization/core/ModernBranchCore.kt` (`SessionManager.initSession`). The legacy `sessionBuilder`/`InitSessionBuilder` is being retired, do not extend it |
-| OPEN, foreground re-open, attribution gating | `Branch.sendOpen(...)` plus `observers/BranchProcessLifecycleObserver.kt`; request in `coroutines/RequestOpen.kt` |
+| Launch, deep-link callbacks, intent parsing | `Branch.requestDeepLinkData` (Activity, Uri, and the `suspend` variants in `BranchCoroutines.kt`), then `readLaunchLink`/`readAndStripParam` and `enqueueLaunchRequest`/`initTasks` in `Branch.java` |
+| OPEN, attribution gating | `Branch.sendOpen(JSONObject)`, sent once per `requestDeepLinkData`, unless one is already waiting, from `coroutines/RequestDeepLink.kt`; `Branch.sendHeldOpen` sends, on opt-in, the open a link check held while attribution was off; request in `coroutines/RequestOpen.kt` |
 | Manual deep-link resolution (`v3/deeplink`) | `Branch.requestDeepLinkData(...)` plus `coroutines/RequestDeepLink.kt` |
 | Request queueing, wait locks, retry behavior | `BranchRequestQueue.kt` and `BranchRequestQueueAdapter.kt`. **Not** `ServerRequestQueue.java`, which is orphaned |
 | A new API request type, or changing a request body | subclass `ServerRequest`; route it in the adapter and queue; add the path to `Defines.RequestPath` |
