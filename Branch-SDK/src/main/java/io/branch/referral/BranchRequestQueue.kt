@@ -2,6 +2,7 @@ package io.branch.referral
 
 import android.content.Context
 import android.os.SystemClock
+import io.branch.coroutines.RequestDeepLink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -242,14 +243,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
             return
         }
         
-        // Remove from queue since we're processing it
+        // Active before it leaves the queue, so containsDeepLinkOrOpen never misses it.
         synchronized(queueList) {
+            activeRequests[requestId] = request
             queueList.remove(request)
         }
         
         // Clear retry info for successful processing attempts
         requestRetryInfo.remove(requestId)
-        activeRequests[requestId] = request
         
         try {
             // Increment network count
@@ -508,12 +509,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
                     
                     // Enhanced debugging for init session requests
                     if (request is ServerRequestInitSession) {
-                        val requestType = when (request) {
-                            is ServerRequestRegisterInstall -> "RegisterInstall"
-                            is ServerRequestRegisterOpen -> "RegisterOpen"
-                            else -> "InitSession"
-                        }
-                        BranchLogger.v("*** SUCCESS: $requestType request completed successfully ***")
+                        BranchLogger.v("*** SUCCESS: ${request::class.simpleName} request completed successfully ***")
                     }
                     
                     // Process ServerRequestInitSession response data before calling onRequestSucceeded
@@ -556,8 +552,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         val sessionInitialized = branch.initState is BranchSessionState.Initialized
         val canPerformOperations = branch.canPerformOperations()
         
-        return (sessionInitialized || canPerformOperations) && hasSession && hasDeviceToken && 
-               (request !is ServerRequestRegisterInstall || hasUser)
+        return (sessionInitialized || canPerformOperations) && hasSession && hasDeviceToken
     }
     
     /**
@@ -584,14 +579,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
         if (waitLocks.contains("INSTALL_REFERRER_FETCH_WAIT_LOCK")) {
             BranchLogger.v("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INSTALL_REFERRER_FETCH_WAIT_LOCK")
             request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK)
-        }
-
-        // EMT-3860: the intent-pending lock is live again. If onActivityResumed / onIntentReady
-        // never fires (e.g. a headless cold start), force-resolve it after the stuck window so the
-        // init request is not held for the full 30s timeout.
-        if (waitLocks.contains("INTENT_PENDING_WAIT_LOCK")) {
-            BranchLogger.w("STUCK_LOCK_RESOLUTION: Forcing removal of stuck INTENT_PENDING_WAIT_LOCK")
-            request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK)
         }
     }
     
@@ -808,10 +795,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
         val hasDeviceToken = !branch.prefHelper_.getRandomizedDeviceToken().equals(PrefHelper.NO_STRING_VALUE)
         val hasUser = !branch.prefHelper_.getRandomizedBundleToken().equals(PrefHelper.NO_STRING_VALUE)
         
-        val result = when (request) {
-            is ServerRequestRegisterInstall -> hasSession && hasDeviceToken
-            else -> hasSession && hasDeviceToken && hasUser
-        }
+        val result = hasSession && hasDeviceToken && hasUser
         
         BranchLogger.v("hasValidSession - hasSession: $hasSession, hasDeviceToken: $hasDeviceToken, hasUser: $hasUser, result: $result")
         return result
@@ -841,7 +825,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Whether an install or open is already queued or in flight.
+     * Whether an open is already queued or in flight.
      *
      * Deep link resolution is not an open: the beta's flow is /v3/deeplink followed by
      * /v3/events/open, so RequestDeepLink is deliberately excluded — counting it would suppress
@@ -850,27 +834,27 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Checks both the queue and the requests already executing, because the duplicate this guards
      * against is enqueued while the first open is pending, before it reaches the network.
      */
-    fun containsInstallOrOpen(): Boolean {
+    fun containsOpen(): Boolean {
         synchronized(queueList) {
-            if (queueList.any { isInstallOrOpen(it) }) {
-                BranchLogger.v("containsInstallOrOpen: found one queued")
+            if (queueList.any { it is RequestOpen }) {
+                BranchLogger.v("containsOpen: found one queued")
                 return true
             }
         }
-        val executing = activeRequests.values.any { isInstallOrOpen(it) }
+        val executing = activeRequests.values.any { it is RequestOpen }
         if (executing) {
-            BranchLogger.v("containsInstallOrOpen: found one executing")
+            BranchLogger.v("containsOpen: found one executing")
         }
         return executing
     }
 
-    // RequestOpen is the beta's open. ServerRequestRegisterInstall is still reachable here:
-    // getInstallOrOpenRequest builds one when there is no randomized bundle token, and
-    // sessionBuilder().init() remains public API. ServerRequestRegisterOpen is not included —
-    // its only construction site is the queue-restore path in ServerRequest, and nothing on this
-    // line restores a persisted queue.
-    private fun isInstallOrOpen(request: ServerRequest): Boolean =
-        request is ServerRequestRegisterInstall || request is RequestOpen
+    /** Whether a deep link or open request is queued or executing. */
+    fun containsDeepLinkOrOpen(): Boolean {
+        synchronized(queueList) {
+            return queueList.any { it is RequestOpen || it is RequestDeepLink } ||
+                activeRequests.values.any { it is RequestOpen || it is RequestDeepLink }
+        }
+    }
 
     /**
      * Peek at request at specific index
@@ -1011,7 +995,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     /**
      * Clear init data after initialization
      */
-    suspend fun clearDeepLinkStorage() {
+    fun clearDeepLinkStorage() {
         BranchLogger.v("BranchRequestQueue.clearDeepLinkStorage called")
         synchronized(queueList) {
             val prefHelper_ = Branch.getInstance().prefHelper
@@ -1061,7 +1045,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Clear all requests from queue
      * Follows SRP - single responsibility for clearing queue state
      */
-    suspend fun clear() {
+    fun clear() {
         BranchLogger.v("BranchRequestQueue.clear called")
         synchronized(queueList) {
             queueList.clear()
