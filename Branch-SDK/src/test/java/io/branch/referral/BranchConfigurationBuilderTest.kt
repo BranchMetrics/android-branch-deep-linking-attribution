@@ -46,7 +46,6 @@ class BranchConfigurationBuilderTest {
         assertFalse(config.referringLinkAttributionForPreinstalledApps)
         assertTrue(config.whitelistedSchemes.isEmpty())
         assertTrue(config.uriHostsToSkip.isEmpty())
-        assertTrue(config.automaticOpenEvents)
         assertFalse(config.userAgentFetchSync)
     }
 
@@ -84,6 +83,23 @@ class BranchConfigurationBuilderTest {
             .setLogLevel(BranchLogger.BranchLogLevel.VERBOSE)
             .build()
         assertEquals(BranchLogger.BranchLogLevel.VERBOSE, config.logLevel)
+    }
+
+    @Test
+    fun `setLoggingCallback without a level defaults to VERBOSE`() {
+        val config = BranchConfiguration.Builder("key_live_x")
+            .setLoggingCallback { _, _ -> }
+            .build()
+        assertEquals(BranchLogger.BranchLogLevel.VERBOSE, config.logLevel)
+    }
+
+    @Test
+    fun `setLoggingCallback with a level keeps that level`() {
+        val config = BranchConfiguration.Builder("key_live_x")
+            .setLoggingCallback { _, _ -> }
+            .setLogLevel(BranchLogger.BranchLogLevel.NONE)
+            .build()
+        assertEquals(BranchLogger.BranchLogLevel.NONE, config.logLevel)
     }
 
     @Test
@@ -210,12 +226,6 @@ class BranchConfigurationBuilderTest {
             .addUriHostToSkip("skip.example.com")
             .build()
         assertEquals(listOf("internal.example.com", "skip.example.com"), config.uriHostsToSkip)
-    }
-
-    @Test
-    fun `setAutomaticOpenEvents false is stored`() {
-        val config = BranchConfiguration.Builder("key_live_x").setAutomaticOpenEvents(false).build()
-        assertFalse(config.automaticOpenEvents)
     }
 
     @Test
@@ -450,14 +460,13 @@ class BranchConfigurationBuilderTest {
             .setReferringLinkAttributionForPreinstalledApps(true)
             .addWhitelistedScheme("example://")
             .addUriHostToSkip("skip.example.com")
-            .setAutomaticOpenEvents(false)
             .setUserAgentFetchSync(true)
             .build()
 
         assertEquals("key_live_x", config.branchKey)
         assertTrue(config.testMode)
         assertEquals(Defines.BranchAttributionLevel.FULL, config.attributionLevel)
-        assertFalse(config.automaticOpenEvents)
+        assertTrue(config.userAgentFetchSync)
     }
 
     // -------------------------------------------------------------------------
