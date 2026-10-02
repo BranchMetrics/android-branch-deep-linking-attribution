@@ -267,6 +267,24 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
+    fun enableLogging_withLevelOnly_afterInitialize_keepsTheConfigLoggingCallback() {
+        val captured = CopyOnWriteArrayList<String>()
+        val callback = IBranchLoggingCallbacks { message, _ -> captured.add(message) }
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLoggingCallback(callback)
+                .build()
+        )
+
+        Branch.enableLogging(BranchLogger.BranchLogLevel.WARN)
+        BranchLogger.w("warn line")
+
+        assertSame(callback, BranchLogger.loggerCallback)
+        assertTrue(captured.contains("warn line"))
+    }
+
+    @Test
     fun enableLogging_withCallbackAndLevel_routesMessagesAtOrAboveTheLevel() {
         val captured = CopyOnWriteArrayList<String>()
 
