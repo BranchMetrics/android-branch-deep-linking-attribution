@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -97,7 +98,8 @@ public abstract class ServerRequest {
         requestPath_ = requestPath;
         params_ = post;
         prefHelper_ = PrefHelper.getInstance(context);
-        locks_ = new HashSet<>();
+        // The launch adds these and the install referrer and ad ID reads remove them, each from its own thread.
+        locks_ = Collections.synchronizedSet(new HashSet<>());
 
         creation_ts = System.currentTimeMillis();
         String creation_ts_date_formatted = formatUnixEpochToDateFormat(creation_ts);
