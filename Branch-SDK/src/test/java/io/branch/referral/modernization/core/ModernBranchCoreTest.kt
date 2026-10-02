@@ -150,14 +150,10 @@ class ModernBranchCoreTest {
     }
     
     @Test
-    fun `test sessionManager initSession`() = testScope.runTest {
-        val core = ModernBranchCoreImpl.newTestInstance(testDispatcher)
-        val mockActivity = mock(android.app.Activity::class.java)
-        
-        val result = core.sessionManager.initSession(mockActivity)
-        
-        assertNotNull("Should return result", result)
-        assertTrue("Should be success or failure", result.isSuccess || result.isFailure)
+    fun `test sessionManager has no initSession`() {
+        // Functions returning Result get a mangled JVM name, such as initSession-gIAlu-s.
+        val names = SessionManager::class.java.methods.map { it.name.substringBefore('-') }
+        assertFalse("initSession was removed", names.contains("initSession"))
     }
     
     @Test
