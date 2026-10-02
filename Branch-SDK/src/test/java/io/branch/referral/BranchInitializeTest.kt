@@ -1,10 +1,12 @@
 package io.branch.referral
 
+import io.branch.interfaces.IBranchLoggingCallbacks
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -30,12 +32,21 @@ class BranchInitializeTest : BranchTestBase() {
     override fun setUpBase() {
         super.setUpBase()
         Branch.shutDown()
+        resetLogger()
     }
 
     @After
     override fun tearDownBase() {
         super.tearDownBase()
         Branch.shutDown()
+        resetLogger()
+    }
+
+    // initialize() no longer resets a logger the config leaves alone, so state must not leak between tests.
+    private fun resetLogger() {
+        BranchLogger.loggingEnabled = true
+        BranchLogger.loggingLevel = BranchLogger.BranchLogLevel.DEBUG
+        BranchLogger.loggerCallback = null
     }
 
     // -------------------------------------------------------------------------
@@ -195,13 +206,104 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun initialize_defaultLogLevel_setsNone() {
-        // initialize() must always own the logger state — no inherited ambient level.
-        BranchLogger.loggingLevel = BranchLogger.BranchLogLevel.VERBOSE // simulate prior state
+    fun enableLogging_beforeInitialize_survivesAConfigWithoutLogging() {
+        Branch.enableLogging()
 
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
 
-        assertEquals(BranchLogger.BranchLogLevel.NONE, BranchLogger.loggingLevel)
+        assertTrue(BranchLogger.loggingEnabled)
+        assertEquals(BranchLogger.BranchLogLevel.DEBUG, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_beforeInitialize_isOverriddenByConfigLogLevel() {
+        Branch.enableLogging()
+
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLogLevel(BranchLogger.BranchLogLevel.WARN)
+                .build()
+        )
+
+        assertEquals(BranchLogger.BranchLogLevel.WARN, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_beforeInitialize_isOverriddenByConfigLoggingCallback() {
+        val callback = IBranchLoggingCallbacks { _, _ -> }
+        Branch.enableLogging(BranchLogger.BranchLogLevel.WARN)
+
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLoggingCallback(callback)
+                .build()
+        )
+
+        assertSame(callback, BranchLogger.loggerCallback)
+        assertEquals(BranchLogger.BranchLogLevel.VERBOSE, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_withCallbackOnly_isVerbose() {
+        Branch.enableLogging(IBranchLoggingCallbacks { _, _ -> })
+
+        assertEquals(BranchLogger.BranchLogLevel.VERBOSE, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_afterInitialize_overridesConfigLogLevel() {
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setLogLevel(BranchLogger.BranchLogLevel.NONE)
+                .build()
+        )
+
+        Branch.enableLogging(BranchLogger.BranchLogLevel.WARN)
+
+        assertEquals(BranchLogger.BranchLogLevel.WARN, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun enableLogging_withCallbackAndLevel_routesMessagesAtOrAboveTheLevel() {
+        val captured = CopyOnWriteArrayList<String>()
+
+        Branch.enableLogging({ message, _ -> captured.add(message) }, BranchLogger.BranchLogLevel.WARN)
+        BranchLogger.w("warn line")
+        BranchLogger.i("info line")
+
+        assertTrue(captured.contains("warn line"))
+        assertFalse(captured.contains("info line"))
+    }
+
+    @Test
+    fun enableLogging_belowInfo_doesNotLogTheVersionLine() {
+        val captured = CopyOnWriteArrayList<String>()
+
+        Branch.enableLogging({ message, _ -> captured.add(message) }, BranchLogger.BranchLogLevel.WARN)
+
+        assertFalse(captured.contains(Branch.GOOGLE_VERSION_TAG))
+    }
+
+    @Test
+    fun enableLogging_atInfo_logsTheVersionLine() {
+        val captured = CopyOnWriteArrayList<String>()
+
+        Branch.enableLogging({ message, _ -> captured.add(message) }, BranchLogger.BranchLogLevel.INFO)
+
+        assertTrue(captured.contains(Branch.GOOGLE_VERSION_TAG))
+    }
+
+    @Test
+    fun disableLogging_turnsLoggingOffAndClearsTheCallback() {
+        Branch.enableLogging(IBranchLoggingCallbacks { _, _ -> })
+
+        Branch.disableLogging()
+
+        assertFalse(BranchLogger.loggingEnabled)
+        assertNull(BranchLogger.loggerCallback)
     }
 
     // -------------------------------------------------------------------------
