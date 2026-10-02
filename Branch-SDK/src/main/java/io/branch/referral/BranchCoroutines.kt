@@ -1,5 +1,6 @@
 package io.branch.referral
 
+import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import io.branch.coroutines.RequestDeepLink
@@ -32,20 +33,32 @@ suspend fun BranchEvent.awaitLogEvent(context: Context): Unit =
     }
 
 /**
+ * Resolves the link in [activity]'s launch intent like the `Uri` variant, and sends the intent's
+ * context with the launch.
+ *
+ * @param activity The Activity that received the launch intent.
+ * @throws BranchException if the deep link could not be resolved.
+ */
+suspend fun Branch.requestDeepLinkData(activity: Activity): JSONObject =
+    requestLaunchDeepLinkData(activity.intent?.data, activity)
+
+/**
  * Resolves [uri] against `v3/deeplink` and suspends until the referring params arrive.
  * Main-safe. Cancelling de-queues the request if it has not been sent yet. Each resolve also
  * sends one open event, unless one is already waiting to be sent; while attribution is off, it is
  * sent when the user opts in.
  *
+ * @param uri The URI (App Link or Scheme) to resolve, or null to look up a deferred deep link.
  * @throws BranchException if the deep link could not be resolved.
  */
-suspend fun Branch.requestDeepLinkData(uri: Uri): JSONObject =
+suspend fun Branch.requestDeepLinkData(uri: Uri?): JSONObject = requestLaunchDeepLinkData(uri, null)
+
+private suspend fun Branch.requestLaunchDeepLinkData(uri: Uri?, activity: Activity?): JSONObject =
     suspendCancellableCoroutine { continuation ->
         // Guards against a retry resuming an already-resumed continuation and killing the queue.
         val resumed = AtomicBoolean(false)
         val request = RequestDeepLink(
             applicationContext,
-            uri,
             Branch.BranchReferralInitListener { referringParams, error ->
                 if (!resumed.compareAndSet(false, true)) return@BranchReferralInitListener
                 when {
@@ -59,6 +72,7 @@ suspend fun Branch.requestDeepLinkData(uri: Uri): JSONObject =
 
         // Enqueue first: invokeOnCancellation fires immediately for an already-cancelled
         // continuation, and removing before enqueueing would let the request send anyway.
-        requestQueue_.handleNewRequest(request)
+        readLaunchLink(uri, activity)
+        enqueueLaunchRequest(request)
         continuation.invokeOnCancellation { requestQueue_.remove(request) }
     }

@@ -9,6 +9,8 @@ import io.branch.coroutines.RequestDeepLink
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -62,7 +64,7 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     @Test
     fun onStop_keepsSessionParamsWhileDeepLinkQueued() {
         prefHelper.sessionParams = linkSessionParams
-        queue.insert(heldRequest(RequestDeepLink(RuntimeEnvironment.getApplication(), null, null, false)), 0)
+        queue.insert(heldRequest(RequestDeepLink(RuntimeEnvironment.getApplication(), null, false)), 0)
 
         observer.onStop(owner)
 
@@ -70,9 +72,35 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     }
 
     @Test
+    fun onStop_clearsTheSavedLaunchLink() {
+        saveLaunchLink()
+
+        observer.onStop(owner)
+
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.linkClickIdentifier)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.appLink)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.pushIdentifier)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.externalIntentUri)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.externalIntentExtra)
+        assertFalse(branch.launchLinkClearOwed_)
+    }
+
+    @Test
+    fun onStop_keepsTheSavedLaunchLinkWhileDeepLinkQueued() {
+        saveLaunchLink()
+        queue.insert(heldRequest(RequestDeepLink(RuntimeEnvironment.getApplication(), null, false)), 0)
+
+        observer.onStop(owner)
+
+        assertEquals("https://example.app.link/abc123", prefHelper.appLink)
+        assertEquals("myapp://product/1", prefHelper.externalIntentUri)
+        assertTrue("the next launch must clear it instead", branch.launchLinkClearOwed_)
+    }
+
+    @Test
     fun onStop_keepsSessionParamsWhileDeepLinkExecuting() {
         prefHelper.sessionParams = linkSessionParams
-        val deepLink = RequestDeepLink(RuntimeEnvironment.getApplication(), null, null, false)
+        val deepLink = RequestDeepLink(RuntimeEnvironment.getApplication(), null, false)
         activeRequests()["RequestDeepLink_executing"] = deepLink
 
         observer.onStop(owner)
@@ -95,16 +123,6 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     fun onStop_keepsSessionParamsWhileOpenQueued() {
         prefHelper.sessionParams = linkSessionParams
         queue.insert(heldRequest(RequestOpen(RuntimeEnvironment.getApplication(), null, false, null)), 0)
-
-        observer.onStop(owner)
-
-        assertEquals(linkSessionParams, prefHelper.sessionParams)
-    }
-
-    @Test
-    fun onStop_keepsSessionParamsWhileInstallQueued() {
-        prefHelper.sessionParams = linkSessionParams
-        queue.insert(heldRequest(ServerRequestRegisterInstall(RuntimeEnvironment.getApplication(), null, false)), 0)
 
         observer.onStop(owner)
 
@@ -146,6 +164,14 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
         assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.sessionParams)
     }
 
+    private fun saveLaunchLink() {
+        prefHelper.linkClickIdentifier = "123"
+        prefHelper.appLink = "https://example.app.link/abc123"
+        prefHelper.pushIdentifier = "https://example.app.link/push"
+        prefHelper.externalIntentUri = "myapp://product/1"
+        prefHelper.externalIntentExtra = """{"key":"value"}"""
+    }
+
     private fun setProcessState(state: Lifecycle.State) {
         (ProcessLifecycleOwner.get().lifecycle as LifecycleRegistry).currentState = state
         Shadows.shadowOf(Looper.getMainLooper()).idle()
@@ -153,7 +179,7 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
 
     // Keeps the queue from sending it mid-test.
     private fun heldRequest(request: ServerRequest): ServerRequest =
-        request.apply { addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INTENT_PENDING_WAIT_LOCK) }
+        request.apply { addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK) }
 
     @Suppress("UNCHECKED_CAST")
     private fun activeRequests(): MutableMap<String, ServerRequest> =

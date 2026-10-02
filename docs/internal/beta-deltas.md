@@ -29,14 +29,8 @@ Constants (`BranchRequestQueue.kt:66-72`): `MAX_ITEMS = 25`, `MAX_RETRY_ATTEMPTS
 
 Both were broken once already. `git log` carries the detail.
 
-- `eb040576`: `onIntentReady()` must read and persist intent params (`readAndStripParam`) **before** releasing `INTENT_PENDING_WAIT_LOCK`, or cold-start deep-link attribution is dropped.
-- `e7e46854`: the retry-count ceiling must apply **only** to requests that are not waiting on a lock. Lock-waiters may fail only via the 30s timeout. `tryResolveStuckLocks` can force-remove a lock at roughly the 10s window; if that was the request's last lock, the retry ceiling applies again. It does not cover `USER_SET_WAIT_LOCK`. `shouldFailRequest()` (`BranchRequestQueue.kt:376+`) encodes this. Without it, 5 attempts at 100 ms force-fails a waiting request after roughly 500 ms.
-
-### Known live bug: `withDelay()`
-
-`USER_SET_WAIT_LOCK` is added by `withDelay()` (`Branch.java:1394`) but has **no removal site** anywhere in `src/main`. `removeSessionInitializationDelay()`, its historical owner, no longer exists on this branch (`git grep` returns zero hits in `Branch-SDK/src`). No stuck-lock resolver handles it either.
-
-Net effect: a delayed `init()` hangs until the 30s timeout, then fails. `withDelay()` is effectively broken here. A fix needs to give the lock a real owner, or model the delay without a dangling lock.
+- The launch request must be enqueued only after `readLaunchLink()` has written the link to `PrefHelper`, or the request goes out without it.
+- `e7e46854`: the retry-count ceiling must apply **only** to requests that are not waiting on a lock. Lock-waiters may fail only via the 30s timeout. `tryResolveStuckLocks` can force-remove a lock at roughly the 10s window; if that was the request's last lock, the retry ceiling applies again. `shouldFailRequest()` (`BranchRequestQueue.kt:376+`) encodes this. Without it, 5 attempts at 100 ms force-fails a waiting request after roughly 500 ms.
 
 ## New request paths
 
@@ -54,9 +48,9 @@ Consent never sends an OPEN of its own: opting in sends only the OPEN a link che
 
 Nothing sends an OPEN when the process comes to the foreground (EMT-4479). Each `requestDeepLinkData` call is one launch's OPEN, unless an OPEN is already waiting to be sent, whenever the app makes it. This diverges from iOS 4.0, which still sends an OPEN when the app becomes active (`automaticOpenEvents` defaults to YES).
 
-**`sessionParams` is cleared at a process background and at `Branch.initialize`**, as on iOS. `BranchProcessLifecycleObserver.onStop` (`ProcessLifecycleOwner`, so not on rotation) skips the clear while `containsDeepLinkOrOpen()` finds a request queued or executing. The observer sends no requests.
+**`sessionParams` is cleared at a process background and at `Branch.initialize`**, as on iOS. `BranchProcessLifecycleObserver.onStop` (`ProcessLifecycleOwner`, so not on rotation) also clears the saved launch link (`link_click_id`, app link, push identifier, external intent URI and extras), because while attribution is off no open succeeds to clear it and the next launch would carry it. It skips both while `containsDeepLinkOrOpen()` finds a request queued or executing; the skipped link clear then runs at the next `readLaunchLink` that finds no deep link or open in the queue, before it reads the new link (`launchLinkClearOwed_`). The observer sends no requests.
 
-**`requestDeepLinkData(uri, callback)`** (`Branch.java`, public) manually resolves a URI. It builds a `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, a `ServerRequestInitSession` subclass) hitting the new `v3/deeplink` endpoint (`Defines.RequestPath.Deeplink`) and routes it through `requestQueue_.handleNewRequest(...)`. It maps `link_click_id`, app-link-url, and scheme-uri into the POST. On success it writes `sessionParams`, fires the callback with `latestReferringParams`, and chains a `sendOpen(response)`, which holds the OPEN while attribution is off. On failure it sends the OPEN without `link_data`. It is coroutine-friendly and intended to be called from a `LifecycleScope`.
+**`requestDeepLinkData(uri, callback)`** (`Branch.java`, public) manually resolves a URI. It builds a `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, a `ServerRequestInitSession` subclass) hitting the new `v3/deeplink` endpoint (`Defines.RequestPath.Deeplink`) and routes it through `requestQueue_.handleNewRequest(...)`. `readLaunchLink` saves the URI's `link_click_id`, app link or scheme URI to prefs, and `ServerRequestInitSession.onPreExecute` adds them to the POST when it sends. On success it writes `sessionParams`, fires the callback with `latestReferringParams`, and chains a `sendOpen(response)`, which holds the OPEN while attribution is off. On failure it sends the OPEN without `link_data`. It is coroutine-friendly and intended to be called from a `LifecycleScope`.
 
 ## Other beta subsystems
 
@@ -72,4 +66,4 @@ Nothing sends an OPEN when the process comes to the foreground (EMT-4479). Each 
 
 ## Removed and restored APIs
 
-Check `git log` before assuming an API's state. `reInit()` and `isReInitializing` were removed from `InitSessionBuilder`. Some 5.x source-compat aliases were deliberately restored earlier in the beta: the no-arg `Branch.logout()`, a relocated LATD listener alias, and the synchronous deep-link param getters.
+Check `git log` before assuming an API's state. `InitSessionBuilder`, with its `reInit()` and `isReInitializing`, is removed. `Branch.notifyNativeToInit()` and the branch.json `deferInitForPluginRuntime` key are deprecated and do nothing: nothing starts a launch on its own any more, so a plugin calls `requestDeepLinkData` once its runtime is ready. Some 5.x source-compat aliases were deliberately restored earlier in the beta: the no-arg `Branch.logout()`, a relocated LATD listener alias, and the synchronous deep-link param getters.

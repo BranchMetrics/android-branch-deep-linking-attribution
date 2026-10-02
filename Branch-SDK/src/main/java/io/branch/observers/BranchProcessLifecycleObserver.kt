@@ -6,14 +6,19 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 
-/** Clears `sessionParams` when the process goes to the background. Sends no requests. */
+/** Clears `sessionParams` and the saved launch link when the process goes to the background. Sends no requests. */
 internal class BranchProcessLifecycleObserver(private val branchInstance: Branch) : DefaultLifecycleObserver {
 
     override fun onStop(owner: LifecycleOwner) {
         BranchLogger.v("BranchProcessLifecycleObserver onStop: process backgrounded")
         guarded("onStop") {
+            // While attribution is off no open succeeds to clear the saved launch link, so the next launch would carry it.
             if (!branchInstance.requestQueue_.containsDeepLinkOrOpen()) {
-                branchInstance.prefHelper.sessionParams = PrefHelper.NO_STRING_VALUE
+                val prefHelper = branchInstance.prefHelper
+                prefHelper.sessionParams = PrefHelper.NO_STRING_VALUE
+                prefHelper.clearLaunchLink()
+            } else {
+                branchInstance.launchLinkClearOwed_ = true
             }
         }
     }
