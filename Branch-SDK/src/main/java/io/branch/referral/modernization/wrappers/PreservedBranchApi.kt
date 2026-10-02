@@ -196,24 +196,6 @@ object PreservedBranchApi {
     }
     
     /**
-     * Legacy Branch.sessionBuilder(Activity) wrapper.
-     */
-    @JvmStatic
-    @Deprecated(
-        message = "Use sessionManager.initSession() instead",
-        replaceWith = ReplaceWith("ModernBranchCore.getInstance().sessionManager.initSession(activity)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun sessionBuilder(activity: Activity): Branch.InitSessionBuilder {
-        preservationManager.handleLegacyApiCall(
-            methodName = "sessionBuilder",
-            parameters = arrayOf(activity)
-        )
-        
-        return Branch.sessionBuilder(activity)
-    }
-    
-    /**
      * Legacy Branch.getDeepLinkDebugMode() wrapper.
      */
     @JvmStatic

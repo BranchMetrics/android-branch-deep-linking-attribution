@@ -227,12 +227,48 @@ public abstract class ServerRequestInitSession extends ServerRequest {
                 prefHelper_.setWebLinkLoadTime(0);
             }
 
+            if (isInstallLaunch()) {
+                addInstallFields(post);
+            }
         } catch (JSONException e) {
             BranchLogger.w("Caught JSONException " + e.getMessage());
         }
 
         // Re-enables auto session initialization, note that we don't care if the request succeeds
 
+    }
+
+    /** The app has no install ID from Branch yet, so this launch registers the install. */
+    protected boolean isInstallLaunch() {
+        return prefHelper_.getRandomizedBundleToken().equals(NO_STRING_VALUE);
+    }
+
+    private void addInstallFields(JSONObject post) throws JSONException {
+        long clickedReferrerTS = prefHelper_.getLong(PrefHelper.KEY_REFERRER_CLICK_TS);
+        long installBeginTS = prefHelper_.getLong(PrefHelper.KEY_INSTALL_BEGIN_TS);
+        long clickedReferrerServerTS = prefHelper_.getLong(PrefHelper.KEY_REFERRER_CLICK_SERVER_TS);
+        long installReferrerServerTS = prefHelper_.getLong(PrefHelper.KEY_INSTALL_BEGIN_SERVER_TS);
+
+        if (clickedReferrerTS > 0) {
+            post.put(Defines.Jsonkey.ClickedReferrerTimeStamp.getKey(), clickedReferrerTS);
+        }
+        if (installBeginTS > 0) {
+            post.put(Defines.Jsonkey.InstallBeginTimeStamp.getKey(), installBeginTS);
+        }
+        if (!AppStoreReferrer.getInstallationID().equals(NO_STRING_VALUE)) {
+            post.put(Defines.Jsonkey.LinkClickID.getKey(), AppStoreReferrer.getInstallationID());
+        }
+        if (clickedReferrerServerTS > 0) {
+            post.put(Defines.Jsonkey.ClickedReferrerServerTimeStamp.getKey(), clickedReferrerServerTS);
+        }
+        if (installReferrerServerTS > 0) {
+            post.put(Defines.Jsonkey.InstallBeginServerTimeStamp.getKey(), installReferrerServerTS);
+        }
+
+        if (Branch.getInstance() != null) {
+            JSONObject configurations = Branch.getInstance().getConfigurationController().serializeConfiguration();
+            post.put(Defines.Jsonkey.OperationalMetrics.getKey(), configurations);
+        }
     }
 
     /*
@@ -294,9 +330,13 @@ public abstract class ServerRequestInitSession extends ServerRequest {
     @Override
     protected boolean prepareExecuteWithoutTracking() {
         JSONObject post = getPost();
+        // The link fields come from prefs at send time, so a request checked when it is queued has them only there.
         if ((post.has(Defines.Jsonkey.AndroidAppLinkURL.getKey())
                 || post.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())
-                || post.has(Defines.Jsonkey.LinkIdentifier.getKey()))) {
+                || post.has(Defines.Jsonkey.LinkIdentifier.getKey())
+                || !prefHelper_.getAppLink().equals(NO_STRING_VALUE)
+                || !prefHelper_.getPushIdentifier().equals(NO_STRING_VALUE)
+                || !prefHelper_.getLinkClickIdentifier().equals(NO_STRING_VALUE))) {
 
             post.remove(Defines.Jsonkey.RandomizedDeviceToken.getKey());
             post.remove(Defines.Jsonkey.RandomizedBundleToken.getKey());

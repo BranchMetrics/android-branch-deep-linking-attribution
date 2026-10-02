@@ -72,7 +72,7 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
     private fun addGclidValueFor(request: ServerRequest): JSONObject {
         val returnParams = JSONObject()
 
-        if (request is ServerRequestLogEvent || request is ServerRequestRegisterOpen) {
+        if (request is ServerRequestLogEvent || request is RequestOpen) {
             val gclid = urlQueryParameters[Defines.Jsonkey.Gclid.key]
             if (gclid != null) {
                 if (gclid.value != null && gclid.value != PrefHelper.NO_STRING_VALUE) {
@@ -85,13 +85,13 @@ class ReferringUrlUtility (prefHelper: PrefHelper) {
                         if (gclid.validityWindow == 0L || currentTime < gclidTimestamp + gclidValidityWindowMillis) {
                             returnParams.put(Defines.Jsonkey.Gclid.key, gclid.value)
 
-                            // Only v1/open requires is_deeplink_gclid
-                            if (request is ServerRequestRegisterOpen) {
+                            // Only the open requires is_deeplink_gclid
+                            if (request is RequestOpen) {
                                 returnParams.put(Defines.Jsonkey.IsDeeplinkGclid.key, gclid.isDeepLink)
                             }
 
                             //isDeepLink is set to true by default when parsed, then is set to false and saved.
-                            //Now future v1/open requests will contain isDeepLink = false until a new gclid is parsed.
+                            //Now future open requests will contain isDeepLink = false until a new gclid is parsed.
                             gclid.isDeepLink = false
                             prefHelper.setReferringUrlQueryParameters(serializeToJson(urlQueryParameters))
                         } else {
