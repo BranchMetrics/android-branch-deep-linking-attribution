@@ -1725,8 +1725,8 @@ public class Branch {
             if (hold) {
                 BranchLogger.d("sendOpen held until the user opts in: attribution is off");
             } else {
-                if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
-                    BranchLogger.d("sendOpen skipped: an install or open is already pending");
+                if (branchReferral_.requestQueue_.containsOpen()) {
+                    BranchLogger.d("sendOpen skipped: an open is already pending");
                     return;
                 }
                 RequestOpen requestOpen = new RequestOpen(context_, null, false, responseData);

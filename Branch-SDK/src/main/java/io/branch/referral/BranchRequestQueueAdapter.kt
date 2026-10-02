@@ -148,10 +148,10 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.hasUser result: $result")
         return result
     }
-    fun containsInstallOrOpen(): Boolean {
-        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOrOpen called")
-        val result = newQueue.containsInstallOrOpen()
-        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOrOpen result: $result")
+    fun containsOpen(): Boolean {
+        BranchLogger.v("BranchRequestQueueAdapter.containsOpen called")
+        val result = newQueue.containsOpen()
+        BranchLogger.v("BranchRequestQueueAdapter.containsOpen result: $result")
         return result
     }
 

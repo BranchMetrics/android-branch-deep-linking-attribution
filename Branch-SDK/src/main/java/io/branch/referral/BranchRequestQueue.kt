@@ -825,7 +825,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Whether an install or open is already queued or in flight.
+     * Whether an open is already queued or in flight.
      *
      * Deep link resolution is not an open: the beta's flow is /v3/deeplink followed by
      * /v3/events/open, so RequestDeepLink is deliberately excluded — counting it would suppress
@@ -834,27 +834,25 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Checks both the queue and the requests already executing, because the duplicate this guards
      * against is enqueued while the first open is pending, before it reaches the network.
      */
-    fun containsInstallOrOpen(): Boolean {
+    fun containsOpen(): Boolean {
         synchronized(queueList) {
-            if (queueList.any { isInstallOrOpen(it) }) {
-                BranchLogger.v("containsInstallOrOpen: found one queued")
+            if (queueList.any { it is RequestOpen }) {
+                BranchLogger.v("containsOpen: found one queued")
                 return true
             }
         }
-        val executing = activeRequests.values.any { isInstallOrOpen(it) }
+        val executing = activeRequests.values.any { it is RequestOpen }
         if (executing) {
-            BranchLogger.v("containsInstallOrOpen: found one executing")
+            BranchLogger.v("containsOpen: found one executing")
         }
         return executing
     }
 
-    private fun isInstallOrOpen(request: ServerRequest): Boolean = request is RequestOpen
-
     /** Whether a deep link or open request is queued or executing. */
     fun containsDeepLinkOrOpen(): Boolean {
         synchronized(queueList) {
-            return queueList.any { isInstallOrOpen(it) || it is RequestDeepLink } ||
-                activeRequests.values.any { isInstallOrOpen(it) || it is RequestDeepLink }
+            return queueList.any { it is RequestOpen || it is RequestDeepLink } ||
+                activeRequests.values.any { it is RequestOpen || it is RequestDeepLink }
         }
     }
 
