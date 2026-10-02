@@ -164,6 +164,24 @@ class LaunchDataTest : BranchTestBase() {
         assertEquals("the first launch's link was wiped before it was sent", link, remote.deepLinks[0].optString(Defines.Jsonkey.AndroidAppLinkURL.key))
     }
 
+    /** The deprecated plugin deferral flag holds nothing: the plugin calls requestDeepLinkData once it is ready. */
+    @Suppress("DEPRECATION")
+    @Test
+    fun pluginDeferralFlag_holdsNoLaunch_andNotifyNativeToInitSendsNothing() {
+        Branch.deferInitForPluginRuntime(true)
+        try {
+            Branch.getInstance().requestDeepLinkData(null) { _, _ -> }
+            awaitOpens(1)
+            Branch.notifyNativeToInit()
+            settle(500)
+
+            assertEquals(1, remote.deepLinks.size)
+            assertEquals(1, remote.opens.size)
+        } finally {
+            Branch.deferInitForPluginRuntime(false)
+        }
+    }
+
     @Test
     fun returningUser_neverReadsTheInstallReferrer() {
         prefs.randomizedBundleToken = "rbt"

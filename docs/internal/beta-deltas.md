@@ -66,4 +66,4 @@ Nothing sends an OPEN when the process comes to the foreground (EMT-4479). Each 
 
 ## Removed and restored APIs
 
-Check `git log` before assuming an API's state. `InitSessionBuilder`, with its `reInit()` and `isReInitializing`, is removed. Some 5.x source-compat aliases were deliberately restored earlier in the beta: the no-arg `Branch.logout()`, a relocated LATD listener alias, and the synchronous deep-link param getters.
+Check `git log` before assuming an API's state. `InitSessionBuilder`, with its `reInit()` and `isReInitializing`, is removed. `Branch.notifyNativeToInit()` and the branch.json `deferInitForPluginRuntime` key are deprecated and do nothing: nothing starts a launch on its own any more, so a plugin calls `requestDeepLinkData` once its runtime is ready. Some 5.x source-compat aliases were deliberately restored earlier in the beta: the no-arg `Branch.logout()`, a relocated LATD listener alias, and the synchronous deep-link param getters.

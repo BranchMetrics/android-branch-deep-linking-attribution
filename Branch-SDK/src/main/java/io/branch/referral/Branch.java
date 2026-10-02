@@ -1618,19 +1618,10 @@ public class Branch {
 
 
     /**
-     * Scenario: Integrations using our plugin SDKs (React-Native, Capacitor, Unity, etc),
-     * it is possible to have a race condition wherein the native layers finish their initialization
-     * before the JS/C# layers have finished loaded and registering their receivers- dropping the
-     * Branch parameters.
+     * Stores the deprecated branch.json {@code deferInitForPluginRuntime} flag. Nothing reads it:
+     * a plugin calls {@code requestDeepLinkData} once its runtime is ready.
      *
-     * Because these plugin delays are not deterministic, or consistent, a constant
-     * offset to delay is not guaranteed to work in all cases, and possibly penalizes performant
-     * devices.
-     *
-     * To solve, we wait for the plugin to signal when it is ready, and then begin native init
-     *
-     * Reusing disable autoinitialization to prevent uninitialization errors
-     * @param isDeferred
+     * @param isDeferred the flag's value
      */
     static void deferInitForPluginRuntime(boolean isDeferred){
         BranchLogger.v("deferInitForPluginRuntime " + isDeferred);
@@ -1639,18 +1630,12 @@ public class Branch {
     }
 
     /**
-     * Method to be invoked from plugin to signal that its runtime is ready.
+     * Does nothing. A plugin calls {@code requestDeepLinkData} once its runtime is ready.
+     *
+     * @deprecated The SDK no longer starts a launch on its own, so there is nothing to release.
      */
+    @Deprecated
     public static void notifyNativeToInit(){
-        BranchLogger.v("notifyNativeToInit");
-
-        BranchSessionState sessionState = Branch.getInstance().getInitState();
-        if(sessionState instanceof BranchSessionState.Uninitialized) {
-            deferInitForPluginRuntime = false;
-        }
-        else {
-            BranchLogger.v("notifyNativeToInit session is not uninitialized. Session state is " + sessionState);
-        }
     }
 
     public void logEventWithPurchase(@NonNull Context context, @NonNull Purchase purchase) {
