@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.branch.coroutines.RequestDeepLink;
 import io.branch.indexing.BranchUniversalObject;
+import io.branch.interfaces.IBranchLoggingCallbacks;
 import io.branch.referral.network.BranchRemoteInterface;
 import io.branch.referral.network.BranchRemoteInterfaceUrlConnection;
 import io.branch.referral.util.DependencyUtilsKt;
@@ -1419,6 +1420,62 @@ public class Branch {
             }
         }
         return matched;
+    }
+
+    /**
+     * Enable logging with a specific log level, independent of Debug Mode.
+     *
+     * @param iBranchLogging Optional interface to receive logging from the SDK; null keeps the current one.
+     * @param level The minimum log level for logging output.
+     */
+    public static void enableLogging(@Nullable IBranchLoggingCallbacks iBranchLogging, @NonNull BranchLogger.BranchLogLevel level) {
+        if (iBranchLogging != null) {
+            BranchLogger.setLoggerCallback(iBranchLogging);
+        }
+        BranchLogger.setLoggingLevel(level);
+        BranchLogger.setLoggingEnabled(true);
+        BranchLogger.i(GOOGLE_VERSION_TAG);
+    }
+
+    /**
+     * Enable Logging, independent of Debug Mode. Defaults to DEBUG level, which shows network
+     * request/response traffic. To also see the internal request queue and lock diagnostics
+     * (for example when debugging a stuck request), call {@link #enableLogging(BranchLogger.BranchLogLevel)}
+     * with {@link BranchLogger.BranchLogLevel#VERBOSE}.
+     */
+    public static void enableLogging() {
+        enableLogging(null, BranchLogger.BranchLogLevel.DEBUG);
+    }
+
+    /**
+     * Enable Logging, independent of Debug Mode. Defaults to VERBOSE level. Implement a callback
+     * to receive logging from the SDK directly to your own logging solution. If null, a callback
+     * set earlier is kept; with none, the default android.util.Log is used.
+     *
+     * @param iBranchLogging Optional interface to receive logging from the SDK.
+     */
+    public static void enableLogging(@Nullable IBranchLoggingCallbacks iBranchLogging) {
+        enableLogging(iBranchLogging, BranchLogger.BranchLogLevel.VERBOSE);
+    }
+
+    /**
+     * Enable logging with a specific log level. Use {@link BranchLogger.BranchLogLevel#DEBUG} for
+     * network request/response traffic, or {@link BranchLogger.BranchLogLevel#VERBOSE} to also emit
+     * the internal request queue and lock trace when diagnosing a stuck request.
+     *
+     * @param level The minimum log level for logging output.
+     */
+    public static void enableLogging(@NonNull BranchLogger.BranchLogLevel level) {
+        enableLogging(null, level);
+
+    }
+
+    /**
+     * Disable Logging, independent of Debug Mode.
+     */
+    public static void disableLogging() {
+        BranchLogger.setLoggingEnabled(false);
+        BranchLogger.setLoggerCallback(null);
     }
 
 

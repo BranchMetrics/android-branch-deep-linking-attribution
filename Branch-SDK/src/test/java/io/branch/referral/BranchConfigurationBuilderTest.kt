@@ -86,6 +86,23 @@ class BranchConfigurationBuilderTest {
     }
 
     @Test
+    fun `setLoggingCallback without a level defaults to VERBOSE`() {
+        val config = BranchConfiguration.Builder("key_live_x")
+            .setLoggingCallback { _, _ -> }
+            .build()
+        assertEquals(BranchLogger.BranchLogLevel.VERBOSE, config.logLevel)
+    }
+
+    @Test
+    fun `setLoggingCallback with a level keeps that level`() {
+        val config = BranchConfiguration.Builder("key_live_x")
+            .setLoggingCallback { _, _ -> }
+            .setLogLevel(BranchLogger.BranchLogLevel.NONE)
+            .build()
+        assertEquals(BranchLogger.BranchLogLevel.NONE, config.logLevel)
+    }
+
+    @Test
     fun `setNetworkTimeout is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setNetworkTimeout(10_000).build()
         assertEquals(10_000, config.networkTimeout)
