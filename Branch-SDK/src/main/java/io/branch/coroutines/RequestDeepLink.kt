@@ -95,14 +95,15 @@ internal class RequestDeepLink(
 
         onInitSessionCompleted(response, branch)
 
-        if(prefHelper_.consumerProtectionAttributionLevel != Defines.BranchAttributionLevel.NONE){
-            Branch.getInstance().sendOpen(response.`object`)
-        }
+        Branch.getInstance().sendOpen(response.`object`)
     }
 
     override fun handleFailure(statusCode: Int, causeMsg: String) {
         val serverErrorMessage = "Request DeepLink failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
+
+        // Each resolve sends one open; a failed one sends it without link_data.
+        Branch.getInstance().sendOpen(null as JSONObject?)
 
         if (callback_ != null) {
             val obj = JSONObject()

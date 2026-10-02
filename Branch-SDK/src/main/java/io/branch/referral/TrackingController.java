@@ -93,7 +93,7 @@ public class TrackingController {
         BranchLogger.v("onTrackingEnabled callback: " + callback);
         Branch branch = Branch.getInstance();
         if (branch != null) {
-            branch.registerAppInit(branch.getInstallOrOpenRequest(callback, true), false);
+            branch.sendHeldOpen(callback);
         }
     }
 }

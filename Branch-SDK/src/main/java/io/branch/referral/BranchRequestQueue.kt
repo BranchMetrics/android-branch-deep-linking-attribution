@@ -2,6 +2,7 @@ package io.branch.referral
 
 import android.content.Context
 import android.os.SystemClock
+import io.branch.coroutines.RequestDeepLink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -242,14 +243,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
             return
         }
         
-        // Remove from queue since we're processing it
+        // Active before it leaves the queue, so containsDeepLinkOrOpen never misses it.
         synchronized(queueList) {
+            activeRequests[requestId] = request
             queueList.remove(request)
         }
         
         // Clear retry info for successful processing attempts
         requestRetryInfo.remove(requestId)
-        activeRequests[requestId] = request
         
         try {
             // Increment network count
@@ -871,6 +872,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
     // line restores a persisted queue.
     private fun isInstallOrOpen(request: ServerRequest): Boolean =
         request is ServerRequestRegisterInstall || request is RequestOpen
+
+    /** Whether a deep link or open request is queued or executing. */
+    fun containsDeepLinkOrOpen(): Boolean {
+        synchronized(queueList) {
+            return queueList.any { isInstallOrOpen(it) || it is RequestDeepLink } ||
+                activeRequests.values.any { isInstallOrOpen(it) || it is RequestDeepLink }
+        }
+    }
 
     /**
      * Peek at request at specific index

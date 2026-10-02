@@ -33,7 +33,10 @@ internal class RequestOpen(
             if(responseData != null && responseData.has("data")){
                 val dataString = responseData.getString("data")
                 val dataJSON = JSONObject(dataString)
-                openPost.put("link_data", dataJSON)
+                // Only a matched link: api-open records any link_data as referring link data.
+                if (dataJSON.optBoolean(Defines.Jsonkey.Clicked_Branch_Link.key)) {
+                    openPost.put("link_data", dataJSON)
+                }
             }
             setPost(openPost)
         } catch (ex: JSONException) {

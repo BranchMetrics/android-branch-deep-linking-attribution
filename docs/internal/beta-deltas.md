@@ -42,14 +42,21 @@ Net effect: a delayed `init()` hangs until the 30s timeout, then fails. `withDel
 
 Know these before touching OPEN or attribution behavior.
 
-**`sendOpen()` / `sendOpen(JSONObject responseData)`** (`Branch.java:2414`, `:2428`) enqueue a `RequestOpen` targeting `v3/events/open` (`Defines.RequestPath.EventsOpen`, `coroutines/RequestOpen.kt`). This is not the legacy `v1/open` `RegisterOpen` path, which still exists separately. Both overloads fire **only when the consumer-protection attribution level is not `NONE`**; both check `getConsumerProtectionAttributionLevel()` first.
+**`sendOpen(JSONObject responseData)`** enqueues a `RequestOpen` targeting `v3/events/open` (`Defines.RequestPath.EventsOpen`, `coroutines/RequestOpen.kt`). This is not the legacy `v1/open` `RegisterOpen` path, which still exists separately. It runs after every `RequestDeepLink`: on success with `link_data` when the resolve matched a link (`+clicked_branch_link`), on failure without it. While attribution is off (level `NONE` or tracking disabled) it sends nothing and holds the open, with that check's response.
 
-Callers:
-1. `setConsumerProtectionAttributionLevel(level)` when re-enabling attribution
-2. `BranchProcessLifecycleObserver.onStart` (`observers/BranchProcessLifecycleObserver.kt`). Foreground OPENs are now driven by AndroidX `ProcessLifecycleOwner`, which fires only on real process foreground, not on config-change recreation such as fold, rotate, or multi-window. This removes duplicate OPENs by construction.
-3. after a successful `RequestDeepLink`
+**Opting in sends the held open.** When tracking goes from off to on (`setConsumerProtectionAttributionLevel` leaving `NONE`, or the deprecated `disableTracking(false)`), `TrackingController` calls `Branch.sendHeldOpen(callback)`:
+- if an open is held, it sends it. It carries `link_data` when the held check matched a link, which a check made with a link URI resolves even while attribution is off. The open's result goes to the consent callback;
+- otherwise it sends nothing and completes the callback at once. Either no link check has finished yet (for example the level is applied in `Branch.initialize`), and the next one counts the launch, or the latest is still running and sends its open when it finishes, now that attribution is on.
 
-**`requestDeepLinkData(uri, callback)`** (`Branch.java:2726`, public) manually resolves a URI. It builds a `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, a `ServerRequestInitSession` subclass) hitting the new `v3/deeplink` endpoint (`Defines.RequestPath.Deeplink`) and routes it through `requestQueue_.handleNewRequest(...)`. It maps `link_click_id`, app-link-url, and scheme-uri into the POST. On success it writes `sessionParams`, fires the callback with `latestReferringParams`, and, when attribution is not `NONE`, chains a `sendOpen(response)`. It is coroutine-friendly and intended to be called from a `LifecycleScope`.
+No deferred deep link is looked up while attribution is off: a check with no URI fails at once with `ERR_BRANCH_TRACKING_DISABLED`, and its held open carries no link.
+
+Consent never sends an OPEN of its own: opting in sends only the OPEN a link check held while attribution was off, and changing between non-`NONE` levels sends none.
+
+Nothing sends an OPEN when the process comes to the foreground (EMT-4479). Each `requestDeepLinkData` call is one launch's OPEN, unless an OPEN is already waiting to be sent, whenever the app makes it. This diverges from iOS 4.0, which still sends an OPEN when the app becomes active (`automaticOpenEvents` defaults to YES).
+
+**`sessionParams` is cleared at a process background and at `Branch.initialize`**, as on iOS. `BranchProcessLifecycleObserver.onStop` (`ProcessLifecycleOwner`, so not on rotation) skips the clear while `containsDeepLinkOrOpen()` finds a request queued or executing. The observer sends no requests.
+
+**`requestDeepLinkData(uri, callback)`** (`Branch.java`, public) manually resolves a URI. It builds a `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, a `ServerRequestInitSession` subclass) hitting the new `v3/deeplink` endpoint (`Defines.RequestPath.Deeplink`) and routes it through `requestQueue_.handleNewRequest(...)`. It maps `link_click_id`, app-link-url, and scheme-uri into the POST. On success it writes `sessionParams`, fires the callback with `latestReferringParams`, and chains a `sendOpen(response)`, which holds the OPEN while attribution is off. On failure it sends the OPEN without `link_data`. It is coroutine-friendly and intended to be called from a `LifecycleScope`.
 
 ## Other beta subsystems
 

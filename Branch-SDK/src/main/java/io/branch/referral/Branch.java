@@ -283,6 +283,11 @@ public class Branch {
     private Uri deferredUri;
     private InitSessionBuilder deferredSessionBuilder;
 
+    // The open the latest link check held while attribution was off, with that check's response.
+    private final Object heldOpenLock_ = new Object();
+    private boolean openHeld_;
+    @Nullable private JSONObject heldOpenResponse_;
+
     private int networkCount_ = 0;
     private ServerResponse serverResponse_;
 
@@ -387,10 +392,12 @@ public class Branch {
 
         BranchConfigurationManager.loadConfiguration(context, branchReferral_);
 
-        if (config.getAutomaticOpenEvents()) {
-            branchReferral_.setupProcessLifecycleObserver();
-        } else {
-            BranchProcessLifecycleObserver.unregister();
+        // The last process may have died without a background.
+        branchReferral_.prefHelper_.setSessionParams(PrefHelper.NO_STRING_VALUE);
+        try {
+            BranchProcessLifecycleObserver.register(branchReferral_);
+        } catch (Exception | LinkageError e) {
+            BranchLogger.w("Could not register the process lifecycle observer: " + e);
         }
 
         logInitializeComplete(branchReferral_, config);
@@ -425,7 +432,6 @@ public class Branch {
         appendJsonField(json, "retryCount", prefHelper.getRetryCount());
         appendJsonField(json, "retryInterval", prefHelper.getRetryInterval());
         appendJsonField(json, "noConnectionRetryMax", prefHelper.getNoConnectionRetryMax());
-        appendJsonField(json, "automaticOpenEvents", config.getAutomaticOpenEvents());
         json.append('}');
 
         BranchLogger.d(json.toString());
@@ -518,12 +524,14 @@ public class Branch {
 
         // Legacy link generator doesn't need explicit shutdown (no coroutines)
 
-        // Unregister process lifecycle observer to prevent memory leak (SDK-2463)
-        // In test mode, use blocking unregister to ensure cleanup completes before next test
-        if (isTestModeEnabled()) {
-            BranchProcessLifecycleObserver.shutDownForTesting();
-        } else {
-            BranchProcessLifecycleObserver.unregister();
+        try {
+            if (isTestModeEnabled()) {
+                BranchProcessLifecycleObserver.shutDownForTesting();
+            } else {
+                BranchProcessLifecycleObserver.unregister();
+            }
+        } catch (Exception | LinkageError e) {
+            BranchLogger.w("Could not unregister the process lifecycle observer: " + e);
         }
 
         BranchRequestQueueAdapter.shutDown();
@@ -1374,14 +1382,6 @@ public class Branch {
      */
 
 
-    private void setupProcessLifecycleObserver() {
-        // SDK-2463: detect app foreground/background at the process level via ProcessLifecycleOwner
-        // instead of counting Activity start/stop. A configuration-change recreation (fold/unfold,
-        // rotation) no longer fires a process ON_START, so it cannot emit a duplicate OPEN. A real
-        // background-to-foreground still does.
-        BranchProcessLifecycleObserver.register(this);
-    }
-
     /*
      * Check for forced session restart. The Branch session is restarted if the incoming intent has branch_force_new_session set to true.
      * This is for supporting opening a deep link path while app is already running in the foreground. Such as clicking push notification while app (namely, LauncherActivity) is in foreground.
@@ -2136,40 +2136,45 @@ public class Branch {
      */
     public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
         setConsumerProtectionAttributionLevel(level, null);
-        if(level != Defines.BranchAttributionLevel.NONE){
-            Branch.getInstance().sendOpen();
-        }
     }
 
-    void sendOpen() {
-        PrefHelper prefHelper = PrefHelper.getInstance(context_);
-
-        if(prefHelper != null) {
-            Defines.BranchAttributionLevel branchAttributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
-
-            BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
-            if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
-                // The foreground observer and the deep link callback both reach here, and the
-                // first open is still queued when the second arrives. Without this the launch
-                // sends two.
-                if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
-                    BranchLogger.d("sendOpen skipped: an install or open is already pending");
-                    return;
-                }
-                RequestOpen requestOpen = new RequestOpen(context_, null, false, null);
-                branchReferral_.requestQueue_.handleNewRequest(requestOpen);
-            }
+    void sendHeldOpen(@NonNull BranchReferralInitListener callback) {
+        boolean held;
+        JSONObject response;
+        synchronized (heldOpenLock_) {
+            held = openHeld_;
+            response = heldOpenResponse_;
+            openHeld_ = false;
+            heldOpenResponse_ = null;
         }
+        // Nothing held: the link check still running, or the app's next one, sends the launch's open.
+        if (!held) {
+            BranchLogger.d("sendHeldOpen: no open held");
+            callback.onInitFinished(getLatestReferringParams(), null);
+            return;
+        }
+        requestQueue_.handleNewRequest(new RequestOpen(context_, callback, false, response));
     }
 
     public void sendOpen(JSONObject responseData) {
         PrefHelper prefHelper = PrefHelper.getInstance(context_);
 
         if(prefHelper != null) {
-            Defines.BranchAttributionLevel branchAttributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
-
-            BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
-            if(branchAttributionLevel != Defines.BranchAttributionLevel.NONE){
+            boolean hold;
+            // Checked under the lock: opt-in saves the level before sendHeldOpen takes it, so an open
+            // either sees attribution on here or is already held when sendHeldOpen runs.
+            synchronized (heldOpenLock_) {
+                Defines.BranchAttributionLevel branchAttributionLevel = prefHelper.getConsumerProtectionAttributionLevel();
+                BranchLogger.d("sendOpen BranchAttributionLevel: " + branchAttributionLevel);
+                hold = branchAttributionLevel == Defines.BranchAttributionLevel.NONE || trackingController.isTrackingDisabled();
+                if (hold) {
+                    openHeld_ = true;
+                    heldOpenResponse_ = responseData;
+                }
+            }
+            if (hold) {
+                BranchLogger.d("sendOpen held until the user opts in: attribution is off");
+            } else {
                 if (branchReferral_.requestQueue_.containsInstallOrOpen()) {
                     BranchLogger.d("sendOpen skipped: an install or open is already pending");
                     return;
@@ -2427,7 +2432,9 @@ public class Branch {
     /**
      * Public API to manually request deep link data for a specific URI.
      * This is coroutine-friendly when called within a LifecycleScope or specialized dispatcher.
-     * * @param uri The URI (App Link or Scheme) to resolve.
+     * Each call also sends one open event, unless one is already waiting to be sent;
+     * while attribution is off, it is sent when the user opts in.
+     * @param uri The URI (App Link or Scheme) to resolve.
      * @param callback A {@link BranchReferralInitListener} to receive the params.
      */
     public void requestDeepLinkData(@NonNull Uri uri, @Nullable BranchReferralInitListener callback) {
