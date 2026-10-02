@@ -101,13 +101,13 @@ public class TraceLoggingTest {
     }
 
     @Test
-    public void noneLevel_silencesLogAlways() {
+    public void noneLevel_stillEmitsLogAlways() {
         BranchLogger.setLoggingLevel(BranchLogger.BranchLogLevel.NONE);
 
-        BranchLogger.logAlways("io.branch.sdk.android:library:6.0.0");
+        BranchLogger.logAlways("Warning, attempted to reinitialize Branch SDK singleton!");
 
-        assertTrue("logAlways bypasses shouldLog, so NONE must gate it explicitly or init still "
-                + "emits one line per launch", captured.isEmpty());
+        assertTrue("logAlways must not be silenced by NONE, or the reinitialize warning (EMT-4478) "
+                + "goes unseen", captured.contains("Warning, attempted to reinitialize Branch SDK singleton!"));
     }
 
     @Test
