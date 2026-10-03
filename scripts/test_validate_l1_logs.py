@@ -291,13 +291,15 @@ class ScenarioArtifactGuards(unittest.TestCase):
 
     FIXTURE_BRANCH_KEY = "key_live_fixtureFixtureFixtureFi"
 
-    def _keep_set(self):
+    def _keep_set(self, scenario=None):
         """Derived from the validator, not restated here, so the two cannot drift.
 
         Plus the documented additions: app_version, which the cold fixtures already
-        carried, external_intent_uri, which is what lets the two warm scenarios
-        contract their entry points in opposite directions, and cpp_level, which the
-        required-field tiers read."""
+        carried, and external_intent_uri, which is what lets the two warm scenarios
+        contract their entry points in opposite directions. cpp_level is read by the
+        required-field tiers but is a literal in attribution_level(), not a constant to
+        derive from, so it is allowed for attribution_none alone, the one capture that
+        sets a level."""
         keep = set()
         for name in dir(v):
             if not name.startswith("REQUIRED"):
@@ -312,7 +314,10 @@ class ScenarioArtifactGuards(unittest.TestCase):
         for contract in v.SCENARIO_CONTRACTS.values():
             for rules in contract["fields"].values():
                 keep |= set(rules)
-        return keep | {"app_version", "external_intent_uri", "cpp_level"}
+        keep |= {"app_version", "external_intent_uri"}
+        if scenario == "attribution_none":
+            keep.add("cpp_level")
+        return keep
 
     def _payloads(self, fixture_name):
         text = open(_fixture(fixture_name), encoding="utf-8").read()
@@ -327,8 +332,8 @@ class ScenarioArtifactGuards(unittest.TestCase):
                 self.assertEqual(stray, [], f"{fixture} holds lines that are not wire pairs")
 
     def test_scenario_fixtures_carry_no_field_outside_the_keep_set(self):
-        keep = self._keep_set()
         for scenario, fixture in SCENARIO_FIXTURES.items():
+            keep = self._keep_set(scenario)
             extra = set()
             for payload in self._payloads(fixture):
                 extra |= set(payload) - keep
