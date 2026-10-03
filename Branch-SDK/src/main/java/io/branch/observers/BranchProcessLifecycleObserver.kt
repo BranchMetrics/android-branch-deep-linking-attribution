@@ -6,43 +6,28 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 
-/**
- * Detects app foreground/background at the PROCESS level using AndroidX ProcessLifecycleOwner.
- *
- * Unlike per-Activity start/stop counting, `ProcessLifecycleOwner` ON_START fires only when the
- * whole process actually enters the foreground (cold start or return from background), and NOT on
- * a configuration-change recreation (fold/unfold, rotation, multi-window) or on navigation between
- * Activities. That removes the duplicate OPEN on foldable configuration changes (SDK-2463) by
- * construction, without any manual counting or shared flags.
- */
+/** Clears `sessionParams` and the saved launch link when the process goes to the background. Sends no requests. */
 internal class BranchProcessLifecycleObserver(private val branchInstance: Branch) : DefaultLifecycleObserver {
-
-    override fun onStart(owner: LifecycleOwner) {
-        BranchLogger.v("BranchProcessLifecycleObserver onStart: process foregrounded, sending OPEN")
-        branchInstance.sendOpen()
-    }
 
     override fun onStop(owner: LifecycleOwner) {
         BranchLogger.v("BranchProcessLifecycleObserver onStop: process backgrounded")
-        // Session close on background is intentionally not triggered here. The pre-existing
-        // BranchOpenObserver also did not call closeSessionInternal on background — no regression.
-        // When the beta session model is finalized, session-close logic belongs here.
+        guarded("onStop") {
+            // While attribution is off no open succeeds to clear the saved launch link, so the next launch would carry it.
+            if (!branchInstance.requestQueue_.containsDeepLinkOrOpen()) {
+                val prefHelper = branchInstance.prefHelper
+                prefHelper.sessionParams = PrefHelper.NO_STRING_VALUE
+                prefHelper.clearLaunchLink()
+            } else {
+                branchInstance.launchLinkClearOwed_ = true
+            }
+        }
     }
 
     companion object {
         @Volatile
         private var instance: BranchProcessLifecycleObserver? = null
 
-        /**
-         * Registers a single process-lifecycle observer for the given Branch instance. Safe to
-         * call more than once (SDK re-init): the previous observer is removed first.
-         *
-         * **Threading:** If already on main thread, executes synchronously. Otherwise, marshalled
-         * to the main thread because ProcessLifecycleOwner requires it. For standard init paths
-         * (Application.onCreate on main thread), this is safe and synchronous. Custom integrations
-         * calling initialize() from background threads should ensure the app hasn't entered
-         * foreground before registration completes, or the first OPEN event may be missed.
-         */
+        /** Registers the observer on the main thread, replacing any previous one. */
         @JvmStatic
         fun register(branchInstance: Branch) {
             if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -56,14 +41,15 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
 
         @JvmStatic
         fun unregister() {
-            // Capture instance now, before posting, to avoid removing a concurrently registered
-            // new observer if register() races with this unregister() on a background thread.
+            // Captured before posting, so a concurrent register() is not undone.
             val capturedInstance = instance
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 unregisterSync()
             } else {
                 Handler(Looper.getMainLooper()).post {
-                    capturedInstance?.let { ProcessLifecycleOwner.get().lifecycle.removeObserver(it) }
+                    guarded("unregister") {
+                        capturedInstance?.let { ProcessLifecycleOwner.get().lifecycle.removeObserver(it) }
+                    }
                     if (instance === capturedInstance) {
                         instance = null
                     }
@@ -71,7 +57,7 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
             }
         }
 
-        private fun registerSync(branchInstance: Branch) {
+        private fun registerSync(branchInstance: Branch) = guarded("register") {
             instance?.let { ProcessLifecycleOwner.get().lifecycle.removeObserver(it) }
             val observer = BranchProcessLifecycleObserver(branchInstance)
             instance = observer
@@ -79,15 +65,24 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
         }
 
         private fun unregisterSync() {
-            instance?.let { ProcessLifecycleOwner.get().lifecycle.removeObserver(it) }
+            guarded("unregister") {
+                instance?.let { ProcessLifecycleOwner.get().lifecycle.removeObserver(it) }
+            }
             instance = null
         }
 
-        /**
-         * Shuts down the observer synchronously for test isolation. Blocks the calling thread
-         * until unregistration completes on the main thread. Should only be called from test
-         * tearDown methods.
-         */
+        // Any failure here only skips the clear.
+        private inline fun guarded(action: String, block: () -> Unit) {
+            try {
+                block()
+            } catch (e: Exception) {
+                BranchLogger.w("BranchProcessLifecycleObserver $action failed: $e")
+            } catch (e: LinkageError) {
+                BranchLogger.w("BranchProcessLifecycleObserver $action failed: $e")
+            }
+        }
+
+        /** Unregisters and waits for it to finish. For tests only. */
         @JvmStatic
         fun shutDownForTesting() {
             if (Looper.myLooper() == Looper.getMainLooper()) {

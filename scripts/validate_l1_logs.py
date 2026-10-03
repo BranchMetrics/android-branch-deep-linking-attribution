@@ -367,30 +367,32 @@ SCENARIO_CONTRACTS = {
     },
     # warm_https_onNewIntent: the app alive and backgrounded when the link
     # arrives. Written from the capture, not from the ticket, which predicted one
-    # /v3/deeplink and exactly one /v3/events/open. Measured: two and three, two
-    # opens more than cold_https's one. The only thing this scenario does that
-    # cold_https does not is background and foreground the app; that is a
-    # coincidence worth stating and not a mapping this contract proves. What the
-    # ticket asked for and the capture confirms is the absence of install,
-    # asserted at zero below.
+    # /v3/deeplink and exactly one /v3/events/open. Measured: two and two. The
+    # foreground open the process lifecycle observer used to send is gone by design
+    # (EMT-4479: one open per requestDeepLinkData call), so each of the two launches
+    # sends one open. The only thing this scenario does that cold_https does not is
+    # background and foreground the app; that is a coincidence worth stating and not
+    # a mapping this contract proves. What the ticket asked for and the capture
+    # confirms is the absence of install, asserted at zero below.
     "warm_https_onNewIntent": {
         "counts": {
             "/v3/deeplink": 2,
-            "/v3/events/open": 3,
+            "/v3/events/open": 2,
             "/v1/url": 1,
             "/v3/events/custom": 2,
             "/v1/install": 0,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
-            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v3/events/open": {"randomized_bundle_token": 2},
             "/v1/url": {"hardware_id": 0},
             # The entry point, asserted in both directions across the two warm
-            # scenarios. Without it the two warm captures are the same contract
-            # and warm_uriScheme says nothing warm_https_onNewIntent does not.
-            # What the field carries is a mapping, and that is tested on the JVM
+            # scenarios. An https link now rides both fields, a scheme link only
+            # external_intent_uri, so android_app_link_url is what separates them.
+            # Without it warm_uriScheme says nothing warm_https_onNewIntent does not.
+            # What each field carries is a mapping, and that is tested on the JVM
             # in RequestDeepLinkUriMappingTest, not here.
-            "/v3/deeplink": {"external_intent_uri": 0},
+            "/v3/deeplink": {"android_app_link_url": 1, "external_intent_uri": 1},
         },
     },
     # warm_uriScheme: warm_https_onNewIntent's launch state entered through
@@ -401,16 +403,16 @@ SCENARIO_CONTRACTS = {
     "warm_uriScheme": {
         "counts": {
             "/v3/deeplink": 2,
-            "/v3/events/open": 3,
+            "/v3/events/open": 2,
             "/v1/url": 1,
             "/v3/events/custom": 2,
             "/v1/install": 0,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
-            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v3/events/open": {"randomized_bundle_token": 2},
             "/v1/url": {"hardware_id": 0},
-            "/v3/deeplink": {"external_intent_uri": 1},
+            "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
         },
     },
     # cold_https: the link starts the app on a device that already has it.
@@ -433,9 +435,10 @@ SCENARIO_CONTRACTS = {
     # hot_https_foreground: an App Link delivered via onNewIntent to a MainActivity that stayed
     # resumed. Same wire shape as cold_https, both tokens already known; hot-vs-warm is proven by
     # the driver's own StoppedWatcher, not by anything the wire carries.
-    # RequestDeepLink picks the field by scheme: http(s) sets android_app_link_url, anything else
-    # sets external_intent_uri, and link_identifier appears only when the URL carries a
-    # link_click_id. The two zeros therefore pin the resolved URL, not how the intent was addressed.
+    # An https link rides both android_app_link_url and external_intent_uri (the launch fields are
+    # added at send time from the intent, as on master), and link_identifier appears only when the
+    # URL carries a link_click_id. The link_identifier zero pins the resolved URL, not how the
+    # intent was addressed; android_app_link_url is what separates this from hot_uriScheme.
     # link_data on the open is the attribution: without it the launch was reported organically.
     # When EMT-4395 lands, a warm delivery emits this same wire, and hot-vs-warm rests on the
     # driver's StoppedWatcher alone.
@@ -449,7 +452,7 @@ SCENARIO_CONTRACTS = {
         "fields": {
             "/v3/deeplink": {
                 "android_app_link_url": 1,
-                "external_intent_uri": 0,
+                "external_intent_uri": 1,
                 "link_identifier": 0,
             },
             "/v3/events/open": {"randomized_bundle_token": 1, "link_data": 1},
