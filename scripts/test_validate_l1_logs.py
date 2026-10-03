@@ -34,6 +34,7 @@ SCENARIO_FIXTURES = {
     "link_generation": "link_generation.txt",
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
+    "hot_uriScheme": "hot_uriScheme.txt",
 }
 
 
