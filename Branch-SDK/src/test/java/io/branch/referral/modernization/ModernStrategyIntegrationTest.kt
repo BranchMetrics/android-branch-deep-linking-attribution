@@ -1,6 +1,7 @@
 package io.branch.referral.modernization
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -88,7 +89,7 @@ class ModernStrategyIntegrationTest {
         val methods = wrapperClass.declaredMethods
         val methodNames = methods.map { it.name }.toSet()
         
-        assertTrue("Should have initSession method", methodNames.contains("initSession"))
+        assertFalse("initSession was removed", methodNames.contains("initSession"))
         assertTrue("Should have setIdentity method", methodNames.contains("setIdentity"))
         assertTrue("Should have userCompletedAction method", methodNames.contains("userCompletedAction"))
         assertTrue("Should have getLatestReferringParams method", methodNames.contains("getLatestReferringParams"))

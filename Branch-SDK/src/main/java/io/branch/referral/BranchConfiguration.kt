@@ -15,6 +15,7 @@ class BranchConfiguration private constructor(
     val cdnBaseUrl: String?,
     val euEndpoint: Boolean,
     val logLevel: BranchLogger.BranchLogLevel,
+    private val logLevelWasSet: Boolean,
     val loggingCallback: IBranchLoggingCallbacks?,
     val requestTracingCallback: IBranchRequestTracingCallback?,
     val networkTimeout: Int,
@@ -34,17 +35,18 @@ class BranchConfiguration private constructor(
     val referringLinkAttributionForPreinstalledApps: Boolean,
     val whitelistedSchemes: List<String>,
     val uriHostsToSkip: List<String>,
-    val automaticOpenEvents: Boolean,
     val userAgentFetchSync: Boolean
 ) {
 
     /**
      * Routes logging to the caller's level and callback. Called by [Branch.initialize] before any
      * other init work, so warnings raised during construction and branch-key resolution are visible
-     * to whoever configured logging.
+     * to whoever configured logging. Leaves the logger alone when neither a level nor a callback was
+     * set, so an earlier [Branch.enableLogging] call stays in effect.
      */
     @JvmName("applyLogging")
     internal fun applyLogging() {
+        if (!logLevelWasSet && loggingCallback == null) return
         BranchLogger.loggerCallback = loggingCallback
         BranchLogger.loggingLevel = logLevel
         BranchLogger.loggingEnabled = true
@@ -59,7 +61,7 @@ class BranchConfiguration private constructor(
         val context = branch.applicationContext
         val prefHelper = branch.prefHelper
 
-        BranchLogger.logAlways(Branch.GOOGLE_VERSION_TAG)
+        BranchLogger.i(Branch.GOOGLE_VERSION_TAG)
         if (BranchLogger.isLoggable(BranchLogger.BranchLogLevel.DEBUG)) BranchLogger.d(toJson())
         requestTracingCallback?.let { Branch._iBranchRequestTracingCallback = it }
 
@@ -163,7 +165,6 @@ class BranchConfiguration private constructor(
         lit("referringLinkAttributionForPreinstalledApps", referringLinkAttributionForPreinstalledApps)
         raw("whitelistedSchemes", whitelistedSchemes.joinToString(",", "[", "]") { JSONObject.quote(it) })
         raw("uriHostsToSkip", uriHostsToSkip.joinToString(",", "[", "]") { JSONObject.quote(it) })
-        lit("automaticOpenEvents", automaticOpenEvents)
         lit("userAgentFetchSync", userAgentFetchSync)
 
         return json.append('}').toString()
@@ -203,7 +204,6 @@ class BranchConfiguration private constructor(
         if (referringLinkAttributionForPreinstalledApps) nonDefaults.add("referringLinkAttributionForPreinstalledApps=true")
         if (whitelistedSchemes.isNotEmpty()) nonDefaults.add("whitelistedSchemes=$whitelistedSchemes")
         if (uriHostsToSkip.isNotEmpty()) nonDefaults.add("uriHostsToSkip=$uriHostsToSkip")
-        if (!automaticOpenEvents) nonDefaults.add("automaticOpenEvents=false")
         if (userAgentFetchSync) nonDefaults.add("userAgentFetchSync=true")
         return "BranchConfiguration(${nonDefaults.joinToString(", ")})"
     }
@@ -221,6 +221,7 @@ class BranchConfiguration private constructor(
         private var cdnBaseUrl: String? = null
         private var euEndpoint: Boolean = false
         private var logLevel: BranchLogger.BranchLogLevel = DEFAULT_LOG_LEVEL
+        private var logLevelWasSet: Boolean = false
         private var loggingCallback: IBranchLoggingCallbacks? = null
         private var requestTracingCallback: IBranchRequestTracingCallback? = null
         private var networkTimeout: Int = PrefHelper.TIMEOUT
@@ -240,7 +241,6 @@ class BranchConfiguration private constructor(
         private var referringLinkAttributionForPreinstalledApps: Boolean = false
         private val whitelistedSchemes: MutableList<String> = mutableListOf()
         private val uriHostsToSkip: MutableList<String> = mutableListOf()
-        private var automaticOpenEvents: Boolean = true
         private var userAgentFetchSync: Boolean = false
 
         // Identity & environment
@@ -250,7 +250,7 @@ class BranchConfiguration private constructor(
         fun setEUEndpoint(enabled: Boolean) = apply { euEndpoint = enabled }
 
         // Logging
-        fun setLogLevel(level: BranchLogger.BranchLogLevel) = apply { logLevel = level }
+        fun setLogLevel(level: BranchLogger.BranchLogLevel) = apply { logLevel = level; logLevelWasSet = true }
         fun setLoggingCallback(callback: IBranchLoggingCallbacks?) = apply { loggingCallback = callback }
         fun setRequestTracingCallback(callback: IBranchRequestTracingCallback?) = apply { requestTracingCallback = callback }
 
@@ -282,8 +282,6 @@ class BranchConfiguration private constructor(
         fun addUriHostToSkip(host: String) = apply { uriHostsToSkip.add(host) }
 
         // Open tracking
-        /** When false, [ProcessLifecycleOwner] won't call [Branch.sendOpen] automatically on ON_START. */
-        fun setAutomaticOpenEvents(enabled: Boolean) = apply { automaticOpenEvents = enabled }
         fun setUserAgentFetchSync(sync: Boolean) = apply { userAgentFetchSync = sync }
 
         /**
@@ -320,7 +318,8 @@ class BranchConfiguration private constructor(
                 apiUrl = apiUrl,
                 cdnBaseUrl = cdnBaseUrl,
                 euEndpoint = euEndpoint,
-                logLevel = logLevel,
+                logLevel = if (!logLevelWasSet && loggingCallback != null) BranchLogger.BranchLogLevel.VERBOSE else logLevel,
+                logLevelWasSet = logLevelWasSet,
                 loggingCallback = loggingCallback,
                 requestTracingCallback = requestTracingCallback,
                 networkTimeout = networkTimeout,
@@ -340,7 +339,6 @@ class BranchConfiguration private constructor(
                 referringLinkAttributionForPreinstalledApps = referringLinkAttributionForPreinstalledApps,
                 whitelistedSchemes = whitelistedSchemes.toList(),
                 uriHostsToSkip = uriHostsToSkip.toList(),
-                automaticOpenEvents = automaticOpenEvents,
                 userAgentFetchSync = userAgentFetchSync
             )
         }
