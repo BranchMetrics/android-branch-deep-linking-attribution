@@ -10,7 +10,7 @@ How the SDK behaves at runtime on this branch, and the invariants a change must 
 | Term | What it means |
 | --- | --- |
 | **install** / **open** | the first app launch after installation, versus every later launch. The choice decides whether a new user is tied back to the link that brought them |
-| **OPEN** (as a noun) | a request to `v3/events/open` reporting a foreground launch for attribution. Distinct from the legacy `v1/open` `RegisterOpen` path, which still exists |
+| **OPEN** (as a noun) | a request to `v3/events/open` reporting a foreground launch for attribution. The legacy `v1/open` path was removed |
 | **randomized bundle token** / **randomized device token** | opaque identifiers the Branch API assigns on a successful init and the SDK persists. The bundle token is per app install, the device token per device |
 | **session params** / **install params** | the link data returned by init. Session params are from the most recent init; install params are frozen from the first-ever one |
 | **wait lock** | a `PROCESS_WAIT_LOCK` on a queued request. While any lock is attached the queue will not send that request |
@@ -32,20 +32,18 @@ The private constructor wires the sub-systems, most into `final` fields set once
 
 `shutDown()` is package-private and test-only. It nulls the singleton and resets statics, and the instrumented suite depends on it between runs.
 
-## Session init entry points, in flux
+## Launch entry point
 
-The legacy entry `Branch.sessionBuilder(activity).withCallback(...).init()` (the `InitSessionBuilder`, `Branch.java:2143+`) is **being retired**. It is already wrapped as legacy in `modernization/wrappers/PreservedBranchApi.kt` and is slated for deletion. It still works today, and the TestBed's `MainActivity` calls it, so you will see it in existing code. Do not build new init logic around it.
+A launch is reported only by the app's `requestDeepLinkData` call: `(activity, callback)`, `(uri, callback)`, or the `suspend` variants in `BranchCoroutines.kt`. The legacy `sessionBuilder(activity).init()` and its `/v1/install` and `/v1/open` requests are gone. `modernization/core/ModernBranchCore.kt` is orphaned scaffolding, not an entry point.
 
-The replacement is `modernization/core/ModernBranchCore.kt`: `ModernBranchCore` exposes manager interfaces, with `SessionManager.initSession(activity): Result<BranchSession>` as a `suspend` function and state surfaced through a `StateFlow<BranchSession?>`. When editing init, confirm which path the caller is on before changing behavior.
+## Launch flow
 
-## Session init flow, the durable mechanism
+Each call drives this sequence:
 
-Regardless of entry point, init drives this sequence:
-
-1. **Intent parsing.** `readAndStripParam()` runs extractors (`extractBranchLinkFromIntentExtra`, `extractClickID`, `extractAppLink`, `extractExternalUriAndIntentExtras`) that write results into `PrefHelper`. A Branch link is consumed exactly once, marked by the `BranchLinkUsed` intent extra.
-2. **Request selection.** `getInstallOrOpenRequest()` picks `ServerRequestRegisterInstall` or `ServerRequestRegisterOpen` based on whether a randomized bundle token is already persisted (`hasUser()`).
-3. **Queue plus wait locks.** `registerAppInit()` sets state `INITIALISING` and force-inserts init at the front of the queue. `initTasks()` attaches `PROCESS_WAIT_LOCK`s so it does not fire until prerequisites resolve: `INTENT_PENDING_WAIT_LOCK` (until `onIntentReady` at `Activity.onResume`), `INSTALL_REFERRER_FETCH_WAIT_LOCK` (install only), `GAID_FETCH_WAIT_LOCK` (always), and `USER_SET_WAIT_LOCK` when the delay option is used. That last lock currently has no removal site, which is the `withDelay()` trap listed in `CLAUDE.md`.
-4. **Response to callback.** On success the init request stores returned params into `PrefHelper` as **session params** (latest) and **install params** (first-ever), then invokes the caller's init callback.
+1. **Link parsing.** `readLaunchLink()` runs `readAndStripParam()`, whose extractors (`extractBranchLinkFromIntentExtra`, `extractClickID`, `extractAppLink`, `extractExternalUriAndIntentExtras`, `extractInitialReferrer`) write results into `PrefHelper`. The Activity variant also reads the intent's extras and referrer; the Uri variant has only the link. A Branch link is consumed exactly once, marked by the `BranchLinkUsed` intent extra.
+2. **Wait locks.** `enqueueLaunchRequest()` sends a `RequestDeepLink` (`/v3/deeplink`) through `initTasks()`, which adds `INSTALL_REFERRER_FETCH_WAIT_LOCK` when no randomized bundle token is stored yet (an install) and `GAID_FETCH_WAIT_LOCK` always, and starts both fetches. While attribution is off, the request skips `initTasks()`, and the fetches run for the open sent at opt-in.
+3. **Request bodies.** The launch fields come from `PrefHelper` at send time (`ServerRequestInitSession.onPreExecute` and `updateLinkReferrerParams`), and the install-only fields (referrer timestamps, store click id, `operational_metrics`, install metadata) ride both requests of an install launch. The bodies have master's `/v1/install` and `/v1/open` shape, plus `link_data` on the open.
+4. **Response to callback.** The deep link response stores **session params** (latest) and, for an install from a link, **install params** (first-ever), then invokes the callback and hands its result to `sendOpen`. After the open succeeds, `postInitClear` clears the launch's link and install data.
 
 `getInitState()` (`Branch.java:1366`) returns the sealed `BranchSessionState`: `Uninitialized`, `Initializing`, `Initialized`, `Resetting`, `Failed`, checked with `instanceof`. The legacy `SESSION_STATE` enum still exists in source but is not what this method returns. `Initialized` means the current intent is consumed and events can send.
 
@@ -55,9 +53,9 @@ Regardless of entry point, init drives this sequence:
 
 `ServerRequest` (abstract) is the base for every API call. It owns the POST/GET body (`params_`), a `Defines.RequestPath`, its wait-lock set, and a retry count.
 
-`BRANCH_API_VERSION` has three values: `V1`, `V1_LATD`, `V2`. `setPost()` branches on `V1`: **V1** (`v1/install`, `v1/open`, `v1/url`) puts device fields at the top level, while **V2** (`v3/events/standard`, `v3/events/custom`) and **`V1_LATD`** nest them under `user_data`.
+`BRANCH_API_VERSION` has three values: `V1`, `V1_LATD`, `V2`. `setPost()` branches on `V1`: **V1**, the default (`v3/deeplink`, `v3/events/open`, `v1/url`), puts device fields at the top level, while **V2** (`v3/events/standard`, `v3/events/custom`) and **`V1_LATD`** nest them under `user_data`.
 
-Subclasses: `ServerRequestInitSession` leading to `ServerRequestRegisterInstall` and `ServerRequestRegisterOpen`; `ServerRequestLogEvent` (V2); `ServerRequestCreateUrl`; `ServerRequestGetLATD`; plus the client-only queue operations `QueueOperationSetIdentity` and `QueueOperationLogout`, which are enqueued for ordering but skip the network.
+Subclasses: `ServerRequestInitSession` leading to `RequestDeepLink` and `RequestOpen`; `ServerRequestLogEvent` (V2); `ServerRequestCreateUrl`; `ServerRequestGetLATD`; plus the client-only queue operations `QueueOperationSetIdentity` and `QueueOperationLogout`, which are enqueued for ordering but skip the network.
 
 **Session gating rule.** A request that is not init, create-url, logout, or set-identity needs a valid session before it can send: session id plus randomized device token plus randomized bundle token, all populated only by a successful init response. Everything else waits behind `SDK_INIT_WAIT_LOCK`. On init success, the new session and token values are written to `PrefHelper` and propagated into every already-queued request's body.
 

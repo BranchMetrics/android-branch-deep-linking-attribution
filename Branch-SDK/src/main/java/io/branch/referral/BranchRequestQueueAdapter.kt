@@ -148,10 +148,18 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.hasUser result: $result")
         return result
     }
-    fun containsInstallOrOpen(): Boolean {
-        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOrOpen called")
-        val result = newQueue.containsInstallOrOpen()
-        BranchLogger.v("BranchRequestQueueAdapter.containsInstallOrOpen result: $result")
+    fun containsOpen(): Boolean {
+        BranchLogger.v("BranchRequestQueueAdapter.containsOpen called")
+        val result = newQueue.containsOpen()
+        BranchLogger.v("BranchRequestQueueAdapter.containsOpen result: $result")
+        return result
+    }
+
+    /** Whether a deep link or open request is queued or executing. */
+    fun containsDeepLinkOrOpen(): Boolean {
+        BranchLogger.v("BranchRequestQueueAdapter.containsDeepLinkOrOpen called")
+        val result = newQueue.containsDeepLinkOrOpen()
+        BranchLogger.v("BranchRequestQueueAdapter.containsDeepLinkOrOpen result: $result")
         return result
     }
     fun peek(): ServerRequest? {
@@ -199,10 +207,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     fun postInitClear() {
         BranchLogger.v("BranchRequestQueueAdapter.postInitClear called")
-        adapterScope.launch {
-            newQueue.clearDeepLinkStorage()
-            BranchLogger.v("BranchRequestQueueAdapter.postInitClear completed")
-        }
+        newQueue.clearDeepLinkStorage()
+        BranchLogger.v("BranchRequestQueueAdapter.postInitClear completed")
     }
     
     /**
@@ -238,10 +244,8 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
     }
     fun clear() {
         BranchLogger.v("BranchRequestQueueAdapter.clear called")
-        adapterScope.launch {
-            newQueue.clear()
-            BranchLogger.v("BranchRequestQueueAdapter.clear completed")
-        }
+        newQueue.clear()
+        BranchLogger.v("BranchRequestQueueAdapter.clear completed")
     }
     
     private fun requestNeedsSession(request: ServerRequest): Boolean {
