@@ -20,6 +20,7 @@ sys.path.insert(0, THIS_DIR)
 import validate_l1_logs as v  # noqa: E402
 from test_validate_l1_logs import SCENARIO_FIXTURES, _fixture  # noqa: E402
 
+
 class HotUriSchemeContractTests(unittest.TestCase):
     """hot_uriScheme. Measured from a real H2HotUriSchemeWireTest run against
     6.0.0-beta.0 at 3fe6a6f9, after the driver's clearing step -- the fixture already reflects
@@ -27,9 +28,8 @@ class HotUriSchemeContractTests(unittest.TestCase):
     validate_l1_logs.py reads. partner_data, identity, instrumentation and several timestamps
     (latest_install_time, latest_update_time, previous_update_time) were dropped; the first check
     against one of those on hot_uriScheme needs a fresh capture, not this fixture.
-    branch_sdk_request_unique_id stays real-shaped for parity with harness_mixed_session.txt's
-    convention -- collapse_retries only needs the two values distinct, a placeholder would satisfy
-    that equally."""
+    branch_sdk_request_unique_id stays real-shaped, as in the other scenario fixtures --
+    collapse_retries only needs the two values distinct, a placeholder would satisfy that equally."""
 
     def _entries(self):
         fixture = _fixture(SCENARIO_FIXTURES["hot_uriScheme"])
