@@ -31,6 +31,7 @@ SCENARIO_FIXTURES = {
     "organic_open": "organic_open.txt",
     "cold_firstInstall": "cold_firstInstall.txt",
     "cold_https": "cold_https.txt",
+    "hot_https_foreground": "hot_https_foreground.txt",
     "link_generation": "link_generation.txt",
     "attribution_none": "attribution_none.txt",
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
@@ -457,6 +458,16 @@ class ScenarioContractTests(unittest.TestCase):
             errors = self._errors(capture, contract)
             with self.subTest(capture=capture, contract=contract):
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_a_scheme_url_fails_hot_https_foreground(self):
+        # hot_uriScheme asserts external_intent_uri alone, so a hot scenario that resolved a scheme
+        # URL instead of an App Link must fail here on the missing android_app_link_url.
+        entries = self._entries("hot_https_foreground")
+        deeplink = next(e for e in entries if e["uri"] == "/v3/deeplink")
+        deeplink["request"].pop("android_app_link_url")
+        deeplink["request"]["external_intent_uri"] = "branchtest://open"
+        errors = v.assert_contract(entries, v.contract_for("hot_https_foreground"))
+        self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
 
     def test_an_install_fails_warm_https_onNewIntent(self):
         # The ticket's one explicit ask for this group: assert the absence of
