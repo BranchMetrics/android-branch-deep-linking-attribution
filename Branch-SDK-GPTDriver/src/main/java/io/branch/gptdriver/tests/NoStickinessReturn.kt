@@ -7,6 +7,8 @@ import android.provider.Settings
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
@@ -116,10 +118,12 @@ class NoStickinessReturn {
         Log.i(TAG, "diagnostic accessor after background: ${Branch.getInstance().getLatestReferringParams()}")
 
         val returnMarker = NoStickinessSupport.currentLineCount(captureFile)
+        check(!mainActivityResumed()) {
+            "MainActivity already RESUMED before the recents tap; the return would settle on nothing"
+        }
         tapExactlyOneRecentCard()
 
-        val path = awaitReturnSettled(returnMarker)
-        Log.i(TAG, "foreground signal path since return: $path")
+        awaitReturnSettled()
 
         val sinceReturn = NoStickinessSupport.linesSince(captureFile, returnMarker)
         val deeplinkPosts = sinceReturn.count { it.contains("posting to") && it.contains("/v3/deeplink") }
@@ -137,6 +141,9 @@ class NoStickinessReturn {
         // Diagnostic only, per spec: the return's own open body never decides the verdict.
         val openBody = NoStickinessSupport.openBodyDiagnosticSince(captureFile, returnMarker)
         Log.i(TAG, "diagnostic return open body: $openBody")
+        // A recents return is not a session start on the beta, so it posts no open.
+        val openPosts = sinceReturn.count { it.contains("posting to") && it.contains("/v3/events/open") }
+        check(openPosts == 0) { "expected 0 /v3/events/open posts since the return, saw $openPosts" }
 
         // The verdict: the accessor read after the return, and nothing else.
         val referring = Branch.getInstance().getLatestReferringParams()
@@ -145,19 +152,19 @@ class NoStickinessReturn {
         NoStickinessSupport.reportResult("pass", "recents_path=$recentsPath card_ms=$cardWaitMs")
     }
 
-    // Trusts the return's own open success first; falls back to the onStart dispatch line,
-    // then waits for quiet before the caller's checks run.
-    private fun awaitReturnSettled(fromLine: Int): String {
-        if (NoStickinessSupport.awaitCaptureFrom(captureFile, NoStickinessSupport.REQUEST_OPEN_SUCCEEDED, fromLine, RETURN_SIGNAL_MS)) {
-            NoStickinessSupport.awaitQuiescentLineCount(captureFile, QUIESCENCE_MS)
-            return "primary"
+    // The return logs no SDK line, so it settles on MainActivity RESUMED (from the lifecycle
+    // monitor; the scenario stops tracking after a new intent), then on a quiet window.
+    private fun awaitReturnSettled() {
+        val start = System.currentTimeMillis()
+        val deadline = start + RESUMED_MS
+        while (!mainActivityResumed() && System.currentTimeMillis() < deadline) {
+            Thread.sleep(NoStickinessSupport.POLL_MS)
         }
-        check(NoStickinessSupport.awaitCaptureFrom(captureFile, NoStickinessSupport.ONSTART_DISPATCH_LINE, fromLine, FALLBACK_SIGNAL_MS)) {
-            "no foreground signal (open succeeded or onStart dispatch) since the return within ${RETURN_SIGNAL_MS + FALLBACK_SIGNAL_MS}ms"
+        check(mainActivityResumed()) {
+            "MainActivity not RESUMED within ${RESUMED_MS}ms after the recents tap"
         }
-        Log.i(TAG, "primary open signal never arrived; using the onStart dispatch fallback, then waiting for quiet")
+        Log.i(TAG, "return resumed resumedMs=${System.currentTimeMillis() - start}")
         NoStickinessSupport.awaitQuiescentLineCount(captureFile, QUIESCENCE_MS)
-        return "fallback"
     }
 
     // Pass/fail on card count comes from dumpsys `Activities=[]`, never from the launcher's
@@ -204,6 +211,15 @@ class NoStickinessReturn {
             "one live task in recents but no rendered card matched the snapshot selector; ${diagnostic()}"
         }
         candidates[0].click()
+    }
+
+    private fun mainActivityResumed(): Boolean {
+        var resumed = false
+        instrumentation.runOnMainSync {
+            resumed = ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(Stage.RESUMED).any { it is MainActivity }
+        }
+        return resumed
     }
 
     private fun stillInOwnApp(): Boolean = uiDevice.currentPackageName == context.packageName
@@ -267,8 +283,7 @@ class NoStickinessReturn {
         const val STABLE_READ_MS = 1_500L
         const val STABLE_POLL_MS = 250L
         const val DISMISS_SETTLE_MS = 1_500L
-        const val RETURN_SIGNAL_MS = 15_000L
-        const val FALLBACK_SIGNAL_MS = 5_000L
+        const val RESUMED_MS = 15_000L
         const val QUIESCENCE_MS = 5_000L
         const val SETTINGS_VISIBLE_MS = 5_000L
         val SNAPSHOT_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/snapshot$"))
