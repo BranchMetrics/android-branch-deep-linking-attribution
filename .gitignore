@@ -33,5 +33,4 @@ Branch-SDK-TestBed/gradle/wrapper/gradle-wrapper.properties
 *.hprof
 failure_logs.txt
 success_logs.txt
-mobileboost.config.json
 .claude/

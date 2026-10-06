@@ -12,7 +12,7 @@ import io.branch.referral.util.BranchEvent;
 
 /**
  * Test utility helpers extracted from MainActivity to reduce class size.
- * Used by E2E test infrastructure (MobileBoost/GPTDriver) and manual testing.
+ * Used by E2E test infrastructure and manual testing.
  */
 public class TestBedHelper {
 
