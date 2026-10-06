@@ -1,13 +1,6 @@
-package io.branch.coroutines
+package io.branch.referral
 
 import android.content.Context
-import io.branch.referral.Branch
-import io.branch.referral.BranchError
-import io.branch.referral.BranchLogger
-import io.branch.referral.Defines
-import io.branch.referral.PrefHelper
-import io.branch.referral.ServerRequestInitSession
-import io.branch.referral.ServerResponse
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -16,6 +9,9 @@ internal class RequestDeepLink(
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean
 ) : ServerRequestInitSession(context, Defines.RequestPath.Deeplink, isAutoInitialization) {
+
+    // Set once sendOpenAfterDeepLink has this request's response; containsDeepLink() then skips it.
+    @JvmField @Volatile var responseHandled = false
 
     init {
         callback_ = callback
@@ -69,6 +65,11 @@ internal class RequestDeepLink(
                 prefHelper_.sessionParams = PrefHelper.NO_STRING_VALUE
             }
 
+            // With setAutomaticOpenEvents(false), before the callback, so a sendOpen made in it finds the response.
+            if (!branch.automaticOpenEvents_) {
+                branch.sendOpenAfterDeepLink(this, response.`object`)
+            }
+
             if (callback_ != null) {
                 callback_!!.onInitFinished(branch.latestReferringParams, null)
             }
@@ -81,15 +82,19 @@ internal class RequestDeepLink(
 
         onInitSessionCompleted(response, branch)
 
-        Branch.getInstance().sendOpen(response.`object`)
+        if (!responseHandled) {
+            branch.sendOpenAfterDeepLink(this, response.`object`)
+        }
     }
 
     override fun handleFailure(statusCode: Int, causeMsg: String) {
         val serverErrorMessage = "Request DeepLink failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
 
-        // Each resolve sends one open; a failed one sends it without link_data.
-        Branch.getInstance().sendOpen(null as JSONObject?)
+        // A failed /v3/deeplink's open has no link_data.
+        if (!responseHandled) {
+            Branch.getInstance().sendOpenAfterDeepLink(this, null)
+        }
 
         if (callback_ != null) {
             val obj = JSONObject()

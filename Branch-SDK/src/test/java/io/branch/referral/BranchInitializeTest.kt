@@ -504,7 +504,7 @@ class BranchInitializeTest : BranchTestBase() {
         )
         assertTrue(
             "setting an attribution level at init must not also fire sendOpen()",
-            logs.none { it.contains("sendOpen BranchAttributionLevel") }
+            logs.none { it.contains("sendOpenAfterDeepLink BranchAttributionLevel") }
         )
     }
 
@@ -568,6 +568,13 @@ class BranchInitializeTest : BranchTestBase() {
         assertNull(Branch.getInstance())
     }
 
+    @Test
+    fun initialize_setAutomaticOpenEventsFalse_reachesBranch() {
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").setAutomaticOpenEvents(false).build())
+
+        assertFalse(Branch.getInstance().automaticOpenEvents_)
+    }
+
     // -------------------------------------------------------------------------
     // Logging emitted by initialize()
     //
@@ -583,7 +590,7 @@ class BranchInitializeTest : BranchTestBase() {
         "attributionLevel", "dmaParameters", "limitFacebookAttribution",
         "adNetworkCalloutsDisabled", "facebookAppId", "preinstallCampaign", "preinstallPartner",
         "installMetadata", "referringLinkAttributionForPreinstalledApps", "whitelistedSchemes",
-        "uriHostsToSkip", "userAgentFetchSync"
+        "uriHostsToSkip", "userAgentFetchSync", "automaticOpenEvents"
     )
 
     /**

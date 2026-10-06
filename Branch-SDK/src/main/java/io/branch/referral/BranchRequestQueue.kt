@@ -2,7 +2,6 @@ package io.branch.referral
 
 import android.content.Context
 import android.os.SystemClock
-import io.branch.coroutines.RequestDeepLink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -856,6 +855,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
     }
 
+    /** Whether a RequestDeepLink is queued or executing, with its response not handled yet. */
+    internal fun containsDeepLink(): Boolean {
+        synchronized(queueList) {
+            return queueList.any { it is RequestDeepLink && !it.responseHandled } ||
+                activeRequests.values.any { it is RequestDeepLink && !it.responseHandled }
+        }
+    }
+
     /**
      * Peek at request at specific index
      */
@@ -1042,17 +1049,19 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Clear all requests from queue
+     * Clear all requests from queue, except a RequestDeepLink already sending: its response still arrives.
+     * Returns the queued requests it removed.
      * Follows SRP - single responsibility for clearing queue state
      */
-    fun clear() {
+    fun clear(): List<ServerRequest> {
         BranchLogger.v("BranchRequestQueue.clear called")
-        synchronized(queueList) {
-            queueList.clear()
+        val removed = synchronized(queueList) {
+            queueList.toList().also { queueList.clear() }
         }
-        activeRequests.clear()
+        activeRequests.values.removeAll { it !is RequestDeepLink || it.responseHandled }
         requestRetryInfo.clear()
         BranchLogger.v("BranchRequestQueue.clear completed")
+        return removed
     }
     
     /**
