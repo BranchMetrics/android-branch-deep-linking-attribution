@@ -40,6 +40,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
+      - name: Fail if the vendor comes back
+        run: |
+          # The vendor left this line with EMT-4518. A rebase that keeps both
+          # sides of a conflict in this file, the L1 script or the module build
+          # restores it silently and stays green, since the repo secret still
+          # exists for master. This step turns that into a red build.
+          # The bracket expressions match the vendor strings but not their own
+          # text, so this file stays covered without excluding itself.
+          if git grep -n -i -e 'mobile[b]oost' -e 'gptdriver[_]lib' -- ':!ChangeLog.md' ; then
+            echo "::error::vendor reference found; see EMT-4518"
+            exit 1
+          fi
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
