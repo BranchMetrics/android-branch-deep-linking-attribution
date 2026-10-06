@@ -305,7 +305,8 @@ SCENARIO_CONTRACTS = {
     # arrives. This shape (process alive, activity stopped, link delivered through
     # onNewIntent to the existing task) is what Android's launch-time vocabulary and
     # `am start -W` report as HOT; EMT-4083 and the scenario names keep the Branch
-    # meaning of warm, which is "app backgrounded". Written from the capture, not from the ticket, which predicted one
+    # meaning of warm, which is "app backgrounded".
+    # Written from the capture, not from the ticket, which predicted one
     # /v3/deeplink and exactly one /v3/events/open. Measured: two and two. The
     # foreground open the process lifecycle observer used to send is gone by design
     # (EMT-4479: one open per requestDeepLinkData call), so each of the two launches
