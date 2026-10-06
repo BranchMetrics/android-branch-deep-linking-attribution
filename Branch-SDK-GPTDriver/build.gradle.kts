@@ -16,7 +16,6 @@ android {
         targetSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
-        multiDexEnabled = true
     }
 
     testOptions {
@@ -30,13 +29,13 @@ android {
 
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs = listOf("-Xskip-metadata-version-check")
     }
 }
 
 dependencies {
-    // Kotlin stdlib is declared explicitly on this `com.android.test` module so the
-    // test APK always ships the Kotlin runtime its own classes need.
+    // Kept defensively. The Kotlin Gradle plugin already adds the stdlib, and the
+    // test APK carries no kotlin.* classes either way: at runtime they come from
+    // the target APK (Branch-SDK-TestBed).
     implementation(kotlin("stdlib"))
     implementation(kotlin("stdlib-jdk8"))
 
@@ -44,6 +43,5 @@ dependencies {
     implementation("androidx.test:runner:1.5.2")
     implementation("androidx.test:rules:1.5.0")
     implementation("androidx.test.espresso:espresso-core:3.5.1")
-    implementation("androidx.test.uiautomator:uiautomator:2.3.0")
     androidTestUtil("androidx.test:orchestrator:1.5.0")
 }
