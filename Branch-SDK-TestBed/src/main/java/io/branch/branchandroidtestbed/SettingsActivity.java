@@ -24,6 +24,8 @@ public class SettingsActivity extends Activity {
 
         setupDisableAdNetworkCalloutsSwitch();
         setupEnableDmaParamsSwitch();
+        setupAutomaticOpenEventsSwitch();
+        setupSendOpenBeforeDeepLinkSwitch();
         setupPrepHelperView();
         setupRetryEditText();
         setupApiUrlText();
@@ -149,6 +151,32 @@ public class SettingsActivity extends Activity {
                         "DMA params " + (enableDmaParamsSwitch.isChecked() ? "enabled" : "disabled")
                                 + " — restart the app to apply",
                         Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    void setupAutomaticOpenEventsSwitch() {
+        final Switch automaticOpenEventsSwitch = findViewById(R.id.automatic_open_events);
+        automaticOpenEventsSwitch.setChecked(TestBedSettings.isAutomaticOpenEvents(this));
+        automaticOpenEventsSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TestBedSettings.setAutomaticOpenEvents(SettingsActivity.this, automaticOpenEventsSwitch.isChecked());
+                Toast.makeText(SettingsActivity.this,
+                        "Automatic open events " + (automaticOpenEventsSwitch.isChecked() ? "on" : "off")
+                                + " — restart the app to apply",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    void setupSendOpenBeforeDeepLinkSwitch() {
+        final Switch sendOpenBeforeDeepLinkSwitch = findViewById(R.id.send_open_before_deep_link);
+        sendOpenBeforeDeepLinkSwitch.setChecked(TestBedSettings.isSendOpenBeforeDeepLink(this));
+        sendOpenBeforeDeepLinkSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TestBedSettings.setSendOpenBeforeDeepLink(SettingsActivity.this, sendOpenBeforeDeepLinkSwitch.isChecked());
             }
         });
     }

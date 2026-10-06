@@ -145,6 +145,12 @@
                 android:text="Init Session" />
 
             <Button
+                android:id="@+id/sendOpenButton"
+                style="@style/testbed_button_style"
+                android:drawableStart="@drawable/baseline_document_scanner_24"
+                android:text="Send Open" />
+
+            <Button
                 android:id="@+id/openInAppBrowser"
                 style="@style/testbed_button_style"
                 android:drawableStart="@drawable/baseline_document_scanner_24"
