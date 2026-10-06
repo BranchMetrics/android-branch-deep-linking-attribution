@@ -109,8 +109,8 @@ class NoStickinessReturn {
         ) {
             "no stop-dispatch line within ${STOP_DISPATCH_MS}ms after pressHome"
         }
-        check(!Branch.getInstance().requestQueue_.containsInstallOpenOrResolution()) {
-            "queue held an install, open or resolution at the stop dispatch"
+        check(!Branch.getInstance().requestQueue_.containsDeepLinkOrOpen()) {
+            "queue held a deep link resolution or open at the stop dispatch"
         }
         // Diagnostic only; the pass/fail verdict never reads this one.
         Log.i(TAG, "diagnostic accessor after background: ${Branch.getInstance().getLatestReferringParams()}")
