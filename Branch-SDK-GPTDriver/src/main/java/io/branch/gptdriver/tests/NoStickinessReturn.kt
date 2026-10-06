@@ -86,6 +86,11 @@ class NoStickinessReturn {
         val link = NoStickinessSupport.generateLinkWithRetry(scenario!!, runId)
         check(link.startsWith("https://")) { "Expected an https link, got '$link'" }
 
+        // The launch's chained open clears stored link data when it completes; a link delivered
+        // while it is in flight is wiped before its own resolution runs.
+        check(NoStickinessSupport.awaitNoSessionWorkQueued(QUEUE_DRAIN_MS)) {
+            "launch deep link or open still queued after ${QUEUE_DRAIN_MS}ms"
+        }
         NoStickinessSupport.deliverWarmAndConfirm(context, captureFile, link, runId)
 
         var activity: Activity? = null
@@ -284,6 +289,7 @@ class NoStickinessReturn {
         const val STABLE_POLL_MS = 250L
         const val DISMISS_SETTLE_MS = 1_500L
         const val RESUMED_MS = 15_000L
+        const val QUEUE_DRAIN_MS = 20_000L
         const val QUIESCENCE_MS = 5_000L
         const val SETTINGS_VISIBLE_MS = 5_000L
         val SNAPSHOT_SELECTOR: BySelector = By.res(Pattern.compile(".*:id/snapshot$"))
