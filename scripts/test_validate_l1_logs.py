@@ -364,9 +364,10 @@ class ScenarioContractTests(unittest.TestCase):
     """organic_open is a measured capture less the EMT-4136 duplicate open.
     cold_firstInstall, cold_https and link_generation are cold captures.
 
-    The two warm captures were re-taken against an API 30 emulator on the beta.2 that
-    removed the foreground open (EMT-4479) and moved the launch fields to send time
-    (EMT-4480). Each warm scenario carries two opens, and an https link carries both
+    The two warm fixtures are the 2026-09-08 captures, edited by hand to match the
+    wire after #1428: one open block removed per fixture, and android_app_link_url
+    prepended on the https resolve. A real re-capture is tracked separately.
+    Each warm scenario carries two opens, and an https link carries both
     android_app_link_url and external_intent_uri.
     The only thing a warm launch does that a cold one does not is background and
     foreground the app; that is a coincidence these fixtures record, not a cause
