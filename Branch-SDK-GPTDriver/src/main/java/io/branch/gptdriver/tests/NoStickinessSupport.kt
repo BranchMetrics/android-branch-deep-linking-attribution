@@ -134,6 +134,25 @@ internal object NoStickinessSupport {
         }
     }
 
+    // Clear only after a full quiet window: the launch's open is enqueued just after its
+    // resolution leaves the queue, so one empty read can fall in that gap.
+    fun awaitNoSessionWorkQueued(timeoutMs: Long): Boolean {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        var clearSince: Long? = null
+        while (System.currentTimeMillis() < deadline) {
+            val now = System.currentTimeMillis()
+            if (Branch.getInstance().requestQueue_.containsDeepLinkOrOpen()) {
+                clearSince = null
+            } else if (clearSince == null) {
+                clearSince = now
+            } else if (now - clearSince >= QUIET_WINDOW_MS) {
+                return true
+            }
+            Thread.sleep(POLL_MS)
+        }
+        return false
+    }
+
     fun currentLineCount(captureFile: File): Int = if (captureFile.exists()) captureFile.readLines().size else 0
 
     // Bounded settle: waits for the capture file's length to hold steady for a full quiet
