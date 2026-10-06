@@ -15,7 +15,8 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
-      - ".github/workflows/sdk-l1-validation.yml"
+      # .github/** so a re-added vendor workflow or script runs the guard step below.
+      - ".github/**"
   pull_request:
     branches: [master, main, "6.0.0-beta.*"]
     # Duplicated rather than shared via a YAML anchor: GitHub Actions does not guarantee anchor
@@ -29,7 +30,8 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
-      - ".github/workflows/sdk-l1-validation.yml"
+      # .github/** so a re-added vendor workflow or script runs the guard step below.
+      - ".github/**"
   workflow_dispatch:
 
 permissions:
