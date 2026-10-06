@@ -15,7 +15,7 @@ on:
       - "scripts/run_l1_instrumented.sh"
       - ".github/workflows/sdk-l1-validation.yml"
   pull_request:
-    branches: [master, main, feature/mobileboost-e2e-tests, "6.0.0-beta.*"]
+    branches: [master, main, "6.0.0-beta.*"]
     # Duplicated rather than shared via a YAML anchor: GitHub Actions does not guarantee anchor
     # support, and a silently dead trigger is the worst failure mode for a gate.
     paths:
@@ -60,12 +60,6 @@ jobs:
       # `adb shell run-as io.branch.branchandroidtestbed cat ...` then fails with
       # `unknown package` and `branchlogs.txt` is never produced for L1 validation.
       - name: Build TestBed + GPTDriver APKs
-        env:
-          # Gradle maps ORG_GRADLE_PROJECT_<name> env vars to project properties,
-          # so the GPTDriver module's `findProperty("MOBILEBOOST_API_KEY")` picks
-          # this up without ever placing the secret on the command line (where
-          # it would appear in `ps`, kernel audit logs, and CI run UIs).
-          ORG_GRADLE_PROJECT_MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
         run: |
           ./gradlew \
             :Branch-SDK-TestBed:assembleDebug \
@@ -74,8 +68,6 @@ jobs:
 
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
-        env:
-          MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
         with:
           api-level: 30
           target: google_apis
@@ -83,9 +75,6 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
-          # MOBILEBOOST_API_KEY is propagated to the script via the step `env:`
-          # block above; the script reads it from the environment, so we no
-          # longer pass the secret as a positional argument (avoids argv leak).
           script: ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
