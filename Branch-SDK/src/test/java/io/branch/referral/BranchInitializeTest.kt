@@ -121,6 +121,17 @@ class BranchInitializeTest : BranchTestBase() {
         assertEquals(PrefHelper.NO_STRING_VALUE, PrefHelper.getInstance(context).sessionParams)
     }
 
+    @Test
+    fun initialize_networkTimeoutRemovedFromTheConfig_goesBackToTheDefault() {
+        // Same key, so the key-change reset doesn't clear it instead.
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").setNetworkTimeout(15_000).build())
+        Branch.shutDown()
+
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        assertEquals(PrefHelper.TIMEOUT, PrefHelper.getInstance(context).getTimeout())
+    }
+
     // -------------------------------------------------------------------------
     // Request tracing callback
     // -------------------------------------------------------------------------
@@ -482,6 +493,16 @@ class BranchInitializeTest : BranchTestBase() {
         Branch.initialize(context, config)
 
         assertEquals("key_live_test123", PrefHelper.getInstance(context).getBranchKey())
+    }
+
+    @Test
+    fun initialize_configWithoutAKey_throwsTheMissingKeyError() {
+        val error = runCatching { Branch.initialize(context, BranchConfiguration.Builder().build()) }
+            .exceptionOrNull()
+
+        assertTrue("got: $error", error is IllegalArgumentException)
+        assertTrue(error!!.message!!.contains("dashboard"))
+        assertNull(Branch.getInstance())
     }
 
     // -------------------------------------------------------------------------

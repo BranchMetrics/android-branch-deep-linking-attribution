@@ -27,26 +27,28 @@ class BranchConfigurationBuilderTest {
         assertFalse(config.testMode)
         assertNull(config.apiUrl)
         assertNull(config.cdnBaseUrl)
-        assertFalse(config.euEndpoint)
+        assertNull(config.euEndpoint)
         assertEquals(BranchLogger.BranchLogLevel.NONE, config.logLevel)
         assertNull(config.loggingCallback)
         assertNull(config.requestTracingCallback)
-        assertEquals(PrefHelper.TIMEOUT, config.networkTimeout)
-        assertEquals(PrefHelper.CONNECT_TIMEOUT, config.networkConnectTimeout)
-        assertEquals(PrefHelper.MAX_RETRIES, config.retryCount)
+        assertNull(config.networkTimeout)
+        assertNull(config.networkConnectTimeout)
+        assertNull(config.retryCount)
+        assertNull(config.retryInterval)
+        assertNull(config.noConnectionRetryMax)
         assertNull(config.remoteInterface)
         assertNull(config.attributionLevel)
         assertNull(config.dmaParameters)
-        assertFalse(config.limitFacebookAttribution)
-        assertFalse(config.adNetworkCalloutsDisabled)
+        assertNull(config.limitFacebookAttribution)
+        assertNull(config.adNetworkCalloutsDisabled)
         assertNull(config.facebookAppId)
         assertNull(config.preinstallCampaign)
         assertNull(config.preinstallPartner)
         assertTrue(config.installMetadata.isEmpty())
-        assertFalse(config.referringLinkAttributionForPreinstalledApps)
+        assertNull(config.referringLinkAttributionForPreinstalledApps)
         assertTrue(config.whitelistedSchemes.isEmpty())
         assertTrue(config.uriHostsToSkip.isEmpty())
-        assertFalse(config.userAgentFetchSync)
+        assertNull(config.userAgentFetchSync)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -74,7 +76,7 @@ class BranchConfigurationBuilderTest {
     @Test
     fun `setEUEndpoint true is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setEUEndpoint(true).build()
-        assertTrue(config.euEndpoint)
+        assertEquals(true, config.euEndpoint)
     }
 
     @Test
@@ -154,13 +156,13 @@ class BranchConfigurationBuilderTest {
     @Test
     fun `setLimitFacebookAttribution true is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setLimitFacebookAttribution(true).build()
-        assertTrue(config.limitFacebookAttribution)
+        assertEquals(true, config.limitFacebookAttribution)
     }
 
     @Test
     fun `setAdNetworkCalloutsDisabled true is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setAdNetworkCalloutsDisabled(true).build()
-        assertTrue(config.adNetworkCalloutsDisabled)
+        assertEquals(true, config.adNetworkCalloutsDisabled)
     }
 
     @Test
@@ -207,7 +209,7 @@ class BranchConfigurationBuilderTest {
         val config = BranchConfiguration.Builder("key_live_x")
             .setReferringLinkAttributionForPreinstalledApps(true)
             .build()
-        assertTrue(config.referringLinkAttributionForPreinstalledApps)
+        assertEquals(true, config.referringLinkAttributionForPreinstalledApps)
     }
 
     @Test
@@ -231,7 +233,7 @@ class BranchConfigurationBuilderTest {
     @Test
     fun `setUserAgentFetchSync true is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setUserAgentFetchSync(true).build()
-        assertTrue(config.userAgentFetchSync)
+        assertEquals(true, config.userAgentFetchSync)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -275,6 +277,11 @@ class BranchConfigurationBuilderTest {
     @Test(expected = IllegalArgumentException::class)
     fun `blank branch key throws IllegalArgumentException`() {
         BranchConfiguration.Builder("   ").build()
+    }
+
+    @Test
+    fun `builder without a key builds a configuration without a key`() {
+        assertNull(BranchConfiguration.Builder().build().branchKey)
     }
 
     @Test
@@ -466,7 +473,7 @@ class BranchConfigurationBuilderTest {
         assertEquals("key_live_x", config.branchKey)
         assertTrue(config.testMode)
         assertEquals(Defines.BranchAttributionLevel.FULL, config.attributionLevel)
-        assertTrue(config.userAgentFetchSync)
+        assertEquals(true, config.userAgentFetchSync)
     }
 
     // -------------------------------------------------------------------------
