@@ -14,10 +14,13 @@ internal class BranchProcessLifecycleObserver(private val branchInstance: Branch
         // First, so the clear below waits for that open.
         guarded("sendOpenAtBackground") { branchInstance.sendOpenAtBackground() }
         guarded("onStop") {
+            val prefHelper = branchInstance.prefHelper
+            // An open never writes sessionParams, so only a /v3/deeplink still waiting keeps them.
+            if (!branchInstance.requestQueue_.containsDeepLink()) {
+                prefHelper.sessionParams = PrefHelper.NO_STRING_VALUE
+            }
             // While attribution is off no open succeeds to clear the saved launch link, so the next launch would carry it.
             if (!branchInstance.requestQueue_.containsDeepLinkOrOpen()) {
-                val prefHelper = branchInstance.prefHelper
-                prefHelper.sessionParams = PrefHelper.NO_STRING_VALUE
                 prefHelper.clearLaunchLink()
             } else {
                 branchInstance.launchLinkClearOwed_ = true

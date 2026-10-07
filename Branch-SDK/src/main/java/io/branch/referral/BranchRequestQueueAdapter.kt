@@ -174,6 +174,9 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         return result
     }
 
+    /** The deep link requests queued or executing, with their responses not handled yet. */
+    fun deepLinksWaiting(): List<ServerRequest> = newQueue.deepLinksWaiting()
+
     fun peek(): ServerRequest? {
         BranchLogger.v("BranchRequestQueueAdapter.peek called")
         val result = newQueue.peek()

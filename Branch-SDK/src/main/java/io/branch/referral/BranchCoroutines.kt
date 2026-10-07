@@ -32,8 +32,9 @@ suspend fun BranchEvent.awaitLogEvent(context: Context): Unit =
     }
 
 /**
- * Sends the open for the latest `requestDeepLinkData` call and suspends until it is sent. Called before
- * that call's response arrives, it waits for the response, or for the app to go to the background.
+ * Sends the open for one `requestDeepLinkData` call, the oldest whose open isn't sent yet, and suspends
+ * until it is sent. Called before that call's response arrives, it waits for the response, or for the
+ * app to go to the background.
  * Cancelling detaches this caller; the open is still sent.
  *
  * @throws BranchException if the open could not be sent.
@@ -89,7 +90,7 @@ private suspend fun Branch.requestLaunchDeepLinkData(uri: Uri?, activity: Activi
 
         // Enqueue first: invokeOnCancellation fires immediately for an already-cancelled
         // continuation, and removing before enqueueing would let the request send anyway.
-        readLaunchLink(uri, activity)
+        readLaunchLink(uri, activity, request)
         enqueueLaunchRequest(request)
         continuation.invokeOnCancellation { requestQueue_.remove(request) }
     }

@@ -13,6 +13,32 @@ internal class RequestDeepLink(
     // Set once sendOpenAfterDeepLink has this request's response; containsDeepLink() then skips it.
     @JvmField @Volatile var responseHandled = false
 
+    // Set under Branch's heldOpenLock_ by a background: its open is sent when it responds, without sendOpen.
+    @JvmField @Volatile var sendOpenWhenAnswered = false
+
+    // The launch link when requestDeepLinkData was called. Sent instead of the saved one, which a later
+    // call or consent off can change before this request is sent.
+    private var launchLink: JSONObject? = null
+
+    fun keepLaunchLink() {
+        launchLink = savedLaunchLink(prefHelper_)
+    }
+
+    override fun doFinalUpdateOnBackgroundThread() {
+        super.doFinalUpdateOnBackgroundThread()
+        // Only the fields it had: on a first install, the install referrer read adds link_identifier later.
+        launchLink?.let { link -> link.keys().forEach { post.put(it, link.get(it)) } }
+    }
+
+    /** The launch link fields this request sent, for its open: by then the saved ones may be a later call's. */
+    fun sentLaunchLink(): JSONObject {
+        val link = JSONObject()
+        for (key in LAUNCH_LINK_KEYS) {
+            post.opt(key)?.let { link.put(key, it) }
+        }
+        return link
+    }
+
     init {
         callback_ = callback
         try {
