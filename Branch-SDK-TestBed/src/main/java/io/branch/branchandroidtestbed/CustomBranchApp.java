@@ -62,6 +62,8 @@ public final class CustomBranchApp extends Application {
             config.setApiUrl(apiUrl);
         }
 
+        config.setAutomaticOpenEvents(TestBedSettings.isAutomaticOpenEvents(this));
+
         Branch.initialize(this, config.build());
 
         // Runtime appearance setting — stays an instance method, not part of the configuration.
