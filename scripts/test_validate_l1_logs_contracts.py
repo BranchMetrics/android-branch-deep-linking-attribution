@@ -76,5 +76,26 @@ class HotUriSchemeContractTests(unittest.TestCase):
         self.assertEqual(errors, [], f"Unexpected errors: {errors}")
 
 
+class ColdUriSchemeContractTests(unittest.TestCase):
+    """cold_uriScheme, from a cold run delivering a scheme URL with a link_click_id. Not yet in
+    SCENARIO_FIXTURES: the registry guards need the contract, which the next commit adds."""
+
+    FIXTURE = "cold_uriScheme.txt"
+
+    def _entries(self, name):
+        return v.collapse_retries(v.parse_branch_logs(_fixture(name)))
+
+    def test_the_cold_scheme_capture_satisfies_the_contract(self):
+        # Catches the contract missing: no cold scheme delivery is asserted anywhere today.
+        errors = v.assert_contract(self._entries(self.FIXTURE), v.contract_for("cold_uriScheme"))
+        self.assertEqual(errors, [], f"Unexpected errors: {errors}")
+
+    def test_a_cold_https_capture_fails_on_android_app_link_url(self):
+        # Catches a cold https delivery passing as a scheme one (name-mismatch trap); only
+        # android_app_link_url on the resolve tells them apart, hot_uriScheme cannot.
+        errors = v.assert_contract(self._entries("cold_https.txt"), v.contract_for("cold_uriScheme"))
+        self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
+
+
 if __name__ == "__main__":
     unittest.main()
