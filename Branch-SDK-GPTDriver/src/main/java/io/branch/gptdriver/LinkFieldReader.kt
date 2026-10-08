@@ -16,7 +16,7 @@ import org.hamcrest.Matcher
  * Espresso asserts rather than extracts, so pulling a value back needs a
  * ViewAction that captures it. The L1 scenario drivers need the actual URL to
  * build an ACTION_VIEW intent, and they must not use the AI driver to get it,
- * because L1 has to run without MOBILEBOOST_API_KEY.
+ * because L1 has to run without a vendor key.
  */
 object LinkFieldReader {
 
