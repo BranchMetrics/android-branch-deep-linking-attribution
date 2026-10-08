@@ -4,11 +4,45 @@ import android.content.Context
 import org.json.JSONException
 import org.json.JSONObject
 
-internal class RequestOpen(
+/** The request fields of the launch link, the ones PrefHelper.clearLaunchLink clears. */
+internal val LAUNCH_LINK_KEYS = listOf(
+    Defines.Jsonkey.LinkIdentifier.key,
+    Defines.Jsonkey.AndroidAppLinkURL.key,
+    Defines.Jsonkey.AndroidPushIdentifier.key,
+    Defines.Jsonkey.External_Intent_URI.key,
+    Defines.Jsonkey.External_Intent_Extra.key
+)
+
+/** The saved launch link fields, as request fields. */
+internal fun savedLaunchLink(prefHelper: PrefHelper): JSONObject {
+    val link = JSONObject()
+    val values = listOf(
+        prefHelper.linkClickIdentifier,
+        prefHelper.appLink,
+        prefHelper.pushIdentifier,
+        prefHelper.externalIntentUri,
+        prefHelper.externalIntentExtra
+    )
+    LAUNCH_LINK_KEYS.zip(values).forEach { (key, value) ->
+        if (!value.isNullOrBlank() && value != PrefHelper.NO_STRING_VALUE) link.put(key, value)
+    }
+    return link
+}
+
+/** Replaces the launch link fields in post with link's. */
+internal fun putLaunchLink(post: JSONObject, link: JSONObject) {
+    for (key in LAUNCH_LINK_KEYS) {
+        if (link.has(key)) post.put(key, link.get(key)) else post.remove(key)
+    }
+}
+
+/** @param launchLink The launch link fields its /v3/deeplink sent, or null to send the saved ones. */
+internal class RequestOpen @JvmOverloads constructor(
     context: Context,
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean,
-    responseData: JSONObject?
+    responseData: JSONObject?,
+    private val launchLink: JSONObject? = null
 ) : ServerRequestInitSession(context, Defines.RequestPath.EventsOpen, isAutoInitialization) {
 
     init {
@@ -44,6 +78,11 @@ internal class RequestOpen(
         }
     }
 
+    override fun doFinalUpdateOnBackgroundThread() {
+        super.doFinalUpdateOnBackgroundThread()
+        launchLink?.let { putLaunchLink(post, it) }
+    }
+
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {
         super.onRequestSucceeded(response, branch)
         BranchLogger.v("RequestOpen Succeeded. Response: ${response.`object`}")
@@ -55,8 +94,8 @@ internal class RequestOpen(
                 prefHelper_.userURL = responseJson.getString(Defines.Jsonkey.Link.key)
             }
 
-            // TODO: Should be put under v3/deeplink
-            // Check for enhanced web link UX override
+            // TODO: Activation: open the enhanced web link UX from the /v3/deeplink response and ignore it here.
+            // api-open sends invoke_features on both responses today.
             if (responseJson.has(Defines.Jsonkey.Invoke_Features.key) &&
                 responseJson.getJSONObject(Defines.Jsonkey.Invoke_Features.key).has("enhanced_web_link_ux")) {
 
@@ -73,14 +112,15 @@ internal class RequestOpen(
                 if (responseJson.has(Defines.Jsonkey.Data.key)) {
                     prefHelper_.sessionParams = responseJson.getString(Defines.Jsonkey.Data.key)
                 }
+            }
 
-                if (callback_ != null) {
-                    // EMT-3860: latestReferringParams now carries the resolved deep link data,
-                    // because the open POST includes external_intent_uri (via the inherited
-                    // ServerRequestInitSession.onPreExecute) so the server resolves the click and
-                    // returns link_data in the response.
-                    callback_!!.onInitFinished(branch.latestReferringParams, null)
-                }
+            // Also after the web page opens: the open was sent, and sendOpen waits for this.
+            if (callback_ != null) {
+                // EMT-3860: latestReferringParams now carries the resolved deep link data,
+                // because the open POST includes external_intent_uri (via the inherited
+                // ServerRequestInitSession.onPreExecute) so the server resolves the click and
+                // returns link_data in the response.
+                callback_!!.onInitFinished(branch.latestReferringParams, null)
             }
 
             prefHelper_.appVersion = DeviceInfo.getInstance()?.appVersion ?: ""

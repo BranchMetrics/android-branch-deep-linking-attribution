@@ -187,4 +187,37 @@ class BranchDeepLinkCoroutinesTest : BranchTestBase() {
         }
         return false
     }
+
+    @Test
+    fun sendOpen_returnsOnceTheOpenIsSent() = runTest {
+        initializeWithAutomaticOpenEventsOff()
+        val remote = StubRemoteInterface(200, """{"data":"{\"+clicked_branch_link\":false}"}""")
+        Branch.getInstance().setBranchRemoteInterface(remote)
+        Branch.getInstance().requestDeepLinkData(uri)
+
+        Branch.getInstance().sendOpen()
+
+        assertTrue("the open must have gone out", remote.openSent.await(1, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun sendOpen_throwsBranchExceptionWhenTheOpenFails() = runTest {
+        initializeWithAutomaticOpenEventsOff()
+        val remote = StubRemoteInterface(500, """{"error":"boom"}""")
+        Branch.getInstance().setBranchRemoteInterface(remote)
+        runCatching { Branch.getInstance().requestDeepLinkData(uri) }
+
+        try {
+            Branch.getInstance().sendOpen()
+            fail("a failed open must throw")
+        } catch (e: BranchException) {
+            assertEquals(500, e.branchError.errorCode)
+        }
+    }
+
+    private fun initializeWithAutomaticOpenEventsOff() {
+        Branch.shutDown()
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").setAutomaticOpenEvents(false).build())
+        Branch._userAgentString = "test-agent"
+    }
 }

@@ -5,7 +5,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.ProcessLifecycleOwner
-import io.branch.coroutines.RequestDeepLink
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -109,24 +108,24 @@ class BranchProcessLifecycleObserverTest : BranchTestBase() {
     }
 
     @Test
-    fun onStop_keepsSessionParamsWhileOpenExecuting() {
+    fun onStop_clearsSessionParamsWhileOpenExecuting() {
         prefHelper.sessionParams = linkSessionParams
         val open = RequestOpen(RuntimeEnvironment.getApplication(), null, false, null)
         activeRequests()["RequestOpen_executing"] = open
 
         observer.onStop(owner)
 
-        assertEquals(linkSessionParams, prefHelper.sessionParams)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.sessionParams)
     }
 
     @Test
-    fun onStop_keepsSessionParamsWhileOpenQueued() {
+    fun onStop_clearsSessionParamsWhileOpenQueued() {
         prefHelper.sessionParams = linkSessionParams
         queue.insert(heldRequest(RequestOpen(RuntimeEnvironment.getApplication(), null, false, null)), 0)
 
         observer.onStop(owner)
 
-        assertEquals(linkSessionParams, prefHelper.sessionParams)
+        assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.sessionParams)
     }
 
     @Test

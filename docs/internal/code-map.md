@@ -22,8 +22,8 @@ Code spans several `io/branch/*` packages, not just `referral/`.
   - `referral/util/` `BranchEvent`, `LinkProperties`, `CommerceEvent`, content-metadata types
   - `referral/validators/`, `referral/QRCode/`
   - `referral/modernization/` `BranchApiPreservationManager.kt`, `registry/PublicApiRegistry.kt`, `wrappers/PreservedBranchApi.kt` and `LegacyBranchWrapper.kt` (legacy API shims), `core/ModernBranchCore.kt` (the new reactive session entry point), `adapters/CallbackAdapterRegistry.kt`, `analytics/ApiUsageAnalytics.kt`
-- **`coroutines/`** async fetch entry points (`AdvertisingIds`, `DeviceSignals`, `InstallReferrers`) **and** the newer coroutine request classes `RequestOpen.kt` (`v3/events/open`) and `RequestDeepLink.kt` (`v3/deeplink`)
-- **`observers/`** (a directory under `io.branch`, but the classes declare `package io.branch.referral`) `BranchProcessLifecycleObserver.kt`, process-level background detection that clears `sessionParams` and the saved launch link; it sends no requests
+- **`coroutines/`** async fetch entry points (`AdvertisingIds`, `DeviceSignals`, `InstallReferrers`) **and** the newer coroutine request classes `RequestOpen.kt` (`v3/events/open`) and `RequestDeepLink.kt` (`v3/deeplink`) (both declare `package io.branch.referral`)
+- **`observers/`** (a directory under `io.branch`, but the classes declare `package io.branch.referral`) `BranchProcessLifecycleObserver.kt`, process-level background detection that clears `sessionParams` and the saved launch link; with `setAutomaticOpenEvents(false)` it first sends the open the app hasn't sent
 - **`indexing/`** `BranchUniversalObject`, the BUO content model
 - **`data/`** `InstallReferrerResult`
 - **`interfaces/`** public callback interfaces, for example `IBranchLoggingCallbacks`
@@ -34,7 +34,7 @@ Code spans several `io/branch/*` packages, not just `referral/`.
 | Task | Start here |
 | --- | --- |
 | Launch, deep-link callbacks, intent parsing | `Branch.requestDeepLinkData` (Activity, Uri, and the `suspend` variants in `BranchCoroutines.kt`), then `readLaunchLink`/`readAndStripParam` and `enqueueLaunchRequest`/`initTasks` in `Branch.java` |
-| OPEN, attribution gating | `Branch.sendOpen(JSONObject)`, sent once per `requestDeepLinkData`, unless one is already waiting, from `coroutines/RequestDeepLink.kt`; `Branch.sendHeldOpen` sends, on opt-in, the open a link check held while attribution was off; request in `coroutines/RequestOpen.kt` |
+| OPEN, attribution gating | `Branch.sendOpenAfterDeepLink(RequestDeepLink, JSONObject)` runs after each `RequestDeepLink` (`coroutines/RequestDeepLink.kt`, package `io.branch.referral`) and sends the open, or keeps it while attribution is off or with `setAutomaticOpenEvents(false)`; `Branch.sendOpen(callback)` sends the oldest kept open, or waits for the next `/v3/deeplink` response or the background; `Branch.sendHeldOpen` sends a kept open at opt-in; `Branch.sendOpenAtBackground` sends the ones the app hasn't sent; request in `coroutines/RequestOpen.kt` |
 | Manual deep-link resolution (`v3/deeplink`) | `Branch.requestDeepLinkData(...)` plus `coroutines/RequestDeepLink.kt` |
 | Request queueing, wait locks, retry behavior | `BranchRequestQueue.kt` and `BranchRequestQueueAdapter.kt`. **Not** `ServerRequestQueue.java`, which is orphaned |
 | A new API request type, or changing a request body | subclass `ServerRequest`; route it in the adapter and queue; add the path to `Defines.RequestPath` |

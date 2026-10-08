@@ -80,6 +80,9 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         
         // Enhanced session validation with fallback to legacy system
         val needsSession = requestNeedsSession(request)
+        if (needsSession) {
+            Branch.getInstance().warnIfOpenWaitsForSendOpen()
+        }
         val canPerformOperations = Branch.getInstance().canPerformOperations()
         val legacyInitialized = Branch.getInstance().initState is BranchSessionState.Initialized
         val hasValidSession = try {
@@ -162,6 +165,18 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.containsDeepLinkOrOpen result: $result")
         return result
     }
+
+    /** Whether a deep link request is queued or executing. */
+    fun containsDeepLink(): Boolean {
+        BranchLogger.v("BranchRequestQueueAdapter.containsDeepLink called")
+        val result = newQueue.containsDeepLink()
+        BranchLogger.v("BranchRequestQueueAdapter.containsDeepLink result: $result")
+        return result
+    }
+
+    /** The deep link requests queued or executing, with their responses not handled yet. */
+    fun deepLinksWaiting(): List<ServerRequest> = newQueue.deepLinksWaiting()
+
     fun peek(): ServerRequest? {
         BranchLogger.v("BranchRequestQueueAdapter.peek called")
         val result = newQueue.peek()
@@ -242,10 +257,9 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.printQueue called")
         newQueue.printQueue()
     }
-    fun clear() {
+    fun clear(): List<ServerRequest> {
         BranchLogger.v("BranchRequestQueueAdapter.clear called")
-        newQueue.clear()
-        BranchLogger.v("BranchRequestQueueAdapter.clear completed")
+        return newQueue.clear()
     }
     
     private fun requestNeedsSession(request: ServerRequest): Boolean {
