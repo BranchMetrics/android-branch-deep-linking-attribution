@@ -184,9 +184,9 @@ jobs:
               echo "| Cold | see failures below |"
               echo "| Negative and guards | see failures below |"
             fi
-            echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
+            echo "| Warm | warm_https_onNewIntent and warm_uriScheme run in this gate |"
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
-              echo "| Hot | hot_https_foreground pass, hot_uriScheme not implemented |"
+              echo "| Hot | hot_https_foreground pass, hot_uriScheme not wired into the gate yet (driver and contract present) |"
             else
               echo "| Hot | see failures below |"
             fi
