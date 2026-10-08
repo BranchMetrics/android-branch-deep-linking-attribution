@@ -1,7 +1,10 @@
 package io.branch.gptdriver.tests
 
+import android.app.Activity
+import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -13,6 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -31,7 +35,8 @@ import org.junit.runner.RunWith
  * after() closes a scenario that has lost lifecycle control once a new intent arrived through
  * startActivity.
  *
- * Produces no assertion of its own. The capture is the output.
+ * Produces no assertion of its own beyond MainActivity staying in the foreground. The capture
+ * is the output.
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
@@ -54,13 +59,44 @@ class H2HotUriSchemeWireTest {
         scenario?.moveToState(Lifecycle.State.RESUMED)
         settleShort()
 
-        generateLink()
-        settleShort()
+        val stoppedWatcher = StoppedWatcher()
+        val application = InstrumentationRegistry.getInstrumentation()
+            .targetContext.applicationContext as Application
+        application.registerActivityLifecycleCallbacks(stoppedWatcher)
+        try {
+            generateLink()
+            settleShort()
 
-        clearCapturedLog()
+            clearCapturedLog()
 
-        deliver(SCHEME_URI)
-        settle()
+            deliver(SCHEME_URI)
+            settle()
+
+            assertTrue(
+                "MainActivity left the foreground during the scenario, so the delivery " +
+                    "was warm rather than hot",
+                !stoppedWatcher.stopped.get()
+            )
+        } finally {
+            application.unregisterActivityLifecycleCallbacks(stoppedWatcher)
+        }
+    }
+
+    /** Watches for onStop, not onPause: onPause fires on every hot redelivery to a resumed
+     * singleTop activity, but a true hot delivery never reaches STOPPED. */
+    private class StoppedWatcher : Application.ActivityLifecycleCallbacks {
+        val stopped = AtomicBoolean(false)
+
+        override fun onActivityStopped(activity: Activity) {
+            if (activity is MainActivity) stopped.set(true)
+        }
+
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+        override fun onActivityStarted(activity: Activity) {}
+        override fun onActivityResumed(activity: Activity) {}
+        override fun onActivityPaused(activity: Activity) {}
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+        override fun onActivityDestroyed(activity: Activity) {}
     }
 
     /** Not read back: this exists so the device is a returning one, as in the warm scenarios. */
