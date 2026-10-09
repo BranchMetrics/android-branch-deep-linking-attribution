@@ -15,7 +15,12 @@ import androidx.test.uiautomator.UiDevice
 import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.LinkFieldReader
+import io.branch.indexing.BranchUniversalObject
+import io.branch.referral.BranchError
+import io.branch.referral.util.LinkProperties
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -57,12 +62,13 @@ internal class WireScenarioDriver {
     private var scenario: ActivityScenario<MainActivity>? = null
     private var baseline = emptyMap<String, Int>()
     private val lifecycle = MainActivityLifecycle()
+    private var registeredOn: Application? = null
 
     /** Starts the TestBed and waits for its launch to reach the wire: a deeplink and an open. */
     fun launch() {
         baseline = ENDPOINTS.associateWith { posts(it) }
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
-        (app as Application).registerActivityLifecycleCallbacks(lifecycle)
+        registeredOn = (app as Application).also { it.registerActivityLifecycleCallbacks(lifecycle) }
         scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario?.moveToState(Lifecycle.State.RESUMED)
         awaitPosts(DEEPLINK, OPEN)
@@ -71,6 +77,18 @@ internal class WireScenarioDriver {
         check(launchOpen != null && launchOpen.contains(TOKEN_FIELD)) {
             "no randomized_bundle_token on the launch open; run cold_https first"
         }
+    }
+
+    /**
+     * Unregisters the lifecycle callbacks launch() added. Without it a finished driver keeps
+     * observing the Application for the rest of the process, and a later driver's activity
+     * events reach its counters too. Each driver then counts only the stops and destroys
+     * between its own launch() and close(). Call it from the test's @After. It does not close the
+     * scenario, for the reason in the class comment. Safe to call twice or without a launch.
+     */
+    fun close() {
+        registeredOn?.unregisterActivityLifecycleCallbacks(lifecycle)
+        registeredOn = null
     }
 
     /**
@@ -94,6 +112,40 @@ internal class WireScenarioDriver {
         }
         awaitQuiet()
         return field
+    }
+
+    /**
+     * Generates a link in the running activity that carries [marker] as the control parameter
+     * `l1_scenario`, which the contract's link marker check reads back from the resolved link
+     * (SCENARIO_LINK_MARKERS in validate_l1_logs.py). Used by a scenario whose contract has a
+     * marker (hot_https_foreground); [generateLink] clicks the TestBed button and cannot set one.
+     * Fails by name if the link does not arrive, fails, or is not https.
+     */
+    fun generateMarkedLink(marker: String): String {
+        val runId = System.currentTimeMillis().toString()
+        val latch = CountDownLatch(1)
+        var url: String? = null
+        var error: BranchError? = null
+        val properties = LinkProperties()
+            .addControlParameter("l1_scenario", marker)
+            .addControlParameter("l1_run_id", runId)
+        checkNotNull(scenario) { "generateMarkedLink needs a launched scenario" }.onActivity { activity ->
+            BranchUniversalObject()
+                .setCanonicalIdentifier("l1/$marker/$runId")
+                .generateShortUrl(activity, properties, { generated, failure ->
+                    url = generated
+                    error = failure
+                    latch.countDown()
+                }, false)
+        }
+        check(latch.await(LINK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+            "No link within ${LINK_TIMEOUT_MS}ms"
+        }
+        check(error == null) { "Link generation failed: ${error?.message}" }
+        val link = url.orEmpty()
+        check(link.startsWith("https://")) { "Expected an https link, got '$link'" }
+        awaitQuiet()
+        return link
     }
 
     /**
@@ -121,8 +173,11 @@ internal class WireScenarioDriver {
      * (hot_uriScheme counts one deeplink and one open, not the launch's). [launch] owns the
      * arrival precondition (a deeplink and an open, then quiet), so it is not repeated here.
      * What this asserts can fail on its own: the rename's result, and that the set-aside file
-     * holds the launch's /v3/events/open carrying randomized_bundle_token, so the pair the
-     * contract no longer sees is the pair that was meant to leave it. [deliver] and
+     * holds the launch's /v3/events/open carrying randomized_bundle_token. The deeplink half of
+     * the pair is not checked here; it is covered indirectly, because [launch] has already
+     * awaited both requests. The approach depends on the TestBed logger reopening
+     * branchlogs.txt on each write (CustomBranchApp.saveLogToFile opens and closes per message),
+     * so a write after the rename lands in a new file. [deliver] and
      * [deliverHot] take their baseline after this, so their counts start from the empty file.
      * The file stays at branchlogs.preclear.txt for diagnosis through run-as; the L1 script
      * does not pull it.

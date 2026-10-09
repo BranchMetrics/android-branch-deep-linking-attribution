@@ -138,7 +138,10 @@ class ScenarioArtifactGuards(unittest.TestCase):
                 for field, pattern in self.PLACEHOLDER_PATTERNS.items():
                     if field in payload:
                         with self.subTest(scenario=scenario, request=index, field=field):
-                            self.assertRegex(payload[field], pattern, f"{fixture}: {field} is not a placeholder")
+                            self.assertIsInstance(payload[field], str, f"{fixture}: {field} is not a string")
+                            self.assertIsNotNone(
+                                pattern.fullmatch(payload[field]), f"{fixture}: {field} is not a placeholder"
+                            )
                 for field in ("android_app_link_url", "external_intent_uri"):
                     if field in payload:
                         with self.subTest(scenario=scenario, request=index, field=field):
