@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * control, so close() throws "Activity never becomes DESTROYED". DeepLinkWarmOpenHybridTest hit
  * the same wall. The runner cleans the activity up.
  */
-internal class WarmScenarioDriver {
+internal class WireScenarioDriver {
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private var baseline = emptyMap<String, Int>()

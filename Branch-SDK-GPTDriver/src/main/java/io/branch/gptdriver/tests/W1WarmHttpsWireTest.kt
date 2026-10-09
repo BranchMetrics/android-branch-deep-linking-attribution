@@ -41,7 +41,7 @@ import org.junit.Test
  */
 class W1WarmHttpsWireTest {
 
-    private val driver = WarmScenarioDriver()
+    private val driver = WireScenarioDriver()
 
     @Test
     fun warmHttpsLinkEmitsWirePayload() {
