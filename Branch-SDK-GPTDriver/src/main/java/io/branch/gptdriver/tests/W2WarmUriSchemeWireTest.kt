@@ -6,8 +6,12 @@ import org.junit.Test
  * warm_uriScheme: warm_https_onNewIntent's launch state, entered through the URI scheme
  * instead of https.
  *
- * Same shape as W1WarmHttpsWireTest: launch, generate a link so the device is a returning
- * one, background, deliver, settle. Only the delivered URI differs.
+ * Same shape as W1WarmHttpsWireTest: launch, generate a link, background, deliver. Only the
+ * delivered URI differs. The link is generated so the capture has the same requests as W1's
+ * and the contracts differ only in the entry-point fields; it makes nothing returning.
+ *
+ * Needs a device that already holds a token, from cold_https running first; this line does not
+ * wipe either. W1WarmHttpsWireTest explains what fails without it.
  *
  * The scheme changes which field carries the URI. RequestDeepLink puts an http or https URI
  * in android_app_link_url and everything else in external_intent_uri, and lifts a
