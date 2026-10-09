@@ -20,6 +20,7 @@ lines for every wire request just before HTTP send:
 import argparse
 import json
 import os
+import re
 import sys
 from urllib.parse import urlparse
 
@@ -257,6 +258,12 @@ def collapse_retries(entries):
 #   fields  endpoint -> field -> exact number of that endpoint's requests
 #           carrying the field. Same counting as `counts`, one level down;
 #           0 forbids. Presence only, never a value comparison.
+#           The endpoint may carry a position, "/v3/events/open[-1]": the rule
+#           then judges only that one request of the endpoint (Python indexing,
+#           so [0] is the first and [-1] the last) and the count is out of 1.
+#           A position out of range selects no request. Only for a rule that
+#           depends on which request carries the field; the plain form stays the
+#           default.
 #           It exists because an endpoint count cannot see a request changing
 #           character: on 6.0.0-beta.0 the install is a /v3/events/open like
 #           any other, so a first install and a launch on an installed device
@@ -333,12 +340,14 @@ SCENARIO_CONTRACTS = {
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
-            # link_data is the attribution: the open that follows the tapped link
-            # carries it, the bare launch's open does not, so one of the two. Without
-            # it a tap whose open went out unattributed (the deeplink request failed,
-            # or its reply was not a click) would still pass. warm_uriScheme must not
-            # get this rule: a bare scheme link matches nothing, so its opens have none.
-            "/v3/events/open": {"randomized_bundle_token": 2, "link_data": 1},
+            # link_data is the attribution, and it belongs to the tapped link's
+            # open, the last one: the scenario launches bare first, then taps. Judged
+            # by position, a count of one of two would pass a capture where the bare
+            # launch carried it and the tap's open lost it (the deeplink request
+            # failed, or its reply was not a click). warm_uriScheme must not get this
+            # rule: a bare scheme link matches nothing, so its opens have none.
+            "/v3/events/open": {"randomized_bundle_token": 2},
+            "/v3/events/open[-1]": {"link_data": 1},
             "/v1/url": {"hardware_id": 0},
             # The entry point, asserted in both directions across the two warm
             # scenarios. An https link now rides both fields, a scheme link only
@@ -439,6 +448,17 @@ def occurs_after(uris, earlier, later):
     return False
 
 
+POSITION_SUFFIX = re.compile(r"^(?P<endpoint>.+)\[(?P<position>-?\d+)\]$")
+
+
+def split_position(endpoint_key):
+    """Split a `fields` key into (endpoint, position); position is None when plain."""
+    match = POSITION_SUFFIX.match(endpoint_key)
+    if match is None:
+        return endpoint_key, None
+    return match["endpoint"], int(match["position"])
+
+
 def assert_contract(entries, contract):
     """Check a normalized capture against a scenario contract.
 
@@ -466,8 +486,13 @@ def assert_contract(entries, contract):
         if not occurs_after(uris, earlier, later):
             errors.append(f"Expected a '{later}' request after a '{earlier}' one.")
 
-    for endpoint, fields in sorted(contract.get("fields", {}).items()):
+    for endpoint_key, fields in sorted(contract.get("fields", {}).items()):
+        endpoint, position = split_position(endpoint_key)
         matching = [e for e in entries if e["uri"] == endpoint]
+        if position is not None:
+            in_range = -len(matching) <= position < len(matching)
+            matching = [matching[position]] if in_range else []
+            endpoint = endpoint_key
         for field, expected in sorted(fields.items()):
             actual = sum(
                 1 for e in matching if is_present(lookup_field(e["request"], field))

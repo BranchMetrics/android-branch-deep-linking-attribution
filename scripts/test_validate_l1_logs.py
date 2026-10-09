@@ -173,6 +173,24 @@ class FieldPresenceEngineTests(unittest.TestCase):
             v.assert_contract(self._entries({"user_data": {"tok": "a"}}), self._contract({"tok": 1})), []
         )
 
+    def test_a_position_judges_only_that_request(self):
+        contract = {"counts": {}, "order": (), "fields": {"/e[-1]": {"tok": 1}}}
+        on_first = self._entries({"tok": "a"}, {})
+        on_last = self._entries({}, {"tok": "a"})
+        self.assertNotEqual(v.assert_contract(on_first, contract), [])
+        self.assertEqual(v.assert_contract(on_last, contract), [])
+
+    def test_a_position_selects_by_python_indexing(self):
+        contract = {"counts": {}, "order": (), "fields": {"/e[0]": {"tok": 1}}}
+        self.assertEqual(v.assert_contract(self._entries({"tok": "a"}, {}), contract), [])
+        self.assertNotEqual(v.assert_contract(self._entries({}, {"tok": "a"}), contract), [])
+
+    def test_a_position_out_of_range_selects_nothing(self):
+        # -5 on two requests must not wrap to the first one.
+        contract = {"counts": {}, "order": (), "fields": {"/e[-5]": {"tok": 1}}}
+        errors = v.assert_contract(self._entries({"tok": "a"}, {"tok": "b"}), contract)
+        self.assertIn("0 of 0 did", errors[0])
+
 
 class UnknownScenarioTests(unittest.TestCase):
     def test_an_unknown_name_is_refused_by_name(self):
