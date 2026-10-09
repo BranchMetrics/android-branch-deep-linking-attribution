@@ -464,14 +464,14 @@ SCENARIO_CONTRACTS = {
     },
     # hot_https_foreground: an App Link delivered via onNewIntent to a MainActivity that stayed
     # resumed. Same wire shape as cold_https, both tokens already known; hot-vs-warm is proven by
-    # the driver's own StoppedWatcher, not by anything the wire carries.
+    # WireScenarioDriver.deliverHot (resumed, never stopped or destroyed), not by the wire.
     # An https link rides both android_app_link_url and external_intent_uri (the launch fields are
     # added at send time from the intent, as on master), and link_identifier appears only when the
     # URL carries a link_click_id. The link_identifier zero pins the resolved URL, not how the
     # intent was addressed; android_app_link_url is what separates this from hot_uriScheme.
     # link_data on the open is the attribution: without it the launch was reported organically.
     # When EMT-4395 lands, a warm delivery emits this same wire, and hot-vs-warm rests on the
-    # driver's StoppedWatcher alone.
+    # driver's lifecycle asserts alone.
     "hot_https_foreground": {
         "counts": {
             "/v3/deeplink": 1,
