@@ -409,20 +409,26 @@ SCENARIO_CONTRACTS = {
     },
 
     # hot_uriScheme: a scheme link delivered via onNewIntent while MainActivity is already
-    # RESUMED, no backgrounding step. Measured from a real run of H2HotUriSchemeWireTest against
-    # 6.0.0-beta.0 at 3fe6a6f9, after the driver clears branchlogs.txt once the bare launch has
-    # settled -- the capture convention this repo now follows, so these counts are this
-    # scenario's own delivery, not the bare launch that precedes it in the driver.
+    # RESUMED, no backgrounding step. The counts come from a local run of
+    # H2HotUriSchemeWireTest against 6.0.0-beta.0 at 3fe6a6f9 (2026-09-11, an API 34
+    # emulator), after the driver clears branchlogs.txt once the bare launch has settled,
+    # so they are this scenario's own delivery, not the bare launch that precedes it. No CI
+    # emulator run of this scenario exists yet, and its fixture was not re-taken after the
+    # launch fields moved to send time (EMT-4480): its open carries none of them, which the
+    # warm_uriScheme capture's second open does.
     #
-    # external_intent_uri at 1 on /v3/deeplink is what separates a scheme delivery from an https
-    # one, same field warm_https_onNewIntent and warm_uriScheme use for the same purpose.
+    # An https link sends external_intent_uri as well as android_app_link_url, so
+    # external_intent_uri alone cannot tell the two deliveries apart. A scheme link
+    # carries only external_intent_uri, which is why android_app_link_url is held at 0.
     "hot_uriScheme": {
         "counts": {
             "/v3/deeplink": 1,
             "/v3/events/open": 1,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {"/v3/deeplink": {"external_intent_uri": 1}},
+        "fields": {
+            "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
+        },
     },
 }
 
