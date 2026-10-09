@@ -289,12 +289,25 @@ class ScenarioArtifactGuards(unittest.TestCase):
 
     FIXTURE_BRANCH_KEY = "key_live_fixtureFixtureFixtureFi"
 
+    # What a scenario fixture may carry in the fields that identify a device or a link.
+    # Placeholders only: this repo is public, and a capture comes off a real emulator.
+    PLACEHOLDERS = {
+        "anon_id": {"fixture-anon-id"},
+        "hardware_id": {"00000000fixture"},
+        "randomized_bundle_token": {"1111111111111111111"},
+        "randomized_device_token": {"2222222222222222222"},
+        # The emulator's own address, and organic_open's older placeholder. Neither
+        # routes anywhere.
+        "local_ip": {"10.0.2.16", "10.0.0.1"},
+    }
+    LINK_PREFIXES = ("https://bnctestbed.test-app.link/fixture-", "branchtest://")
+
     def _keep_set(self):
         """Derived from the validator, not restated here, so the two cannot drift.
 
-        Plus the two documented additions: app_version, which the cold fixtures already
-        carried, and external_intent_uri, which is what lets the two warm scenarios
-        contract their entry points in opposite directions."""
+        Plus app_version, the one name the validator never reads (the cold fixtures
+        already carried it). Every other kept field is one a rule or a required list
+        names, external_intent_uri and link_data among them."""
         keep = set()
         for name in dir(v):
             if not name.startswith("REQUIRED"):
@@ -309,18 +322,30 @@ class ScenarioArtifactGuards(unittest.TestCase):
         for contract in v.SCENARIO_CONTRACTS.values():
             for rules in contract["fields"].values():
                 keep |= set(rules)
-        return keep | {"app_version", "external_intent_uri"}
+        return keep | {"app_version"}
+
+    def _lines(self, fixture_name):
+        with open(_fixture(fixture_name), encoding="utf-8") as fh:
+            return [line for line in fh.read().splitlines() if line.strip()]
 
     def _payloads(self, fixture_name):
-        text = open(_fixture(fixture_name), encoding="utf-8").read()
-        return [json.loads(m.group(1)) for m in re.finditer(r"^Post value = (\{.*)$", text, re.M)]
+        """Parsed with the validator's own parser. Never empty: a parser that stopped
+        matching would otherwise make every guard below pass on nothing."""
+        payloads = [e["request"] for e in v.parse_branch_logs(_fixture(fixture_name))]
+        postings = [l for l in self._lines(fixture_name) if l.startswith(v.POSTING_PREFIX)]
+        self.assertGreater(len(payloads), 0, f"{fixture_name} parsed to no requests")
+        self.assertEqual(
+            len(payloads), len(postings), f"{fixture_name}: a request did not parse"
+        )
+        return payloads
 
     def test_scenario_fixtures_hold_only_wire_pairs(self):
         # What a raw capture fails: log lines the validator never reads.
         for scenario, fixture in SCENARIO_FIXTURES.items():
-            lines = [l for l in open(_fixture(fixture), encoding="utf-8").read().splitlines() if l.strip()]
-            stray = [l for l in lines if not l.startswith(("posting to ", "Post value = ", v.RESOLVED_PREFIX))]
+            lines = self._lines(fixture)
+            stray = [l for l in lines if not l.startswith((v.POSTING_PREFIX, v.POST_VALUE_PREFIX, v.RESOLVED_PREFIX))]
             with self.subTest(scenario=scenario):
+                self.assertGreater(len(lines), 0, f"{fixture} is empty")
                 self.assertEqual(stray, [], f"{fixture} holds lines that are not wire pairs")
 
     def test_scenario_fixtures_carry_no_field_outside_the_keep_set(self):
@@ -334,15 +359,50 @@ class ScenarioArtifactGuards(unittest.TestCase):
                     extra, set(), f"{fixture} carries fields the validator never reads: {sorted(extra)}"
                 )
 
-    def test_scenario_fixtures_carry_no_real_branch_key(self):
+    def test_scenario_fixtures_carry_only_the_branch_key_constant(self):
         # The one that would have caught a test-mode key going into a public repo.
         for scenario, fixture in SCENARIO_FIXTURES.items():
-            keys = {p["branch_key"] for p in self._payloads(fixture) if "branch_key" in p}
+            payloads = self._payloads(fixture)
+            keys = [p.get("branch_key") for p in payloads]
             with self.subTest(scenario=scenario):
-                self.assertTrue(
-                    keys <= {self.FIXTURE_BRANCH_KEY},
-                    f"{fixture} carries a branch key that is not the fixture constant",
+                self.assertEqual(
+                    keys, [self.FIXTURE_BRANCH_KEY] * len(payloads),
+                    f"{fixture}: every request must carry the fixture branch key and no other",
                 )
+
+    def test_scenario_fixtures_carry_only_placeholder_values(self):
+        # The names alone do not make a capture safe to commit: an emulator's
+        # hardware_id, anon_id and tokens ride in fields the keep set allows.
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            for index, payload in enumerate(self._payloads(fixture)):
+                for field, allowed in self.PLACEHOLDERS.items():
+                    if field in payload:
+                        with self.subTest(scenario=scenario, request=index, field=field):
+                            self.assertIn(payload[field], allowed, f"{fixture}: {field} is not a placeholder")
+                for field in ("android_app_link_url", "external_intent_uri"):
+                    if field in payload:
+                        with self.subTest(scenario=scenario, request=index, field=field):
+                            self.assertTrue(
+                                payload[field].startswith(self.LINK_PREFIXES),
+                                f"{fixture}: {field} is not a fixture link",
+                            )
+                if "link_data" in payload:
+                    with self.subTest(scenario=scenario, request=index, field="link_data"):
+                        link_data = payload["link_data"]
+                        self.assertLessEqual(
+                            set(link_data), {"+clicked_branch_link", "~referring_link"},
+                            f"{fixture}: link_data carries more than the two keys the rule reads",
+                        )
+                        self.assertTrue(link_data["~referring_link"].startswith(self.LINK_PREFIXES))
+
+    def test_scenario_fixtures_resolve_only_fixture_runs(self):
+        # The "Deep link params:" lines are logged by the TestBed from the resolved
+        # link, so they can carry whatever the link carried.
+        for scenario, fixture in SCENARIO_FIXTURES.items():
+            for params in v.parse_resolved_params(_fixture(fixture)):
+                with self.subTest(scenario=scenario):
+                    self.assertLessEqual(set(params), {"+clicked_branch_link", "l1_run_id", "l1_scenario"})
+                    self.assertEqual(params.get("l1_run_id"), "fixture-run")
 
     def test_no_two_scenarios_share_a_contract(self):
         # A scenario whose contract equals another's asserts nothing that one does not,
