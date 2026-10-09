@@ -307,7 +307,8 @@ SCENARIO_CONTRACTS = {
     # `am start -W` report as HOT; EMT-4083 and the scenario names keep the Branch
     # meaning of warm, which is "app backgrounded".
     # Written from the capture, not from the ticket, which predicted one
-    # /v3/deeplink and exactly one /v3/events/open. Measured: two and two. The
+    # /v3/deeplink and exactly one /v3/events/open. Measured on the CI emulator
+    # (API 30, the passing Layer 1 run on 3eb17bc0): two and two. The
     # foreground open the process lifecycle observer used to send is gone by design
     # (EMT-4479: one open per requestDeepLinkData call), so each of the two launches
     # sends one open. The only thing this scenario does that cold_https does not is
@@ -351,8 +352,8 @@ SCENARIO_CONTRACTS = {
         },
     },
     # warm_uriScheme: warm_https_onNewIntent's launch state entered through
-    # branchtest:// instead of https. Same counts and order, measured, and
-    # deliberately so: what it adds is not a different wire shape but the proof
+    # branchtest:// instead of https. Same counts and order, measured in the same
+    # run, and deliberately so: what it adds is not a different wire shape but the proof
     # that the manifest's branchtest filter matches and the OS hands a scheme
     # intent to a backgrounded app. Neither is reachable from a JVM test.
     "warm_uriScheme": {

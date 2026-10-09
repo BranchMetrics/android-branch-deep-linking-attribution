@@ -424,9 +424,12 @@ class ScenarioContractTests(unittest.TestCase):
     """organic_open is a measured capture less the EMT-4136 duplicate open.
     cold_firstInstall, cold_https and link_generation are cold captures.
 
-    The two warm fixtures are the 2026-09-08 captures, edited by hand to match the
-    wire after #1428: one open block removed per fixture, and android_app_link_url
-    prepended on the https resolve. A real re-capture is tracked separately.
+    The two warm fixtures are the real requests of the passing Layer 1 run on 3eb17bc0
+    (sdk-l1-validation.yml, workflow_dispatch, API 30, sdk_gphone_x86_64), read back from the
+    job log of its validate-wire-logs job. Nothing was added by hand. What was removed:
+    every field the validator never reads; and the identifiers were replaced with the
+    placeholders the other fixtures use (hardware_id, anon_id, both tokens, branch key,
+    request ids, the link, which is also all that link_data keeps).
     Each warm scenario carries two opens, and an https link carries both
     android_app_link_url and external_intent_uri.
     The only thing a warm launch does that a cold one does not is background and
