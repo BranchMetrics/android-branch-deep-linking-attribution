@@ -13,11 +13,13 @@ import org.junit.Test
  * Needs a device that already holds a token, from cold_https running first; this line does not
  * wipe either. W1WarmHttpsWireTest explains what fails without it.
  *
- * The scheme changes which field carries the URI. RequestDeepLink puts an http or https URI
- * in android_app_link_url and everything else in external_intent_uri, and lifts a
- * link_click_id query parameter into link_identifier when one is present. A bare
- * branchtest:// URI therefore reaches /v3/deeplink with external_intent_uri set and no
- * link_identifier, which is what this drives and what its contract records.
+ * The scheme changes which field carries the URI. Branch.readAndStripParam records the launch
+ * URI as external_intent_uri for every link, and records it as the app link
+ * (android_app_link_url) only for an http or https URI. A link_click_id query parameter is
+ * lifted into link_identifier when one is present. A bare branchtest:// URI therefore reaches
+ * /v3/deeplink with external_intent_uri set, no android_app_link_url and no link_identifier,
+ * which is what this drives and what its contract records. RequestDeepLink itself only adds
+ * the two tokens; RequestDeepLinkUriMappingTest pins the mapping on the JVM.
  *
  * The URI form follows ReferringUrlUtilityTests, which uses branchtest://home and
  * branchtest://?gclid=12345. The TestBed's button generates https links only, so there is no
