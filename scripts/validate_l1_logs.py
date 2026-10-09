@@ -20,6 +20,7 @@ lines for every wire request just before HTTP send:
 import argparse
 import json
 import os
+import re
 import sys
 from urllib.parse import urlparse
 
@@ -257,6 +258,12 @@ def collapse_retries(entries):
 #   fields  endpoint -> field -> exact number of that endpoint's requests
 #           carrying the field. Same counting as `counts`, one level down;
 #           0 forbids. Presence only, never a value comparison.
+#           The endpoint may carry a position, "/v3/events/open[-1]": the rule
+#           then judges only that one request of the endpoint (Python indexing,
+#           so [0] is the first and [-1] the last) and the count is out of 1.
+#           A position out of range selects no request. Only for a rule that
+#           depends on which request carries the field; the plain form stays the
+#           default.
 #           It exists because an endpoint count cannot see a request changing
 #           character: on 6.0.0-beta.0 the install is a /v3/events/open like
 #           any other, so a first install and a launch on an installed device
@@ -307,7 +314,8 @@ SCENARIO_CONTRACTS = {
     # `am start -W` report as HOT; EMT-4083 and the scenario names keep the Branch
     # meaning of warm, which is "app backgrounded".
     # Written from the capture, not from the ticket, which predicted one
-    # /v3/deeplink and exactly one /v3/events/open. Measured: two and two. The
+    # /v3/deeplink and exactly one /v3/events/open. Measured on the CI emulator
+    # (API 30, the passing Layer 1 run on 3eb17bc0): two and two. The
     # foreground open the process lifecycle observer used to send is gone by design
     # (EMT-4479: one open per requestDeepLinkData call), so each of the two launches
     # sends one open. The only thing this scenario does that cold_https does not is
@@ -319,12 +327,27 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": 2,
             "/v3/events/open": 2,
             "/v1/url": 1,
+            # Two, and not a property of the SDK: the TestBed logs one custom event
+            # from MainActivity.onStart, so two means the activity went through
+            # onStart twice, once per launch. The Kotlin driver asserts the stop
+            # directly (WarmScenarioDriver.assertBackgrounded); this count is the
+            # capture-side witness the Python gate can see, kept as a second signal.
+            # It cannot tell a stopped activity from a destroyed and recreated one,
+            # and it moves with the TestBed, not the SDK. The cold contracts leave
+            # it out for that reason.
             "/v3/events/custom": 2,
             "/v1/install": 0,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
+            # link_data is the attribution, and it belongs to the tapped link's
+            # open, the last one: the scenario launches bare first, then taps. Judged
+            # by position, a count of one of two would pass a capture where the bare
+            # launch carried it and the tap's open lost it (the deeplink request
+            # failed, or its reply was not a click). warm_uriScheme must not get this
+            # rule: a bare scheme link matches nothing, so its opens have none.
             "/v3/events/open": {"randomized_bundle_token": 2},
+            "/v3/events/open[-1]": {"link_data": 1},
             "/v1/url": {"hardware_id": 0},
             # The entry point, asserted in both directions across the two warm
             # scenarios. An https link now rides both fields, a scheme link only
@@ -336,8 +359,8 @@ SCENARIO_CONTRACTS = {
         },
     },
     # warm_uriScheme: warm_https_onNewIntent's launch state entered through
-    # branchtest:// instead of https. Same counts and order, measured, and
-    # deliberately so: what it adds is not a different wire shape but the proof
+    # branchtest:// instead of https. Same counts and order, measured in the same
+    # run, and deliberately so: what it adds is not a different wire shape but the proof
     # that the manifest's branchtest filter matches and the OS hands a scheme
     # intent to a backgrounded app. Neither is reachable from a JVM test.
     "warm_uriScheme": {
@@ -345,6 +368,9 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": 2,
             "/v3/events/open": 2,
             "/v1/url": 1,
+            # Two for the same reason as warm_https_onNewIntent: one TestBed
+            # onStart per launch. The driver asserts the stop directly; this is the
+            # capture-side witness of it, kept as a second signal.
             "/v3/events/custom": 2,
             "/v1/install": 0,
         },
@@ -373,8 +399,9 @@ SCENARIO_CONTRACTS = {
         },
     },
     # link_generation: the generation run that precedes
-    # cold_firstInstall, judged on its own capture. It holds the only /v1/url,
-    # so it carries the EMT-4199 rule that /v1/url sends no hardware_id.
+    # cold_firstInstall, judged on its own capture. It holds the /v1/url of the
+    # cold line (the warm contracts count one of their own), so it carries the
+    # EMT-4199 rule that /v1/url sends no hardware_id.
     "link_generation": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
@@ -438,6 +465,17 @@ def occurs_after(uris, earlier, later):
     return False
 
 
+POSITION_SUFFIX = re.compile(r"^(?P<endpoint>.+)\[(?P<position>-?\d+)\]$")
+
+
+def split_position(endpoint_key):
+    """Split a `fields` key into (endpoint, position); position is None when plain."""
+    match = POSITION_SUFFIX.match(endpoint_key)
+    if match is None:
+        return endpoint_key, None
+    return match["endpoint"], int(match["position"])
+
+
 def assert_contract(entries, contract):
     """Check a normalized capture against a scenario contract.
 
@@ -465,8 +503,13 @@ def assert_contract(entries, contract):
         if not occurs_after(uris, earlier, later):
             errors.append(f"Expected a '{later}' request after a '{earlier}' one.")
 
-    for endpoint, fields in sorted(contract.get("fields", {}).items()):
+    for endpoint_key, fields in sorted(contract.get("fields", {}).items()):
+        endpoint, position = split_position(endpoint_key)
         matching = [e for e in entries if e["uri"] == endpoint]
+        if position is not None:
+            in_range = -len(matching) <= position < len(matching)
+            matching = [matching[position]] if in_range else []
+            endpoint = endpoint_key
         for field, expected in sorted(fields.items()):
             actual = sum(
                 1 for e in matching if is_present(lookup_field(e["request"], field))
