@@ -185,11 +185,13 @@ class FieldPresenceEngineTests(unittest.TestCase):
         self.assertEqual(v.assert_contract(self._entries({"tok": "a"}, {}), contract), [])
         self.assertNotEqual(v.assert_contract(self._entries({}, {"tok": "a"}), contract), [])
 
-    def test_a_position_out_of_range_selects_nothing(self):
-        # -5 on two requests must not wrap to the first one.
+    def test_a_position_out_of_range_is_a_contract_error(self):
+        # -5 on two requests must not wrap to the first one, nor pass quietly.
         contract = {"counts": {}, "order": (), "fields": {"/e[-5]": {"tok": 1}}}
         errors = v.assert_contract(self._entries({"tok": "a"}, {"tok": "b"}), contract)
-        self.assertIn("0 of 0 did", errors[0])
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("Contract error", errors[0])
+        self.assertIn("out of range", errors[0])
 
 
 class UnknownScenarioTests(unittest.TestCase):
