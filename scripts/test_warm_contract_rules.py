@@ -199,6 +199,46 @@ class WarmLinkDataPosition(unittest.TestCase):
         self.assertTrue(any("/v3/events/open[-1]" in e for e in errors), errors)
 
 
+class PositionalKeysFailLoudly(unittest.TestCase):
+    """A positional key that selects nothing or parses as nothing must never pass."""
+
+    def _check(self, key, expected):
+        contract = {"counts": {}, "order": (), "fields": {key: {"link_data": expected}}}
+        return v.assert_contract(_entries("warm_https_onNewIntent"), contract)
+
+    def test_out_of_range_position_is_an_error_even_when_zero_is_expected(self):
+        for key in ("/v3/events/open[-5]", "/v3/events/open[7]"):
+            for expected in (0, 1):
+                with self.subTest(key=key, expected=expected):
+                    errors = self._check(key, expected)
+                    self.assertTrue(
+                        any("Contract error" in e and "out of range" in e and key in e for e in errors),
+                        errors,
+                    )
+
+    def test_malformed_suffix_is_an_error_not_a_plain_endpoint(self):
+        for key in (
+            "/v3/events/open[ -1]",
+            "/v3/events/open[\u22121]",
+            "/v3/events/open[x]",
+            "/v3/events/open[1",
+            "/v3/events/open[]",
+            "/v3/events/open[1][2]",
+            "/v3/events/open[\u0661]",
+        ):
+            for expected in (0, 1):
+                with self.subTest(key=key, expected=expected):
+                    errors = self._check(key, expected)
+                    self.assertTrue(
+                        any("Contract error" in e and "malformed" in e for e in errors),
+                        errors,
+                    )
+
+    def test_in_range_positions_still_work(self):
+        self.assertEqual(self._check("/v3/events/open[-1]", 1), [])
+        self.assertEqual(self._check("/v3/events/open[0]", 0), [])
+
+
 class WarmScenariosAreSeparated(unittest.TestCase):
     def test_each_warm_capture_fails_the_other_warm_contract(self):
         # The two share counts and order. What tells them apart is the entry
