@@ -121,8 +121,11 @@ internal class WireScenarioDriver {
      * (hot_uriScheme counts one deeplink and one open, not the launch's). [launch] owns the
      * arrival precondition (a deeplink and an open, then quiet), so it is not repeated here.
      * What this asserts can fail on its own: the rename's result, and that the set-aside file
-     * holds the launch's /v3/events/open carrying randomized_bundle_token, so the pair the
-     * contract no longer sees is the pair that was meant to leave it. [deliver] and
+     * holds the launch's /v3/events/open carrying randomized_bundle_token. The deeplink half of
+     * the pair is not checked here; it is covered indirectly, because [launch] has already
+     * awaited both requests. The approach depends on the TestBed logger reopening
+     * branchlogs.txt on each write (CustomBranchApp.saveLogToFile opens and closes per message),
+     * so a write after the rename lands in a new file. [deliver] and
      * [deliverHot] take their baseline after this, so their counts start from the empty file.
      * The file stays at branchlogs.preclear.txt for diagnosis through run-as; the L1 script
      * does not pull it.
