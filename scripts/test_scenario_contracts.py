@@ -35,11 +35,11 @@ class ScenarioContractTests(unittest.TestCase):
     they establish.
 
     hot_uriScheme is not one of those. It is a capture of a local H2HotUriSchemeWireTest run
-    against 6.0.0-beta.0 at 3fe6a6f9 (2026-09-11, an API 34 emulator, not the CI one), taken
-    after the driver cleared the log once the bare launch had settled, trimmed to the fields the
-    validator reads, with the identifiers swapped for the placeholders above. It was not
-    re-taken after the launch fields moved to send time, so its open carries none of them and
-    the first check against one of them needs a fresh capture, not this fixture."""
+    at 4652bf06 (2026-10-09, an API 30 emulator, sdk_gphone_arm64), not a CI capture: H2 is
+    not in the CI gate yet. The requests are real, taken after the driver moved the launch
+    capture aside once the bare launch had settled (WireScenarioDriver.setCaptureAside),
+    trimmed to the fields the validator reads, with the identifiers swapped for the
+    placeholders above."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
