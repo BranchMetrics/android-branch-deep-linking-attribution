@@ -19,8 +19,10 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The steps W1WarmHttpsWireTest and W2WarmUriSchemeWireTest share: launch the TestBed, generate
- * a link, send the app to the background, deliver a URI through startActivity.
+ * The steps the wire drivers share: launch the TestBed, generate a link, then deliver a URI
+ * through startActivity, either after sending the app to the background ([background] then
+ * [deliver], W1WarmHttpsWireTest and W2WarmUriSchemeWireTest) or while the activity is
+ * resumed ([deliverHot], H2HotUriSchemeWireTest).
  *
  * Each step waits for something it can observe: the TestBed's own capture file
  * (branchlogs.txt, read in this process, which is the app's), the short-URL field, or the
@@ -44,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * control, so close() throws "Activity never becomes DESTROYED". DeepLinkWarmOpenHybridTest hit
  * the same wall. The runner cleans the activity up.
  */
-internal class WarmScenarioDriver {
+internal class WireScenarioDriver {
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private var baseline = emptyMap<String, Int>()
@@ -108,6 +110,22 @@ internal class WarmScenarioDriver {
         awaitQuiet()
     }
 
+    /**
+     * Sets the capture so far aside, for a scenario whose contract judges only its delivery
+     * (hot_uriScheme counts one deeplink and one open, not the launch's). Asserts first that the
+     * capture holds this launch's deeplink and open (past the baseline [launch] read), so a launch that never reached the wire
+     * fails here by name, and checks the rename's result. [deliver] and [deliverHot] take their
+     * baseline after this, so their counts start from the empty file.
+     */
+    fun setCaptureAside() {
+        check(arrived(DEEPLINK) && arrived(OPEN)) {
+            "the capture holds no /v3/deeplink and /v3/events/open from this launch to set aside"
+        }
+        val aside = File(captureFile().parentFile, ASIDE_FILE)
+        aside.delete()
+        check(captureFile().renameTo(aside)) { "could not move $CAPTURE_FILE to $ASIDE_FILE" }
+    }
+
     private fun assertBackgrounded() {
         check(lifecycle.destroys.get() == 0) {
             "MainActivity was destroyed, not stopped. The link would reach onCreate, not onNewIntent"
@@ -122,6 +140,27 @@ internal class WarmScenarioDriver {
      */
     fun deliver(uri: String) {
         assertBackgrounded()
+        send(uri)
+        check(lifecycle.destroys.get() == 0) {
+            "MainActivity was destroyed during delivery, so the link did not reach a living " +
+                "activity through onNewIntent"
+        }
+    }
+
+    /**
+     * Delivers [uri] while MainActivity is resumed, with no background step, and waits as
+     * [deliver] does. Asserts the activity never stopped or died since [launch], so the link
+     * reached onNewIntent hot and not warm.
+     */
+    fun deliverHot(uri: String) {
+        check(!lifecycle.stopped) { "MainActivity is stopped, so this would not be a hot link" }
+        send(uri)
+        check(lifecycle.stops.get() == 0 && lifecycle.destroys.get() == 0) {
+            "MainActivity left the foreground during the scenario, so the delivery was not hot"
+        }
+    }
+
+    private fun send(uri: String) {
         baseline = ENDPOINTS.associateWith { posts(it) }
         // setPackage, so the system still resolves the intent against the manifest. Naming
         // the component would work too and would skip resolution, but then a manifest that
@@ -136,10 +175,6 @@ internal class WarmScenarioDriver {
         context.startActivity(intent)
         poll(WAIT_MS) { arrived(DEEPLINK) && arrived(OPEN) }
         awaitQuiet(FINAL_QUIET_MS)
-        check(lifecycle.destroys.get() == 0) {
-            "MainActivity was destroyed during delivery, so the link did not reach a living " +
-                "activity through onNewIntent"
-        }
     }
 
     private fun captureFile() =
@@ -233,6 +268,7 @@ internal class WarmScenarioDriver {
         const val OPEN = "/v3/events/open"
         val ENDPOINTS = listOf(DEEPLINK, OPEN)
         const val CAPTURE_FILE = "branchlogs.txt"
+        const val ASIDE_FILE = "branchlogs.preclear.txt"
         const val LINK_TIMEOUT_MS = 30_000L
         const val WAIT_MS = 30_000L
         const val POLL_MS = 250L
