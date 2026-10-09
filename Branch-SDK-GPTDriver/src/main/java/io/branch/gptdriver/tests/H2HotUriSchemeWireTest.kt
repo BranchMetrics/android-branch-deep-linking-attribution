@@ -22,8 +22,7 @@ import org.junit.Test
  *
  * No ActivityScenarioRule, for the reason WireScenarioDriver documents. The driver asserts that
  * MainActivity is RESUMED before and after the delivery and never stopped or died between the
- * launch and its end. The
- * capture is the output.
+ * launch and its end. The capture is the output.
  *
  * Not in the L1 workflow yet: run it by hand after cold_https with
  * TEST_CLASS=H2HotUriSchemeWireTest OUTPUT_LOG=wire-hot_uriScheme.txt CLEAR_LOG=1
