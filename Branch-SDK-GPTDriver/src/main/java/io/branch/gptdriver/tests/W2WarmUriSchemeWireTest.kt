@@ -34,7 +34,7 @@ import org.junit.Test
  */
 class W2WarmUriSchemeWireTest {
 
-    private val driver = WarmScenarioDriver()
+    private val driver = WireScenarioDriver()
 
     @Test
     fun warmUriSchemeLinkEmitsWirePayload() {
