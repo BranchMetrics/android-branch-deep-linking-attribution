@@ -182,12 +182,17 @@ jobs:
             echo "| --- | --- |"
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "| Cold | cold_firstInstall and cold_https pass |"
-              echo "| Negative and guards | organic_open and attribution_none pass, no_stickiness and late_userActivity not implemented |"
+              echo "| Negative and guards | organic_open and attribution_none pass, late_userActivity not implemented |"
               echo "| Warm | warm_https_onNewIntent and warm_uriScheme pass |"
             else
               echo "| Cold | see failures below |"
               echo "| Negative and guards | see failures below |"
               echo "| Warm | see failures below |"
+            fi
+            if [ "${{ steps.run_scenarios.outputs.result }}" = "pass" ]; then
+              echo "| No stickiness | no_stickiness pass |"
+            else
+              echo "| No stickiness | no_stickiness did not pass, see the no-stickiness-failure artifact |"
             fi
             echo "| Hot | hot_uriScheme has a driver and contract but is not in this gate yet; hot_https_foreground not implemented |"
             echo
