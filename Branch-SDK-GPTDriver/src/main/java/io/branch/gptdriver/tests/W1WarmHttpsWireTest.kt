@@ -1,95 +1,55 @@
 package io.branch.gptdriver.tests
 
-import android.content.Intent
-import android.net.Uri
-import androidx.lifecycle.Lifecycle
-import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import io.branch.branchandroidtestbed.MainActivity
-import io.branch.branchandroidtestbed.R
-import io.branch.gptdriver.LinkFieldReader
 import org.junit.Test
 
 /**
  * warm_https_onNewIntent: a link arriving while the app is alive but backgrounded.
  *
  * Warm is defined by the launch state, not by the delivery. The app must actually be in the
- * background when the link arrives, which is why this presses home before delivering. The
- * existing DeepLinkWarmOpenHybridTest delivers with the app in the foreground and its own
- * header calls that the hot case, so it is a precedent for the mechanism and not for the
- * state.
+ * background when the link arrives, which is why this presses Home and waits for the activity
+ * to stop before delivering. DeepLinkWarmOpenHybridTest delivers with the app in the
+ * foreground ("App is in foreground" in its header), so it is a precedent for the mechanism
+ * and not for the state.
  *
- * Delivery preserves the task. cold_https uses FLAG_ACTIVITY_CLEAR_TASK, which tears it down
- * and is the cold shape; SINGLE_TOP lands in MainActivity.onNewIntent instead, which is the
- * entry point a warm open really uses. Going through startActivity rather than calling
- * onNewIntent directly is deliberate: it re-runs onActivityStarted and onActivityResumed,
- * so the SDK's PENDING -> READY intent transition happens the way it does in production.
+ * Needs a device that already holds a token. The contract expects both opens to carry
+ * randomized_bundle_token, and only the reply to an init-session request stores it
+ * (BranchRequestQueue.processInitSessionResponse). Neither this driver's launch nor
+ * generating a link does. The token comes from cold_https, which the L1 workflow runs first,
+ * and this line does not wipe app data. Run alone on a wiped device, the first launch is an
+ * install and the gate fails on the token count and the custom event count, which reads like
+ * an SDK bug and is a missing prerequisite.
+ *
+ * Delivery preserves the task. cold_https is delivered from the host: scripts/
+ * run_l1_instrumented.sh force-stops the app and runs `am start -W`, and fails unless the
+ * launch is COLD. Here the process stays alive and FLAG_ACTIVITY_SINGLE_TOP lands the intent
+ * in the running MainActivity.onNewIntent, the entry point a warm open uses. It goes through
+ * startActivity rather than calling onNewIntent directly, so the system resolves the intent
+ * against the manifest and brings the stopped activity back the way a tap would. The SDK's
+ * BranchProcessLifecycleObserver.onStop does clear sessionParams and the saved launch link when
+ * the app goes to the background, which is why the driver waits for the stop before delivering;
+ * after that the SDK holds no launch intent state to re-run. The TestBed's onNewIntent calls
+ * requestDeepLinkData, which sends the deeplink and the open.
  *
  * No ActivityScenarioRule here, unlike the other L1 drivers. The rule closes the scenario in
  * its after(), and once a new intent has been delivered through startActivity the scenario
  * has lost lifecycle control, so close() throws. DeepLinkWarmOpenHybridTest hit the same wall
  * and manages its own scenario for the same reason. The runner cleans the activity up.
  *
- * Produces no assertion of its own. The capture is the output; the contract that judges it
- * lives in the validator.
+ * The driver checks only its own preconditions: the launch open carries a token, the activity
+ * stopped without being destroyed, and it was not destroyed by the delivery. The capture is the
+ * output; the contract that judges it lives in the validator.
  */
 class W1WarmHttpsWireTest {
 
-    private var scenario: ActivityScenario<MainActivity>? = null
+    private val driver = WireScenarioDriver()
 
     @Test
     fun warmHttpsLinkEmitsWirePayload() {
-        // This launch and the generation below happen first, so the device is a returning
-        // one and the app is running by the time the link arrives.
-        scenario = ActivityScenario.launch(MainActivity::class.java)
-        scenario?.moveToState(Lifecycle.State.RESUMED)
-        settleShort()
-
-        val url = generateLink()
-        settleShort()
-
-        background()
-        settleShort()
-
-        deliver(url)
-        settle()
-    }
-
-    private fun generateLink(): String {
-        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
-        Thread.sleep(LINK_MS)
-        return LinkFieldReader.read()
-    }
-
-    private fun background() {
-        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressHome()
-    }
-
-    private fun deliver(url: String) {
-        // setPackage, so the system still resolves the intent against the manifest.
-        // Naming the component explicitly would work too and would skip resolution,
-        // but then a manifest that no longer declares the generated link's host would
-        // not break this test. It did stop declaring it, unnoticed for a week, which
-        // is the argument for keeping resolution in the path.
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            setPackage(context.packageName)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        }
-        context.startActivity(intent)
-    }
-
-    private fun settleShort() = Thread.sleep(SETTLE_SHORT_MS)
-
-    private fun settle() = Thread.sleep(SETTLE_MS)
-
-    private companion object {
-        const val LINK_MS = 8_000L
-        const val SETTLE_SHORT_MS = 6_000L
-        const val SETTLE_MS = 12_000L
+        // The launch and the link generation put the app in the running state a warm link
+        // needs. They do not make the device a returning one: that is cold_https's token.
+        driver.launch()
+        val url = driver.generateLink()
+        driver.background()
+        driver.deliver(url)
     }
 }
