@@ -5,9 +5,11 @@ Run from the repo root:
     python -m unittest scripts.test_warm_contract_rules
 
 Each case starts from the scenario's own fixture, which satisfies its contract, breaks
-exactly the property one rule states, and asserts the contract names it. A rule nothing
-here breaks could be loosened or removed with every test still green; that was the state
-of 19 of the 20 warm rules before this file."""
+exactly the property one rule states, and asserts the contract names it. The failure
+class this catches and no other test does is a single rule being deleted or weakened:
+test_scenario_contracts checks that a fixture passes and that a few chosen defects fail,
+so a contract with one rule removed still passes both. That is why this overlaps them on
+purpose and restates the expected rules below instead of reading them from the contract."""
 
 import os
 import sys
