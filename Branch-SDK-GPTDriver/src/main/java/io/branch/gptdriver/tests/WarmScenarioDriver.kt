@@ -31,11 +31,26 @@ internal class WarmScenarioDriver {
         scenario?.moveToState(Lifecycle.State.RESUMED)
     }
 
-    /** Clicks Generate Link and returns what the field holds once the click has had time to land. */
+    /**
+     * Clicks Generate Link, then polls the short-URL field until it holds an https link, and
+     * returns it. Fails at once if the TestBed reports a creation error, and after
+     * [LINK_TIMEOUT_MS] if nothing arrives, so a failed link step is named as one instead of
+     * surfacing later as an intent for a URL that is not one. Same check as
+     * ScenarioLinkGenerator makes on the cold path.
+     */
     fun generateLink(): String {
         onView(withId(R.id.cmdRefreshShortURL)).perform(click())
-        Thread.sleep(LINK_MS)
-        return LinkFieldReader.read()
+        val deadline = System.currentTimeMillis() + LINK_TIMEOUT_MS
+        var field = LinkFieldReader.read()
+        while (!field.startsWith("https://")) {
+            check(!field.startsWith("ERROR:")) { "Link generation failed: '$field'" }
+            check(System.currentTimeMillis() < deadline) {
+                "No link within ${LINK_TIMEOUT_MS}ms, the field holds '$field'"
+            }
+            Thread.sleep(POLL_MS)
+            field = LinkFieldReader.read()
+        }
+        return field
     }
 
     fun background() {
@@ -61,7 +76,8 @@ internal class WarmScenarioDriver {
     fun settle() = Thread.sleep(SETTLE_MS)
 
     private companion object {
-        const val LINK_MS = 8_000L
+        const val LINK_TIMEOUT_MS = 30_000L
+        const val POLL_MS = 250L
         const val SETTLE_SHORT_MS = 6_000L
         const val SETTLE_MS = 12_000L
     }
