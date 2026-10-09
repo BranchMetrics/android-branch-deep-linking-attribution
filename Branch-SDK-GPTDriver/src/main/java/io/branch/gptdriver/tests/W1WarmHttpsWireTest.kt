@@ -11,6 +11,14 @@ import org.junit.Test
  * header calls that the hot case, so it is a precedent for the mechanism and not for the
  * state.
  *
+ * Needs a device that already holds a token. The contract expects both opens to carry
+ * randomized_bundle_token, and only the reply to an init-session request stores it
+ * (BranchRequestQueue.processInitSessionResponse). Neither this driver's launch nor
+ * generating a link does. The token comes from cold_https, which the L1 workflow runs first,
+ * and this line does not wipe app data. Run alone on a wiped device, the first launch is an
+ * install and the gate fails on the token count and the custom event count, which reads like
+ * an SDK bug and is a missing prerequisite.
+ *
  * Delivery preserves the task. cold_https uses FLAG_ACTIVITY_CLEAR_TASK, which tears it down
  * and is the cold shape; SINGLE_TOP lands in MainActivity.onNewIntent instead, which is the
  * entry point a warm open really uses. Going through startActivity rather than calling
@@ -31,8 +39,8 @@ class W1WarmHttpsWireTest {
 
     @Test
     fun warmHttpsLinkEmitsWirePayload() {
-        // This launch and the generation below happen first, so the app is running by the
-        // time the link arrives.
+        // The launch and the link generation put the app in the running state a warm link
+        // needs. They do not make the device a returning one: that is cold_https's token.
         driver.launch()
         val url = driver.generateLink()
         driver.background()
