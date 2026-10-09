@@ -29,7 +29,8 @@ import org.junit.Test
  * closes a scenario that has lost lifecycle control once a new intent arrived through
  * startActivity.
  *
- * Produces no assertion of its own. The capture is the output.
+ * The driver checks only its own preconditions (token on the launch open, stopped and not
+ * destroyed, not destroyed by the delivery). The capture is the output.
  */
 class W2WarmUriSchemeWireTest {
 
