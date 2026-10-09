@@ -1,16 +1,5 @@
 package io.branch.gptdriver.tests
 
-import android.content.Intent
-import android.net.Uri
-import androidx.lifecycle.Lifecycle
-import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import io.branch.branchandroidtestbed.MainActivity
-import io.branch.branchandroidtestbed.R
 import org.junit.Test
 
 /**
@@ -38,54 +27,25 @@ import org.junit.Test
  */
 class W2WarmUriSchemeWireTest {
 
-    private var scenario: ActivityScenario<MainActivity>? = null
+    private val driver = WarmScenarioDriver()
 
     @Test
     fun warmUriSchemeLinkEmitsWirePayload() {
-        scenario = ActivityScenario.launch(MainActivity::class.java)
-        scenario?.moveToState(Lifecycle.State.RESUMED)
-        settleShort()
+        driver.launch()
+        driver.settleShort()
 
-        generateLink()
-        settleShort()
+        // Not read back: the generated link is not delivered here, only the scheme URI is.
+        driver.generateLink()
+        driver.settleShort()
 
-        background()
-        settleShort()
+        driver.background()
+        driver.settleShort()
 
-        deliver(SCHEME_URI)
-        settle()
+        driver.deliver(SCHEME_URI)
+        driver.settle()
     }
-
-    /** Not read back: this exists so the device is a returning one, as in the https case. */
-    private fun generateLink() {
-        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
-        Thread.sleep(LINK_MS)
-    }
-
-    private fun background() {
-        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressHome()
-    }
-
-    private fun deliver(uri: String) {
-        // setPackage, so the manifest's branchtest filter still has to match. Naming the
-        // component would skip that, and the point of driving the real entry point is that
-        // a manifest which stops declaring the scheme breaks this test.
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).apply {
-            setPackage(context.packageName)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        }
-        context.startActivity(intent)
-    }
-
-    private fun settleShort() = Thread.sleep(SETTLE_SHORT_MS)
-
-    private fun settle() = Thread.sleep(SETTLE_MS)
 
     private companion object {
         const val SCHEME_URI = "branchtest://open"
-        const val LINK_MS = 8_000L
-        const val SETTLE_SHORT_MS = 6_000L
-        const val SETTLE_MS = 12_000L
     }
 }

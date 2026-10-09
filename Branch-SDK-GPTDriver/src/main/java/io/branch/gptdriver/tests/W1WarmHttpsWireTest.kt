@@ -1,17 +1,5 @@
 package io.branch.gptdriver.tests
 
-import android.content.Intent
-import android.net.Uri
-import androidx.lifecycle.Lifecycle
-import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import io.branch.branchandroidtestbed.MainActivity
-import io.branch.branchandroidtestbed.R
-import io.branch.gptdriver.LinkFieldReader
 import org.junit.Test
 
 /**
@@ -39,57 +27,22 @@ import org.junit.Test
  */
 class W1WarmHttpsWireTest {
 
-    private var scenario: ActivityScenario<MainActivity>? = null
+    private val driver = WarmScenarioDriver()
 
     @Test
     fun warmHttpsLinkEmitsWirePayload() {
-        // This launch and the generation below happen first, so the device is a returning
-        // one and the app is running by the time the link arrives.
-        scenario = ActivityScenario.launch(MainActivity::class.java)
-        scenario?.moveToState(Lifecycle.State.RESUMED)
-        settleShort()
+        // This launch and the generation below happen first, so the app is running by the
+        // time the link arrives.
+        driver.launch()
+        driver.settleShort()
 
-        val url = generateLink()
-        settleShort()
+        val url = driver.generateLink()
+        driver.settleShort()
 
-        background()
-        settleShort()
+        driver.background()
+        driver.settleShort()
 
-        deliver(url)
-        settle()
-    }
-
-    private fun generateLink(): String {
-        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
-        Thread.sleep(LINK_MS)
-        return LinkFieldReader.read()
-    }
-
-    private fun background() {
-        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressHome()
-    }
-
-    private fun deliver(url: String) {
-        // setPackage, so the system still resolves the intent against the manifest.
-        // Naming the component explicitly would work too and would skip resolution,
-        // but then a manifest that no longer declares the generated link's host would
-        // not break this test. It did stop declaring it, unnoticed for a week, which
-        // is the argument for keeping resolution in the path.
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            setPackage(context.packageName)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        }
-        context.startActivity(intent)
-    }
-
-    private fun settleShort() = Thread.sleep(SETTLE_SHORT_MS)
-
-    private fun settle() = Thread.sleep(SETTLE_MS)
-
-    private companion object {
-        const val LINK_MS = 8_000L
-        const val SETTLE_SHORT_MS = 6_000L
-        const val SETTLE_MS = 12_000L
+        driver.deliver(url)
+        driver.settle()
     }
 }
