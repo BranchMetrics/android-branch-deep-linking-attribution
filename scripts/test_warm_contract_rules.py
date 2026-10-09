@@ -46,7 +46,8 @@ COUNTS = {
 ORDER = (("/v3/deeplink", "/v3/events/open"),)
 FIELDS = {
     "warm_https_onNewIntent": {
-        "/v3/events/open": {"randomized_bundle_token": 2, "link_data": 1},
+        "/v3/events/open": {"randomized_bundle_token": 2},
+        "/v3/events/open[-1]": {"link_data": 1},
         "/v1/url": {"hardware_id": 0},
         "/v3/deeplink": {"android_app_link_url": 1, "external_intent_uri": 1},
     },
@@ -129,32 +130,71 @@ class WarmOrderRules(unittest.TestCase):
                 )
 
 
+def _selected(entries, endpoint_key):
+    """The requests a `fields` key judges: its endpoint, narrowed by a position."""
+    endpoint, position = v.split_position(endpoint_key)
+    matching = [e for e in entries if e["uri"] == endpoint]
+    return matching if position is None else [matching[position]]
+
+
 class WarmFieldRules(unittest.TestCase):
     def test_each_field_rule_fails_when_its_count_is_broken(self):
-        # For every (endpoint, field, expected): strip the field from all of that
-        # endpoint's requests (fails any expected above zero), and set it on all of
+        # For every (endpoint, field, expected): strip the field from the requests
+        # the rule judges (fails any expected above zero), and set it on all of
         # them (fails any expected below the number of requests).
         for scenario in WARM:
             for endpoint, rules in FIELDS[scenario].items():
                 for field, expected in rules.items():
-                    size = sum(1 for e in _entries(scenario) if e["uri"] == endpoint)
+                    size = len(_selected(_entries(scenario), endpoint))
                     needle = f"'{field}'"
                     if expected > 0:
                         entries = _entries(scenario)
-                        for e in entries:
-                            if e["uri"] == endpoint:
-                                e["request"].pop(field, None)
+                        for e in _selected(entries, endpoint):
+                            e["request"].pop(field, None)
                         with self.subTest(scenario=scenario, endpoint=endpoint, field=field, change="strip"):
                             errors = _errors(entries, scenario)
                             self.assertTrue(any(needle in e and endpoint in e for e in errors), errors)
                     if expected < size:
                         entries = _entries(scenario)
-                        for e in entries:
-                            if e["uri"] == endpoint:
-                                e["request"][field] = "x"
+                        for e in _selected(entries, endpoint):
+                            e["request"][field] = "x"
                         with self.subTest(scenario=scenario, endpoint=endpoint, field=field, change="set"):
                             errors = _errors(entries, scenario)
                             self.assertTrue(any(needle in e and endpoint in e for e in errors), errors)
+
+
+class WarmLinkDataPosition(unittest.TestCase):
+    """link_data belongs to the tapped link's open, the last of the two, not to
+    either open. A count of one of two cannot say which, so the rule is positional."""
+
+    def _opens(self, entries):
+        return [e for e in entries if e["uri"] == "/v3/events/open"]
+
+    def test_link_data_only_on_the_bare_launch_open_fails(self):
+        # The bare launch's open carries it and the tap's open lost it. One open
+        # of two still carries link_data, so a count alone passes this.
+        entries = _entries("warm_https_onNewIntent")
+        opens = self._opens(entries)
+        opens[0]["request"]["link_data"] = opens[-1]["request"].pop("link_data")
+        errors = _errors(entries, "warm_https_onNewIntent")
+        self.assertTrue(any("link_data" in e for e in errors), errors)
+
+    def test_link_data_on_both_opens_passes(self):
+        # Extra attribution on the bare launch is not the defect this guards.
+        entries = _entries("warm_https_onNewIntent")
+        opens = self._opens(entries)
+        opens[0]["request"]["link_data"] = opens[-1]["request"]["link_data"]
+        self.assertEqual(_errors(entries, "warm_https_onNewIntent"), [])
+
+    def test_the_real_fixture_carries_it_on_the_tap_only(self):
+        opens = self._opens(_entries("warm_https_onNewIntent"))
+        self.assertNotIn("link_data", opens[0]["request"])
+        self.assertIn("link_data", opens[-1]["request"])
+
+    def test_a_position_with_no_request_fails_instead_of_passing(self):
+        entries = [e for e in _entries("warm_https_onNewIntent") if e["uri"] != "/v3/events/open"]
+        errors = _errors(entries, "warm_https_onNewIntent")
+        self.assertTrue(any("/v3/events/open[-1]" in e for e in errors), errors)
 
 
 class WarmScenariosAreSeparated(unittest.TestCase):
