@@ -1,7 +1,10 @@
 package io.branch.gptdriver.tests
 
+import android.app.Activity
+import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -13,6 +16,7 @@ import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.LinkFieldReader
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The steps W1WarmHttpsWireTest and W2WarmUriSchemeWireTest share: launch the TestBed, generate
@@ -20,7 +24,7 @@ import java.io.File
  *
  * Each step waits for something it can observe: the TestBed's own capture file
  * (branchlogs.txt, read in this process, which is the app's), the short-URL field, or the
- * activity's lifecycle state. After each step the capture must also stay unchanged for
+ * activity's lifecycle callbacks. After each step the capture must also stay unchanged for
  * [QUIET_MS]. That window is the one place a sleep stands in for a condition: it waits for
  * requests that must not be there (a second open, a stray event), and no signal says they will
  * not come. It is what lets the contract's exact counts see an extra request.
@@ -37,10 +41,13 @@ internal class WarmScenarioDriver {
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private var baseline = emptyMap<String, Int>()
+    private val lifecycle = MainActivityLifecycle()
 
     /** Starts the TestBed and waits for its launch to reach the wire: a deeplink and an open. */
     fun launch() {
         baseline = ENDPOINTS.associateWith { posts(it) }
+        val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
+        (app as Application).registerActivityLifecycleCallbacks(lifecycle)
         scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario?.moveToState(Lifecycle.State.RESUMED)
         awaitPosts(DEEPLINK, OPEN)
@@ -70,12 +77,28 @@ internal class WarmScenarioDriver {
         return field
     }
 
-    /** Presses Home and waits until the activity has stopped, the state a warm link needs. */
+    /**
+     * Presses Home and asserts the activity went to the background: it must report onStop and
+     * must not be destroyed. Without this a Home press that did not stop the activity, or a
+     * device that destroys it ("Don't keep activities"), would still produce a capture, and
+     * the scenario would no longer be a link arriving through onNewIntent on a stopped,
+     * living activity.
+     */
     fun background() {
+        val stopsBefore = lifecycle.stops.get()
         UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressHome()
-        // A stopped activity reports CREATED.
-        await("the activity did not stop after Home") { scenario?.state == Lifecycle.State.CREATED }
+        await("MainActivity did not stop after Home") {
+            lifecycle.stops.get() > stopsBefore || lifecycle.destroys.get() > 0
+        }
+        assertBackgrounded()
         awaitQuiet()
+    }
+
+    private fun assertBackgrounded() {
+        check(lifecycle.destroys.get() == 0) {
+            "MainActivity was destroyed, not stopped. The link would reach onCreate, not onNewIntent"
+        }
+        check(lifecycle.stopped) { "MainActivity is not stopped, so this would not be a warm link" }
     }
 
     /**
@@ -84,6 +107,7 @@ internal class WarmScenarioDriver {
      * is missing, and stopping this driver early would skip that judgement.
      */
     fun deliver(uri: String) {
+        assertBackgrounded()
         baseline = ENDPOINTS.associateWith { posts(it) }
         // setPackage, so the system still resolves the intent against the manifest. Naming
         // the component would work too and would skip resolution, but then a manifest that
@@ -139,6 +163,33 @@ internal class WarmScenarioDriver {
             Thread.sleep(POLL_MS)
         }
         return true
+    }
+
+    /** Follows MainActivity only: whether it is stopped now, and how often it stopped or died. */
+    private class MainActivityLifecycle : Application.ActivityLifecycleCallbacks {
+        val stops = AtomicInteger()
+        val destroys = AtomicInteger()
+        @Volatile var stopped = false
+
+        override fun onActivityStarted(activity: Activity) {
+            if (activity is MainActivity) stopped = false
+        }
+
+        override fun onActivityStopped(activity: Activity) {
+            if (activity is MainActivity) {
+                stops.incrementAndGet()
+                stopped = true
+            }
+        }
+
+        override fun onActivityDestroyed(activity: Activity) {
+            if (activity is MainActivity) destroys.incrementAndGet()
+        }
+
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+        override fun onActivityResumed(activity: Activity) {}
+        override fun onActivityPaused(activity: Activity) {}
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     }
 
     private companion object {
