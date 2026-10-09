@@ -468,6 +468,18 @@ class ScenarioContractTests(unittest.TestCase):
             f"an install in a warm capture must fail the contract, got: {errors}",
         )
 
+    def test_a_tap_whose_open_lost_link_data_fails_warm_https_onNewIntent(self):
+        # The tapped link is credited through link_data on its open. When the
+        # deeplink request fails, RequestDeepLink sends the open without it, and
+        # counts, order and the token all still read the same. Only this rule
+        # sees it.
+        entries = self._entries("warm_https_onNewIntent")
+        opens = [e for e in entries if e["uri"] == "/v3/events/open"]
+        self.assertIn("link_data", opens[-1]["request"], "the fixture's tap must carry link_data")
+        opens[-1]["request"].pop("link_data")
+        errors = v.assert_contract(entries, v.contract_for("warm_https_onNewIntent"))
+        self.assertTrue(any("link_data" in e for e in errors), errors)
+
     def test_hardware_id_on_link_creation_fails_link_generation(self):
         # The EMT-4199 signal. /v1/url lives only in the generation capture.
         entries = self._entries("link_generation")
