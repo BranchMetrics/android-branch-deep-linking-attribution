@@ -109,6 +109,7 @@ jobs:
             COLD_SCENARIO=attribution_none L1_ATTRIBUTION_LEVEL=NONE CLEAR_LOG=1 WIPE_FIRST=1 WIPE_AFTER=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            COLD_SCENARIO=cold_uriScheme COLD_LINK_URL="branchtest://open?link_click_id=1234567890123456789&l1_scenario=cold_uriScheme&l1_run_id=${{ github.run_id }}-${{ github.run_attempt }}" ./scripts/run_l1_instrumented.sh
             TEST_CLASS=W1WarmHttpsWireTest OUTPUT_LOG=wire-warm_https_onNewIntent.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=W2WarmUriSchemeWireTest OUTPUT_LOG=wire-warm_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
@@ -149,6 +150,7 @@ jobs:
           check link_generation wire-link_generation.txt
           check cold_firstInstall wire-cold_firstInstall.txt
           check cold_https wire-cold_https.txt
+          check cold_uriScheme wire-cold_uriScheme.txt
           check warm_https_onNewIntent wire-warm_https_onNewIntent.txt
           check warm_uriScheme wire-warm_uriScheme.txt
           exit $rc
@@ -176,7 +178,7 @@ jobs:
             echo "| scenario group | status |"
             echo "| --- | --- |"
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
-              echo "| Cold | cold_firstInstall and cold_https pass |"
+              echo "| Cold | cold_firstInstall, cold_https and cold_uriScheme pass |"
               echo "| Negative and guards | organic_open and attribution_none pass, no_stickiness and late_userActivity not implemented |"
             else
               echo "| Cold | see failures below |"
