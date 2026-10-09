@@ -39,7 +39,14 @@ class ScenarioContractTests(unittest.TestCase):
     not in the CI gate yet. The requests are real, taken after the driver moved the launch
     capture aside once the bare launch had settled (WireScenarioDriver.setCaptureAside),
     trimmed to the fields the validator reads, with the identifiers swapped for the
-    placeholders above."""
+    placeholders above.
+
+    cold_uriScheme is a capture of a local run on an API 30 emulator (sdk_gphone_arm64), not a
+    CI capture. The requests are real, trimmed to the fields the validator reads, with the
+    identifiers swapped for the placeholders above (the link keeps the fixture run id). Only
+    the requests are kept: the server's response to the scheme link, which does not resolve
+    it (+non_branch_link), is deliberately omitted, because the contract asserts the wire and
+    not resolution."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])

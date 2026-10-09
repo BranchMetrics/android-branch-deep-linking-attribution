@@ -87,6 +87,9 @@ jobs:
       # The two warm scenarios do not wipe. They need an installed device, so
       # they run right after cold_https and rely on the install and device state
       # it left behind; reordering them ahead of it breaks them.
+      # cold_uriScheme runs between cold_https and the warm runs without wiping, so
+      # it must leave the token state the warm scenarios rely on (the run on 7905fe35
+      # showed both warm scenarios passing after it).
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
