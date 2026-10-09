@@ -174,11 +174,12 @@ jobs:
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "| Cold | cold_firstInstall and cold_https pass |"
               echo "| Negative and guards | organic_open pass, no_stickiness, attribution_none and late_userActivity not implemented |"
+              echo "| Warm | warm_https_onNewIntent and warm_uriScheme pass |"
             else
               echo "| Cold | see failures below |"
               echo "| Negative and guards | see failures below |"
+              echo "| Warm | see failures below |"
             fi
-            echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
             echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
