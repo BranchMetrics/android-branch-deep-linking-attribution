@@ -132,6 +132,16 @@ class RequestDeepLinkUriMappingTest : BranchTestBase() {
             Thread.sleep(10)
         }
         assertTrue("no open reached the remote", remote.opens.isNotEmpty())
+        // The body is recorded before the open's reply handling has finished, and tearDown
+        // shuts the Branch instance down, so wait for the queue to drain (as ConsentLevelOpenTest
+        // does) instead of a fixed delay.
+        val drainDeadline = System.currentTimeMillis() + 10_000
+        while (Branch.getInstance().requestQueue_.containsDeepLinkOrOpen()) {
+            assertTrue("the request queue never drained", System.currentTimeMillis() < drainDeadline)
+            Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+            Thread.sleep(10)
+        }
+        Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
     }
 
     /** Answers the ad ID and install referrer reads at once, so no launch waits on a lock. */
