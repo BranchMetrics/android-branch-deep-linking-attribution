@@ -5,49 +5,51 @@ import org.json.JSONObject
 import io.branch.referral.network.BranchRemoteInterface
 
 /**
- * Immutable pre-init configuration for the Branch SDK. Build once in [Builder], pass to
- * [Branch.initialize]. All fields are locked after [Builder.build] is called.
+ * Immutable configuration for the Branch SDK. Build it in [Builder] and pass it to
+ * [Branch.initialize], or to [Branch.updateConfiguration] to change settings later. A null
+ * setting is one this configuration doesn't set.
  */
 class BranchConfiguration private constructor(
-    val branchKey: String,
+    val branchKey: String?,
     val testMode: Boolean,
     val apiUrl: String?,
     val cdnBaseUrl: String?,
-    val euEndpoint: Boolean,
+    val euEndpoint: Boolean?,
     val logLevel: BranchLogger.BranchLogLevel,
     private val logLevelWasSet: Boolean,
     val loggingCallback: IBranchLoggingCallbacks?,
     val requestTracingCallback: IBranchRequestTracingCallback?,
-    val networkTimeout: Int,
-    val networkConnectTimeout: Int,
-    val retryCount: Int,
-    val retryInterval: Int,
-    val noConnectionRetryMax: Int,
+    val networkTimeout: Int?,
+    val networkConnectTimeout: Int?,
+    val retryCount: Int?,
+    val retryInterval: Int?,
+    val noConnectionRetryMax: Int?,
     val remoteInterface: BranchRemoteInterface?,
     val attributionLevel: Defines.BranchAttributionLevel?,
     val dmaParameters: DMAParameters?,
-    val limitFacebookAttribution: Boolean,
-    val adNetworkCalloutsDisabled: Boolean,
+    val limitFacebookAttribution: Boolean?,
+    val adNetworkCalloutsDisabled: Boolean?,
     val facebookAppId: String?,
     val preinstallCampaign: String?,
     val preinstallPartner: String?,
     val installMetadata: Map<String, String>,
-    val referringLinkAttributionForPreinstalledApps: Boolean,
+    val referringLinkAttributionForPreinstalledApps: Boolean?,
     val whitelistedSchemes: List<String>,
     val uriHostsToSkip: List<String>,
-    val userAgentFetchSync: Boolean
+    val userAgentFetchSync: Boolean?
 ) {
 
     /**
      * Routes logging to the caller's level and callback. Called by [Branch.initialize] before any
      * other init work, so warnings raised during construction and branch-key resolution are visible
      * to whoever configured logging. Leaves the logger alone when neither a level nor a callback was
-     * set, so an earlier [Branch.enableLogging] call stays in effect.
+     * set, so an earlier [Branch.enableLogging] call stays in effect, and keeps an earlier callback
+     * when only a level is set.
      */
     @JvmName("applyLogging")
     internal fun applyLogging() {
         if (!logLevelWasSet && loggingCallback == null) return
-        BranchLogger.loggerCallback = loggingCallback
+        loggingCallback?.let { BranchLogger.loggerCallback = it }
         BranchLogger.loggingLevel = logLevel
         BranchLogger.loggingEnabled = true
     }
@@ -58,26 +60,59 @@ class BranchConfiguration private constructor(
      */
     @JvmName("applyTo")
     internal fun applyTo(branch: Branch) {
-        val context = branch.applicationContext
         val prefHelper = branch.prefHelper
 
         BranchLogger.i(Branch.GOOGLE_VERSION_TAG)
         if (BranchLogger.isLoggable(BranchLogger.BranchLogLevel.DEBUG)) BranchLogger.d(toJson())
+
+        // Set once
+        BranchUtil.setTestMode(testMode)
+        remoteInterface?.let { branch.setBranchRemoteInterface(it) }
+
+        // Install attribution
+        facebookAppId?.let { PrefHelper.setFbAppId(it) }
+        preinstallCampaign?.let { prefHelper.setPreinstallCampaign(it) }
+        preinstallPartner?.let { prefHelper.setPreinstallPartner(it) }
+        installMetadata.forEach { (key, value) -> prefHelper.addInstallMetadata(key, value) }
+        referringLinkAttributionForPreinstalledApps?.let {
+            Branch.referringLinkAttributionForPreinstalledAppsEnabled = it
+        }
+
+        // Defaults first, so a setting removed from the configuration doesn't stay saved
+        prefHelper.timeout = PrefHelper.TIMEOUT
+        prefHelper.connectTimeout = PrefHelper.CONNECT_TIMEOUT
+        prefHelper.retryCount = PrefHelper.MAX_RETRIES
+        prefHelper.retryInterval = PrefHelper.INTERVAL_RETRY
+        prefHelper.noConnectionRetryMax = PrefHelper.DEFAULT_NO_CONNECTION_RETRY_MAX
+        prefHelper.setLimitFacebookTracking(false)
+        prefHelper.setAdNetworkCalloutsDisabled(false)
+        Branch.userAgentSync = false
+
+        applyUpdate(branch)
+    }
+
+    /**
+     * Writes the settings this configuration sets, except those [applyTo] sets once. Called by
+     * [applyTo] and [Branch.updateConfiguration].
+     */
+    @JvmName("applyUpdate")
+    internal fun applyUpdate(branch: Branch) {
+        val context = branch.applicationContext
+        val prefHelper = branch.prefHelper
+
         requestTracingCallback?.let { Branch._iBranchRequestTracingCallback = it }
 
         // Identity & environment
-        BranchUtil.setTestMode(testMode)
         apiUrl?.let { PrefHelper.setAPIUrl(it) }
         cdnBaseUrl?.let { PrefHelper.setCDNBaseUrl(it) }
-        if (euEndpoint) PrefHelper.useEUEndpoint(true)
+        euEndpoint?.let { PrefHelper.useEUEndpoint(it) }
 
         // Network — validated in Builder.build()
-        prefHelper.timeout = networkTimeout
-        prefHelper.connectTimeout = networkConnectTimeout
-        prefHelper.retryCount = retryCount
-        prefHelper.retryInterval = retryInterval
-        prefHelper.noConnectionRetryMax = noConnectionRetryMax
-        remoteInterface?.let { branch.setBranchRemoteInterface(it) }
+        networkTimeout?.let { prefHelper.timeout = it }
+        networkConnectTimeout?.let { prefHelper.connectTimeout = it }
+        retryCount?.let { prefHelper.retryCount = it }
+        retryInterval?.let { prefHelper.retryInterval = it }
+        noConnectionRetryMax?.let { prefHelper.noConnectionRetryMax = it }
 
         // Privacy & attribution
         attributionLevel?.let { branch.setConsumerProtectionAttributionLevel(it, null) }
@@ -85,17 +120,8 @@ class BranchConfiguration private constructor(
             it.logWarnings()
             prefHelper.setDMAParameters(it.eeaRegion, it.adPersonalizationConsent, it.adUserDataUsageConsent)
         }
-        prefHelper.setLimitFacebookTracking(limitFacebookAttribution)
-        prefHelper.setAdNetworkCalloutsDisabled(adNetworkCalloutsDisabled)
-
-        // Install attribution
-        facebookAppId?.let { PrefHelper.setFbAppId(it) }
-        preinstallCampaign?.let { prefHelper.setPreinstallCampaign(it) }
-        preinstallPartner?.let { prefHelper.setPreinstallPartner(it) }
-        installMetadata.forEach { (key, value) -> prefHelper.addInstallMetadata(key, value) }
-        if (referringLinkAttributionForPreinstalledApps) {
-            Branch.referringLinkAttributionForPreinstalledAppsEnabled = true
-        }
+        limitFacebookAttribution?.let { prefHelper.setLimitFacebookTracking(it) }
+        adNetworkCalloutsDisabled?.let { prefHelper.setAdNetworkCalloutsDisabled(it) }
 
         // URL collection
         if (whitelistedSchemes.isNotEmpty() || uriHostsToSkip.isNotEmpty()) {
@@ -105,7 +131,7 @@ class BranchConfiguration private constructor(
         }
 
         // User agent
-        Branch.userAgentSync = userAgentFetchSync
+        userAgentFetchSync?.let { Branch.userAgentSync = it }
     }
 
     /**
@@ -124,7 +150,7 @@ class BranchConfiguration private constructor(
             key(name)
             json.append(if (value == null) "null" else JSONObject.quote(value))
         }
-        fun lit(name: String, value: Any) {
+        fun lit(name: String, value: Any?) {
             key(name)
             json.append(value)
         }
@@ -171,77 +197,78 @@ class BranchConfiguration private constructor(
     }
 
     /** Branch keys are client-side, but there is no reason to spill a whole one into logcat. */
-    private fun maskedKey(): String =
-        if (branchKey.length > 13) branchKey.take(9) + "..." + branchKey.takeLast(4) else "***"
+    private fun maskedKey(): String? =
+        branchKey?.let { if (it.length > 13) it.take(9) + "..." + it.takeLast(4) else "***" }
 
-    /**
-     * Lists only the settings that differ from their defaults, so the DEBUG-level line in
-     * [applyTo] reads as "here is what this app actually asked for".
-     */
+    /** Lists only the settings this configuration sets. */
     override fun toString(): String {
-        val nonDefaults = mutableListOf("branchKey=${maskedKey()}")
+        val nonDefaults = mutableListOf<String>()
+        maskedKey()?.let { nonDefaults.add("branchKey=$it") }
         if (testMode) nonDefaults.add("testMode=true")
         apiUrl?.let { nonDefaults.add("apiUrl=$it") }
         cdnBaseUrl?.let { nonDefaults.add("cdnBaseUrl=$it") }
-        if (euEndpoint) nonDefaults.add("euEndpoint=true")
+        euEndpoint?.let { nonDefaults.add("euEndpoint=$it") }
         if (logLevel != DEFAULT_LOG_LEVEL) nonDefaults.add("logLevel=$logLevel")
         if (loggingCallback != null) nonDefaults.add("loggingCallback=set")
         if (requestTracingCallback != null) nonDefaults.add("requestTracingCallback=set")
-        if (networkTimeout != PrefHelper.TIMEOUT) nonDefaults.add("networkTimeout=$networkTimeout")
-        if (networkConnectTimeout != PrefHelper.CONNECT_TIMEOUT) nonDefaults.add("networkConnectTimeout=$networkConnectTimeout")
-        if (retryCount != PrefHelper.MAX_RETRIES) nonDefaults.add("retryCount=$retryCount")
-        if (retryInterval != PrefHelper.INTERVAL_RETRY) nonDefaults.add("retryInterval=$retryInterval")
-        if (noConnectionRetryMax != PrefHelper.DEFAULT_NO_CONNECTION_RETRY_MAX) nonDefaults.add("noConnectionRetryMax=$noConnectionRetryMax")
+        networkTimeout?.let { nonDefaults.add("networkTimeout=$it") }
+        networkConnectTimeout?.let { nonDefaults.add("networkConnectTimeout=$it") }
+        retryCount?.let { nonDefaults.add("retryCount=$it") }
+        retryInterval?.let { nonDefaults.add("retryInterval=$it") }
+        noConnectionRetryMax?.let { nonDefaults.add("noConnectionRetryMax=$it") }
         if (remoteInterface != null) nonDefaults.add("remoteInterface=${remoteInterface.javaClass.name}")
         attributionLevel?.let { nonDefaults.add("attributionLevel=$it") }
         dmaParameters?.let { nonDefaults.add("dmaParameters=$it") }
-        if (limitFacebookAttribution) nonDefaults.add("limitFacebookAttribution=true")
-        if (adNetworkCalloutsDisabled) nonDefaults.add("adNetworkCalloutsDisabled=true")
+        limitFacebookAttribution?.let { nonDefaults.add("limitFacebookAttribution=$it") }
+        adNetworkCalloutsDisabled?.let { nonDefaults.add("adNetworkCalloutsDisabled=$it") }
         facebookAppId?.let { nonDefaults.add("facebookAppId=$it") }
         preinstallCampaign?.let { nonDefaults.add("preinstallCampaign=$it") }
         preinstallPartner?.let { nonDefaults.add("preinstallPartner=$it") }
         if (installMetadata.isNotEmpty()) nonDefaults.add("installMetadata=${installMetadata.keys}")
-        if (referringLinkAttributionForPreinstalledApps) nonDefaults.add("referringLinkAttributionForPreinstalledApps=true")
+        referringLinkAttributionForPreinstalledApps?.let { nonDefaults.add("referringLinkAttributionForPreinstalledApps=$it") }
         if (whitelistedSchemes.isNotEmpty()) nonDefaults.add("whitelistedSchemes=$whitelistedSchemes")
         if (uriHostsToSkip.isNotEmpty()) nonDefaults.add("uriHostsToSkip=$uriHostsToSkip")
-        if (userAgentFetchSync) nonDefaults.add("userAgentFetchSync=true")
+        userAgentFetchSync?.let { nonDefaults.add("userAgentFetchSync=$it") }
         return "BranchConfiguration(${nonDefaults.joinToString(", ")})"
     }
 
     internal companion object {
         internal val DEFAULT_LOG_LEVEL = BranchLogger.BranchLogLevel.NONE
 
+        internal const val MISSING_BRANCH_KEY = "Branch key cannot be empty. Get your key from dashboard.branch.io/settings."
+
         /** Discriminator for the single-line JSON emitted by [applyTo]. */
         internal const val EVENT_CONFIGURATION_APPLIED = "branch_configuration_applied"
     }
 
-    class Builder(private val branchKey: String) {
+    /** @param branchKey Your Branch key. Required by [Branch.initialize]; leave it out for [Branch.updateConfiguration]. */
+    class Builder @JvmOverloads constructor(private val branchKey: String? = null) {
         private var testMode: Boolean = false
         private var apiUrl: String? = null
         private var cdnBaseUrl: String? = null
-        private var euEndpoint: Boolean = false
+        private var euEndpoint: Boolean? = null
         private var logLevel: BranchLogger.BranchLogLevel = DEFAULT_LOG_LEVEL
         private var logLevelWasSet: Boolean = false
         private var loggingCallback: IBranchLoggingCallbacks? = null
         private var requestTracingCallback: IBranchRequestTracingCallback? = null
-        private var networkTimeout: Int = PrefHelper.TIMEOUT
-        private var networkConnectTimeout: Int = PrefHelper.CONNECT_TIMEOUT
-        private var retryCount: Int = PrefHelper.MAX_RETRIES
-        private var retryInterval: Int = PrefHelper.INTERVAL_RETRY
-        private var noConnectionRetryMax: Int = PrefHelper.DEFAULT_NO_CONNECTION_RETRY_MAX
+        private var networkTimeout: Int? = null
+        private var networkConnectTimeout: Int? = null
+        private var retryCount: Int? = null
+        private var retryInterval: Int? = null
+        private var noConnectionRetryMax: Int? = null
         private var remoteInterface: BranchRemoteInterface? = null
         private var attributionLevel: Defines.BranchAttributionLevel? = null
         private var dmaParameters: DMAParameters? = null
-        private var limitFacebookAttribution: Boolean = false
-        private var adNetworkCalloutsDisabled: Boolean = false
+        private var limitFacebookAttribution: Boolean? = null
+        private var adNetworkCalloutsDisabled: Boolean? = null
         private var facebookAppId: String? = null
         private var preinstallCampaign: String? = null
         private var preinstallPartner: String? = null
         private val installMetadata: MutableMap<String, String> = mutableMapOf()
-        private var referringLinkAttributionForPreinstalledApps: Boolean = false
+        private var referringLinkAttributionForPreinstalledApps: Boolean? = null
         private val whitelistedSchemes: MutableList<String> = mutableListOf()
         private val uriHostsToSkip: MutableList<String> = mutableListOf()
-        private var userAgentFetchSync: Boolean = false
+        private var userAgentFetchSync: Boolean? = null
 
         // Identity & environment
         fun setTestMode(enabled: Boolean) = apply { testMode = enabled }
@@ -290,22 +317,22 @@ class BranchConfiguration private constructor(
          */
         fun build(): BranchConfiguration {
             val errors = mutableListOf<String>()
-            if (branchKey.isBlank()) {
-                errors += "Branch key cannot be empty. Get your key from dashboard.branch.io/settings."
+            if (branchKey != null && branchKey.isBlank()) {
+                errors += MISSING_BRANCH_KEY
             }
-            if (networkTimeout <= 0) {
+            if (networkTimeout?.let { it <= 0 } == true) {
                 errors += "Network timeout must be a positive number of milliseconds (got $networkTimeout)."
             }
-            if (networkConnectTimeout <= 0) {
+            if (networkConnectTimeout?.let { it <= 0 } == true) {
                 errors += "Network connect timeout must be a positive number of milliseconds (got $networkConnectTimeout)."
             }
-            if (retryCount < 0) {
+            if (retryCount?.let { it < 0 } == true) {
                 errors += "Retry count must be >= 0 (got $retryCount)."
             }
-            if (retryInterval <= 0) {
+            if (retryInterval?.let { it <= 0 } == true) {
                 errors += "Retry interval must be a positive number of milliseconds (got $retryInterval)."
             }
-            if (noConnectionRetryMax <= 0) {
+            if (noConnectionRetryMax?.let { it <= 0 } == true) {
                 errors += "No-connection retry max must be > 0 (got $noConnectionRetryMax)."
             }
             require(errors.isEmpty()) {

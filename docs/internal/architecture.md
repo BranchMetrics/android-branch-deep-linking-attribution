@@ -26,7 +26,7 @@ The direction is away from session state as an asserted flag. `SDK_INIT_WAIT_LOC
 
 ## Singleton wiring
 
-`Branch` is a process singleton (`branchReferral_`). Apps create it with `Branch.initialize(Context, BranchConfiguration)`; `getInstance()` is a pure accessor that never creates.
+`Branch` is a process singleton (`branchReferral_`). Apps create it with `Branch.initialize(Context, BranchConfiguration)`; `getInstance()` is a pure accessor that never creates. To change settings later, apps pass a configuration built with `BranchConfiguration.Builder()` (no key) to `updateConfiguration`, which applies only the settings it sets and skips the set-once ones (key, test mode, remote interface, install attribution).
 
 The private constructor wires the sub-systems, most into `final` fields set once: `prefHelper_` (persistent state), `requestQueue_` (a `BranchRequestQueueAdapter` on this branch, `Branch.java:217`, assigned `:328`), `deviceInfo_`, `trackingController`, `branchConfigurationController_`, and `branchRemoteInterface_` (swappable, which is how tests mock the network).
 

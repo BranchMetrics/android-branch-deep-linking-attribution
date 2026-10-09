@@ -367,6 +367,9 @@ public class Branch {
             BranchLogger.logAlways("Warning, attempted to reinitialize Branch SDK singleton!");
             return;
         }
+        if (config.getBranchKey() == null) {
+            throw new IllegalArgumentException(BranchConfiguration.MISSING_BRANCH_KEY);
+        }
 
         // Before anything else, so construction and branch-key warnings are visible.
         config.applyLogging();
@@ -436,6 +439,19 @@ public class Branch {
         } else {
             json.append(JSONObject.quote(value.toString()));
         }
+    }
+
+    /**
+     * Applies the settings set on {@code config}. Settings it doesn't set keep their current values.
+     * The Branch key, test mode, remote interface and install attribution settings only apply at
+     * {@link #initialize}.
+     *
+     * @param config The settings to change, built with {@link BranchConfiguration.Builder#Builder()}.
+     */
+    public void updateConfiguration(@NonNull BranchConfiguration config) {
+        config.applyLogging();
+        BranchLogger.d("updateConfiguration: " + config);
+        config.applyUpdate(this);
     }
 
 
