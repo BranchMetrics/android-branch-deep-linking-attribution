@@ -19,10 +19,11 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The steps the wire drivers share: launch the TestBed, generate a link, then deliver a URI
- * through startActivity, either after sending the app to the background ([background] then
- * [deliver], W1WarmHttpsWireTest and W2WarmUriSchemeWireTest) or while the activity is
- * resumed ([deliverHot], H2HotUriSchemeWireTest).
+ * The steps the wire drivers share: launch the TestBed, optionally generate a link (W1 and W2
+ * do, H2 does not), then deliver a URI through startActivity, either after sending the app to
+ * the background ([background] then [deliver], W1WarmHttpsWireTest and
+ * W2WarmUriSchemeWireTest) or while the activity is resumed ([deliverHot],
+ * H2HotUriSchemeWireTest).
  *
  * Each step waits for something it can observe: the TestBed's own capture file
  * (branchlogs.txt, read in this process, which is the app's), the short-URL field, or the
@@ -38,8 +39,13 @@ import java.util.concurrent.atomic.AtomicInteger
  * the last request is inside the capture, one later than that is not seen. The windows between
  * the other steps stay at [QUIET_MS].
  *
- * Counts are taken against a baseline read at [launch], so a capture that already holds lines
- * (no CLEAR_LOG) does not satisfy a wait early.
+ * Counts are taken against a baseline: read at [launch], so a capture that already holds lines
+ * (no CLEAR_LOG) does not satisfy a wait early, and read again when a URI is sent, so the
+ * delivery's counts start from what the capture holds then.
+ *
+ * Residual risk: a launch request that reaches the wire more than [QUIET_MS] after the
+ * launch's last post would land in the delivery's capture and push its counts over the
+ * contract's. That is a false red, never a false green.
  *
  * The scenario is never closed here, and the drivers use no ActivityScenarioRule, for the same
  * reason: once a new intent has arrived through startActivity the scenario has lost lifecycle
@@ -61,8 +67,8 @@ internal class WireScenarioDriver {
         scenario?.moveToState(Lifecycle.State.RESUMED)
         awaitPosts(DEEPLINK, OPEN)
         awaitQuiet()
-        val launchOpen = openBodies().drop(baseline.getValue(OPEN)).firstOrNull()
-        check(launchOpen != null && launchOpen.contains("\"randomized_bundle_token\"")) {
+        val launchOpen = launchOpenBody(captureFile())
+        check(launchOpen != null && launchOpen.contains(TOKEN_FIELD)) {
             "no randomized_bundle_token on the launch open; run cold_https first"
         }
     }
@@ -112,19 +118,28 @@ internal class WireScenarioDriver {
 
     /**
      * Sets the capture so far aside, for a scenario whose contract judges only its delivery
-     * (hot_uriScheme counts one deeplink and one open, not the launch's). Asserts first that the
-     * capture holds this launch's deeplink and open (past the baseline [launch] read), so a launch that never reached the wire
-     * fails here by name, and checks the rename's result. [deliver] and [deliverHot] take their
-     * baseline after this, so their counts start from the empty file.
+     * (hot_uriScheme counts one deeplink and one open, not the launch's). [launch] owns the
+     * arrival precondition (a deeplink and an open, then quiet), so it is not repeated here.
+     * What this asserts can fail on its own: the rename's result, and that the set-aside file
+     * holds the launch's /v3/events/open carrying randomized_bundle_token, so the pair the
+     * contract no longer sees is the pair that was meant to leave it. [deliver] and
+     * [deliverHot] take their baseline after this, so their counts start from the empty file.
+     * The file stays at branchlogs.preclear.txt for diagnosis through run-as; the L1 script
+     * does not pull it.
      */
     fun setCaptureAside() {
-        check(arrived(DEEPLINK) && arrived(OPEN)) {
-            "the capture holds no /v3/deeplink and /v3/events/open from this launch to set aside"
-        }
         val aside = File(captureFile().parentFile, ASIDE_FILE)
         aside.delete()
         check(captureFile().renameTo(aside)) { "could not move $CAPTURE_FILE to $ASIDE_FILE" }
+        val launchOpen = launchOpenBody(aside)
+        check(launchOpen != null && launchOpen.contains(TOKEN_FIELD)) {
+            "the set-aside $ASIDE_FILE holds no launch /v3/events/open with randomized_bundle_token"
+        }
     }
+
+    /** The first open body past the baseline [launch] read, from [file], or null. */
+    private fun launchOpenBody(file: File) =
+        openBodies(file).drop(baseline.getValue(OPEN)).firstOrNull()
 
     private fun assertBackgrounded() {
         check(lifecycle.destroys.get() == 0) {
@@ -149,12 +164,18 @@ internal class WireScenarioDriver {
 
     /**
      * Delivers [uri] while MainActivity is resumed, with no background step, and waits as
-     * [deliver] does. Asserts the activity never stopped or died since [launch], so the link
-     * reached onNewIntent hot and not warm.
+     * [deliver] does. Asserts MainActivity is RESUMED before sending and again after the final
+     * quiet, and that it never stopped or died since [launch], so the link reached onNewIntent
+     * hot and not warm.
      */
     fun deliverHot(uri: String) {
-        check(!lifecycle.stopped) { "MainActivity is stopped, so this would not be a hot link" }
+        check(lifecycle.resumed) {
+            "MainActivity is not resumed before delivery, so this would not be a hot link"
+        }
         send(uri)
+        check(lifecycle.resumed) {
+            "MainActivity is not resumed after delivery, so the link did not land hot"
+        }
         check(lifecycle.stops.get() == 0 && lifecycle.destroys.get() == 0) {
             "MainActivity left the foreground during the scenario, so the delivery was not hot"
         }
@@ -190,8 +211,7 @@ internal class WireScenarioDriver {
     }
 
     /** The body line of each open the capture holds, in order. */
-    private fun openBodies(): List<String> {
-        val file = captureFile()
+    private fun openBodies(file: File): List<String> {
         if (!file.exists()) return emptyList()
         val bodies = mutableListOf<String>()
         var pending = false
@@ -236,11 +256,15 @@ internal class WireScenarioDriver {
         return true
     }
 
-    /** Follows MainActivity only: whether it is stopped now, and how often it stopped or died. */
+    /**
+     * Follows MainActivity only: whether it is stopped or resumed now, and how often it stopped
+     * or died.
+     */
     private class MainActivityLifecycle : Application.ActivityLifecycleCallbacks {
         val stops = AtomicInteger()
         val destroys = AtomicInteger()
         @Volatile var stopped = false
+        @Volatile var resumed = false
 
         override fun onActivityStarted(activity: Activity) {
             if (activity is MainActivity) stopped = false
@@ -258,8 +282,14 @@ internal class WireScenarioDriver {
         }
 
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
-        override fun onActivityResumed(activity: Activity) {}
-        override fun onActivityPaused(activity: Activity) {}
+        override fun onActivityResumed(activity: Activity) {
+            if (activity is MainActivity) resumed = true
+        }
+
+        override fun onActivityPaused(activity: Activity) {
+            if (activity is MainActivity) resumed = false
+        }
+
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     }
 
@@ -267,6 +297,7 @@ internal class WireScenarioDriver {
         const val DEEPLINK = "/v3/deeplink"
         const val OPEN = "/v3/events/open"
         val ENDPOINTS = listOf(DEEPLINK, OPEN)
+        const val TOKEN_FIELD = "\"randomized_bundle_token\""
         const val CAPTURE_FILE = "branchlogs.txt"
         const val ASIDE_FILE = "branchlogs.preclear.txt"
         const val LINK_TIMEOUT_MS = 30_000L

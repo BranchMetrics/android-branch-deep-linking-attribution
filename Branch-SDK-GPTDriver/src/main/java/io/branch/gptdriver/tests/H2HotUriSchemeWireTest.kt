@@ -15,12 +15,14 @@ import org.junit.Test
  *
  * The contract counts one deeplink and one open, the delivery's own, so the launch's pair is
  * set aside once the launch has settled (WireScenarioDriver.setCaptureAside), before the scheme
- * link is delivered. That moves the capture to branchlogs.preclear.txt, where it stays
- * readable for diagnosis, and fails by name unless the capture held the launch's deeplink and
- * open at that point. The delivery's counts are then taken from the empty file.
+ * link is delivered. That moves the capture to branchlogs.preclear.txt and fails by name unless
+ * the moved file holds the launch's open with a randomized_bundle_token; the launch itself owns
+ * the arrival precondition. The file stays readable for diagnosis through run-as only: the L1
+ * script does not pull it. The delivery's counts are then taken from the empty file.
  *
  * No ActivityScenarioRule, for the reason WireScenarioDriver documents. The driver asserts that
- * MainActivity never stopped or died between the launch and the end of the delivery. The
+ * MainActivity is RESUMED before and after the delivery and never stopped or died between the
+ * launch and its end. The
  * capture is the output.
  *
  * Not in the L1 workflow yet: run it by hand after cold_https with
