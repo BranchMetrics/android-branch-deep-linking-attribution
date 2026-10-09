@@ -17,8 +17,20 @@ python3 scripts/validate_l1_logs.py path/to/branchlogs.txt
 To run the validator's own test suite:
 
 ```bash
-python3 -m unittest discover -s scripts -p "test_*.py" -v
+python3 -m unittest discover -s scripts -p 'test_*.py' -v
 ```
+
+The suite is split by what it judges:
+
+- `test_validate_l1_logs.py`: the parser, the field and contract engine, the registry.
+- `test_scenario_contracts.py`: each scenario contract against the fixture it was
+  written from, and its negatives.
+- `test_scenario_artifact_guards.py`: guards over the committed fixtures (placeholders
+  only, wire pairs only) and over the contract table.
+- `test_warm_contract_rules.py`: one test per rule of the two warm contracts and of
+  `hot_uriScheme`, so deleting or weakening a rule fails.
+
+`l1_fixtures.py` holds the fixture directory and the scenario-to-fixture map they share.
 
 ## What gets validated
 
