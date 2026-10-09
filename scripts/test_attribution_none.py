@@ -102,7 +102,9 @@ class AttributionNoneContractTests(unittest.TestCase):
             v.validate_entries, self._entries("attribution_none.txt"),
             v.contract_for("attribution_none"), [], v.SCENARIO_LINK_MARKERS.get("attribution_none"),
         )
-        self.assertTrue(any("none" in e for e in errors), errors)
+        self.assertEqual(
+            errors, ["Expected a resolution carrying {'l1_scenario': 'attribution_none'}, got none."]
+        )
 
 
 class AttributionNoneRuleTests(unittest.TestCase):
