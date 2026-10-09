@@ -308,6 +308,18 @@ class WarmScenariosAreSeparated(unittest.TestCase):
         errors = _errors(entries, "hot_https_foreground")
         self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
 
+    def test_each_hot_capture_fails_the_other_hot_contract(self):
+        # The two hot captures, unmodified, must refuse each other: the https fixture
+        # carries android_app_link_url (hot_uriScheme holds it at 0), and the scheme
+        # fixture lacks it (hot_https_foreground requires it).
+        for capture, contract in (
+            ("hot_https_foreground", "hot_uriScheme"),
+            ("hot_uriScheme", "hot_https_foreground"),
+        ):
+            with self.subTest(capture=capture, contract=contract):
+                errors = _errors(_entries(capture), contract)
+                self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
+
     def test_each_warm_capture_fails_the_other_warm_contract(self):
         # The two share counts and order. What tells them apart is the entry
         # point: an https link rides android_app_link_url, a scheme link does not.
