@@ -49,6 +49,7 @@ COUNTS = {
     "hot_uriScheme": {
         "/v3/deeplink": 1,
         "/v3/events/open": 1,
+        "/v3/events/custom": 0,
     },
 }
 ORDER = (("/v3/deeplink", "/v3/events/open"),)
@@ -66,6 +67,7 @@ FIELDS = {
     },
     "hot_uriScheme": {
         "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
+        "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1},
     },
 }
 
@@ -227,6 +229,21 @@ class WarmScenariosAreSeparated(unittest.TestCase):
         deeplink["request"]["external_intent_uri"] = link
         errors = _errors(entries, "hot_uriScheme")
         self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
+
+    def test_a_restarted_activity_in_the_hot_window_fails_hot_uriScheme(self):
+        # A /v3/events/custom in the delivery window is the activity restarting, the
+        # lifecycle this scenario exists to exclude.
+        entries = _entries("hot_uriScheme")
+        entries.insert(0, dict(entries[0], uri="/v3/events/custom"))
+        errors = _errors(entries, "hot_uriScheme")
+        self.assertTrue(_count_error(errors, "/v3/events/custom", 0), errors)
+
+    def test_a_hot_open_without_the_scheme_link_fails_hot_uriScheme(self):
+        entries = _entries("hot_uriScheme")
+        open_ = next(e for e in entries if e["uri"] == "/v3/events/open")
+        open_["request"].pop("external_intent_uri", None)
+        errors = _errors(entries, "hot_uriScheme")
+        self.assertTrue(any("'external_intent_uri'" in e and "/v3/events/open" in e for e in errors), errors)
 
     def test_each_warm_capture_fails_the_other_warm_contract(self):
         # The two share counts and order. What tells them apart is the entry
