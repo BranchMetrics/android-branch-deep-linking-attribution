@@ -49,12 +49,13 @@ internal class WireScenarioDriver {
     private var scenario: ActivityScenario<MainActivity>? = null
     private var baseline = emptyMap<String, Int>()
     private val lifecycle = MainActivityLifecycle()
+    private var registeredOn: Application? = null
 
     /** Starts the TestBed and waits for its launch to reach the wire: a deeplink and an open. */
     fun launch() {
         baseline = ENDPOINTS.associateWith { posts(it) }
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
-        (app as Application).registerActivityLifecycleCallbacks(lifecycle)
+        registeredOn = (app as Application).also { it.registerActivityLifecycleCallbacks(lifecycle) }
         scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario?.moveToState(Lifecycle.State.RESUMED)
         awaitPosts(DEEPLINK, OPEN)
@@ -63,6 +64,18 @@ internal class WireScenarioDriver {
         check(launchOpen != null && launchOpen.contains("\"randomized_bundle_token\"")) {
             "no randomized_bundle_token on the launch open; run cold_https first"
         }
+    }
+
+    /**
+     * Unregisters the lifecycle callbacks launch() added. Without it a finished driver keeps
+     * observing the Application for the rest of the process, and a later driver's activity
+     * events reach its counters too. Each driver then counts only the stops and destroys
+     * between its own launch() and close(). Call it from the test's @After. It does not close the
+     * scenario, for the reason in the class comment. Safe to call twice or without a launch.
+     */
+    fun close() {
+        registeredOn?.unregisterActivityLifecycleCallbacks(lifecycle)
+        registeredOn = null
     }
 
     /**
