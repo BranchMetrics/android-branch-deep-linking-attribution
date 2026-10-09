@@ -11,6 +11,7 @@ SCENARIO_FIXTURES = {
     "organic_open": "organic_open.txt",
     "cold_firstInstall": "cold_firstInstall.txt",
     "cold_https": "cold_https.txt",
+    "hot_https_foreground": "hot_https_foreground.txt",
     "link_generation": "link_generation.txt",
     "attribution_none": "attribution_none.txt",
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
