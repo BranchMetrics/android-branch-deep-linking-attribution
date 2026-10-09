@@ -16,6 +16,7 @@ SCENARIO_FIXTURES = {
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
     "hot_uriScheme": "hot_uriScheme.txt",
+    "cold_uriScheme": "cold_uriScheme.txt",
 }
 
 
