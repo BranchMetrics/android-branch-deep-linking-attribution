@@ -132,6 +132,17 @@ class RequestDeepLinkUriMappingTest : BranchTestBase() {
             Thread.sleep(10)
         }
         assertTrue("no open reached the remote", remote.opens.isNotEmpty())
+        // Same settle as LaunchDataTest.awaitCount: the body is recorded before the open's
+        // reply handling has finished, and tearDown shuts the Branch instance down.
+        settle(300)
+    }
+
+    private fun settle(ms: Long) {
+        val deadline = System.currentTimeMillis() + ms
+        while (System.currentTimeMillis() < deadline) {
+            Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+            Thread.sleep(10)
+        }
     }
 
     /** Answers the ad ID and install referrer reads at once, so no launch waits on a lock. */
