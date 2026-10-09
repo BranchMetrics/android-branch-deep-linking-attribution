@@ -15,9 +15,11 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
-      - ".github/workflows/sdk-l1-validation.yml"
+      # .github/** so a re-added vendor workflow or script runs the guard step below. It also
+      # covers this workflow file.
+      - ".github/**"
   pull_request:
-    branches: [master, main, feature/mobileboost-e2e-tests, "6.0.0-beta.*"]
+    branches: [master, main, "6.0.0-beta.*"]
     # Duplicated rather than shared via a YAML anchor: GitHub Actions does not guarantee anchor
     # support, and a silently dead trigger is the worst failure mode for a gate.
     paths:
@@ -29,7 +31,9 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
-      - ".github/workflows/sdk-l1-validation.yml"
+      # .github/** so a re-added vendor workflow or script runs the guard step below. It also
+      # covers this workflow file.
+      - ".github/**"
   workflow_dispatch:
 
 permissions:
@@ -43,6 +47,19 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
+
+      - name: Fail if the vendor comes back
+        run: |
+          # The vendor left this line with EMT-4518. A rebase that keeps both
+          # sides of a conflict in this file, the L1 script or the module build
+          # restores it silently and stays green, since the repo secret still
+          # exists for master. This step turns that into a red build.
+          # The bracket expressions match the vendor strings but not their own
+          # text, so this file stays covered without excluding itself.
+          if git grep -n -i -e 'mobile[b]oost' -e 'gptdriver[_]lib' -- ':!ChangeLog.md' ; then
+            echo "::error::vendor reference found"
+            exit 1
+          fi
 
       - name: Enable KVM
         run: |
@@ -64,12 +81,6 @@ jobs:
       # `adb shell run-as io.branch.branchandroidtestbed cat ...` then fails with
       # `unknown package` and no capture is produced for L1 validation.
       - name: Build TestBed + GPTDriver APKs
-        env:
-          # Gradle maps ORG_GRADLE_PROJECT_<name> env vars to project properties,
-          # so the GPTDriver module's `findProperty("MOBILEBOOST_API_KEY")` picks
-          # this up without ever placing the secret on the command line (where
-          # it would appear in `ps`, kernel audit logs, and CI run UIs).
-          ORG_GRADLE_PROJECT_MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
         run: |
           ./gradlew \
             :Branch-SDK-TestBed:assembleDebug \
@@ -87,8 +98,6 @@ jobs:
       # construct here would not survive.
       - name: Run Instrumented Tests (Generate Activity) and Pull Logs
         uses: reactivecircus/android-emulator-runner@v2
-        env:
-          MOBILEBOOST_API_KEY: ${{ secrets.MOBILEBOOST_API_KEY }}
         with:
           api-level: 30
           target: google_apis
@@ -96,9 +105,6 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
-          # MOBILEBOOST_API_KEY is propagated to the script via the step `env:`
-          # block above; the script reads it from the environment, so we no
-          # longer pass the secret as a positional argument (avoids argv leak).
           script: |
             TEST_CLASS=N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh

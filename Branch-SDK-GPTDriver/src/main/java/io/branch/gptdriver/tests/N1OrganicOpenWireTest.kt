@@ -8,10 +8,9 @@ import org.junit.Test
 /**
  * organic_open: a launch with no link.
  *
- * Deliberately not a BaseGptDriverTest subclass. That base supplies the AI
- * driver and fails without MOBILEBOOST_API_KEY, and L1 asserts the wire rather
- * than the screen, so it needs neither. What it does need from the base is one
- * line: the activity rule below. Same split the iOS L1 drivers make.
+ * Deliberately depends on no vendor base class and no vendor key. L1 asserts
+ * the wire rather than the screen, so all it needs is the activity rule below.
+ * Same split the iOS L1 drivers make.
  *
  * Produces no assertion of its own. The capture is the output; the contract
  * that judges it lives in the validator.
