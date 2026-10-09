@@ -1,146 +1,46 @@
 package io.branch.gptdriver.tests
 
-import android.app.Activity
-import android.app.Application
-import android.content.Intent
-import android.net.Uri
-import android.os.Bundle
-import androidx.lifecycle.Lifecycle
-import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry
-import io.branch.branchandroidtestbed.MainActivity
-import io.branch.branchandroidtestbed.R
-import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 
 /**
- * hot_uriScheme - W2WarmUriSchemeWireTest's shape minus its background() call, so the
- * activity never leaves RESUMED and the scheme link lands in onNewIntent hot rather than warm.
+ * hot_uriScheme: a scheme link delivered through startActivity while MainActivity is RESUMED.
+ * W2WarmUriSchemeWireTest's delivery without its background() step, so the activity never
+ * leaves RESUMED and the link lands in onNewIntent hot rather than warm.
  *
- * Sets branchlogs.txt aside once the bare launch has settled, before delivering the scheme link,
- * per the capture convention: the contract asserts only this scenario's own pair, not the bare
- * launch's.
+ * Needs a device that already holds a token, from cold_https running first; this line does not
+ * wipe app data. The shared driver checks it on the launch open and fails by name without it.
+ * The hot_uriScheme contract itself has no token rule. W1WarmHttpsWireTest explains why the
+ * token comes from cold_https and not from this launch. The link generation step W2 has is
+ * left out: it only added a /v1/url that this scenario sets aside anyway.
  *
- * No ActivityScenarioRule, for the reason the warm scenarios' drivers document: the rule's
- * after() closes a scenario that has lost lifecycle control once a new intent arrived through
- * startActivity.
+ * The contract counts one deeplink and one open, the delivery's own, so the launch's pair is
+ * set aside once the launch has settled (WireScenarioDriver.setCaptureAside), before the scheme
+ * link is delivered. That moves the capture to branchlogs.preclear.txt and fails by name unless
+ * the moved file holds the launch's open with a randomized_bundle_token; the launch itself owns
+ * the arrival precondition. The file stays readable for diagnosis through run-as only: the L1
+ * script does not pull it. The delivery's counts are then taken from the empty file.
  *
- * Produces no assertion of its own beyond MainActivity staying in the foreground. The capture
- * is the output.
+ * No ActivityScenarioRule, for the reason WireScenarioDriver documents. The driver asserts that
+ * MainActivity is RESUMED before and after the delivery and never stopped or died between the
+ * launch and its end. The
+ * capture is the output.
+ *
+ * Not in the L1 workflow yet: run it by hand after cold_https with
+ * TEST_CLASS=H2HotUriSchemeWireTest OUTPUT_LOG=wire-hot_uriScheme.txt CLEAR_LOG=1
+ * ./scripts/run_l1_instrumented.sh, then validate_l1_logs.py --scenario hot_uriScheme.
  */
-@LargeTest
-@RunWith(AndroidJUnit4::class)
 class H2HotUriSchemeWireTest {
 
-    private var scenario: ActivityScenario<MainActivity>? = null
-
-    /** adb install -r keeps app data, so a leftover capture from an earlier run would satisfy
-     * clearCapturedLog's pre-condition without this run's launch having written anything. */
-    @Before
-    fun deleteAnyLeftoverCaptures() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        File(context.filesDir, LOG_FILE_NAME).delete()
-        File(context.filesDir, PRECLEAR_FILE_NAME).delete()
-    }
+    private val driver = WireScenarioDriver()
 
     @Test
     fun hotUriSchemeLinkEmitsWirePayload() {
-        scenario = ActivityScenario.launch(MainActivity::class.java)
-        scenario?.moveToState(Lifecycle.State.RESUMED)
-        settleShort()
-
-        val stoppedWatcher = StoppedWatcher()
-        val application = InstrumentationRegistry.getInstrumentation()
-            .targetContext.applicationContext as Application
-        application.registerActivityLifecycleCallbacks(stoppedWatcher)
-        try {
-            generateLink()
-            settleShort()
-
-            clearCapturedLog()
-
-            deliver(SCHEME_URI)
-            settle()
-
-            assertTrue(
-                "MainActivity left the foreground during the scenario, so the delivery " +
-                    "was warm rather than hot",
-                !stoppedWatcher.stopped.get()
-            )
-        } finally {
-            application.unregisterActivityLifecycleCallbacks(stoppedWatcher)
-        }
+        driver.launch()
+        driver.setCaptureAside()
+        driver.deliverHot(SCHEME_URI)
     }
-
-    /** Watches for onStop, not onPause: onPause fires on every hot redelivery to a resumed
-     * singleTop activity, but a true hot delivery never reaches STOPPED. */
-    private class StoppedWatcher : Application.ActivityLifecycleCallbacks {
-        val stopped = AtomicBoolean(false)
-
-        override fun onActivityStopped(activity: Activity) {
-            if (activity is MainActivity) stopped.set(true)
-        }
-
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
-        override fun onActivityStarted(activity: Activity) {}
-        override fun onActivityResumed(activity: Activity) {}
-        override fun onActivityPaused(activity: Activity) {}
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-        override fun onActivityDestroyed(activity: Activity) {}
-    }
-
-    /** Not read back: this exists so the device is a returning one, as in the warm scenarios. */
-    private fun generateLink() {
-        onView(withId(R.id.cmdRefreshShortURL)).perform(click())
-        Thread.sleep(LINK_MS)
-    }
-
-    /** Moves the bare launch's own traffic to a side file, so the contract measures only this
-     * scenario's delivery while the pre-clear capture stays readable for diagnosis. */
-    private fun clearCapturedLog() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val liveLog = File(context.filesDir, LOG_FILE_NAME)
-        assertTrue(
-            "bare launch wrote nothing to $LOG_FILE_NAME before the clear",
-            liveLog.exists() && liveLog.length() > 0
-        )
-        if (!liveLog.renameTo(File(context.filesDir, PRECLEAR_FILE_NAME))) {
-            fail("could not rename $LOG_FILE_NAME to $PRECLEAR_FILE_NAME; the clear did not happen")
-        }
-    }
-
-    private fun deliver(uri: String) {
-        // setPackage, so the manifest's branchtest filter still has to match. Naming the
-        // component would skip that, and the point of driving the real entry point is that
-        // a manifest which stops declaring the scheme breaks this test.
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).apply {
-            setPackage(context.packageName)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        }
-        context.startActivity(intent)
-    }
-
-    private fun settleShort() = Thread.sleep(SETTLE_SHORT_MS)
-
-    private fun settle() = Thread.sleep(SETTLE_MS)
 
     private companion object {
         const val SCHEME_URI = "branchtest://open"
-        const val LOG_FILE_NAME = "branchlogs.txt"
-        const val PRECLEAR_FILE_NAME = "branchlogs.preclear.txt"
-        const val LINK_MS = 8_000L
-        const val SETTLE_SHORT_MS = 6_000L
-        const val SETTLE_MS = 12_000L
     }
 }
