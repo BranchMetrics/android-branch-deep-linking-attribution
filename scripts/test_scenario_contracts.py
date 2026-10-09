@@ -80,6 +80,7 @@ class ScenarioContractTests(unittest.TestCase):
         # has drifted back onto the defect.
         for scenario in SCENARIO_FIXTURES:
             if self._opens_forbidden(scenario):
+                self.assertEqual(scenario, "attribution_none", f"{scenario} forbids opens but is not attribution_none")
                 continue
             entries = self._entries(scenario)
             first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
@@ -112,6 +113,7 @@ class ScenarioContractTests(unittest.TestCase):
         # passes; the second open has to carry an id of its own to be a second open.
         for scenario in SCENARIO_FIXTURES:
             if self._opens_forbidden(scenario):
+                self.assertEqual(scenario, "attribution_none", f"{scenario} forbids opens but is not attribution_none")
                 continue
             raw = self._raw(scenario)
             first_open = next(e for e in raw if e["uri"] == "/v3/events/open")
