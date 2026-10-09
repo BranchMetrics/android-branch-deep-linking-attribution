@@ -6,10 +6,10 @@ import org.junit.Test
  * warm_https_onNewIntent: a link arriving while the app is alive but backgrounded.
  *
  * Warm is defined by the launch state, not by the delivery. The app must actually be in the
- * background when the link arrives, which is why this presses home before delivering. The
- * existing DeepLinkWarmOpenHybridTest delivers with the app in the foreground and its own
- * header calls that the hot case, so it is a precedent for the mechanism and not for the
- * state.
+ * background when the link arrives, which is why this presses Home and waits for the activity
+ * to stop before delivering. DeepLinkWarmOpenHybridTest delivers with the app in the
+ * foreground ("App is in foreground" in its header), so it is a precedent for the mechanism
+ * and not for the state.
  *
  * Needs a device that already holds a token. The contract expects both opens to carry
  * randomized_bundle_token, and only the reply to an init-session request stores it
@@ -19,11 +19,14 @@ import org.junit.Test
  * install and the gate fails on the token count and the custom event count, which reads like
  * an SDK bug and is a missing prerequisite.
  *
- * Delivery preserves the task. cold_https uses FLAG_ACTIVITY_CLEAR_TASK, which tears it down
- * and is the cold shape; SINGLE_TOP lands in MainActivity.onNewIntent instead, which is the
- * entry point a warm open really uses. Going through startActivity rather than calling
- * onNewIntent directly is deliberate: it re-runs onActivityStarted and onActivityResumed,
- * so the SDK's PENDING -> READY intent transition happens the way it does in production.
+ * Delivery preserves the task. cold_https is delivered from the host: scripts/
+ * run_l1_instrumented.sh force-stops the app and runs `am start -W`, and fails unless the
+ * launch is COLD. Here the process stays alive and FLAG_ACTIVITY_SINGLE_TOP lands the intent
+ * in the running MainActivity.onNewIntent, the entry point a warm open uses. It goes through
+ * startActivity rather than calling onNewIntent directly, so the system resolves the intent
+ * against the manifest and brings the stopped activity back the way a tap would. The SDK
+ * keeps no intent state or activity lifecycle hooks of its own to re-run: the TestBed's
+ * onNewIntent calls requestDeepLinkData, which sends the deeplink and the open.
  *
  * No ActivityScenarioRule here, unlike the other L1 drivers. The rule closes the scenario in
  * its after(), and once a new intent has been delivered through startActivity the scenario
