@@ -5,9 +5,11 @@ Run from the repo root:
     python -m unittest scripts.test_scenario_contracts
 """
 
+import io
 import os
 import sys
 import unittest
+from contextlib import redirect_stdout
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, THIS_DIR)
@@ -30,7 +32,14 @@ class ScenarioContractTests(unittest.TestCase):
     android_app_link_url and external_intent_uri.
     The only thing a warm launch does that a cold one does not is background and
     foreground the app; that is a coincidence these fixtures record, not a cause
-    they establish."""
+    they establish.
+
+    hot_uriScheme is not one of those. It is a capture of a local H2HotUriSchemeWireTest run
+    against 6.0.0-beta.0 at 3fe6a6f9 (2026-09-11, an API 34 emulator, not the CI one), taken
+    after the driver cleared the log once the bare launch had settled, trimmed to the fields the
+    validator reads, with the identifiers swapped for the placeholders above. It was not
+    re-taken after the launch fields moved to send time, so its open carries none of them and
+    the first check against one of them needs a fresh capture, not this fixture."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
@@ -74,6 +83,36 @@ class ScenarioContractTests(unittest.TestCase):
                     any("/v3/events/open" in e for e in errors),
                     f"{scenario} accepted the duplicate open: {errors}",
                 )
+
+    def _ci_errors(self, scenario, entries):
+        """What `validate_l1_logs.py <capture> --scenario <scenario>` computes: the raw
+        parse, with retries collapsed inside validate_entries, not a pre-collapsed list."""
+        with redirect_stdout(io.StringIO()):
+            return v.validate_entries(entries, v.contract_for(scenario))
+
+    def _raw(self, scenario):
+        return v.parse_branch_logs(_fixture(SCENARIO_FIXTURES[scenario]))
+
+    def test_each_fixture_passes_the_path_ci_runs(self):
+        # The tests above go through assert_contract on a collapsed list. CI goes through
+        # validate_entries, which also checks every request's own fields.
+        for scenario in SCENARIO_FIXTURES:
+            with self.subTest(scenario=scenario):
+                self.assertEqual(self._ci_errors(scenario, self._raw(scenario)), [])
+
+    def test_a_second_open_with_its_own_id_fails_the_path_ci_runs(self):
+        # A copy that repeats the first open's request id is a retry and is dropped, so it
+        # passes; the second open has to carry an id of its own to be a second open.
+        for scenario in SCENARIO_FIXTURES:
+            raw = self._raw(scenario)
+            first_open = next(e for e in raw if e["uri"] == "/v3/events/open")
+            request = dict(first_open["request"], branch_sdk_request_unique_id="a-second-open")
+            second = dict(first_open, request=request)
+            with self.subTest(scenario=scenario):
+                errors = self._ci_errors(scenario, raw + [second])
+                self.assertTrue(any("'/v3/events/open'" in e for e in errors), errors)
+                same_id = raw + [dict(first_open, request=dict(first_open["request"]))]
+                self.assertEqual(self._ci_errors(scenario, same_id), [])
 
     def test_a_missing_endpoint_fails_every_scenario(self):
         # The counterpart to the duplicate-open case: too few is a defect the
