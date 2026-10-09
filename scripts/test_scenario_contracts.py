@@ -53,6 +53,11 @@ class ScenarioContractTests(unittest.TestCase):
             self._entries(capture_scenario), v.contract_for(contract_scenario)
         )
 
+    def _opens_forbidden(self, scenario):
+        """attribution_none contracts no /v3/events/open at all, so it has no open to
+        duplicate; its own negative is an open appearing (test_attribution_none)."""
+        return v.contract_for(scenario)["counts"].get("/v3/events/open") == 0
+
     def test_each_fixture_satisfies_its_own_contract(self):
         for scenario in SCENARIO_FIXTURES:
             with self.subTest(scenario=scenario):
@@ -74,6 +79,9 @@ class ScenarioContractTests(unittest.TestCase):
         # contract must reject it. If one of these ever passes, the contract
         # has drifted back onto the defect.
         for scenario in SCENARIO_FIXTURES:
+            if self._opens_forbidden(scenario):
+                self.assertEqual(scenario, "attribution_none", f"{scenario} forbids opens but is not attribution_none")
+                continue
             entries = self._entries(scenario)
             first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
             duplicated = entries + [dict(first_open, request=dict(first_open["request"]))]
@@ -104,6 +112,9 @@ class ScenarioContractTests(unittest.TestCase):
         # A copy that repeats the first open's request id is a retry and is dropped, so it
         # passes; the second open has to carry an id of its own to be a second open.
         for scenario in SCENARIO_FIXTURES:
+            if self._opens_forbidden(scenario):
+                self.assertEqual(scenario, "attribution_none", f"{scenario} forbids opens but is not attribution_none")
+                continue
             raw = self._raw(scenario)
             first_open = next(e for e in raw if e["uri"] == "/v3/events/open")
             request = dict(first_open["request"], branch_sdk_request_unique_id="a-second-open")
@@ -208,7 +219,7 @@ class ScenarioContractTests(unittest.TestCase):
                 self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
 
     def test_each_cold_scenario_resolves_its_own_link(self):
-        for scenario in ("cold_firstInstall", "cold_https"):
+        for scenario in ("cold_firstInstall", "cold_https", "attribution_none"):
             with self.subTest(scenario=scenario):
                 expected = v.SCENARIO_LINK_MARKERS[scenario]
                 self.assertEqual(v.assert_resolved(self._resolved(scenario), expected), [])

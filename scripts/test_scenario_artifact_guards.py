@@ -50,27 +50,35 @@ class ScenarioArtifactGuards(unittest.TestCase):
     }
     LINK_PREFIXES = ("https://bnctestbed.test-app.link/fixture-", "branchtest://")
 
-    def _keep_set(self):
+    def _keep_set(self, scenario=None):
         """Derived from the validator, not restated here, so the two cannot drift.
 
         Plus app_version, the one name the validator never reads (the cold fixtures
         already carried it). Every other kept field is one a rule or a required list
-        names, external_intent_uri and link_data among them."""
+        names, external_intent_uri and link_data among them. cpp_level is read by the
+        required-field tiers but is a literal in attribution_level(), not a constant to
+        derive from, so it is allowed for attribution_none alone, the one capture that
+        sets a level."""
         keep = set()
-        for name in dir(v):
-            if not name.startswith("REQUIRED"):
-                continue
-            value = getattr(v, name)
+
+        def collect(value):
+            # REQUIRED_PER_ENDPOINT nests lists inside dicts, one per attribution tier.
             if isinstance(value, list):
-                keep |= {str(x) for x in value}
+                keep.update(str(x) for x in value)
             elif isinstance(value, dict):
                 for inner in value.values():
-                    if isinstance(inner, list):
-                        keep |= {str(x) for x in inner}
+                    collect(inner)
+
+        for name in dir(v):
+            if name.startswith("REQUIRED"):
+                collect(getattr(v, name))
         for contract in v.SCENARIO_CONTRACTS.values():
             for rules in contract["fields"].values():
                 keep |= set(rules)
-        return keep | {"app_version"}
+        keep |= {"app_version"}
+        if scenario == "attribution_none":
+            keep.add("cpp_level")
+        return keep
 
     def _lines(self, fixture_name):
         with open(_fixture(fixture_name), encoding="utf-8") as fh:
@@ -97,8 +105,8 @@ class ScenarioArtifactGuards(unittest.TestCase):
                 self.assertEqual(stray, [], f"{fixture} holds lines that are not wire pairs")
 
     def test_scenario_fixtures_carry_no_field_outside_the_keep_set(self):
-        keep = self._keep_set()
         for scenario, fixture in SCENARIO_FIXTURES.items():
+            keep = self._keep_set(scenario)
             extra = set()
             for payload in self._payloads(fixture):
                 extra |= set(payload) - keep
