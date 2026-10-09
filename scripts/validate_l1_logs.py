@@ -324,7 +324,12 @@ SCENARIO_CONTRACTS = {
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
-            "/v3/events/open": {"randomized_bundle_token": 2},
+            # link_data is the attribution: the open that follows the tapped link
+            # carries it, the bare launch's open does not, so one of the two. Without
+            # it a tap whose open went out unattributed (the deeplink request failed,
+            # or its reply was not a click) would still pass. warm_uriScheme must not
+            # get this rule: a bare scheme link matches nothing, so its opens have none.
+            "/v3/events/open": {"randomized_bundle_token": 2, "link_data": 1},
             "/v1/url": {"hardware_id": 0},
             # The entry point, asserted in both directions across the two warm
             # scenarios. An https link now rides both fields, a scheme link only
