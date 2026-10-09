@@ -319,6 +319,16 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": 2,
             "/v3/events/open": 2,
             "/v1/url": 1,
+            # Two, and not a property of the SDK: the TestBed logs one custom event
+            # from MainActivity.onStart, so two means the activity went through
+            # onStart twice, once per launch. It is the only thing in this contract
+            # that notices the app was stopped between them (a Home press that did
+            # not stop it leaves one). It cannot tell a stopped activity from a
+            # destroyed and recreated one, and it moves with the TestBed, not the
+            # SDK. The cold contracts leave it out for that reason; here it stays
+            # because nothing else sees the stop. The direct check, a lifecycle
+            # callback in the driver asserting onActivityStopped before delivery,
+            # belongs in the Kotlin drivers; when it lands, this count can go.
             "/v3/events/custom": 2,
             "/v1/install": 0,
         },
@@ -350,6 +360,8 @@ SCENARIO_CONTRACTS = {
             "/v3/deeplink": 2,
             "/v3/events/open": 2,
             "/v1/url": 1,
+            # Two for the same reason as warm_https_onNewIntent: one TestBed
+            # onStart per launch, the only sign here that the app was stopped.
             "/v3/events/custom": 2,
             "/v1/install": 0,
         },
