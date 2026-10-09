@@ -178,7 +178,7 @@ jobs:
             echo "| scenario group | status |"
             echo "| --- | --- |"
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
-              echo "| Cold | cold_firstInstall, cold_https and cold_uriScheme pass |"
+              echo "| Cold | cold_firstInstall and cold_https pass; cold_uriScheme wire passes (scheme link not resolved by the server) |"
               echo "| Negative and guards | organic_open and attribution_none pass, no_stickiness and late_userActivity not implemented |"
             else
               echo "| Cold | see failures below |"
