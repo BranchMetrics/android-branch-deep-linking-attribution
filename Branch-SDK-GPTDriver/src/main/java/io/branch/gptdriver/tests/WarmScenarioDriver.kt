@@ -24,10 +24,17 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * Each step waits for something it can observe: the TestBed's own capture file
  * (branchlogs.txt, read in this process, which is the app's), the short-URL field, or the
- * activity's lifecycle callbacks. After each step the capture must also stay unchanged for
- * [QUIET_MS]. That window is the one place a sleep stands in for a condition: it waits for
- * requests that must not be there (a second open, a stray event), and no signal says they will
- * not come. It is what lets the contract's exact counts see an extra request.
+ * activity's lifecycle callbacks. After each step the number of requests posted must also stay
+ * unchanged for [QUIET_MS]. Request lines are counted, not capture bytes, so a VERBOSE log line
+ * that is not a request does not restart the window. That window is the one place a sleep
+ * stands in for a condition: it waits for requests that must not be there (a second open, a
+ * stray event), and no signal says they will not come. It is what lets the contract's exact
+ * counts see an extra request.
+ *
+ * The window after delivery is [FINAL_QUIET_MS], 12 s, as long as the fixed capture window the
+ * earlier driver used. The bound is therefore: a duplicate open or stray event up to 12 s after
+ * the last request is inside the capture, one later than that is not seen. The windows between
+ * the other steps stay at [QUIET_MS].
  *
  * Counts are taken against a baseline read at [launch], so a capture that already holds lines
  * (no CLEAR_LOG) does not satisfy a wait early.
@@ -52,6 +59,10 @@ internal class WarmScenarioDriver {
         scenario?.moveToState(Lifecycle.State.RESUMED)
         awaitPosts(DEEPLINK, OPEN)
         awaitQuiet()
+        val launchOpen = openBodies().drop(baseline.getValue(OPEN)).firstOrNull()
+        check(launchOpen != null && launchOpen.contains("\"randomized_bundle_token\"")) {
+            "no randomized_bundle_token on the launch open; run cold_https first"
+        }
     }
 
     /**
@@ -91,6 +102,9 @@ internal class WarmScenarioDriver {
             lifecycle.stops.get() > stopsBefore || lifecycle.destroys.get() > 0
         }
         assertBackgrounded()
+        // The window must exceed ProcessLifecycleOwner's 700 ms stop delay: that delay is what
+        // fires BranchProcessLifecycleObserver.onStop, which clears sessionParams and the saved
+        // launch link, and it has to have fired before the link is delivered.
         awaitQuiet()
     }
 
@@ -121,17 +135,39 @@ internal class WarmScenarioDriver {
         }
         context.startActivity(intent)
         poll(WAIT_MS) { arrived(DEEPLINK) && arrived(OPEN) }
-        awaitQuiet()
+        awaitQuiet(FINAL_QUIET_MS)
+        check(lifecycle.destroys.get() == 0) {
+            "MainActivity was destroyed during delivery, so the link did not reach a living " +
+                "activity through onNewIntent"
+        }
     }
 
     private fun captureFile() =
         File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, CAPTURE_FILE)
 
-    /** How many requests to [endpoint] the capture holds. */
-    private fun posts(endpoint: String): Int {
+    /** How many requests to [endpoint] the capture holds, or to any endpoint when null. */
+    private fun posts(endpoint: String? = null): Int {
         val file = captureFile()
         if (!file.exists()) return 0
-        return file.readLines().count { it.contains("posting to ") && it.trim().endsWith(endpoint) }
+        return file.readLines().count {
+            it.contains("posting to ") && (endpoint == null || it.trim().endsWith(endpoint))
+        }
+    }
+
+    /** The body line of each open the capture holds, in order. */
+    private fun openBodies(): List<String> {
+        val file = captureFile()
+        if (!file.exists()) return emptyList()
+        val bodies = mutableListOf<String>()
+        var pending = false
+        for (line in file.readLines()) {
+            if (line.contains("posting to ")) pending = line.trim().endsWith(OPEN)
+            else if (pending && line.startsWith("Post value = ")) {
+                bodies.add(line)
+                pending = false
+            }
+        }
+        return bodies
     }
 
     private fun arrived(endpoint: String) = posts(endpoint) > baseline.getValue(endpoint)
@@ -139,17 +175,17 @@ internal class WarmScenarioDriver {
     private fun awaitPosts(vararg endpoints: String) =
         await("no ${endpoints.joinToString(" and ")} in the capture") { endpoints.all { arrived(it) } }
 
-    /** Returns once the capture has not changed for [QUIET_MS]. */
-    private fun awaitQuiet() {
-        var size = captureFile().length()
+    /** Returns once no request has been posted for [quietMs]. */
+    private fun awaitQuiet(quietMs: Long = QUIET_MS) {
+        var count = posts()
         var since = System.currentTimeMillis()
-        await("the capture was still changing after ${WAIT_MS}ms") {
-            val now = captureFile().length()
-            if (now != size) {
-                size = now
+        await("requests were still being posted after ${WAIT_MS}ms") {
+            val now = posts()
+            if (now != count) {
+                count = now
                 since = System.currentTimeMillis()
             }
-            System.currentTimeMillis() - since >= QUIET_MS
+            System.currentTimeMillis() - since >= quietMs
         }
     }
 
@@ -201,5 +237,6 @@ internal class WarmScenarioDriver {
         const val WAIT_MS = 30_000L
         const val POLL_MS = 250L
         const val QUIET_MS = 3_000L
+        const val FINAL_QUIET_MS = 12_000L
     }
 }
