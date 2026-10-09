@@ -32,17 +32,10 @@ class W2WarmUriSchemeWireTest {
     @Test
     fun warmUriSchemeLinkEmitsWirePayload() {
         driver.launch()
-        driver.settleShort()
-
         // Not read back: the generated link is not delivered here, only the scheme URI is.
         driver.generateLink()
-        driver.settleShort()
-
         driver.background()
-        driver.settleShort()
-
         driver.deliver(SCHEME_URI)
-        driver.settle()
     }
 
     private companion object {

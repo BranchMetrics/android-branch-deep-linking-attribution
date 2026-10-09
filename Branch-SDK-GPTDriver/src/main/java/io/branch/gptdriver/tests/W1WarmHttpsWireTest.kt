@@ -34,15 +34,8 @@ class W1WarmHttpsWireTest {
         // This launch and the generation below happen first, so the app is running by the
         // time the link arrives.
         driver.launch()
-        driver.settleShort()
-
         val url = driver.generateLink()
-        driver.settleShort()
-
         driver.background()
-        driver.settleShort()
-
         driver.deliver(url)
-        driver.settle()
     }
 }
