@@ -390,8 +390,9 @@ SCENARIO_CONTRACTS = {
         },
     },
     # link_generation: the generation run that precedes
-    # cold_firstInstall, judged on its own capture. It holds the only /v1/url,
-    # so it carries the EMT-4199 rule that /v1/url sends no hardware_id.
+    # cold_firstInstall, judged on its own capture. It holds the /v1/url of the
+    # cold line (the warm contracts count one of their own), so it carries the
+    # EMT-4199 rule that /v1/url sends no hardware_id.
     "link_generation": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),

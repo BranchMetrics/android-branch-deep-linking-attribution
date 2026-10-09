@@ -544,7 +544,8 @@ class ScenarioContractTests(unittest.TestCase):
         self.assertTrue(any("link_data" in e for e in errors), errors)
 
     def test_hardware_id_on_link_creation_fails_link_generation(self):
-        # The EMT-4199 signal. /v1/url lives only in the generation capture.
+        # The EMT-4199 signal. link_generation is where /v1/url is the point of
+        # the capture; the warm contracts count one as well.
         entries = self._entries("link_generation")
         for e in entries:
             if e["uri"] == "/v1/url":
