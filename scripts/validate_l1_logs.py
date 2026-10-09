@@ -330,7 +330,7 @@ SCENARIO_CONTRACTS = {
             # Two, and not a property of the SDK: the TestBed logs one custom event
             # from MainActivity.onStart, so two means the activity went through
             # onStart twice, once per launch. The Kotlin driver asserts the stop
-            # directly (WarmScenarioDriver.assertBackgrounded); this count is the
+            # directly (WireScenarioDriver.assertBackgrounded); this count is the
             # capture-side witness the Python gate can see, kept as a second signal.
             # It cannot tell a stopped activity from a destroyed and recreated one,
             # and it moves with the TestBed, not the SDK. The cold contracts leave
