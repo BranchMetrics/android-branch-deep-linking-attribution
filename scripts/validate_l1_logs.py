@@ -410,13 +410,17 @@ SCENARIO_CONTRACTS = {
 
     # hot_uriScheme: a scheme link delivered via onNewIntent while MainActivity is already
     # RESUMED, no backgrounding step. The counts come from a local run of
-    # H2HotUriSchemeWireTest against 6.0.0-beta.0 at 3fe6a6f9 (2026-09-11, an API 34
-    # emulator), after the driver clears branchlogs.txt once the bare launch has settled,
-    # so they are this scenario's own delivery, not the bare launch that precedes it. No CI
-    # emulator run of this scenario exists yet, and its fixture was not re-taken after the
-    # launch fields moved to send time (EMT-4480): its open carries none of them, which the
-    # warm_uriScheme capture's second open does.
+    # H2HotUriSchemeWireTest at 4652bf06 (2026-10-09, an API 30 emulator), judged on the
+    # delivery alone: the driver moves the launch capture aside once the bare launch has
+    # settled (WireScenarioDriver.setCaptureAside), so the log holds this scenario's own
+    # requests, not the bare launch that precedes it. No CI emulator run of this scenario
+    # exists yet (H2 is not in the CI gate), so the fixture is that local run, real
+    # requests with placeholders.
     #
+    # The delivery window must not restart the activity, which is what /v3/events/custom
+    # at 0 holds: the warm scenarios send two because they background and foreground the
+    # app. The open must be a returning device's (randomized_bundle_token) and must carry
+    # the scheme link (external_intent_uri).
     # An https link sends external_intent_uri as well as android_app_link_url, so
     # external_intent_uri alone cannot tell the two deliveries apart. A scheme link
     # carries only external_intent_uri, which is why android_app_link_url is held at 0.
@@ -424,10 +428,12 @@ SCENARIO_CONTRACTS = {
         "counts": {
             "/v3/deeplink": 1,
             "/v3/events/open": 1,
+            "/v3/events/custom": 0,
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
             "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
+            "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1},
         },
     },
 }
