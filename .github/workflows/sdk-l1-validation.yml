@@ -84,9 +84,10 @@ jobs:
       # attribution_none sets the attribution level to NONE after its link
       # exists, and wipes app data after itself.
       #
-      # The two warm scenarios do not wipe. They need an installed device, so
-      # they run right after cold_https and rely on the install and device state
-      # it left behind; reordering them ahead of it breaks them.
+      # The two warm scenarios and hot_https_foreground do not wipe. They need an
+      # installed device holding the token, so they run after cold_https and rely
+      # on the install and device state it left behind; reordering them ahead of it,
+      # or wiping before them, breaks them.
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
@@ -112,6 +113,7 @@ jobs:
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=W1WarmHttpsWireTest OUTPUT_LOG=wire-warm_https_onNewIntent.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=W2WarmUriSchemeWireTest OUTPUT_LOG=wire-warm_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=H1HotAppLinkWireTest OUTPUT_LOG=wire-hot_https_foreground.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -152,6 +154,7 @@ jobs:
           check cold_https wire-cold_https.txt
           check warm_https_onNewIntent wire-warm_https_onNewIntent.txt
           check warm_uriScheme wire-warm_uriScheme.txt
+          check hot_https_foreground wire-hot_https_foreground.txt
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
@@ -185,7 +188,11 @@ jobs:
               echo "| Negative and guards | see failures below |"
               echo "| Warm | see failures below |"
             fi
-            echo "| Hot | hot_uriScheme has a driver and contract but is not in this gate yet; hot_https_foreground not implemented |"
+            if [ "${{ steps.validate.outcome }}" = "success" ]; then
+              echo "| Hot | hot_https_foreground pass, hot_uriScheme not wired into the gate yet (driver and contract present) |"
+            else
+              echo "| Hot | see failures below |"
+            fi
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"
