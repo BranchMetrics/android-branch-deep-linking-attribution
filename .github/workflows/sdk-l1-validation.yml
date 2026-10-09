@@ -77,15 +77,16 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
       # Each scenario gets its own capture file, because CustomBranchApp appends
-      # to the capture and nothing truncates it. Every scenario starts from wiped
-      # app data; the cold_https generation run makes the install its link then
-      # opens on. wire-link_generation.txt is cold_firstInstall's
-      # generation capture, where /v1/url is.
+      # to the capture and nothing truncates it. The organic_open, cold_firstInstall
+      # and cold_https runs start from wiped app data; the cold_https generation
+      # run makes the install its link then opens on. wire-link_generation.txt is
+      # cold_firstInstall's generation capture, where /v1/url is.
       # attribution_none sets the attribution level to NONE after its link
       # exists, and wipes app data after itself.
       #
-      # The two warm scenarios need an installed device and do not wipe, so they
-      # follow cold_https and keep the install it established.
+      # The two warm scenarios do not wipe. They need an installed device, so
+      # they run right after cold_https and rely on the install and device state
+      # it left behind; reordering them ahead of it breaks them.
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
@@ -180,12 +181,13 @@ jobs:
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "| Cold | cold_firstInstall and cold_https pass; cold_uriScheme wire passes (scheme link not resolved by the server) |"
               echo "| Negative and guards | organic_open and attribution_none pass, no_stickiness and late_userActivity not implemented |"
+              echo "| Warm | warm_https_onNewIntent and warm_uriScheme pass |"
             else
               echo "| Cold | see failures below |"
               echo "| Negative and guards | see failures below |"
+              echo "| Warm | see failures below |"
             fi
-            echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
-            echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
+            echo "| Hot | hot_uriScheme has a driver and contract but is not in this gate yet; hot_https_foreground not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"

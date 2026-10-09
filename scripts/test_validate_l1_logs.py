@@ -2,13 +2,11 @@
 
 Run from the repo root:
 
-    python -m unittest scripts.test_validate_l1_logs
+    python3 -m unittest discover -s scripts -p 'test_*.py'
 """
 
 import io
-import json
 import os
-import re
 import sys
 import unittest
 from contextlib import redirect_stdout
@@ -17,27 +15,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, THIS_DIR)
 
 import validate_l1_logs as v  # noqa: E402
-
-FIXTURE_DIR = os.path.join(THIS_DIR, "fixtures")
-
-
-def _fixture(name):
-    return os.path.join(FIXTURE_DIR, name)
-
-
-# Every contract in the registry must appear here, and every entry must name a
-# file that exists. That binding is what the registry guard checks.
-SCENARIO_FIXTURES = {
-    "organic_open": "organic_open.txt",
-    "cold_firstInstall": "cold_firstInstall.txt",
-    "cold_https": "cold_https.txt",
-    "link_generation": "link_generation.txt",
-    "attribution_none": "attribution_none.txt",
-    "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
-    "warm_uriScheme": "warm_uriScheme.txt",
-    "hot_uriScheme": "hot_uriScheme.txt",
-    "cold_uriScheme": "cold_uriScheme.txt",
-}
+from l1_fixtures import SCENARIO_FIXTURES, fixture_path as _fixture  # noqa: E402
 
 
 def _run_validation(fixture_name):
@@ -195,6 +173,24 @@ class FieldPresenceEngineTests(unittest.TestCase):
             v.assert_contract(self._entries({"user_data": {"tok": "a"}}), self._contract({"tok": 1})), []
         )
 
+    def test_a_position_judges_only_that_request(self):
+        contract = {"counts": {}, "order": (), "fields": {"/e[-1]": {"tok": 1}}}
+        on_first = self._entries({"tok": "a"}, {})
+        on_last = self._entries({}, {"tok": "a"})
+        self.assertNotEqual(v.assert_contract(on_first, contract), [])
+        self.assertEqual(v.assert_contract(on_last, contract), [])
+
+    def test_a_position_selects_by_python_indexing(self):
+        contract = {"counts": {}, "order": (), "fields": {"/e[0]": {"tok": 1}}}
+        self.assertEqual(v.assert_contract(self._entries({"tok": "a"}, {}), contract), [])
+        self.assertNotEqual(v.assert_contract(self._entries({}, {"tok": "a"}), contract), [])
+
+    def test_a_position_out_of_range_selects_nothing(self):
+        # -5 on two requests must not wrap to the first one.
+        contract = {"counts": {}, "order": (), "fields": {"/e[-5]": {"tok": 1}}}
+        errors = v.assert_contract(self._entries({"tok": "a"}, {"tok": "b"}), contract)
+        self.assertIn("0 of 0 did", errors[0])
+
 
 class UnknownScenarioTests(unittest.TestCase):
     def test_an_unknown_name_is_refused_by_name(self):
@@ -275,354 +271,3 @@ class ContractRegistryTests(unittest.TestCase):
         for name, contract in v.SCENARIO_CONTRACTS.items():
             with self.subTest(scenario=name):
                 self.assertEqual(set(contract), {"counts", "order", "fields"})
-
-
-class ScenarioArtifactGuards(unittest.TestCase):
-    """Two mistakes this suite could have caught, turned into checks.
-
-    A scenario fixture was once committed as the raw 658-line capture, carrying the
-    emulator's identifiers and a live-shaped branch key, and only the neighbouring files
-    revealed it. A scenario contract was once proposed identical to another's, which would
-    have shipped a capture that asserted nothing the other did not, and only asking what it
-    added revealed that. Neither needed a person.
-
-    Scoped to the scenario fixtures. The harness fixtures under the same directory are
-    hand-written inputs for the field-presence tests, not captures, and are deliberately
-    outside this shape."""
-
-    FIXTURE_BRANCH_KEY = "key_live_fixtureFixtureFixtureFi"
-
-    def _keep_set(self, scenario=None):
-        """Derived from the validator, not restated here, so the two cannot drift.
-
-        Plus the documented additions: app_version, which the cold fixtures already
-        carried, and external_intent_uri, which is what lets the two warm scenarios
-        contract their entry points in opposite directions. cpp_level is read by the
-        required-field tiers but is a literal in attribution_level(), not a constant to
-        derive from, so it is allowed for attribution_none alone, the one capture that
-        sets a level."""
-        keep = set()
-        for name in dir(v):
-            if not name.startswith("REQUIRED"):
-                continue
-            value = getattr(v, name)
-            if isinstance(value, list):
-                keep |= {str(x) for x in value}
-            elif isinstance(value, dict):
-                for inner in value.values():
-                    if isinstance(inner, list):
-                        keep |= {str(x) for x in inner}
-        for contract in v.SCENARIO_CONTRACTS.values():
-            for rules in contract["fields"].values():
-                keep |= set(rules)
-        keep |= {"app_version", "external_intent_uri"}
-        if scenario == "attribution_none":
-            keep.add("cpp_level")
-        return keep
-
-    def _payloads(self, fixture_name):
-        text = open(_fixture(fixture_name), encoding="utf-8").read()
-        return [json.loads(m.group(1)) for m in re.finditer(r"^Post value = (\{.*)$", text, re.M)]
-
-    def test_scenario_fixtures_hold_only_wire_pairs(self):
-        # What a raw capture fails: log lines the validator never reads.
-        for scenario, fixture in SCENARIO_FIXTURES.items():
-            lines = [l for l in open(_fixture(fixture), encoding="utf-8").read().splitlines() if l.strip()]
-            stray = [l for l in lines if not l.startswith(("posting to ", "Post value = ", v.RESOLVED_PREFIX))]
-            with self.subTest(scenario=scenario):
-                self.assertEqual(stray, [], f"{fixture} holds lines that are not wire pairs")
-
-    def test_scenario_fixtures_carry_no_field_outside_the_keep_set(self):
-        for scenario, fixture in SCENARIO_FIXTURES.items():
-            keep = self._keep_set(scenario)
-            extra = set()
-            for payload in self._payloads(fixture):
-                extra |= set(payload) - keep
-            with self.subTest(scenario=scenario):
-                self.assertEqual(
-                    extra, set(), f"{fixture} carries fields the validator never reads: {sorted(extra)}"
-                )
-
-    def test_scenario_fixtures_carry_no_real_branch_key(self):
-        # The one that would have caught a test-mode key going into a public repo.
-        for scenario, fixture in SCENARIO_FIXTURES.items():
-            keys = {p["branch_key"] for p in self._payloads(fixture) if "branch_key" in p}
-            with self.subTest(scenario=scenario):
-                self.assertTrue(
-                    keys <= {self.FIXTURE_BRANCH_KEY},
-                    f"{fixture} carries a branch key that is not the fixture constant",
-                )
-
-    def test_no_two_scenarios_share_a_contract(self):
-        # A scenario whose contract equals another's asserts nothing that one does not,
-        # however different the driver looks. The two warm scenarios are the near miss
-        # this exists for: same counts, same order, separated only by which field
-        # carries the URI.
-        names = sorted(v.SCENARIO_CONTRACTS)
-        for i, first in enumerate(names):
-            for second in names[i + 1:]:
-                with self.subTest(pair=f"{first}/{second}"):
-                    self.assertNotEqual(
-                        v.SCENARIO_CONTRACTS[first],
-                        v.SCENARIO_CONTRACTS[second],
-                        f"{first} and {second} carry the same contract",
-                    )
-
-
-class ScenarioContractTests(unittest.TestCase):
-    """organic_open is a measured capture less the EMT-4136 duplicate open.
-    cold_firstInstall, cold_https and link_generation are cold captures.
-
-    The two warm fixtures are the 2026-09-08 captures, edited by hand to match the
-    wire after #1428: one open block removed per fixture, and android_app_link_url
-    prepended on the https resolve. A real re-capture is tracked separately.
-    Each warm scenario carries two opens, and an https link carries both
-    android_app_link_url and external_intent_uri.
-    The only thing a warm launch does that a cold one does not is background and
-    foreground the app; that is a coincidence these fixtures record, not a cause
-    they establish."""
-
-    def _entries(self, scenario):
-        path = _fixture(SCENARIO_FIXTURES[scenario])
-        return v.collapse_retries(v.parse_branch_logs(path))
-
-    def _resolved(self, scenario):
-        return v.parse_resolved_params(_fixture(SCENARIO_FIXTURES[scenario]))
-
-    def _errors(self, capture_scenario, contract_scenario):
-        return v.assert_contract(
-            self._entries(capture_scenario), v.contract_for(contract_scenario)
-        )
-
-    def test_each_fixture_satisfies_its_own_contract(self):
-        for scenario in SCENARIO_FIXTURES:
-            with self.subTest(scenario=scenario):
-                errors = self._errors(scenario, scenario)
-                self.assertEqual(errors, [], f"{scenario}: {errors}")
-
-    def test_each_count_is_a_fact_about_its_fixture(self):
-        # The check that would catch a contract written from the plan text
-        # rather than from a capture.
-        for scenario in SCENARIO_FIXTURES:
-            uris = [e["uri"] for e in self._entries(scenario)]
-            for endpoint, expected in v.contract_for(scenario)["counts"].items():
-                with self.subTest(scenario=scenario, endpoint=endpoint):
-                    self.assertEqual(uris.count(endpoint), expected)
-
-    def test_the_duplicate_open_fails_every_scenario(self):
-        # The negative control these contracts exist for. Putting the EMT-4136
-        # duplicate back is exactly the wire as it stands today, so each
-        # contract must reject it. If one of these ever passes, the contract
-        # has drifted back onto the defect.
-        for scenario in SCENARIO_FIXTURES:
-            if v.contract_for(scenario)["counts"].get("/v3/events/open") == 0:
-                continue
-            entries = self._entries(scenario)
-            first_open = next(e for e in entries if e["uri"] == "/v3/events/open")
-            duplicated = entries + [dict(first_open, request=dict(first_open["request"]))]
-            with self.subTest(scenario=scenario):
-                errors = v.assert_contract(duplicated, v.contract_for(scenario))
-                self.assertTrue(
-                    any("/v3/events/open" in e for e in errors),
-                    f"{scenario} accepted the duplicate open: {errors}",
-                )
-
-    def test_a_missing_endpoint_fails_every_scenario(self):
-        # The counterpart to the duplicate-open case: too few is a defect the
-        # same way too many is. Carried over from the harness contract's
-        # coverage, which this class replaces.
-        for scenario in SCENARIO_FIXTURES:
-            entries = [e for e in self._entries(scenario) if e["uri"] != "/v3/deeplink"]
-            with self.subTest(scenario=scenario):
-                errors = v.assert_contract(entries, v.contract_for(scenario))
-                self.assertTrue(any("/v3/deeplink" in e for e in errors), errors)
-
-    def test_a_first_install_that_reads_as_a_returning_device_fails_cold_firstInstall(self):
-        # The Android shape of EMT-4027: nothing is treated as an install, so
-        # every open carries the token. Counts and order are unchanged by that
-        # defect, which is why the field rule has to exist.
-        entries = self._entries("cold_firstInstall")
-        for e in entries:
-            if e["uri"] == "/v3/events/open":
-                e["request"]["randomized_bundle_token"] = "1111111111111111111"
-        errors = v.assert_contract(entries, v.contract_for("cold_firstInstall"))
-        self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
-
-    def test_a_missing_token_fails_cold_https(self):
-        entries = self._entries("cold_https")
-        opens = [e for e in entries if e["uri"] == "/v3/events/open"]
-        opens[0]["request"].pop("randomized_bundle_token")
-        errors = v.assert_contract(entries, v.contract_for("cold_https"))
-        self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
-
-    def test_cold_https_and_cold_firstInstall_are_separated_by_the_token(self):
-        # Each capture must fail the other's contract on the token count.
-        for capture, contract in (
-            ("cold_firstInstall", "cold_https"),
-            ("cold_https", "cold_firstInstall"),
-        ):
-            errors = self._errors(capture, contract)
-            with self.subTest(capture=capture, contract=contract):
-                self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
-
-    def test_an_install_fails_warm_https_onNewIntent(self):
-        # The ticket's one explicit ask for this group: assert the absence of
-        # install, because a presence-only check would not catch a warm launch
-        # that emitted one. Zero in the contract is the assertion; this is the
-        # proof it can fail.
-        entries = self._entries("warm_https_onNewIntent")
-        first = entries[0]
-        with_install = entries + [dict(first, uri="/v1/install")]
-        errors = v.assert_contract(with_install, v.contract_for("warm_https_onNewIntent"))
-        self.assertTrue(
-            any("/v1/install" in e for e in errors),
-            f"an install in a warm capture must fail the contract, got: {errors}",
-        )
-
-    def test_hardware_id_on_link_creation_fails_link_generation(self):
-        # The EMT-4199 signal. /v1/url lives only in the generation capture.
-        entries = self._entries("link_generation")
-        for e in entries:
-            if e["uri"] == "/v1/url":
-                e["request"]["hardware_id"] = "something"
-        errors = v.assert_contract(entries, v.contract_for("link_generation"))
-        self.assertTrue(any("hardware_id" in e for e in errors), errors)
-
-    def test_link_generation_inside_a_cold_capture_fails(self):
-        # A /v1/url in cold_firstInstall or cold_https means the link was
-        # generated in the process it was delivered to, which is the warm
-        # shape these replaced.
-        link = next(e for e in self._entries("link_generation") if e["uri"] == "/v1/url")
-        for scenario in ("cold_firstInstall", "cold_https"):
-            with self.subTest(scenario=scenario):
-                errors = v.assert_contract(self._entries(scenario) + [link], v.contract_for(scenario))
-                self.assertTrue(any("/v1/url" in e for e in errors), errors)
-
-    def test_a_link_that_never_reached_the_sdk_fails(self):
-        for scenario in ("cold_firstInstall", "cold_https"):
-            entries = self._entries(scenario)
-            for e in entries:
-                e["request"].pop("android_app_link_url", None)
-            with self.subTest(scenario=scenario):
-                errors = v.assert_contract(entries, v.contract_for(scenario))
-                self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
-
-    def test_each_cold_scenario_resolves_its_own_link(self):
-        for scenario in ("cold_firstInstall", "cold_https", "attribution_none"):
-            with self.subTest(scenario=scenario):
-                expected = v.SCENARIO_LINK_MARKERS[scenario]
-                self.assertEqual(v.assert_resolved(self._resolved(scenario), expected), [])
-
-    def test_a_shared_link_fails_the_resolved_rule(self):
-        # One scenario's resolution judged against the other's marker: what a
-        # link shared between the two would look like.
-        for capture, marker in (
-            ("cold_firstInstall", "cold_https"),
-            ("cold_https", "cold_firstInstall"),
-        ):
-            with self.subTest(capture=capture, marker=marker):
-                errors = v.assert_resolved(
-                    self._resolved(capture), v.SCENARIO_LINK_MARKERS[marker]
-                )
-                self.assertTrue(any("l1_scenario" in e for e in errors), errors)
-
-    def test_a_shared_link_fails_validation(self):
-        # The same failure through validate_entries, the path main() takes.
-        errors = v.validate_entries(
-            self._entries("cold_https"),
-            v.contract_for("cold_firstInstall"),
-            self._resolved("cold_https"),
-            v.SCENARIO_LINK_MARKERS["cold_firstInstall"],
-        )
-        self.assertTrue(any("l1_scenario" in e for e in errors), errors)
-
-    def test_no_resolution_fails_the_resolved_rule(self):
-        errors = v.assert_resolved([], v.SCENARIO_LINK_MARKERS["cold_firstInstall"])
-        self.assertTrue(any("none" in e for e in errors), errors)
-
-    def test_organic_open_forbids_nothing_it_did_not_measure(self):
-        # organic_open carries no `fields` rule on purpose. The property the
-        # scenario is about is that the open carries no link data, and the run
-        # these were derived from reported the token rather than the link
-        # payload. The counts still earn their place: they catch a second open
-        # reappearing.
-        self.assertEqual(v.contract_for("organic_open")["fields"], {})
-
-
-def _quiet(fn, *args):
-    with redirect_stdout(io.StringIO()):
-        return fn(*args)
-
-
-class AttributionTierTests(unittest.TestCase):
-    """Required fields tiered by the request's own cpp_level, as on iOS.
-    At NONE the SDK strips the device identifiers before sending."""
-
-    NONE_FIXTURE = "attribution_none.txt"
-    STRIPPED_AT_NONE = {"local_ip", "anon_id", "first_install_time", "is_hardware_id_real"}
-
-    def _deeplink(self, fixture):
-        entries = v.parse_branch_logs(_fixture(fixture))
-        return [e for e in entries if e["uri"] == "/v3/deeplink"]
-
-    def test_a_none_resolve_passes_required_fields(self):
-        errors, _ = _run_validation(self.NONE_FIXTURE)
-        self.assertEqual(errors, [], f"Unexpected errors: {errors}")
-
-    def test_every_other_level_still_requires_anon_id(self):
-        for level in ("FULL", "REDUCED", "MINIMAL", None):
-            with self.subTest(cpp_level=level):
-                entries = self._deeplink("cold_https.txt")
-                entries[0]["request"].pop("anon_id")
-                if level is not None:
-                    entries[0]["request"]["cpp_level"] = level
-                errors = _quiet(v.validate_entries, entries)
-                self.assertTrue(any("'anon_id'" in e for e in errors), errors)
-
-    def test_none_drops_exactly_the_four_stripped_fields(self):
-        full = set(v.required_fields_for("/v3/deeplink", {"cpp_level": "FULL"}))
-        for level in ("NONE", "none"):
-            with self.subTest(cpp_level=level):
-                none = set(v.required_fields_for("/v3/deeplink", {"cpp_level": level}))
-                self.assertEqual(full - none, self.STRIPPED_AT_NONE)
-
-    def test_always_fields_survive_every_level(self):
-        for request in ({}, {"cpp_level": "FULL"}, {"cpp_level": "REDUCED"},
-                        {"cpp_level": "MINIMAL"}, {"cpp_level": "NONE"}):
-            with self.subTest(request=request):
-                fields = v.required_fields_for("/v3/deeplink", request)
-                for field in ("branch_key", "sdk", "wifi"):
-                    self.assertIn(field, fields)
-
-    def test_a_none_resolve_without_tracking_disabled_fails(self):
-        entries = self._deeplink(self.NONE_FIXTURE)
-        entries[0]["request"].pop("tracking_disabled")
-        errors = _quiet(v.validate_entries, entries)
-        self.assertTrue(any("'tracking_disabled'" in e for e in errors), errors)
-
-
-class AttributionNoneContractTests(unittest.TestCase):
-    """attribution_none: at level NONE the link resolve goes out stripped and
-    marked, and no open follows it."""
-
-    def _entries(self, fixture):
-        return v.collapse_retries(v.parse_branch_logs(_fixture(fixture)))
-
-    def test_an_open_fails_attribution_none(self):
-        opened = next(e for e in self._entries("cold_https.txt") if e["uri"] == "/v3/events/open")
-        entries = self._entries("attribution_none.txt") + [opened]
-        errors = v.assert_contract(entries, v.contract_for("attribution_none"))
-        self.assertIn("'/v3/events/open' must not be captured", " ".join(errors))
-
-    def test_a_resolve_that_keeps_the_device_token_fails_attribution_none(self):
-        entries = self._entries("attribution_none.txt")
-        entries[0]["request"]["randomized_device_token"] = "2222222222222222222"
-        errors = v.assert_contract(entries, v.contract_for("attribution_none"))
-        self.assertIn("No '/v3/deeplink' request may carry 'randomized_device_token'", " ".join(errors))
-
-    def test_a_failed_resolve_fails_attribution_none(self):
-        errors = _quiet(
-            v.validate_entries, self._entries("attribution_none.txt"),
-            v.contract_for("attribution_none"), [], v.SCENARIO_LINK_MARKERS.get("attribution_none"),
-        )
-        self.assertTrue(any("none" in e for e in errors), errors)
