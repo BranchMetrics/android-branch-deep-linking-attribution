@@ -39,6 +39,9 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("stdlib-jdk8"))
 
+    // SDK types for drivers that call the SDK directly. Provided at runtime by the target APK.
+    compileOnly(project(":Branch-SDK"))
+
     implementation("androidx.test.ext:junit:1.1.5")
     implementation("androidx.test:runner:1.5.2")
     implementation("androidx.test:rules:1.5.0")
