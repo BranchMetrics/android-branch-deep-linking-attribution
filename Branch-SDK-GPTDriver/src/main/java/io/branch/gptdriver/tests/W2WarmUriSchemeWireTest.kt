@@ -1,5 +1,6 @@
 package io.branch.gptdriver.tests
 
+import org.junit.After
 import org.junit.Test
 
 /**
@@ -35,6 +36,10 @@ import org.junit.Test
 class W2WarmUriSchemeWireTest {
 
     private val driver = WireScenarioDriver()
+
+    /** Stops this driver observing the Application, so the next test's counters are its own. */
+    @After
+    fun closeDriver() = driver.close()
 
     @Test
     fun warmUriSchemeLinkEmitsWirePayload() {
