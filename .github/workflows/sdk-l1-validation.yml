@@ -84,9 +84,10 @@ jobs:
       # attribution_none sets the attribution level to NONE after its link
       # exists, and wipes app data after itself.
       #
-      # The two warm scenarios do not wipe. They need an installed device, so
-      # they run right after cold_https and rely on the install and device state
-      # it left behind; reordering them ahead of it breaks them.
+      # The two warm scenarios and hot_https_foreground do not wipe. They need an
+      # installed device holding the token, so they run after cold_https and rely
+      # on the install and device state it left behind; reordering them ahead of it,
+      # or wiping before them, breaks them.
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
@@ -112,7 +113,7 @@ jobs:
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=W1WarmHttpsWireTest OUTPUT_LOG=wire-warm_https_onNewIntent.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=W2WarmUriSchemeWireTest OUTPUT_LOG=wire-warm_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
-            TEST_CLASS=H1HotAppLinkWireTest OUTPUT_LOG=wire-hot_https_foreground.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=H1HotAppLinkWireTest OUTPUT_LOG=wire-hot_https_foreground.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
