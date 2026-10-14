@@ -24,13 +24,14 @@
 
                 <TextView
                     style="@style/testbed_text_view"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
                     android:text="Disable Ad Network Callouts" />
 
                 <Switch
                     android:id="@+id/disable_ad_network_callouts"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
@@ -41,13 +42,14 @@
 
                 <TextView
                     style="@style/testbed_text_view"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
                     android:text="Enable DMA Params (test EEA consent values)" />
 
                 <Switch
                     android:id="@+id/enable_dma_params"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
@@ -58,13 +60,14 @@
 
                 <TextView
                     style="@style/testbed_text_view"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
                     android:text="Automatic open events (off: use Send Open)" />
 
                 <Switch
                     android:id="@+id/automatic_open_events"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
@@ -75,13 +78,14 @@
 
                 <TextView
                     style="@style/testbed_text_view"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
                     android:text="Send open before requestDeepLinkData (needs automatic open events off)" />
 
                 <Switch
                     android:id="@+id/send_open_before_deep_link"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
