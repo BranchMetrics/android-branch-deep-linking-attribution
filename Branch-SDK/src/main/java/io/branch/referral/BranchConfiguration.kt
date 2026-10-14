@@ -91,6 +91,21 @@ class BranchConfiguration private constructor(
         applyUpdate(branch)
     }
 
+    /** Names the settings this configuration sets that only [applyTo] writes, so an update ignores them. */
+    @JvmName("initializeOnlySettings")
+    internal fun initializeOnlySettings(): List<String> {
+        val names = mutableListOf<String>()
+        if (branchKey != null) names.add("branchKey")
+        if (testMode) names.add("testMode")
+        if (remoteInterface != null) names.add("remoteInterface")
+        if (facebookAppId != null) names.add("facebookAppId")
+        if (preinstallCampaign != null) names.add("preinstallCampaign")
+        if (preinstallPartner != null) names.add("preinstallPartner")
+        if (installMetadata.isNotEmpty()) names.add("installMetadata")
+        if (referringLinkAttributionForPreinstalledApps != null) names.add("referringLinkAttributionForPreinstalledApps")
+        return names
+    }
+
     /**
      * Writes the settings this configuration sets, except those [applyTo] sets once. Called by
      * [applyTo] and [Branch.updateConfiguration].

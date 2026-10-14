@@ -32,6 +32,7 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -451,6 +452,10 @@ public class Branch {
     public void updateConfiguration(@NonNull BranchConfiguration config) {
         config.applyLogging();
         BranchLogger.d("updateConfiguration: " + config);
+        List<String> ignored = config.initializeOnlySettings();
+        if (!ignored.isEmpty()) {
+            BranchLogger.logAlways("Warning, updateConfiguration ignored settings that only apply at initialize: " + ignored);
+        }
         config.applyUpdate(this);
     }
 

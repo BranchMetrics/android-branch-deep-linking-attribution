@@ -140,4 +140,33 @@ class BranchUpdateConfigurationTest : BranchTestBase() {
         assertSame(callback, BranchLogger.loggerCallback)
         assertEquals(BranchLogger.BranchLogLevel.WARN, BranchLogger.loggingLevel)
     }
+
+    @Test
+    fun updateConfiguration_initializeOnlySettings_areIgnoredWithAWarning() {
+        val messages = mutableListOf<String>()
+        initialize {
+            setLogLevel(BranchLogger.BranchLogLevel.NONE)
+            setLoggingCallback(IBranchLoggingCallbacks { message, _ -> messages.add(message) })
+        }
+
+        Branch.getInstance().updateConfiguration(
+            BranchConfiguration.Builder("key_live_other").setTestMode(true).setPreinstallCampaign("campaign").build()
+        )
+
+        assertEquals("key_live_test123", prefHelper.getBranchKey())
+        assertFalse(BranchUtil.isTestModeEnabled())
+        assertTrue(messages.any {
+            it.contains("ignored settings that only apply at initialize: [branchKey, testMode, preinstallCampaign]")
+        })
+    }
+
+    @Test
+    fun updateConfiguration_withoutInitializeOnlySettings_doesNotWarn() {
+        val messages = mutableListOf<String>()
+        initialize { setLoggingCallback(IBranchLoggingCallbacks { message, _ -> messages.add(message) }) }
+
+        update { setRetryCount(1) }
+
+        assertFalse(messages.any { it.contains("only apply at initialize") })
+    }
 }
