@@ -35,7 +35,6 @@ class BranchConfigurationBuilderTest {
         assertNull(config.networkConnectTimeout)
         assertNull(config.retryCount)
         assertNull(config.retryInterval)
-        assertNull(config.noConnectionRetryMax)
         assertNull(config.remoteInterface)
         assertNull(config.attributionLevel)
         assertNull(config.dmaParameters)
@@ -126,12 +125,6 @@ class BranchConfigurationBuilderTest {
     fun `setRetryInterval is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setRetryInterval(2_000).build()
         assertEquals(2_000, config.retryInterval)
-    }
-
-    @Test
-    fun `setNoConnectionRetryMax is stored`() {
-        val config = BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(5).build()
-        assertEquals(5, config.noConnectionRetryMax)
     }
 
     @Test
@@ -386,26 +379,6 @@ class BranchConfigurationBuilderTest {
     }
 
     // -----------------------------------------------------------------------------------------
-    // build() validation — no-connection retry max
-    // -----------------------------------------------------------------------------------------
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `zero no-connection retry max throws`() {
-        BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(0).build()
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `negative no-connection retry max throws`() {
-        BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(-1).build()
-    }
-
-    @Test
-    fun `no-connection retry max of one is accepted`() {
-        val config = BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(1).build()
-        assertEquals(1, config.noConnectionRetryMax)
-    }
-
-    // -----------------------------------------------------------------------------------------
     // build() reports every failure at once
     // -----------------------------------------------------------------------------------------
 
@@ -455,7 +428,6 @@ class BranchConfigurationBuilderTest {
             .setNetworkConnectTimeout(5_000)
             .setRetryCount(3)
             .setRetryInterval(1_500)
-            .setNoConnectionRetryMax(2)
             .setAttributionLevel(Defines.BranchAttributionLevel.FULL)
             .setDMAParameters(DMAParameters.Builder().setEeaRegion(true).setAdPersonalizationConsent(true).build())
             .setLimitFacebookAttribution(true)

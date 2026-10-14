@@ -1,5 +1,6 @@
 package io.branch.referral
 
+import io.branch.referral.network.BranchRemoteInterfaceUrlConnection
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -79,6 +80,21 @@ class RetrySettingsNetworkTest : BranchTestBase() {
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").setRetryCount(1).build())
 
         Branch.getInstance().updateConfiguration(BranchConfiguration.Builder().setRetryInterval(50).build())
+
+        assertEquals(2, post())
+        val gapMs = (attemptTimes[1] - attemptTimes[0]) / 1_000_000
+        assertTrue("Retry waited ${gapMs}ms, expected about 50ms", gapMs in 50..500)
+    }
+
+    @Test
+    fun updateConfiguration_retrySettings_reachTheSyncNetworkPath() {
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").setRetryCount(0).build())
+        (Branch.getInstance().branchRemoteInterface as BranchRemoteInterfaceUrlConnection)
+            .setAsyncImplementationEnabled(false)
+
+        Branch.getInstance().updateConfiguration(
+            BranchConfiguration.Builder().setRetryCount(1).setRetryInterval(50).build()
+        )
 
         assertEquals(2, post())
         val gapMs = (attemptTimes[1] - attemptTimes[0]) / 1_000_000

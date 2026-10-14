@@ -128,19 +128,6 @@ public class PrefHelperTest extends BranchTest {
     }
 
     @Test
-    public void testSetNoConnectionRetryMaxReturnsDefault(){
-        Assert.assertEquals(prefHelper.getNoConnectionRetryMax(), PrefHelper.DEFAULT_NO_CONNECTION_RETRY_MAX);
-    }
-
-    @Test
-    public void testSetNoConnectionRetryMax(){
-        int max = 10;
-        prefHelper.setNoConnectionRetryMax(max);
-
-        Assert.assertEquals(max, prefHelper.getNoConnectionRetryMax());
-    }
-
-    @Test
     public void testAppStoreSource(){
         prefHelper.setAppStoreSource(Defines.Jsonkey.Google_Play_Store.getKey());
 

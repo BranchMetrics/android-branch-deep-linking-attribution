@@ -182,7 +182,7 @@ public class Branch {
     /**
      * If true, instantiate a new webview instance ui thread to retrieve user agent string
      */
-    static boolean userAgentSync;
+    static volatile boolean userAgentSync;
 
     /**
      * Package private user agent string cached to save on repeated queries
@@ -295,7 +295,7 @@ public class Branch {
         INITIALISED
     }
 
-    static IBranchRequestTracingCallback _iBranchRequestTracingCallback;
+    static volatile IBranchRequestTracingCallback _iBranchRequestTracingCallback;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -421,7 +421,6 @@ public class Branch {
         appendJsonField(json, "networkConnectTimeout", prefHelper.getConnectTimeout());
         appendJsonField(json, "retryCount", prefHelper.getRetryCount());
         appendJsonField(json, "retryInterval", prefHelper.getRetryInterval());
-        appendJsonField(json, "noConnectionRetryMax", prefHelper.getNoConnectionRetryMax());
         json.append('}');
 
         BranchLogger.d(json.toString());
@@ -444,13 +443,15 @@ public class Branch {
 
     /**
      * Applies the settings set on {@code config}. Settings it doesn't set keep their current values.
-     * The Branch key, test mode, remote interface and install attribution settings only apply at
-     * {@link #initialize}.
+     * Whitelisted schemes and URI hosts to skip are added to the ones already set. The API URL,
+     * CDN URL and EU endpoint apply to every request sent after this call, including requests
+     * already queued. The Branch key, test mode, remote interface and install attribution settings
+     * only apply at {@link #initialize}.
      *
      * @param config The settings to change, built with {@link BranchConfiguration.Builder#Builder()}.
      */
     public void updateConfiguration(@NonNull BranchConfiguration config) {
-        config.applyLogging();
+        config.applyLoggingUpdate();
         BranchLogger.d("updateConfiguration: " + config);
         List<String> ignored = config.initializeOnlySettings();
         if (!ignored.isEmpty()) {

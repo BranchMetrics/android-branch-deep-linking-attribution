@@ -61,7 +61,6 @@ public class PrefHelper {
     static final long DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID = 2592000000L; // Default expiration is 30 days, in milliseconds
     static final long MAX_VALID_WINDOW_FOR_REFERRER_GCLID = 100000000000L; // Arbitrary maximum window to prevent overflow, 3 years, in milliseconds
     static final long MIN_VALID_WINDOW_FOR_REFERRER_GCLID = 0L; // Don't allow time set in the past , in milliseconds
-    static final int DEFAULT_NO_CONNECTION_RETRY_MAX = 3;
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
@@ -98,7 +97,6 @@ public class PrefHelper {
     private static final String KEY_TIMEOUT = "bnc_timeout";
     private static final String KEY_TASK_TIMEOUT = "bnc_task_timeout";
     private static final String KEY_CONNECT_TIMEOUT = "bnc_connect_timeout";
-    private static final String KEY_NO_CONNECTION_RETRY_MAX = "bnc_no_connection_retry_max";
 
     private static final String KEY_LAST_READ_SYSTEM = "bnc_system_read_date";
     
@@ -172,12 +170,12 @@ public class PrefHelper {
     /**
      * Branch Custom server url.  Used by clients that want to proxy all requests.
      */
-    private static String customServerURL_ = null;
+    private static volatile String customServerURL_ = null;
 
     /**
      * Branch Custom server url.  Used by clients that want to proxy all CDN requests.
      */
-    private static String customCDNBaseURL_ = null;
+    private static volatile String customCDNBaseURL_ = null;
 
     /**
      * Branch partner parameters.
@@ -403,22 +401,6 @@ public class PrefHelper {
         return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
     }
 
-    /**
-     * In cases of persistent no internet connection or offline modes,
-     * set a maximum number of attempts for the Branch Request to be tried.
-     * @param retryInt
-     */
-    public void setNoConnectionRetryMax(int retryInt){
-        setInteger(KEY_NO_CONNECTION_RETRY_MAX, retryInt);
-    }
-
-    /**
-     * Returns the set retry count for Branch Requests
-     * @return
-     */
-    public int getNoConnectionRetryMax(){
-        return getInteger(KEY_NO_CONNECTION_RETRY_MAX, DEFAULT_NO_CONNECTION_RETRY_MAX);
-    }
     
     /**
      * <p>Sets the value of {@link #KEY_APP_VERSION} in preferences.</p>
@@ -1480,7 +1462,7 @@ public class PrefHelper {
     }
 
     private static boolean enableLogging_ = false;
-    private static boolean useEUEndpoint_ = false;
+    private static volatile boolean useEUEndpoint_ = false;
 
     public static String fbAppId_ = null;
 

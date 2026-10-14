@@ -98,17 +98,6 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun initialize_noConnectionRetryMax_reachesPrefHelper() {
-        val config = BranchConfiguration.Builder("key_live_test123")
-            .setNoConnectionRetryMax(4)
-            .build()
-
-        Branch.initialize(context, config)
-
-        assertEquals(4, PrefHelper.getInstance(context).getNoConnectionRetryMax())
-    }
-
-    @Test
     fun initialize_clearsSessionParamsLeftByPreviousProcess() {
         // Same key, so the key-change reset doesn't clear it instead.
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
@@ -600,7 +589,7 @@ class BranchInitializeTest : BranchTestBase() {
     private val allConfigurationFields = listOf(
         "event", "branchKey", "testMode", "apiUrl", "cdnBaseUrl", "euEndpoint", "logLevel",
         "loggingCallback", "requestTracingCallback", "networkTimeout", "networkConnectTimeout",
-        "retryCount", "retryInterval", "noConnectionRetryMax", "remoteInterface",
+        "retryCount", "retryInterval", "remoteInterface",
         "attributionLevel", "dmaParameters", "limitFacebookAttribution",
         "adNetworkCalloutsDisabled", "facebookAppId", "preinstallCampaign", "preinstallPartner",
         "installMetadata", "referringLinkAttributionForPreinstalledApps", "whitelistedSchemes",

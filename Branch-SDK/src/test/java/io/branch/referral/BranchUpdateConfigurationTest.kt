@@ -4,10 +4,12 @@ import io.branch.interfaces.IBranchLoggingCallbacks
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.json.JSONObject
 import org.robolectric.RuntimeEnvironment
 
 class BranchUpdateConfigurationTest : BranchTestBase() {
@@ -139,6 +141,42 @@ class BranchUpdateConfigurationTest : BranchTestBase() {
 
         assertSame(callback, BranchLogger.loggerCallback)
         assertEquals(BranchLogger.BranchLogLevel.WARN, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun updateConfiguration_loggingCallbackOnly_keepsTheLogLevel() {
+        val callback = IBranchLoggingCallbacks { _, _ -> }
+        initialize { setLogLevel(BranchLogger.BranchLogLevel.WARN) }
+
+        update { setLoggingCallback(callback) }
+
+        assertSame(callback, BranchLogger.loggerCallback)
+        assertEquals(BranchLogger.BranchLogLevel.WARN, BranchLogger.loggingLevel)
+    }
+
+    @Test
+    fun updateConfiguration_apiUrl_appliesToARequestCreatedBeforeTheUpdate() {
+        initialize()
+        val request = ServerRequestLogEvent(
+            context, Defines.RequestPath.TrackCustomEvent, "my_event",
+            HashMap(), JSONObject(), JSONObject(), emptyList()
+        )
+
+        update { setApiUrl("https://proxy.example.com/") }
+
+        assertTrue(request.requestUrl, request.requestUrl.startsWith("https://proxy.example.com/"))
+    }
+
+    @Test
+    fun updateConfiguration_whitelistedScheme_isAddedToTheOnesSetAtInitialize() {
+        initialize { addWhitelistedScheme("first://.*") }
+
+        update { addWhitelistedScheme("second://.*") }
+
+        val analyser = UniversalResourceAnalyser.getInstance(context)
+        assertEquals("first://a", analyser.getStrippedURL("first://a"))
+        assertEquals("second://b", analyser.getStrippedURL("second://b"))
+        assertNull(analyser.getStrippedURL("other://c"))
     }
 
     @Test

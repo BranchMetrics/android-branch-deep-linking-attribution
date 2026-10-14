@@ -23,7 +23,6 @@ class BranchConfiguration private constructor(
     val networkConnectTimeout: Int?,
     val retryCount: Int?,
     val retryInterval: Int?,
-    val noConnectionRetryMax: Int?,
     val remoteInterface: BranchRemoteInterface?,
     val attributionLevel: Defines.BranchAttributionLevel?,
     val dmaParameters: DMAParameters?,
@@ -51,6 +50,15 @@ class BranchConfiguration private constructor(
         if (!logLevelWasSet && loggingCallback == null) return
         loggingCallback?.let { BranchLogger.loggerCallback = it }
         BranchLogger.loggingLevel = logLevel
+        BranchLogger.loggingEnabled = true
+    }
+
+    /** Like [applyLogging], but keeps the current level unless this configuration sets one. */
+    @JvmName("applyLoggingUpdate")
+    internal fun applyLoggingUpdate() {
+        if (!logLevelWasSet && loggingCallback == null) return
+        loggingCallback?.let { BranchLogger.loggerCallback = it }
+        if (logLevelWasSet) BranchLogger.loggingLevel = logLevel
         BranchLogger.loggingEnabled = true
     }
 
@@ -83,7 +91,6 @@ class BranchConfiguration private constructor(
         prefHelper.connectTimeout = PrefHelper.CONNECT_TIMEOUT
         prefHelper.retryCount = PrefHelper.MAX_RETRIES
         prefHelper.retryInterval = PrefHelper.INTERVAL_RETRY
-        prefHelper.noConnectionRetryMax = PrefHelper.DEFAULT_NO_CONNECTION_RETRY_MAX
         prefHelper.setLimitFacebookTracking(false)
         prefHelper.setAdNetworkCalloutsDisabled(false)
         Branch.userAgentSync = false
@@ -127,7 +134,6 @@ class BranchConfiguration private constructor(
         networkConnectTimeout?.let { prefHelper.connectTimeout = it }
         retryCount?.let { prefHelper.retryCount = it }
         retryInterval?.let { prefHelper.retryInterval = it }
-        noConnectionRetryMax?.let { prefHelper.noConnectionRetryMax = it }
 
         // Privacy & attribution
         attributionLevel?.let { branch.setConsumerProtectionAttributionLevel(it, null) }
@@ -187,7 +193,6 @@ class BranchConfiguration private constructor(
         lit("networkConnectTimeout", networkConnectTimeout)
         lit("retryCount", retryCount)
         lit("retryInterval", retryInterval)
-        lit("noConnectionRetryMax", noConnectionRetryMax)
         str("remoteInterface", remoteInterface?.javaClass?.name)
         str("attributionLevel", attributionLevel?.name)
         raw("dmaParameters", dmaParameters?.let {
@@ -230,7 +235,6 @@ class BranchConfiguration private constructor(
         networkConnectTimeout?.let { nonDefaults.add("networkConnectTimeout=$it") }
         retryCount?.let { nonDefaults.add("retryCount=$it") }
         retryInterval?.let { nonDefaults.add("retryInterval=$it") }
-        noConnectionRetryMax?.let { nonDefaults.add("noConnectionRetryMax=$it") }
         if (remoteInterface != null) nonDefaults.add("remoteInterface=${remoteInterface.javaClass.name}")
         attributionLevel?.let { nonDefaults.add("attributionLevel=$it") }
         dmaParameters?.let { nonDefaults.add("dmaParameters=$it") }
@@ -270,7 +274,6 @@ class BranchConfiguration private constructor(
         private var networkConnectTimeout: Int? = null
         private var retryCount: Int? = null
         private var retryInterval: Int? = null
-        private var noConnectionRetryMax: Int? = null
         private var remoteInterface: BranchRemoteInterface? = null
         private var attributionLevel: Defines.BranchAttributionLevel? = null
         private var dmaParameters: DMAParameters? = null
@@ -301,7 +304,6 @@ class BranchConfiguration private constructor(
         fun setNetworkConnectTimeout(timeoutMs: Int) = apply { networkConnectTimeout = timeoutMs }
         fun setRetryCount(count: Int) = apply { retryCount = count }
         fun setRetryInterval(intervalMs: Int) = apply { retryInterval = intervalMs }
-        fun setNoConnectionRetryMax(max: Int) = apply { noConnectionRetryMax = max }
         fun setRemoteInterface(remoteInterface: BranchRemoteInterface?) = apply { this.remoteInterface = remoteInterface }
 
         // Privacy & attribution
@@ -320,7 +322,9 @@ class BranchConfiguration private constructor(
         }
 
         // URL collection
+        /** Adds a scheme. [Branch.updateConfiguration] adds to the schemes already set; it can't remove one. */
         fun addWhitelistedScheme(scheme: String) = apply { whitelistedSchemes.add(scheme) }
+        /** Adds a host. [Branch.updateConfiguration] adds to the hosts already set; it can't remove one. */
         fun addUriHostToSkip(host: String) = apply { uriHostsToSkip.add(host) }
 
         // Open tracking
@@ -347,9 +351,6 @@ class BranchConfiguration private constructor(
             if (retryInterval?.let { it <= 0 } == true) {
                 errors += "Retry interval must be a positive number of milliseconds (got $retryInterval)."
             }
-            if (noConnectionRetryMax?.let { it <= 0 } == true) {
-                errors += "No-connection retry max must be > 0 (got $noConnectionRetryMax)."
-            }
             require(errors.isEmpty()) {
                 "Invalid BranchConfiguration:\n  - " + errors.joinToString("\n  - ")
             }
@@ -368,7 +369,6 @@ class BranchConfiguration private constructor(
                 networkConnectTimeout = networkConnectTimeout,
                 retryCount = retryCount,
                 retryInterval = retryInterval,
-                noConnectionRetryMax = noConnectionRetryMax,
                 remoteInterface = remoteInterface,
                 attributionLevel = attributionLevel,
                 dmaParameters = dmaParameters,
