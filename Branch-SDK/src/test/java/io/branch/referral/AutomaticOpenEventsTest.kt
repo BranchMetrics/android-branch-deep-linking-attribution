@@ -43,6 +43,8 @@ class AutomaticOpenEventsTest : BranchTestBase() {
         @Volatile var holdDeepLink: CountDownLatch? = null
         @Volatile var failDeepLink = false
         @Volatile var noLinkFound = false
+        @Volatile var openAsksForWebPage = false
+        @Volatile var failOpen = false
 
         override fun doRestfulGet(url: String?): BranchResponse = BranchResponse("{}", 200)
 
@@ -60,7 +62,11 @@ class AutomaticOpenEventsTest : BranchTestBase() {
                         else -> BranchResponse(linkBody(body.getString("android_app_link_url")), 200)
                     }
                 }
-                "v3/events/open" -> BranchResponse(OPEN_RESPONSE, 200)
+                "v3/events/open" -> when {
+                    failOpen -> BranchResponse(FAILED_BODY, 500)
+                    openAsksForWebPage -> BranchResponse(OPEN_RESPONSE_WEB_PAGE, 200)
+                    else -> BranchResponse(OPEN_RESPONSE, 200)
+                }
                 else -> BranchResponse("{}", 200)
             }
         }
@@ -132,6 +138,36 @@ class AutomaticOpenEventsTest : BranchTestBase() {
     }
 
     @Test
+    fun secondSendOpen_whileTheFirstOpenIsQueued_reportsThatOpensResult() {
+        requestDeepLink(linkA)
+        val release = startHeldDeepLink(linkB)
+        remote.failOpen = true
+        val firstError = AtomicReference<BranchError?>()
+        val firstDone = CountDownLatch(1)
+        Branch.getInstance().sendOpen { error -> firstError.set(error); firstDone.countDown() }
+        val secondError = AtomicReference<BranchError?>()
+        val secondDone = CountDownLatch(1)
+        Branch.getInstance().sendOpen { error -> secondError.set(error); secondDone.countDown() }
+
+        release.countDown()
+
+        assertTrue("the first sendOpen callback never fired", firstDone.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", secondDone.await(10, TimeUnit.SECONDS))
+        assertEquals("one open per call, both failed", 2, settledOpens(count = 2).size)
+        assertEquals(500, firstError.get()?.errorCode)
+        assertEquals(500, secondError.get()?.errorCode)
+    }
+
+    @Test
+    fun openResponseAsksForTheWebPage_theSendOpenCallbackStillFires() {
+        requestDeepLink(linkA)
+        remote.openAsksForWebPage = true
+
+        assertTrue("the sendOpen callback never fired", sendOpen().await(10, TimeUnit.SECONDS))
+        assertOneOpen(linkA)
+    }
+
+    @Test
     fun sendOpenBeforeTheResponse_sendsTheOpenWhenTheResponseArrives() {
         val release = startHeldDeepLink(linkA)
         val called = sendOpen()
@@ -156,66 +192,104 @@ class AutomaticOpenEventsTest : BranchTestBase() {
     }
 
     @Test
-    fun secondLinkBeforeSendOpen_sendsOneOpenForTheNewerLink() {
+    fun secondLinkBeforeSendOpen_eachSendOpenSendsOneLinkInOrder() {
         requestDeepLink(linkA)
         requestDeepLink(linkB)
 
         sendOpen()
+        assertOneOpen(linkA)
+        sendOpen()
 
-        assertOneOpen(linkB)
+        assertOpens(linkA, linkB)
     }
 
     @Test
-    fun secondLink_sendOpenInItsCallback_sendsTheNewerLink() {
-        requestDeepLink(linkA)
-        val sent = CountDownLatch(1)
-
-        Branch.getInstance().requestDeepLinkData(linkB) { _, _ ->
-            Branch.getInstance().sendOpen { sent.countDown() }
+    fun sendOpenInEachCallback_sendsAnOpenPerLink() {
+        listOf(linkA, linkB).forEachIndexed { i, link ->
+            val sent = CountDownLatch(1)
+            Branch.getInstance().requestDeepLinkData(link) { _, _ -> Branch.getInstance().sendOpen { sent.countDown() } }
+            assertTrue("the sendOpen callback never fired", sent.await(10, TimeUnit.SECONDS))
+            settledOpens(count = i + 1)
         }
 
-        assertTrue("the sendOpen callback never fired", sent.await(10, TimeUnit.SECONDS))
-        assertOneOpen(linkB)
+        assertOpens(linkA, linkB)
     }
 
-    /** The newer response arrives while the kept open is pending, so it is not kept. */
     @Test
-    fun rotation_sendOpenWhileTheRebuiltScreensDeepLinkWaits_sendsOneOpen() {
-        setProcessState(Lifecycle.State.RESUMED)
-        val activity = Robolectric.buildActivity(Activity::class.java, Intent(Intent.ACTION_VIEW, linkA)).get()
-        requestDeepLink(activity)
-        val release = startHeldDeepLink(activity)
-        val called = sendOpen()
+    fun twoCallsBeforeTheFirstDeepLinkIsSent_eachSendsItsOwnLink() {
+        holdNextAdIdRead.set(true)
+        Branch.getInstance().requestDeepLinkData(linkA) { _, _ -> }
+        Branch.getInstance().requestDeepLinkData(linkB) { _, _ -> }
+        adIdRelease.countDown()
+        awaitNoDeepLink()
+
+        assertEquals(listOf(linkA.toString(), linkB.toString()), remote.deepLinks().map { it.optString("android_app_link_url") })
+    }
+
+    @Test
+    fun requestDeepLinkDataInTheSendOpenCallback_keepsItsLink() {
+        requestDeepLink(linkA)
+        val answered = CountDownLatch(1)
+
+        Branch.getInstance().sendOpen {
+            Branch.getInstance().requestDeepLinkData(linkB) { _, _ -> answered.countDown() }
+        }
+
+        assertTrue("the requestDeepLinkData callback never fired", answered.await(10, TimeUnit.SECONDS))
+        assertEquals(linkB.toString(), remote.deepLinks()[1].optString("android_app_link_url"))
+    }
+
+    @Test
+    fun sendOpenWhileTheSecondLinksDeepLinkWaits_sendsTheFirstLinkWithItsOwnUrl() {
+        requestDeepLink(linkA)
+        val release = startHeldDeepLink(linkB)
+        val first = sendOpen()
 
         release.countDown()
-        assertTrue("the sendOpen callback never fired", called.await(10, TimeUnit.SECONDS))
+        assertTrue("the first sendOpen callback never fired", first.await(10, TimeUnit.SECONDS))
         awaitNoDeepLink()
-        setProcessState(Lifecycle.State.CREATED)
+        sendOpen()
 
-        assertEquals(linkA.toString(), remote.deepLinks()[1].optString("android_app_link_url"))
-        assertOneOpen(linkA)
+        val opens = assertOpens(linkA, linkB)
+        assertEquals(linkA.toString(), opens[0].optString("android_app_link_url"))
+        assertEquals(linkB.toString(), opens[1].optString("android_app_link_url"))
     }
 
     @Test
-    fun secondDeepLinkFails_keepsTheFirstLink() {
+    fun rotationBeforeSendOpen_sendsAnOpenPerCall() {
+        val activity = Robolectric.buildActivity(Activity::class.java, Intent(Intent.ACTION_VIEW, linkA)).get()
+        requestDeepLink(activity)
+        requestDeepLink(activity)
+
+        sendOpen()
+        sendOpen()
+
+        assertEquals(linkA.toString(), remote.deepLinks()[1].optString("android_app_link_url"))
+        assertOpens(linkA, linkA)
+    }
+
+    @Test
+    fun secondDeepLinkFails_itsOpenHasNoLinkData() {
         requestDeepLink(linkA)
         remote.failDeepLink = true
         requestDeepLink(linkB)
 
         sendOpen()
+        sendOpen()
 
-        assertOneOpen(linkA)
+        assertOpens(linkA, null)
     }
 
     @Test
-    fun secondResponseWithoutALink_keepsTheFirstLink() {
+    fun secondResponseWithoutALink_itsOpenHasNoLinkData() {
         requestDeepLink(linkA)
         remote.noLinkFound = true
         requestDeepLink(linkB)
 
         sendOpen()
+        sendOpen()
 
-        assertOneOpen(linkA)
+        assertOpens(linkA, null)
     }
 
     @Test
@@ -307,6 +381,29 @@ class AutomaticOpenEventsTest : BranchTestBase() {
 
         setProcessState(Lifecycle.State.CREATED)
 
+        assertOneOpen(linkA)
+    }
+
+    @Test
+    fun backgroundWithTwoOpensKept_sendsBoth() {
+        setProcessState(Lifecycle.State.RESUMED)
+        requestDeepLink(linkA)
+        requestDeepLink(linkB)
+
+        setProcessState(Lifecycle.State.CREATED)
+
+        assertOpens(linkA, linkB)
+    }
+
+    @Test
+    fun backgroundWithAnOpenKept_clearsTheLinksParams() {
+        setProcessState(Lifecycle.State.RESUMED)
+        requestDeepLink(linkA)
+        assertEquals(linkA.toString(), Branch.getInstance().latestReferringParams.optString("~referring_link"))
+
+        setProcessState(Lifecycle.State.CREATED)
+
+        assertEquals("{}", Branch.getInstance().latestReferringParams.toString())
         assertOneOpen(linkA)
     }
 
@@ -424,19 +521,41 @@ class AutomaticOpenEventsTest : BranchTestBase() {
     }
 
     @Test
-    fun consentOffDropsTheDeepLinkASendOpenWaitsFor_theNextResponseSendsTheOpen() {
+    fun consentOffWhileTheDeepLinkWaits_keepsIt_andSendOpenSendsItsLink() {
         holdNextAdIdRead.set(true)
-        Branch.getInstance().requestDeepLinkData(linkA) { _, _ -> }
+        val answered = CountDownLatch(1)
+        Branch.getInstance().requestDeepLinkData(linkA) { _, _ -> answered.countDown() }
         val app = sendOpen()
         setLevel(Defines.BranchAttributionLevel.NONE)
         adIdRelease.countDown()
-        setLevel(Defines.BranchAttributionLevel.FULL)
-        assertEquals("no /v3/deeplink answered, so nothing is sent", 0, settledOpens(count = 0).size)
 
-        requestDeepLink(linkB)
+        assertTrue("the requestDeepLinkData callback never fired", answered.await(10, TimeUnit.SECONDS))
+        val deepLink = remote.deepLinks().single()
+        assertEquals(linkA.toString(), deepLink.optString("android_app_link_url"))
+        assertTrue(deepLink.optBoolean("tracking_disabled"))
+        setLevel(Defines.BranchAttributionLevel.FULL)
 
         assertTrue("the app's sendOpen callback never fired", app.await(10, TimeUnit.SECONDS))
-        assertOneOpen(linkB)
+        assertOneOpen(linkA)
+    }
+
+    @Test
+    fun backgroundThenConsentOffWhileTheDeepLinkWaits_optInSendsItsOpen_theNextLinkWaitsForSendOpen() {
+        setProcessState(Lifecycle.State.RESUMED)
+        holdNextAdIdRead.set(true)
+        Branch.getInstance().requestDeepLinkData(linkA) { _, _ -> }
+        setProcessState(Lifecycle.State.CREATED)
+        setLevel(Defines.BranchAttributionLevel.NONE)
+        adIdRelease.countDown()
+        awaitNoDeepLink()
+        assertEquals("nothing is sent while attribution is off", 0, settledOpens(count = 0).size)
+
+        setLevel(Defines.BranchAttributionLevel.FULL)
+        assertOneOpen(linkA)
+        setProcessState(Lifecycle.State.RESUMED)
+        requestDeepLink(linkB)
+
+        assertOneOpen(linkA)
     }
 
     @Test
@@ -472,6 +591,117 @@ class AutomaticOpenEventsTest : BranchTestBase() {
         assertOneOpen(linkA)
     }
 
+    @Test
+    fun clickIdLinkThenAppLink_eachDeepLinkSendsOnlyItsOwnLink() {
+        val clickLink = Uri.parse("myapp://open?link_click_id=111")
+        holdNextAdIdRead.set(true)
+        val aDone = CountDownLatch(1)
+        Branch.getInstance().requestDeepLinkData(clickLink) { _, _ -> aDone.countDown() }
+        val bDone = CountDownLatch(1)
+        Branch.getInstance().requestDeepLinkData(linkB) { _, _ -> bDone.countDown() }
+        adIdRelease.countDown()
+        assertTrue(aDone.await(10, TimeUnit.SECONDS))
+        assertTrue(bDone.await(10, TimeUnit.SECONDS))
+
+        val posts = remote.deepLinks()
+        val a = posts.single { it.optString("external_intent_uri").startsWith("myapp") }
+        val b = posts.single { !it.optString("external_intent_uri").startsWith("myapp") }
+        assertFalse("A carries B's app link: $a", a.has("android_app_link_url"))
+        assertFalse("B carries A's click id: $b", b.has("link_identifier"))
+    }
+
+    @Test
+    fun firstInstall_referrerClickIdIsSentWithAnAppLinkThatHasNone() {
+        initialize(automaticOpenEvents = false, returningUser = false)
+        useFakeReaders(referrerClickId = "referrer-id")
+
+        requestDeepLink(linkA)
+
+        val deepLink = remote.deepLinks().single()
+        assertEquals(linkA.toString(), deepLink.optString("android_app_link_url"))
+        assertEquals("referrer-id", deepLink.optString("link_identifier"))
+    }
+
+    @Test
+    fun failedDeepLink_thenALaterLink_theFirstOpenKeepsItsOwnLink() {
+        remote.failDeepLink = true
+        requestDeepLink(linkA)
+        remote.failDeepLink = false
+        requestDeepLink(linkB)
+
+        sendOpen()
+        sendOpen()
+
+        val opens = assertOpens(null, linkB)
+        assertEquals(linkA.toString(), opens[0].optString("android_app_link_url"))
+        assertEquals(linkB.toString(), opens[1].optString("android_app_link_url"))
+    }
+
+    @Test
+    fun consentOff_rotationWithASendOpenEach_optInThenBackground_sendsOneOpen() {
+        setProcessState(Lifecycle.State.RESUMED)
+        setLevel(Defines.BranchAttributionLevel.NONE)
+        requestDeepLink(linkA); val first = sendOpen()
+        requestDeepLink(linkA); val second = sendOpen()
+        setLevel(Defines.BranchAttributionLevel.FULL)
+        settledOpens()
+        setProcessState(Lifecycle.State.CREATED)
+
+        assertOpens(linkA)
+        assertTrue("the first sendOpen callback never fired", first.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", second.await(10, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun consentOff_rotationWithASendOpenEach_optIn_nextLinkStillWaitsForSendOpen() {
+        setLevel(Defines.BranchAttributionLevel.NONE)
+        requestDeepLink(linkA); val first = sendOpen()
+        requestDeepLink(linkA); val second = sendOpen()
+        setLevel(Defines.BranchAttributionLevel.FULL)
+        settledOpens()
+        requestDeepLink(linkB)
+
+        assertOpens(linkA)
+        assertTrue("the first sendOpen callback never fired", first.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", second.await(10, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun consentOff_sendOpenBeforeEachResponse_optIn_sendsOneOpen() {
+        setLevel(Defines.BranchAttributionLevel.NONE)
+        val firstRelease = startHeldDeepLink(linkA)
+        val first = sendOpen()
+        firstRelease.countDown()
+        awaitNoDeepLink()
+        val secondRelease = startHeldDeepLink(linkB)
+        val second = sendOpen()
+        secondRelease.countDown()
+        awaitNoDeepLink()
+
+        setLevel(Defines.BranchAttributionLevel.FULL)
+
+        assertOpens(linkB)
+        assertTrue("the first sendOpen callback never fired", first.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", second.await(10, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun logoutDropsAQueuedOpen_answersItsCallback() {
+        requestDeepLink(linkA)
+        // B's /v3/deeplink holds the queue, so the logout and then A's open queue behind it.
+        val release = startHeldDeepLink(linkB)
+        Branch.getInstance().logout()
+        val error = AtomicReference<BranchError?>()
+        val called = CountDownLatch(1)
+        Branch.getInstance().sendOpen { e -> error.set(e); called.countDown() }
+
+        release.countDown()
+
+        assertTrue("the sendOpen callback never fired", called.await(10, TimeUnit.SECONDS))
+        assertTrue("the dropped open must report an error", error.get() != null)
+        assertEquals(0, settledOpens(count = 0).size)
+    }
+
     private fun initialize(automaticOpenEvents: Boolean, returningUser: Boolean = true, captureLogs: Boolean = false) {
         Branch.shutDown()
         Branch._userAgentString = "test-agent"
@@ -497,9 +727,10 @@ class AutomaticOpenEventsTest : BranchTestBase() {
 
     /**
      * The ad ID and install referrer reads finish at once, and count how often they ran. With
-     * holdNextAdIdRead set, the next ad ID read waits for adIdRelease.
+     * holdNextAdIdRead set, the next ad ID read waits for adIdRelease. With referrerClickId, the
+     * install referrer read saves it as the link identifier, as a click-through install does.
      */
-    private fun useFakeReaders() {
+    private fun useFakeReaders(referrerClickId: String? = null) {
         val observer = object : SystemObserver() {
             override fun fetchAdId(context: Context, callback: AdsParamsFetchEvents?) {
                 adIdReads.incrementAndGet()
@@ -512,7 +743,10 @@ class AutomaticOpenEventsTest : BranchTestBase() {
             }
 
             override fun fetchInstallReferrer(context: Context, callback: InstallReferrerFetchEvents?) {
-                thread { callback?.onInstallReferrersFinished() }
+                thread {
+                    referrerClickId?.let { PrefHelper.getInstance(context).linkClickIdentifier = it }
+                    callback?.onInstallReferrersFinished()
+                }
             }
         }
         DeviceInfo::class.java.getDeclaredField("systemObserver_").apply { isAccessible = true }
@@ -570,6 +804,13 @@ class AutomaticOpenEventsTest : BranchTestBase() {
         assertEquals(link?.toString(), linkOf(opens[0]))
     }
 
+    /** One open per link, in order, each with that link's link_data, or none when the link is null. */
+    private fun assertOpens(vararg links: Uri?): List<JSONObject> {
+        val opens = settledOpens(count = links.size)
+        assertEquals(links.map { it?.toString() }, opens.map { linkOf(it) })
+        return opens
+    }
+
     private fun warnings() = logs.count { it.startsWith("Warning, Branch logEvent, LATD or QR code called before sendOpen") }
 
     /** Waits for `count` opens, then long enough that one more would have been sent too. */
@@ -602,6 +843,9 @@ class AutomaticOpenEventsTest : BranchTestBase() {
         const val FAILED_BODY = """{"error":"boom"}"""
         const val OPEN_RESPONSE =
             """{"randomized_bundle_token":"rbt","randomized_device_token":"rdt","session_id":"sid"}"""
+        const val OPEN_RESPONSE_WEB_PAGE =
+            """{"randomized_bundle_token":"rbt","randomized_device_token":"rdt","session_id":"sid",""" +
+                """"invoke_features":{"enhanced_web_link_ux":"IN_APP_WEBVIEW","web_link_redirect_url":"https://example.com/page"}}"""
 
         fun linkBody(link: String): String = JSONObject()
             .put("data", JSONObject().put("+clicked_branch_link", true).put("~referring_link", link).toString())

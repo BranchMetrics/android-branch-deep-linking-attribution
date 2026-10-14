@@ -856,10 +856,13 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
 
     /** Whether a RequestDeepLink is queued or executing, with its response not handled yet. */
-    internal fun containsDeepLink(): Boolean {
+    internal fun containsDeepLink(): Boolean = deepLinksWaiting().isNotEmpty()
+
+    /** The RequestDeepLinks queued or executing, with their responses not handled yet. */
+    internal fun deepLinksWaiting(): List<RequestDeepLink> {
         synchronized(queueList) {
-            return queueList.any { it is RequestDeepLink && !it.responseHandled } ||
-                activeRequests.values.any { it is RequestDeepLink && !it.responseHandled }
+            return (queueList + activeRequests.values).filterIsInstance<RequestDeepLink>()
+                .filter { !it.responseHandled }.distinct()
         }
     }
 
@@ -1049,14 +1052,14 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Clear all requests from queue, except a RequestDeepLink already sending: its response still arrives.
+     * Clear all requests from queue, except RequestDeepLinks: a /v3/deeplink the app asked for is always sent.
      * Returns the queued requests it removed.
      * Follows SRP - single responsibility for clearing queue state
      */
     fun clear(): List<ServerRequest> {
         BranchLogger.v("BranchRequestQueue.clear called")
         val removed = synchronized(queueList) {
-            queueList.toList().also { queueList.clear() }
+            queueList.filter { it !is RequestDeepLink }.also { queueList.retainAll { it is RequestDeepLink } }
         }
         activeRequests.values.removeAll { it !is RequestDeepLink || it.responseHandled }
         requestRetryInfo.clear()

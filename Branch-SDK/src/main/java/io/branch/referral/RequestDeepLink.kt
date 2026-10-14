@@ -13,6 +13,46 @@ internal class RequestDeepLink(
     // Set once sendOpenAfterDeepLink has this request's response; containsDeepLink() then skips it.
     @JvmField @Volatile var responseHandled = false
 
+    // Set under Branch's heldOpenLock_ by a background: its open is sent when it responds, without sendOpen.
+    @JvmField @Volatile var sendOpenWhenAnswered = false
+
+    // The launch link when requestDeepLinkData was called. Sent instead of the saved one, which a later
+    // call or consent off can change before this request is sent.
+    @Volatile private var launchLink: JSONObject? = null
+
+    // The launch link fields it sent, set when it is prepared to send.
+    @Volatile private var sentLaunchLink: JSONObject? = null
+
+    fun keepLaunchLink() {
+        launchLink = savedLaunchLink(prefHelper_)
+    }
+
+    /** Keeps the install referrer's click id when it has none: a later call can clear the saved one before this is sent. */
+    fun keepInstallReferrerClickId(clickId: String) {
+        val link = launchLink ?: return
+        if (clickId.isBlank() || clickId == PrefHelper.NO_STRING_VALUE || link.has(Defines.Jsonkey.LinkIdentifier.key)) return
+        launchLink = JSONObject(link.toString()).put(Defines.Jsonkey.LinkIdentifier.key, clickId)
+    }
+
+    override fun keptLaunchLink(): JSONObject? = launchLink
+
+    override fun doFinalUpdateOnBackgroundThread() {
+        super.doFinalUpdateOnBackgroundThread()
+        launchLink?.let { putLaunchLink(it) }
+        // Before consent off strips the intent fields: its open may be sent after opt-in.
+        sentLaunchLink = JSONObject().also { link ->
+            for (key in LAUNCH_LINK_KEYS) {
+                post.opt(key)?.let { link.put(key, it) }
+            }
+        }
+    }
+
+    /**
+     * The launch link fields for its open, which may be sent after a later call changed the saved ones:
+     * the ones it sent, or the ones it kept if it was never sent.
+     */
+    fun launchLinkForOpen(): JSONObject? = sentLaunchLink ?: launchLink
+
     init {
         callback_ = callback
         try {
