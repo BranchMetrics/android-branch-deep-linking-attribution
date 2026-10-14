@@ -44,6 +44,7 @@ class AutomaticOpenEventsTest : BranchTestBase() {
         @Volatile var failDeepLink = false
         @Volatile var noLinkFound = false
         @Volatile var openAsksForWebPage = false
+        @Volatile var failOpen = false
 
         override fun doRestfulGet(url: String?): BranchResponse = BranchResponse("{}", 200)
 
@@ -61,7 +62,11 @@ class AutomaticOpenEventsTest : BranchTestBase() {
                         else -> BranchResponse(linkBody(body.getString("android_app_link_url")), 200)
                     }
                 }
-                "v3/events/open" -> BranchResponse(if (openAsksForWebPage) OPEN_RESPONSE_WEB_PAGE else OPEN_RESPONSE, 200)
+                "v3/events/open" -> when {
+                    failOpen -> BranchResponse(FAILED_BODY, 500)
+                    openAsksForWebPage -> BranchResponse(OPEN_RESPONSE_WEB_PAGE, 200)
+                    else -> BranchResponse(OPEN_RESPONSE, 200)
+                }
                 else -> BranchResponse("{}", 200)
             }
         }
@@ -130,6 +135,27 @@ class AutomaticOpenEventsTest : BranchTestBase() {
         sendOpen()
 
         assertOneOpen(null)
+    }
+
+    @Test
+    fun secondSendOpen_whileTheFirstOpenIsQueued_reportsThatOpensResult() {
+        requestDeepLink(linkA)
+        val release = startHeldDeepLink(linkB)
+        remote.failOpen = true
+        val firstError = AtomicReference<BranchError?>()
+        val firstDone = CountDownLatch(1)
+        Branch.getInstance().sendOpen { error -> firstError.set(error); firstDone.countDown() }
+        val secondError = AtomicReference<BranchError?>()
+        val secondDone = CountDownLatch(1)
+        Branch.getInstance().sendOpen { error -> secondError.set(error); secondDone.countDown() }
+
+        release.countDown()
+
+        assertTrue("the first sendOpen callback never fired", firstDone.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", secondDone.await(10, TimeUnit.SECONDS))
+        assertEquals("one open per call, both failed", 2, settledOpens(count = 2).size)
+        assertEquals(500, firstError.get()?.errorCode)
+        assertEquals(500, secondError.get()?.errorCode)
     }
 
     @Test

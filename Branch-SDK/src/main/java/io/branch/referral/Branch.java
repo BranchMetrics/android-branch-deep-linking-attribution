@@ -1936,6 +1936,7 @@ public class Branch {
         }
         if (openPending) {
             BranchLogger.d("sendOpen skipped: an open is already pending");
+            // Only says an open was already queued, not that one was sent.
             if (open.callback != null) {
                 open.callback.onInitFinished(null, null);
             }
@@ -2247,6 +2248,11 @@ public class Branch {
             deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
                 @Override
                 public void onInstallReferrersFinished() {
+                    // The click id this read saved, unless a later call's link has replaced it.
+                    String referrerClickId = AppStoreReferrer.getInstallationID();
+                    if (request instanceof RequestDeepLink && referrerClickId.equals(prefHelper_.getLinkClickIdentifier())) {
+                        ((RequestDeepLink) request).keepInstallReferrerClickId(referrerClickId);
+                    }
                     request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
                     BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
                     BranchLogger.v("Install referrer fetch completed, lock removed");

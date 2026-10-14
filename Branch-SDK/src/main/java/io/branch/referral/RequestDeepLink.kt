@@ -18,13 +18,20 @@ internal class RequestDeepLink(
 
     // The launch link when requestDeepLinkData was called. Sent instead of the saved one, which a later
     // call or consent off can change before this request is sent.
-    private var launchLink: JSONObject? = null
+    @Volatile private var launchLink: JSONObject? = null
 
     // The launch link fields it sent, set when it is prepared to send.
     @Volatile private var sentLaunchLink: JSONObject? = null
 
     fun keepLaunchLink() {
         launchLink = savedLaunchLink(prefHelper_)
+    }
+
+    /** Keeps the install referrer's click id when it has none: a later call can clear the saved one before this is sent. */
+    fun keepInstallReferrerClickId(clickId: String) {
+        val link = launchLink ?: return
+        if (clickId.isBlank() || clickId == PrefHelper.NO_STRING_VALUE || link.has(Defines.Jsonkey.LinkIdentifier.key)) return
+        launchLink = JSONObject(link.toString()).put(Defines.Jsonkey.LinkIdentifier.key, clickId)
     }
 
     override fun keptLaunchLink(): JSONObject? = launchLink
