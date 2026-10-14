@@ -565,6 +565,117 @@ class AutomaticOpenEventsTest : BranchTestBase() {
         assertOneOpen(linkA)
     }
 
+    @Test
+    fun clickIdLinkThenAppLink_eachDeepLinkSendsOnlyItsOwnLink() {
+        val clickLink = Uri.parse("myapp://open?link_click_id=111")
+        holdNextAdIdRead.set(true)
+        val aDone = CountDownLatch(1)
+        Branch.getInstance().requestDeepLinkData(clickLink) { _, _ -> aDone.countDown() }
+        val bDone = CountDownLatch(1)
+        Branch.getInstance().requestDeepLinkData(linkB) { _, _ -> bDone.countDown() }
+        adIdRelease.countDown()
+        assertTrue(aDone.await(10, TimeUnit.SECONDS))
+        assertTrue(bDone.await(10, TimeUnit.SECONDS))
+
+        val posts = remote.deepLinks()
+        val a = posts.single { it.optString("external_intent_uri").startsWith("myapp") }
+        val b = posts.single { !it.optString("external_intent_uri").startsWith("myapp") }
+        assertFalse("A carries B's app link: $a", a.has("android_app_link_url"))
+        assertFalse("B carries A's click id: $b", b.has("link_identifier"))
+    }
+
+    @Test
+    fun firstInstall_referrerClickIdIsSentWithAnAppLinkThatHasNone() {
+        initialize(automaticOpenEvents = false, returningUser = false)
+        useFakeReaders(referrerClickId = "referrer-id")
+
+        requestDeepLink(linkA)
+
+        val deepLink = remote.deepLinks().single()
+        assertEquals(linkA.toString(), deepLink.optString("android_app_link_url"))
+        assertEquals("referrer-id", deepLink.optString("link_identifier"))
+    }
+
+    @Test
+    fun failedDeepLink_thenALaterLink_theFirstOpenKeepsItsOwnLink() {
+        remote.failDeepLink = true
+        requestDeepLink(linkA)
+        remote.failDeepLink = false
+        requestDeepLink(linkB)
+
+        sendOpen()
+        sendOpen()
+
+        val opens = assertOpens(null, linkB)
+        assertEquals(linkA.toString(), opens[0].optString("android_app_link_url"))
+        assertEquals(linkB.toString(), opens[1].optString("android_app_link_url"))
+    }
+
+    @Test
+    fun consentOff_rotationWithASendOpenEach_optInThenBackground_sendsOneOpen() {
+        setProcessState(Lifecycle.State.RESUMED)
+        setLevel(Defines.BranchAttributionLevel.NONE)
+        requestDeepLink(linkA); val first = sendOpen()
+        requestDeepLink(linkA); val second = sendOpen()
+        setLevel(Defines.BranchAttributionLevel.FULL)
+        settledOpens()
+        setProcessState(Lifecycle.State.CREATED)
+
+        assertOpens(linkA)
+        assertTrue("the first sendOpen callback never fired", first.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", second.await(10, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun consentOff_rotationWithASendOpenEach_optIn_nextLinkStillWaitsForSendOpen() {
+        setLevel(Defines.BranchAttributionLevel.NONE)
+        requestDeepLink(linkA); val first = sendOpen()
+        requestDeepLink(linkA); val second = sendOpen()
+        setLevel(Defines.BranchAttributionLevel.FULL)
+        settledOpens()
+        requestDeepLink(linkB)
+
+        assertOpens(linkA)
+        assertTrue("the first sendOpen callback never fired", first.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", second.await(10, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun consentOff_sendOpenBeforeEachResponse_optIn_sendsOneOpen() {
+        setLevel(Defines.BranchAttributionLevel.NONE)
+        val firstRelease = startHeldDeepLink(linkA)
+        val first = sendOpen()
+        firstRelease.countDown()
+        awaitNoDeepLink()
+        val secondRelease = startHeldDeepLink(linkB)
+        val second = sendOpen()
+        secondRelease.countDown()
+        awaitNoDeepLink()
+
+        setLevel(Defines.BranchAttributionLevel.FULL)
+
+        assertOpens(linkB)
+        assertTrue("the first sendOpen callback never fired", first.await(10, TimeUnit.SECONDS))
+        assertTrue("the second sendOpen callback never fired", second.await(10, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun logoutDropsAQueuedOpen_answersItsCallback() {
+        requestDeepLink(linkA)
+        // B's /v3/deeplink holds the queue, so the logout and then A's open queue behind it.
+        val release = startHeldDeepLink(linkB)
+        Branch.getInstance().logout()
+        val error = AtomicReference<BranchError?>()
+        val called = CountDownLatch(1)
+        Branch.getInstance().sendOpen { e -> error.set(e); called.countDown() }
+
+        release.countDown()
+
+        assertTrue("the sendOpen callback never fired", called.await(10, TimeUnit.SECONDS))
+        assertTrue("the dropped open must report an error", error.get() != null)
+        assertEquals(0, settledOpens(count = 0).size)
+    }
+
     private fun initialize(automaticOpenEvents: Boolean, returningUser: Boolean = true, captureLogs: Boolean = false) {
         Branch.shutDown()
         Branch._userAgentString = "test-agent"
@@ -590,9 +701,10 @@ class AutomaticOpenEventsTest : BranchTestBase() {
 
     /**
      * The ad ID and install referrer reads finish at once, and count how often they ran. With
-     * holdNextAdIdRead set, the next ad ID read waits for adIdRelease.
+     * holdNextAdIdRead set, the next ad ID read waits for adIdRelease. With referrerClickId, the
+     * install referrer read saves it as the link identifier, as a click-through install does.
      */
-    private fun useFakeReaders() {
+    private fun useFakeReaders(referrerClickId: String? = null) {
         val observer = object : SystemObserver() {
             override fun fetchAdId(context: Context, callback: AdsParamsFetchEvents?) {
                 adIdReads.incrementAndGet()
@@ -605,7 +717,10 @@ class AutomaticOpenEventsTest : BranchTestBase() {
             }
 
             override fun fetchInstallReferrer(context: Context, callback: InstallReferrerFetchEvents?) {
-                thread { callback?.onInstallReferrersFinished() }
+                thread {
+                    referrerClickId?.let { PrefHelper.getInstance(context).linkClickIdentifier = it }
+                    callback?.onInstallReferrersFinished()
+                }
             }
         }
         DeviceInfo::class.java.getDeclaredField("systemObserver_").apply { isAccessible = true }

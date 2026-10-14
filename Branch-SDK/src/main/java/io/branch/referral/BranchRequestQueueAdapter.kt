@@ -257,9 +257,14 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.printQueue called")
         newQueue.printQueue()
     }
-    fun clear(): List<ServerRequest> {
+    /** Clears the queue except RequestDeepLinks. A dropped open still answers its callback, with errorCode. */
+    fun clear(errorCode: Int, reason: String) {
         BranchLogger.v("BranchRequestQueueAdapter.clear called")
-        return newQueue.clear()
+        for (request in newQueue.clear()) {
+            if (request is RequestOpen) {
+                request.handleFailure(errorCode, reason)
+            }
+        }
     }
     
     private fun requestNeedsSession(request: ServerRequest): Boolean {

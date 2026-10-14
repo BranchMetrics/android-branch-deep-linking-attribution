@@ -29,14 +29,25 @@ internal fun savedLaunchLink(prefHelper: PrefHelper): JSONObject {
     return link
 }
 
-/** Replaces the launch link fields in post with link's. */
-internal fun putLaunchLink(post: JSONObject, link: JSONObject) {
+/**
+ * Replaces the launch link fields in the post with link's. On an install launch, the ones the install
+ * referrer saves after requestDeepLinkData is called stay when link has none.
+ */
+internal fun ServerRequestInitSession.putLaunchLink(link: JSONObject) {
+    val fromReferrer = when {
+        !isInstallLaunch() -> emptyList()
+        prefHelper_.isFullAppConversion -> listOf(Defines.Jsonkey.LinkIdentifier.key, Defines.Jsonkey.AndroidAppLinkURL.key)
+        else -> listOf(Defines.Jsonkey.LinkIdentifier.key)
+    }
     for (key in LAUNCH_LINK_KEYS) {
-        if (link.has(key)) post.put(key, link.get(key)) else post.remove(key)
+        when {
+            link.has(key) -> post.put(key, link.get(key))
+            key !in fromReferrer -> post.remove(key)
+        }
     }
 }
 
-/** @param launchLink The launch link fields its /v3/deeplink sent, or null to send the saved ones. */
+/** @param launchLink The launch link fields for this open, or null to send the saved ones. */
 internal class RequestOpen @JvmOverloads constructor(
     context: Context,
     callback: Branch.BranchReferralInitListener?,
@@ -78,9 +89,11 @@ internal class RequestOpen @JvmOverloads constructor(
         }
     }
 
+    override fun keptLaunchLink(): JSONObject? = launchLink
+
     override fun doFinalUpdateOnBackgroundThread() {
         super.doFinalUpdateOnBackgroundThread()
-        launchLink?.let { putLaunchLink(post, it) }
+        launchLink?.let { putLaunchLink(it) }
     }
 
     override fun onRequestSucceeded(response: ServerResponse, branch: Branch) {

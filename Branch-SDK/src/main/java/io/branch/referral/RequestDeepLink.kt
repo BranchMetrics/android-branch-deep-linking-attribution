@@ -20,24 +20,31 @@ internal class RequestDeepLink(
     // call or consent off can change before this request is sent.
     private var launchLink: JSONObject? = null
 
+    // The launch link fields it sent, set when it is prepared to send.
+    @Volatile private var sentLaunchLink: JSONObject? = null
+
     fun keepLaunchLink() {
         launchLink = savedLaunchLink(prefHelper_)
     }
 
+    override fun keptLaunchLink(): JSONObject? = launchLink
+
     override fun doFinalUpdateOnBackgroundThread() {
         super.doFinalUpdateOnBackgroundThread()
-        // Only the fields it had: on a first install, the install referrer read adds link_identifier later.
-        launchLink?.let { link -> link.keys().forEach { post.put(it, link.get(it)) } }
+        launchLink?.let { putLaunchLink(it) }
+        // Before consent off strips the intent fields: its open may be sent after opt-in.
+        sentLaunchLink = JSONObject().also { link ->
+            for (key in LAUNCH_LINK_KEYS) {
+                post.opt(key)?.let { link.put(key, it) }
+            }
+        }
     }
 
-    /** The launch link fields this request sent, for its open: by then the saved ones may be a later call's. */
-    fun sentLaunchLink(): JSONObject {
-        val link = JSONObject()
-        for (key in LAUNCH_LINK_KEYS) {
-            post.opt(key)?.let { link.put(key, it) }
-        }
-        return link
-    }
+    /**
+     * The launch link fields for its open, which may be sent after a later call changed the saved ones:
+     * the ones it sent, or the ones it kept if it was never sent.
+     */
+    fun launchLinkForOpen(): JSONObject? = sentLaunchLink ?: launchLink
 
     init {
         callback_ = callback

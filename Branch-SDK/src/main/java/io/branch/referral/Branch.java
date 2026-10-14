@@ -278,14 +278,14 @@ public class Branch {
     private BranchReferralInitListener deferredCallback;
     private Uri deferredUri;
     // Under heldOpenLock_: the opens not sent yet, oldest first, and the callback of each sendOpen
-    // still waiting for a /v3/deeplink response (null for a sendOpen without one).
+    // still waiting for a /v3/deeplink response because no kept open was there for it.
     private final Object heldOpenLock_ = new Object();
     private final ArrayDeque<KeptOpen> keptOpens_ = new ArrayDeque<>();
     private final List<BranchReferralInitListener> openWaiters_ = new ArrayList<>();
     // Set when a background could not clear the saved launch link because a launch request was still in the queue.
     volatile boolean launchLinkClearOwed_;
     // Set by BranchConfiguration.setAutomaticOpenEvents.
-    boolean automaticOpenEvents_ = true;
+    volatile boolean automaticOpenEvents_ = true;
     private volatile boolean sendOpenWarningLogged_;
 
     private int networkCount_ = 0;
@@ -668,12 +668,7 @@ public class Branch {
      * Clears all pending requests in the queue
      */
     void clearPendingRequests() {
-        // A dropped open still answers its callback.
-        for (ServerRequest request : requestQueue_.clear()) {
-            if (request instanceof RequestOpen) {
-                request.handleFailure(BranchError.ERR_BRANCH_TRACKING_DISABLED, "Tracking is disabled");
-            }
-        }
+        requestQueue_.clear(BranchError.ERR_BRANCH_TRACKING_DISABLED, "Tracking is disabled");
     }
     
     /**
@@ -1745,12 +1740,14 @@ public class Branch {
     /** An open not sent yet, with its /v3/deeplink response, which is null after a failure or without a /v3/deeplink. */
     private static final class KeptOpen {
         @Nullable final JSONObject response;
-        // The launch link its /v3/deeplink sent, or null to use the saved one.
+        // The launch link fields for it, or null to use the saved ones.
         @Nullable final JSONObject launchLink;
         // The ad ID and install referrer haven't been read for it.
         boolean readsNeeded;
         // The app went to the background before sending it, so it no longer waits for sendOpen.
         boolean owed;
+        // The callback of the sendOpen calls that asked for it while it could not be sent, or null.
+        @Nullable BranchReferralInitListener callback;
 
         KeptOpen(@Nullable JSONObject response, @Nullable JSONObject launchLink, boolean readsNeeded) {
             this.response = response;
@@ -1759,8 +1756,8 @@ public class Branch {
         }
     }
 
-    private void sendOpenRequest(@NonNull KeptOpen open, @Nullable BranchReferralInitListener callback) {
-        RequestOpen request = new RequestOpen(context_, callback, false, open.response, open.launchLink);
+    private void sendOpenRequest(@NonNull KeptOpen open) {
+        RequestOpen request = new RequestOpen(context_, open.callback, false, open.response, open.launchLink);
         if (open.readsNeeded) {
             enqueueLaunchRequest(request);
         } else {
@@ -1780,11 +1777,34 @@ public class Branch {
     }
 
     // Under heldOpenLock_, with setAutomaticOpenEvents(false): takes the kept opens, oldest first,
-    // that a sendOpen waits for or that a background left owed.
-    private void takeOpensToSend(@NonNull List<KeptOpen> opens, @NonNull List<BranchReferralInitListener> callbacks) {
-        while (!keptOpens_.isEmpty() && (!openWaiters_.isEmpty() || keptOpens_.peek().owed)) {
+    // that a sendOpen asked for or that a background left owed.
+    private void takeOpensToSend(@NonNull List<KeptOpen> opens) {
+        while (!keptOpens_.isEmpty()) {
+            KeptOpen open = keptOpens_.peek();
+            if (open.callback == null && !openWaiters_.isEmpty()) {
+                open.callback = openWaiters_.remove(0);
+            }
+            if (open.callback == null && !open.owed) {
+                return;
+            }
             opens.add(keptOpens_.poll());
-            callbacks.add(openWaiters_.isEmpty() ? null : openWaiters_.remove(0));
+        }
+    }
+
+    // Under heldOpenLock_, while the kept opens can't be sent: the sendOpen asks for the oldest one no
+    // sendOpen asked for. While attribution is off only the newest is kept, so a later one asks for it too.
+    private void keepSendOpen(@NonNull BranchReferralInitListener callback) {
+        for (KeptOpen open : keptOpens_) {
+            if (open.callback == null) {
+                open.callback = callback;
+                return;
+            }
+        }
+        if (isAttributionOff()) {
+            KeptOpen newest = keptOpens_.peekLast();
+            newest.callback = bothCallbacks(newest.callback, callback);
+        } else {
+            openWaiters_.add(callback);
         }
     }
 
@@ -1802,7 +1822,6 @@ public class Branch {
 
     void sendHeldOpen(@NonNull BranchReferralInitListener callback) {
         List<KeptOpen> opens = new ArrayList<>();
-        List<BranchReferralInitListener> callbacks = new ArrayList<>();
         synchronized (heldOpenLock_) {
             // Consent off cleared the install referrer.
             for (KeptOpen open : keptOpens_) {
@@ -1810,12 +1829,13 @@ public class Branch {
             }
             if (automaticOpenEvents_) {
                 if (!keptOpens_.isEmpty()) {
-                    opens.add(keptOpens_.poll());
-                    callbacks.add(takeAllOpenWaiters());
+                    KeptOpen open = keptOpens_.poll();
+                    open.callback = bothCallbacks(open.callback, takeAllOpenWaiters());
+                    opens.add(open);
                 }
             } else {
                 // With setAutomaticOpenEvents(false), an open also waits for its sendOpen.
-                takeOpensToSend(opens, callbacks);
+                takeOpensToSend(opens);
             }
         }
         // Nothing to send yet: a later response or the app's sendOpen sends it.
@@ -1824,9 +1844,9 @@ public class Branch {
             callback.onInitFinished(getLatestReferringParams(), null);
             return;
         }
-        callbacks.set(0, bothCallbacks(callback, callbacks.get(0)));
-        for (int i = 0; i < opens.size(); i++) {
-            sendOpenRequest(opens.get(i), callbacks.get(i));
+        opens.get(0).callback = bothCallbacks(callback, opens.get(0).callback);
+        for (KeptOpen open : opens) {
+            sendOpenRequest(open);
         }
     }
 
@@ -1836,7 +1856,6 @@ public class Branch {
             return;
         }
         List<KeptOpen> opens = new ArrayList<>();
-        List<BranchReferralInitListener> callbacks = new ArrayList<>();
         synchronized (heldOpenLock_) {
             // Each /v3/deeplink still waiting sends its open when it responds.
             List<ServerRequest> waiting = requestQueue_.deepLinksWaiting();
@@ -1846,20 +1865,21 @@ public class Branch {
             for (KeptOpen open : keptOpens_) {
                 open.owed = true;
             }
-            // A sendOpen that no /v3/deeplink will answer: an open without link_data.
-            for (int i = openWaiters_.size() - waiting.size() - keptOpens_.size(); i > 0; i--) {
-                KeptOpen open = new KeptOpen(null, null, true);
+            // A sendOpen that no /v3/deeplink will answer: an open without link_data or a launch link.
+            for (int i = openWaiters_.size() - waiting.size(); i > 0; i--) {
+                KeptOpen open = new KeptOpen(null, new JSONObject(), true);
                 open.owed = true;
+                open.callback = openWaiters_.remove(0);
                 keptOpens_.add(open);
             }
             if (isAttributionOff()) {
                 return;
             }
-            takeOpensToSend(opens, callbacks);
+            takeOpensToSend(opens);
         }
-        for (int i = 0; i < opens.size(); i++) {
+        for (KeptOpen open : opens) {
             BranchLogger.d("sendOpenAtBackground: sending the open the app hasn't sent");
-            sendOpenRequest(opens.get(i), callbacks.get(i));
+            sendOpenRequest(open);
         }
     }
 
@@ -1881,17 +1901,23 @@ public class Branch {
     void sendOpenAfterDeepLink(@NonNull RequestDeepLink request, @Nullable JSONObject response) {
         boolean openPending = false;
         KeptOpen open;
-        BranchReferralInitListener callback;
         // Checked under the lock: opt-in saves the level before sendHeldOpen takes it, so an open
         // either sees attribution on here or is already held when sendHeldOpen runs.
         synchronized (heldOpenLock_) {
             request.responseHandled = true;
             BranchLogger.d("sendOpenAfterDeepLink BranchAttributionLevel: " + prefHelper_.getConsumerProtectionAttributionLevel());
             boolean off = isAttributionOff();
-            open = new KeptOpen(response, response == null ? null : request.sentLaunchLink(), off);
+            open = new KeptOpen(response, request.launchLinkForOpen(), off);
             if (off) {
-                // While attribution is off, only the newest response's open is held.
+                // While attribution is off, only the newest response's open is held. It answers the
+                // sendOpen calls of the opens it replaces, and the oldest sendOpen still waiting.
                 open.owed = request.sendOpenWhenAnswered;
+                for (KeptOpen replaced : keptOpens_) {
+                    open.callback = bothCallbacks(open.callback, replaced.callback);
+                }
+                if (!openWaiters_.isEmpty()) {
+                    open.callback = bothCallbacks(open.callback, openWaiters_.remove(0));
+                }
                 keptOpens_.clear();
                 keptOpens_.add(open);
                 BranchLogger.d("sendOpen held until the user opts in: attribution is off");
@@ -1899,12 +1925,10 @@ public class Branch {
             }
             if (automaticOpenEvents_) {
                 openPending = requestQueue_.containsOpen();
-                callback = takeAllOpenWaiters();
+                open.callback = takeAllOpenWaiters();
             } else if (!openWaiters_.isEmpty()) {
-                callback = openWaiters_.remove(0);
-            } else if (request.sendOpenWhenAnswered) {
-                callback = null;
-            } else {
+                open.callback = openWaiters_.remove(0);
+            } else if (!request.sendOpenWhenAnswered) {
                 keptOpens_.add(open);
                 BranchLogger.d("sendOpen kept until the app calls sendOpen");
                 return;
@@ -1912,12 +1936,12 @@ public class Branch {
         }
         if (openPending) {
             BranchLogger.d("sendOpen skipped: an open is already pending");
-            if (callback != null) {
-                callback.onInitFinished(null, null);
+            if (open.callback != null) {
+                open.callback.onInitFinished(null, null);
             }
             return;
         }
-        sendOpenRequest(open, callback);
+        sendOpenRequest(open);
     }
 
     /** Callback for {@link #sendOpen}. */
@@ -1934,17 +1958,29 @@ public class Branch {
      * @param callback Called when the open is sent, or when it fails.
      */
     public void sendOpen(@Nullable SendOpenListener callback) {
-        BranchReferralInitListener appCallback = callback == null ? null : (params, error) -> callback.onOpenSent(error);
+        // Never null, so a kept open can tell that a sendOpen asked for it.
+        BranchReferralInitListener appCallback = (params, error) -> {
+            if (callback != null) {
+                callback.onOpenSent(error);
+            }
+        };
         KeptOpen open;
         synchronized (heldOpenLock_) {
-            if (keptOpens_.isEmpty() || isAttributionOff()) {
-                // Sent with the next /v3/deeplink response, at opt-in, or at the background.
+            open = keptOpens_.peek();
+            if (open == null) {
+                // Sent with the next /v3/deeplink response, or at the background.
                 openWaiters_.add(appCallback);
                 return;
             }
-            open = keptOpens_.poll();
+            if (isAttributionOff() || open.callback != null) {
+                // Sent at opt-in.
+                keepSendOpen(appCallback);
+                return;
+            }
+            keptOpens_.poll();
+            open.callback = appCallback;
         }
-        sendOpenRequest(open, appCallback);
+        sendOpenRequest(open);
     }
 
     /**
@@ -2170,7 +2206,8 @@ public class Branch {
 
     /** Saves the launch link and, with an Activity, its intent's context, and keeps them on request. */
     void readLaunchLink(@Nullable Uri uri, @Nullable Activity activity, @NonNull RequestDeepLink request) {
-        // Not while an earlier launch's request still waits to send: it reads the link at send time.
+        // Not while an earlier launch's request still waits to send: on a first install it reads the
+        // install referrer's link_identifier from prefs at send time.
         if (launchLinkClearOwed_ && (requestQueue_ == null || !requestQueue_.containsDeepLinkOrOpen())) {
             launchLinkClearOwed_ = false;
             prefHelper_.clearLaunchLink();
@@ -2179,6 +2216,11 @@ public class Branch {
             currentActivityReference_ = new WeakReference<>(activity);
         }
         if (uri != null || activity != null) {
+            // Only this launch's link: readAndStripParam saves just the fields it finds. An intent read
+            // before, as after a rotation, yields none, so it keeps the link saved when it was read.
+            if (!isIntentParamsAlreadyConsumed(activity)) {
+                prefHelper_.clearLaunchLink();
+            }
             readAndStripParam(uri, activity);
         }
         request.keepLaunchLink();
