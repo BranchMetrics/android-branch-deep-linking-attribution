@@ -73,20 +73,6 @@ public class PrefHelperTest extends BranchTest {
     }
 
     @Test
-    public void testSetAdNetworkCalloutsDisabled() {
-        prefHelper.setAdNetworkCalloutsDisabled(true);
-
-        Assert.assertTrue(prefHelper.getAdNetworkCalloutsDisabled());
-    }
-
-    @Test
-    public void testSetAdNetworkCalloutsEnabled() {
-        prefHelper.setAdNetworkCalloutsDisabled(false);
-
-        Assert.assertFalse(prefHelper.getAdNetworkCalloutsDisabled());
-    }
-
-    @Test
     public void testSetTimeout(){
         int TEST_TIMEOUT = 1;
         prefHelper.setTimeout(TEST_TIMEOUT);

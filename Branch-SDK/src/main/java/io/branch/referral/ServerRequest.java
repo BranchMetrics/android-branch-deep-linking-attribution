@@ -179,16 +179,6 @@ public abstract class ServerRequest {
     }
 
     /**
-     * Specifies whether this request should add the limit app tracking value
-     *
-     * @return {@code true} to add the limit app tracking value to the request else false.
-     * {@code false} by default. Should override for requests that need limited app tracking value.
-     */
-    protected boolean shouldUpdateLimitFacebookTracking() {
-        return false;
-    }
-
-    /**
      * <p>
      * Specifies whether this request should have DMA params.
      * By default it will return false. Subclasses can override this function, if the corresponding request type
@@ -622,37 +612,6 @@ public abstract class ServerRequest {
         }
     }
     
-    /*
-     * Update the the limit app tracking value to the request
-     */
-    private void updateLimitFacebookTracking() {
-        JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-        if (updateJson != null) {
-            boolean isLimitFacebookTracking = prefHelper_.isAppTrackingLimited(); // Currently only FB app tracking
-            if (isLimitFacebookTracking) {
-                try {
-                    updateJson.putOpt(Defines.Jsonkey.limitFacebookTracking.getKey(), isLimitFacebookTracking);
-                } catch (JSONException e) {
-                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                }
-            }
-        }
-    }
-
-    private void updateDisableAdNetworkCallouts() {
-        JSONObject updateJson = getBranchRemoteAPIVersion() == BRANCH_API_VERSION.V1 ? params_ : params_.optJSONObject(Defines.Jsonkey.UserData.getKey());
-        if (updateJson != null) {
-            boolean disableAdNetworkCallouts = prefHelper_.getAdNetworkCalloutsDisabled();
-            if (disableAdNetworkCallouts) {
-                try {
-                    updateJson.putOpt(Defines.Jsonkey.DisableAdNetworkCallouts.getKey(), disableAdNetworkCallouts);
-                } catch (JSONException e) {
-                    BranchLogger.w("Caught JSONException " + e.getMessage());
-                }
-            }
-        }
-    }
-
     private boolean prioritizeLinkAttribution(JSONObject params) {
         if (false
                 && params.has(Defines.Jsonkey.LinkIdentifier.getKey())) {
@@ -670,9 +629,6 @@ public abstract class ServerRequest {
     void doFinalUpdateOnMainThread() {
         BranchLogger.v("doFinalUpdateOnMainThread");
         updateRequestMetadata();
-        if (shouldUpdateLimitFacebookTracking()) {
-            updateLimitFacebookTracking();
-        }
         if (shouldAddDMAParams()) {
             addDMAParams();
         }
@@ -709,7 +665,6 @@ public abstract class ServerRequest {
         
         // Update the dynamic device info params
         updateDeviceInfo();
-        updateDisableAdNetworkCallouts();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.
 

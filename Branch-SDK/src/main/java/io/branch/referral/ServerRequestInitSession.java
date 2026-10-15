@@ -64,11 +64,6 @@ public abstract class ServerRequestInitSession extends ServerRequest {
     }
 
     @Override
-    protected boolean shouldUpdateLimitFacebookTracking() {
-        return true;
-    }
-
-    @Override
     protected boolean shouldAddDMAParams() {
         return true;
     }

@@ -106,7 +106,6 @@ public class PrefHelper {
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
-    private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
     private static final String KEY_DMA_EEA = "bnc_dma_eea";
     private static final String KEY_DMA_AD_PERSONALIZATION = "bnc_dma_ad_personalization";
     private static final String KEY_DMA_AD_USER_DATA = "bnc_dma_ad_user_data";
@@ -120,7 +119,6 @@ public class PrefHelper {
     static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
     static final String KEY_INSTALL_BEGIN_SERVER_TS = "bnc_install_begin_server_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
-    static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
     static final String KEY_BRANCH_KEY_SOURCE = "bnc_branch_key_source";
 
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
@@ -608,24 +606,6 @@ public class PrefHelper {
     }
 
     /**
-     * Specify whether ad network callouts should be disabled. By default, they are enabled.
-     *
-     * @param disabled (@link Boolean) whether ad network callouts should be disabled
-     */
-    public void setAdNetworkCalloutsDisabled(boolean disabled) {
-        setBool(KEY_AD_NETWORK_CALLOUTS_DISABLED, disabled);
-    }
-
-    /**
-     * Determine whether ad network callouts have been disabled.
-     *
-     * @return A (@link Boolean) indicating whether ad network callouts have been disabled.
-     */
-    public boolean getAdNetworkCalloutsDisabled() {
-        return getBool(KEY_AD_NETWORK_CALLOUTS_DISABLED);
-    }
-
-    /**
      * <p>Sets the {@link #KEY_EXTERNAL_INTENT_URI} with value with given intent URI String.</p>
      *
      * @param uri A {@link String} value containing intent URI to set
@@ -992,21 +972,6 @@ public class PrefHelper {
         setLong(KEY_LAST_READ_SYSTEM, c.getTimeInMillis() / 1000);
     }
     
-    /*
-     * Enables or disables FB app tracking.
-     * @param isLimitFBAppTracking {@code true} to enable the app tracking.
-     */
-    void setLimitFacebookTracking(boolean isLimitFBAppTracking) {
-        setBool(KEY_LIMIT_FACEBOOK_TRACKING, isLimitFBAppTracking);
-    }
-    
-    /*
-       Returns true if FB app tracking is enabled.
-     */
-    boolean isAppTrackingLimited() {
-        return getBool(KEY_LIMIT_FACEBOOK_TRACKING);
-    }
-
     /**
      * Returns true if DMA params - KEY_EEA_REGION value exist in pref helper.
      */

@@ -46,6 +46,7 @@ import io.branch.referral.Branch.BranchReferralInitListener;
 import io.branch.referral.BranchError;
 import io.branch.referral.BranchLogger;
 import io.branch.referral.BranchShareSheetBuilder;
+import io.branch.referral.BranchConfiguration;
 import io.branch.referral.Defines;
 import io.branch.referral.PrefHelper;
 import io.branch.referral.QRCode.BranchQRCode;
@@ -476,7 +477,8 @@ public class MainActivity extends Activity {
                                 preference = Defines.BranchAttributionLevel.FULL;
                                 break;
                         }
-                        Branch.getInstance().setConsumerProtectionAttributionLevel(preference);
+                        Branch.getInstance().updateConfiguration(
+                                new BranchConfiguration.Builder().setAttributionLevel(preference).build());
                         Toast.makeText(MainActivity.this, "Consumer Protection Preference set to " + options[which], Toast.LENGTH_LONG).show();
                     });
             builder.create().show();

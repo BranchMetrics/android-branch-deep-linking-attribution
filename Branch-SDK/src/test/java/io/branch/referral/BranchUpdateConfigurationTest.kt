@@ -49,7 +49,7 @@ class BranchUpdateConfigurationTest : BranchTestBase() {
     fun updateConfiguration_changesOnlyTheSettingsItSets() {
         initialize {
             setNetworkTimeout(15_000)
-            setAdNetworkCalloutsDisabled(true)
+            setUserAgentFetchSync(true)
             setApiUrl("https://proxy.example.com/")
         }
 
@@ -57,7 +57,7 @@ class BranchUpdateConfigurationTest : BranchTestBase() {
 
         assertEquals(7, prefHelper.getRetryCount())
         assertEquals(15_000, prefHelper.getTimeout())
-        assertTrue(prefHelper.getAdNetworkCalloutsDisabled())
+        assertTrue(Branch.userAgentSync)
         assertEquals("https://proxy.example.com/", prefHelper.getAPIBaseUrl())
     }
 
@@ -73,21 +73,15 @@ class BranchUpdateConfigurationTest : BranchTestBase() {
     @Test
     fun updateConfiguration_turnsOffSettingsTurnedOnAtInitialize() {
         initialize {
-            setAdNetworkCalloutsDisabled(true)
-            setLimitFacebookAttribution(true)
             setEUEndpoint(true)
             setUserAgentFetchSync(true)
         }
 
         update {
-            setAdNetworkCalloutsDisabled(false)
-            setLimitFacebookAttribution(false)
             setEUEndpoint(false)
             setUserAgentFetchSync(false)
         }
 
-        assertFalse(prefHelper.getAdNetworkCalloutsDisabled())
-        assertFalse(prefHelper.isAppTrackingLimited())
         assertEquals(PrefHelper.BRANCH_BASE_URL_V2, prefHelper.getAPIBaseUrl())
         assertFalse(Branch.userAgentSync)
     }

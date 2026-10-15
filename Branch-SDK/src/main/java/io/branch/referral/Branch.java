@@ -1727,24 +1727,11 @@ public class Branch {
 
 
     /**
-     * Updates DMA consent after initialization. Configure the initial value with
-     * {@link BranchConfiguration.Builder#setDMAParameters}; call this when the user's consent
-     * changes, for example from a privacy settings screen.
-     *
-     * @param params The consent values to apply. Build with {@link DMAParameters.Builder}.
-     */
-    public void setDMAParameters(@NonNull DMAParameters params) {
-        params.logWarnings();
-        prefHelper_.setDMAParameters(
-                params.getEeaRegion(), params.getAdPersonalizationConsent(), params.getAdUserDataUsageConsent());
-    }
-
-    /**
      * Sets the consumer protection attribution level.
      *
      * @param level The consumer protection attribution level {@link Defines.BranchAttributionLevel}.
      */
-    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
+    void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level) {
         setConsumerProtectionAttributionLevel(level, null);
     }
 
@@ -1802,7 +1789,7 @@ public class Branch {
      * @param callback An optional {@link TrackingStateCallback} for receiving notifications about
      *                 the change in tracking state. This parameter can be {@code null} if no callback actions are needed.
      */
-    public void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level, @Nullable TrackingStateCallback callback) {
+    void setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel level, @Nullable TrackingStateCallback callback) {
         prefHelper_.setConsumerProtectionAttributionLevel(level);
         BranchLogger.v("Set Consumer Protection Preference to " + level);
 

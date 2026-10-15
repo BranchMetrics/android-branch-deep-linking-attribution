@@ -38,8 +38,6 @@ class BranchConfigurationBuilderTest {
         assertNull(config.remoteInterface)
         assertNull(config.attributionLevel)
         assertNull(config.dmaParameters)
-        assertNull(config.limitFacebookAttribution)
-        assertNull(config.adNetworkCalloutsDisabled)
         assertNull(config.facebookAppId)
         assertNull(config.preinstallCampaign)
         assertNull(config.preinstallPartner)
@@ -144,18 +142,6 @@ class BranchConfigurationBuilderTest {
         val config = BranchConfiguration.Builder("key_live_x").setDMAParameters(dma).build()
         assertNotNull(config.dmaParameters)
         assertEquals(dma, config.dmaParameters)
-    }
-
-    @Test
-    fun `setLimitFacebookAttribution true is stored`() {
-        val config = BranchConfiguration.Builder("key_live_x").setLimitFacebookAttribution(true).build()
-        assertEquals(true, config.limitFacebookAttribution)
-    }
-
-    @Test
-    fun `setAdNetworkCalloutsDisabled true is stored`() {
-        val config = BranchConfiguration.Builder("key_live_x").setAdNetworkCalloutsDisabled(true).build()
-        assertEquals(true, config.adNetworkCalloutsDisabled)
     }
 
     @Test
@@ -430,8 +416,6 @@ class BranchConfigurationBuilderTest {
             .setRetryInterval(1_500)
             .setAttributionLevel(Defines.BranchAttributionLevel.FULL)
             .setDMAParameters(DMAParameters.Builder().setEeaRegion(true).setAdPersonalizationConsent(true).build())
-            .setLimitFacebookAttribution(true)
-            .setAdNetworkCalloutsDisabled(false)
             .setFacebookAppId("fb999")
             .setPreinstallCampaign("spring")
             .setPreinstallPartner("samsung")

@@ -250,6 +250,41 @@ class LaunchDataTest : BranchTestBase() {
     }
 
     @Test
+    fun consentChangedWithUpdateConfiguration_ridesTheNextLaunchRequests() {
+        updateConsent(Defines.BranchAttributionLevel.REDUCED, adUserData = true)
+
+        Branch.getInstance().requestDeepLinkData(null) { _, _ -> }
+        awaitOpens(1)
+
+        for (request in listOf(remote.deepLinks[0], remote.opens[0])) {
+            assertConsent(request, "REDUCED", adUserData = true)
+        }
+
+        updateConsent(Defines.BranchAttributionLevel.MINIMAL, adUserData = false)
+        Branch.getInstance().requestDeepLinkData(null) { _, _ -> }
+        awaitDeepLinks(2)
+
+        assertConsent(remote.deepLinks[1], "MINIMAL", adUserData = false)
+    }
+
+    @Test
+    fun facebookAndAdCalloutSettingsSavedByAnOlderVersion_areNotSent() {
+        context.getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE).edit()
+            .putBoolean("bnc_limit_facebook_tracking", true)
+            .putBoolean("bnc_ad_network_callouts_disabled", true)
+            .commit()
+
+        Branch.getInstance().requestDeepLinkData(null) { _, _ -> }
+        awaitOpens(1)
+
+        for (request in listOf(remote.deepLinks[0], remote.opens[0])) {
+            val body = request.toString()
+            assertFalse(body, body.contains("limit_facebook_tracking"))
+            assertFalse(body, body.contains("disable_ad_network_callouts"))
+        }
+    }
+
+    @Test
     fun gclidInTheTappedLink_ridesTheOpen() {
         Branch.getInstance().requestDeepLinkData(Uri.parse("https://example.app.link/abc?gclid=$GCLID")) { _, _ -> }
         awaitOpens(1)
@@ -367,6 +402,24 @@ class LaunchDataTest : BranchTestBase() {
     }
 
     private fun activity(intent: Intent): Activity = Robolectric.buildActivity(Activity::class.java, intent).get()
+
+    private fun updateConsent(level: Defines.BranchAttributionLevel, adUserData: Boolean) {
+        Branch.getInstance().updateConfiguration(
+            BranchConfiguration.Builder()
+                .setAttributionLevel(level)
+                .setDMAParameters(
+                    DMAParameters.Builder().setEeaRegion(true).setAdUserDataUsageConsent(adUserData).build()
+                )
+                .build()
+        )
+    }
+
+    private fun assertConsent(request: JSONObject, level: String, adUserData: Boolean) {
+        assertEquals(request.toString(), level, request.optString(Defines.Jsonkey.Consumer_Protection_Attribution_Level.key))
+        assertTrue(request.toString(), request.getBoolean(Defines.Jsonkey.DMA_EEA.key))
+        assertFalse(request.toString(), request.getBoolean(Defines.Jsonkey.DMA_Ad_Personalization.key))
+        assertEquals(request.toString(), adUserData, request.getBoolean(Defines.Jsonkey.DMA_Ad_User_Data.key))
+    }
 
     private fun linkBody(campaign: String) =
         """{"data":"{\"+clicked_branch_link\":true,\"~campaign\":\"$campaign\"}","randomized_device_token":"rdt"}"""

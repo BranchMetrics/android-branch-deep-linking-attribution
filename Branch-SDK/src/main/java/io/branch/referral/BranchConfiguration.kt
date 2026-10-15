@@ -26,8 +26,6 @@ class BranchConfiguration private constructor(
     val remoteInterface: BranchRemoteInterface?,
     val attributionLevel: Defines.BranchAttributionLevel?,
     val dmaParameters: DMAParameters?,
-    val limitFacebookAttribution: Boolean?,
-    val adNetworkCalloutsDisabled: Boolean?,
     val facebookAppId: String?,
     val preinstallCampaign: String?,
     val preinstallPartner: String?,
@@ -91,8 +89,6 @@ class BranchConfiguration private constructor(
         prefHelper.connectTimeout = PrefHelper.CONNECT_TIMEOUT
         prefHelper.retryCount = PrefHelper.MAX_RETRIES
         prefHelper.retryInterval = PrefHelper.INTERVAL_RETRY
-        prefHelper.setLimitFacebookTracking(false)
-        prefHelper.setAdNetworkCalloutsDisabled(false)
         Branch.userAgentSync = false
 
         applyUpdate(branch)
@@ -141,8 +137,6 @@ class BranchConfiguration private constructor(
             it.logWarnings()
             prefHelper.setDMAParameters(it.eeaRegion, it.adPersonalizationConsent, it.adUserDataUsageConsent)
         }
-        limitFacebookAttribution?.let { prefHelper.setLimitFacebookTracking(it) }
-        adNetworkCalloutsDisabled?.let { prefHelper.setAdNetworkCalloutsDisabled(it) }
 
         // URL collection
         if (whitelistedSchemes.isNotEmpty() || uriHostsToSkip.isNotEmpty()) {
@@ -200,8 +194,6 @@ class BranchConfiguration private constructor(
                     "," + JSONObject.quote("adPersonalizationConsent") + ":" + it.adPersonalizationConsent +
                     "," + JSONObject.quote("adUserDataUsageConsent") + ":" + it.adUserDataUsageConsent + "}"
         } ?: "null")
-        lit("limitFacebookAttribution", limitFacebookAttribution)
-        lit("adNetworkCalloutsDisabled", adNetworkCalloutsDisabled)
         str("facebookAppId", facebookAppId)
         str("preinstallCampaign", preinstallCampaign)
         str("preinstallPartner", preinstallPartner)
@@ -238,8 +230,6 @@ class BranchConfiguration private constructor(
         if (remoteInterface != null) nonDefaults.add("remoteInterface=${remoteInterface.javaClass.name}")
         attributionLevel?.let { nonDefaults.add("attributionLevel=$it") }
         dmaParameters?.let { nonDefaults.add("dmaParameters=$it") }
-        limitFacebookAttribution?.let { nonDefaults.add("limitFacebookAttribution=$it") }
-        adNetworkCalloutsDisabled?.let { nonDefaults.add("adNetworkCalloutsDisabled=$it") }
         facebookAppId?.let { nonDefaults.add("facebookAppId=$it") }
         preinstallCampaign?.let { nonDefaults.add("preinstallCampaign=$it") }
         preinstallPartner?.let { nonDefaults.add("preinstallPartner=$it") }
@@ -277,8 +267,6 @@ class BranchConfiguration private constructor(
         private var remoteInterface: BranchRemoteInterface? = null
         private var attributionLevel: Defines.BranchAttributionLevel? = null
         private var dmaParameters: DMAParameters? = null
-        private var limitFacebookAttribution: Boolean? = null
-        private var adNetworkCalloutsDisabled: Boolean? = null
         private var facebookAppId: String? = null
         private var preinstallCampaign: String? = null
         private var preinstallPartner: String? = null
@@ -309,8 +297,6 @@ class BranchConfiguration private constructor(
         // Privacy & attribution
         fun setAttributionLevel(level: Defines.BranchAttributionLevel) = apply { attributionLevel = level }
         fun setDMAParameters(params: DMAParameters) = apply { dmaParameters = params }
-        fun setLimitFacebookAttribution(limit: Boolean) = apply { limitFacebookAttribution = limit }
-        fun setAdNetworkCalloutsDisabled(disabled: Boolean) = apply { adNetworkCalloutsDisabled = disabled }
 
         // Install attribution
         fun setFacebookAppId(appId: String) = apply { facebookAppId = appId }
@@ -372,8 +358,6 @@ class BranchConfiguration private constructor(
                 remoteInterface = remoteInterface,
                 attributionLevel = attributionLevel,
                 dmaParameters = dmaParameters,
-                limitFacebookAttribution = limitFacebookAttribution,
-                adNetworkCalloutsDisabled = adNetworkCalloutsDisabled,
                 facebookAppId = facebookAppId,
                 preinstallCampaign = preinstallCampaign,
                 preinstallPartner = preinstallPartner,

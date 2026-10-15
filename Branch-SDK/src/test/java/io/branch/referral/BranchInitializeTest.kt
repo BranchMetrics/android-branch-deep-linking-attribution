@@ -328,8 +328,12 @@ class BranchInitializeTest : BranchTestBase() {
     // DMA parameters at runtime
     // -------------------------------------------------------------------------
 
+    private fun updateDMAParameters(params: DMAParameters) {
+        Branch.getInstance().updateConfiguration(BranchConfiguration.Builder().setDMAParameters(params).build())
+    }
+
     @Test
-    fun setDMAParameters_afterInitialize_reachesPrefHelper() {
+    fun updateConfiguration_dmaParameters_reachPrefHelper() {
         Branch.initialize(
             context,
             BranchConfiguration.Builder("key_live_test123")
@@ -337,7 +341,7 @@ class BranchInitializeTest : BranchTestBase() {
                 .build()
         )
 
-        Branch.getInstance().setDMAParameters(
+        updateDMAParameters(
             DMAParameters.Builder()
                 .setEeaRegion(true)
                 .setAdPersonalizationConsent(true)
@@ -352,10 +356,10 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun setDMAParameters_afterInitialize_reachesRequestBody() {
+    fun updateConfiguration_dmaParameters_reachTheRequestBody() {
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
 
-        Branch.getInstance().setDMAParameters(
+        updateDMAParameters(
             DMAParameters.Builder()
                 .setEeaRegion(true)
                 .setAdPersonalizationConsent(false)
@@ -378,37 +382,10 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun setDMAParameters_canRevokeConsentGrantedAtInit() {
-        Branch.initialize(
-            context,
-            BranchConfiguration.Builder("key_live_test123")
-                .setDMAParameters(
-                    DMAParameters.Builder()
-                        .setEeaRegion(true)
-                        .setAdPersonalizationConsent(true)
-                        .setAdUserDataUsageConsent(true)
-                        .build()
-                )
-                .build()
-        )
-
-        Branch.getInstance().setDMAParameters(
-            DMAParameters.Builder().setEeaRegion(true).build()
-        )
-
-        val prefHelper = PrefHelper.getInstance(context)
-        assertTrue(prefHelper.getEEARegion())
-        assertFalse(prefHelper.getAdPersonalizationConsent())
-        assertFalse(prefHelper.getAdUserDataUsageConsent())
-    }
-
-    @Test
-    fun setDMAParameters_emitsTheInconsistencyWarning() {
+    fun updateConfiguration_dmaParameters_emitTheInconsistencyWarning() {
         val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
 
-        Branch.getInstance().setDMAParameters(
-            DMAParameters.Builder().setAdUserDataUsageConsent(true).build()
-        )
+        updateDMAParameters(DMAParameters.Builder().setAdUserDataUsageConsent(true).build())
 
         assertTrue(
             "the runtime path must drain the warning too, not just applyTo()",
@@ -590,8 +567,7 @@ class BranchInitializeTest : BranchTestBase() {
         "event", "branchKey", "testMode", "apiUrl", "cdnBaseUrl", "euEndpoint", "logLevel",
         "loggingCallback", "requestTracingCallback", "networkTimeout", "networkConnectTimeout",
         "retryCount", "retryInterval", "remoteInterface",
-        "attributionLevel", "dmaParameters", "limitFacebookAttribution",
-        "adNetworkCalloutsDisabled", "facebookAppId", "preinstallCampaign", "preinstallPartner",
+        "attributionLevel", "dmaParameters", "facebookAppId", "preinstallCampaign", "preinstallPartner",
         "installMetadata", "referringLinkAttributionForPreinstalledApps", "whitelistedSchemes",
         "uriHostsToSkip", "userAgentFetchSync"
     )
