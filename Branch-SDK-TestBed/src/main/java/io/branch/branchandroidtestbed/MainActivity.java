@@ -704,6 +704,12 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Stands in for another SDK's callback that gives the app its ID.
+        findViewById(R.id.sendOpenButton).setOnClickListener(v -> {
+            sendOpenWithPartnerId("partner-" + System.currentTimeMillis());
+            Toast.makeText(getApplicationContext(), "sendOpen called", Toast.LENGTH_SHORT).show();
+        });
+
         findViewById(R.id.logout_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -825,6 +831,11 @@ public class MainActivity extends Activity {
      * Resolves Branch data for the launch or new intent.
      */
     private void handleDeepLink() {
+        // The other SDK's ID is already known, so send the open first: the SDK keeps it until
+        // this call's /v3/deeplink responds.
+        if (!TestBedSettings.isAutomaticOpenEvents(this) && TestBedSettings.isSendOpenBeforeDeepLink(this)) {
+            sendOpenWithPartnerId("partner-" + System.currentTimeMillis());
+        }
         Branch.getInstance().requestDeepLinkData(this, new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
@@ -833,6 +844,21 @@ public class MainActivity extends Activity {
                 } else if (referringParams != null) {
                     BranchLogger.d("Deep link params: " + referringParams.toString());
                 }
+            }
+        });
+    }
+
+    /**
+     * With setAutomaticOpenEvents(false), call this when another SDK gives the app its ID:
+     * setRequestMetadata puts the ID on the /v3/events/open that sendOpen sends.
+     */
+    private void sendOpenWithPartnerId(String partnerId) {
+        Branch.getInstance().setRequestMetadata("$testbed_partner_id", partnerId);
+        Branch.getInstance().sendOpen(error -> {
+            if (error != null) {
+                Log.d("BranchSDK_Tester", "sendOpen failed: " + error.getMessage());
+            } else {
+                Log.d("BranchSDK_Tester", "sendOpen sent");
             }
         });
     }

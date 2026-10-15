@@ -16,6 +16,8 @@ final class TestBedSettings {
     private static final String PREFS_NAME = "branch_testbed_settings";
     private static final String KEY_API_URL = "api_url";
     private static final String KEY_ENABLE_DMA_PARAMS = "enable_dma_params";
+    private static final String KEY_AUTOMATIC_OPEN_EVENTS = "automatic_open_events";
+    private static final String KEY_SEND_OPEN_BEFORE_DEEP_LINK = "send_open_before_deep_link";
 
     private TestBedSettings() {
     }
@@ -45,5 +47,25 @@ final class TestBedSettings {
     /** Takes effect on the next launch, when CustomBranchApp builds the configuration. */
     static void setDmaParamsEnabled(Context context, boolean enabled) {
         prefs(context).edit().putBoolean(KEY_ENABLE_DMA_PARAMS, enabled).apply();
+    }
+
+    /** On by default, as in the SDK. Off makes the TestBed send the open from its Send Open button. */
+    static boolean isAutomaticOpenEvents(Context context) {
+        return prefs(context).getBoolean(KEY_AUTOMATIC_OPEN_EVENTS, true);
+    }
+
+    /** Takes effect on the next launch, when CustomBranchApp builds the configuration. */
+    static void setAutomaticOpenEvents(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_AUTOMATIC_OPEN_EVENTS, enabled).apply();
+    }
+
+    /** Off by default. On, with automatic open events off, MainActivity sends the open before requestDeepLinkData. */
+    static boolean isSendOpenBeforeDeepLink(Context context) {
+        return prefs(context).getBoolean(KEY_SEND_OPEN_BEFORE_DEEP_LINK, false);
+    }
+
+    /** Takes effect on the next requestDeepLinkData call. */
+    static void setSendOpenBeforeDeepLink(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_SEND_OPEN_BEFORE_DEEP_LINK, enabled).apply();
     }
 }
