@@ -61,7 +61,6 @@ public class PrefHelper {
     static final long DEFAULT_VALID_WINDOW_FOR_REFERRER_GCLID = 2592000000L; // Default expiration is 30 days, in milliseconds
     static final long MAX_VALID_WINDOW_FOR_REFERRER_GCLID = 100000000000L; // Arbitrary maximum window to prevent overflow, 3 years, in milliseconds
     static final long MIN_VALID_WINDOW_FOR_REFERRER_GCLID = 0L; // Don't allow time set in the past , in milliseconds
-    static final int DEFAULT_NO_CONNECTION_RETRY_MAX = 3;
 
     private static final String SHARED_PREF_FILE = "branch_referral_shared_pref";
     
@@ -98,7 +97,6 @@ public class PrefHelper {
     private static final String KEY_TIMEOUT = "bnc_timeout";
     private static final String KEY_TASK_TIMEOUT = "bnc_task_timeout";
     private static final String KEY_CONNECT_TIMEOUT = "bnc_connect_timeout";
-    private static final String KEY_NO_CONNECTION_RETRY_MAX = "bnc_no_connection_retry_max";
 
     private static final String KEY_LAST_READ_SYSTEM = "bnc_system_read_date";
     
@@ -108,7 +106,6 @@ public class PrefHelper {
     private static final String KEY_BRANCH_VIEW_NUM_OF_USE = "bnc_branch_view_use";
     private static final String KEY_INSTALL_REFERRER = "bnc_install_referrer";
     private static final String KEY_IS_FULL_APP_CONVERSION = "bnc_is_full_app_conversion";
-    private static final String KEY_LIMIT_FACEBOOK_TRACKING = "bnc_limit_facebook_tracking";
     private static final String KEY_DMA_EEA = "bnc_dma_eea";
     private static final String KEY_DMA_AD_PERSONALIZATION = "bnc_dma_ad_personalization";
     private static final String KEY_DMA_AD_USER_DATA = "bnc_dma_ad_user_data";
@@ -122,7 +119,6 @@ public class PrefHelper {
     static final String KEY_INSTALL_BEGIN_TS = "bnc_install_begin_ts";
     static final String KEY_INSTALL_BEGIN_SERVER_TS = "bnc_install_begin_server_ts";
     static final String KEY_TRACKING_STATE = "bnc_tracking_state";
-    static final String KEY_AD_NETWORK_CALLOUTS_DISABLED = "bnc_ad_network_callouts_disabled";
     static final String KEY_BRANCH_KEY_SOURCE = "bnc_branch_key_source";
 
     static final String KEY_RANDOMLY_GENERATED_UUID = "bnc_randomly_generated_uuid";
@@ -172,12 +168,12 @@ public class PrefHelper {
     /**
      * Branch Custom server url.  Used by clients that want to proxy all requests.
      */
-    private static String customServerURL_ = null;
+    private static volatile String customServerURL_ = null;
 
     /**
      * Branch Custom server url.  Used by clients that want to proxy all CDN requests.
      */
-    private static String customCDNBaseURL_ = null;
+    private static volatile String customCDNBaseURL_ = null;
 
     /**
      * Branch partner parameters.
@@ -403,22 +399,6 @@ public class PrefHelper {
         return getInteger(KEY_RETRY_INTERVAL, INTERVAL_RETRY);
     }
 
-    /**
-     * In cases of persistent no internet connection or offline modes,
-     * set a maximum number of attempts for the Branch Request to be tried.
-     * @param retryInt
-     */
-    public void setNoConnectionRetryMax(int retryInt){
-        setInteger(KEY_NO_CONNECTION_RETRY_MAX, retryInt);
-    }
-
-    /**
-     * Returns the set retry count for Branch Requests
-     * @return
-     */
-    public int getNoConnectionRetryMax(){
-        return getInteger(KEY_NO_CONNECTION_RETRY_MAX, DEFAULT_NO_CONNECTION_RETRY_MAX);
-    }
     
     /**
      * <p>Sets the value of {@link #KEY_APP_VERSION} in preferences.</p>
@@ -623,24 +603,6 @@ public class PrefHelper {
      */
     public String getLinkClickID() {
         return getString(KEY_LINK_CLICK_ID);
-    }
-
-    /**
-     * Specify whether ad network callouts should be disabled. By default, they are enabled.
-     *
-     * @param disabled (@link Boolean) whether ad network callouts should be disabled
-     */
-    public void setAdNetworkCalloutsDisabled(boolean disabled) {
-        setBool(KEY_AD_NETWORK_CALLOUTS_DISABLED, disabled);
-    }
-
-    /**
-     * Determine whether ad network callouts have been disabled.
-     *
-     * @return A (@link Boolean) indicating whether ad network callouts have been disabled.
-     */
-    public boolean getAdNetworkCalloutsDisabled() {
-        return getBool(KEY_AD_NETWORK_CALLOUTS_DISABLED);
     }
 
     /**
@@ -1010,21 +972,6 @@ public class PrefHelper {
         setLong(KEY_LAST_READ_SYSTEM, c.getTimeInMillis() / 1000);
     }
     
-    /*
-     * Enables or disables FB app tracking.
-     * @param isLimitFBAppTracking {@code true} to enable the app tracking.
-     */
-    void setLimitFacebookTracking(boolean isLimitFBAppTracking) {
-        setBool(KEY_LIMIT_FACEBOOK_TRACKING, isLimitFBAppTracking);
-    }
-    
-    /*
-       Returns true if FB app tracking is enabled.
-     */
-    boolean isAppTrackingLimited() {
-        return getBool(KEY_LIMIT_FACEBOOK_TRACKING);
-    }
-
     /**
      * Returns true if DMA params - KEY_EEA_REGION value exist in pref helper.
      */
@@ -1480,7 +1427,7 @@ public class PrefHelper {
     }
 
     private static boolean enableLogging_ = false;
-    private static boolean useEUEndpoint_ = false;
+    private static volatile boolean useEUEndpoint_ = false;
 
     public static String fbAppId_ = null;
 

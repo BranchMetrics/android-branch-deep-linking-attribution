@@ -183,7 +183,7 @@ public class Branch {
     /**
      * If true, instantiate a new webview instance ui thread to retrieve user agent string
      */
-    static boolean userAgentSync;
+    static volatile boolean userAgentSync;
 
     /**
      * Package private user agent string cached to save on repeated queries
@@ -300,7 +300,7 @@ public class Branch {
         INITIALISED
     }
 
-    static IBranchRequestTracingCallback _iBranchRequestTracingCallback;
+    static volatile IBranchRequestTracingCallback _iBranchRequestTracingCallback;
 
     /**
      * <p>The main constructor of the Branch class is private because the class uses the Singleton
@@ -373,6 +373,9 @@ public class Branch {
             BranchLogger.logAlways("Warning, attempted to reinitialize Branch SDK singleton!");
             return;
         }
+        if (config.getBranchKey() == null) {
+            throw new IllegalArgumentException(BranchConfiguration.MISSING_BRANCH_KEY);
+        }
 
         // Before anything else, so construction and branch-key warnings are visible.
         config.applyLogging();
@@ -423,7 +426,6 @@ public class Branch {
         appendJsonField(json, "networkConnectTimeout", prefHelper.getConnectTimeout());
         appendJsonField(json, "retryCount", prefHelper.getRetryCount());
         appendJsonField(json, "retryInterval", prefHelper.getRetryInterval());
-        appendJsonField(json, "noConnectionRetryMax", prefHelper.getNoConnectionRetryMax());
         json.append('}');
 
         BranchLogger.d(json.toString());
@@ -442,6 +444,25 @@ public class Branch {
         } else {
             json.append(JSONObject.quote(value.toString()));
         }
+    }
+
+    /**
+     * Applies the settings set on {@code config}. Settings it doesn't set keep their current values.
+     * Whitelisted schemes and URI hosts to skip are added to the ones already set. The API URL,
+     * CDN URL and EU endpoint apply to every request sent after this call, including requests
+     * already queued. The Branch key, test mode, remote interface, install attribution settings and
+     * automatic open events only apply at {@link #initialize}.
+     *
+     * @param config The settings to change, built with {@link BranchConfiguration.Builder#Builder()}.
+     */
+    public void updateConfiguration(@NonNull BranchConfiguration config) {
+        config.applyLoggingUpdate();
+        BranchLogger.d("updateConfiguration: " + config);
+        List<String> ignored = config.initializeOnlySettings();
+        if (!ignored.isEmpty()) {
+            BranchLogger.logAlways("Warning, updateConfiguration ignored settings that only apply at initialize: " + ignored);
+        }
+        config.applyUpdate(this);
     }
 
 

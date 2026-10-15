@@ -27,27 +27,26 @@ class BranchConfigurationBuilderTest {
         assertFalse(config.testMode)
         assertNull(config.apiUrl)
         assertNull(config.cdnBaseUrl)
-        assertFalse(config.euEndpoint)
+        assertNull(config.euEndpoint)
         assertEquals(BranchLogger.BranchLogLevel.NONE, config.logLevel)
         assertNull(config.loggingCallback)
         assertNull(config.requestTracingCallback)
-        assertEquals(PrefHelper.TIMEOUT, config.networkTimeout)
-        assertEquals(PrefHelper.CONNECT_TIMEOUT, config.networkConnectTimeout)
-        assertEquals(PrefHelper.MAX_RETRIES, config.retryCount)
+        assertNull(config.networkTimeout)
+        assertNull(config.networkConnectTimeout)
+        assertNull(config.retryCount)
+        assertNull(config.retryInterval)
         assertNull(config.remoteInterface)
         assertNull(config.attributionLevel)
         assertNull(config.dmaParameters)
-        assertFalse(config.limitFacebookAttribution)
-        assertFalse(config.adNetworkCalloutsDisabled)
         assertNull(config.facebookAppId)
         assertNull(config.preinstallCampaign)
         assertNull(config.preinstallPartner)
         assertTrue(config.installMetadata.isEmpty())
-        assertFalse(config.referringLinkAttributionForPreinstalledApps)
+        assertNull(config.referringLinkAttributionForPreinstalledApps)
         assertTrue(config.whitelistedSchemes.isEmpty())
         assertTrue(config.uriHostsToSkip.isEmpty())
-        assertFalse(config.userAgentFetchSync)
-        assertTrue(config.automaticOpenEvents)
+        assertNull(config.userAgentFetchSync)
+        assertNull(config.automaticOpenEvents)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -75,7 +74,7 @@ class BranchConfigurationBuilderTest {
     @Test
     fun `setEUEndpoint true is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setEUEndpoint(true).build()
-        assertTrue(config.euEndpoint)
+        assertEquals(true, config.euEndpoint)
     }
 
     @Test
@@ -128,12 +127,6 @@ class BranchConfigurationBuilderTest {
     }
 
     @Test
-    fun `setNoConnectionRetryMax is stored`() {
-        val config = BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(5).build()
-        assertEquals(5, config.noConnectionRetryMax)
-    }
-
-    @Test
     fun `setAttributionLevel is stored`() {
         val config = BranchConfiguration.Builder("key_live_x")
             .setAttributionLevel(Defines.BranchAttributionLevel.MINIMAL)
@@ -150,18 +143,6 @@ class BranchConfigurationBuilderTest {
         val config = BranchConfiguration.Builder("key_live_x").setDMAParameters(dma).build()
         assertNotNull(config.dmaParameters)
         assertEquals(dma, config.dmaParameters)
-    }
-
-    @Test
-    fun `setLimitFacebookAttribution true is stored`() {
-        val config = BranchConfiguration.Builder("key_live_x").setLimitFacebookAttribution(true).build()
-        assertTrue(config.limitFacebookAttribution)
-    }
-
-    @Test
-    fun `setAdNetworkCalloutsDisabled true is stored`() {
-        val config = BranchConfiguration.Builder("key_live_x").setAdNetworkCalloutsDisabled(true).build()
-        assertTrue(config.adNetworkCalloutsDisabled)
     }
 
     @Test
@@ -208,7 +189,7 @@ class BranchConfigurationBuilderTest {
         val config = BranchConfiguration.Builder("key_live_x")
             .setReferringLinkAttributionForPreinstalledApps(true)
             .build()
-        assertTrue(config.referringLinkAttributionForPreinstalledApps)
+        assertEquals(true, config.referringLinkAttributionForPreinstalledApps)
     }
 
     @Test
@@ -232,13 +213,13 @@ class BranchConfigurationBuilderTest {
     @Test
     fun `setUserAgentFetchSync true is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setUserAgentFetchSync(true).build()
-        assertTrue(config.userAgentFetchSync)
+        assertEquals(true, config.userAgentFetchSync)
     }
 
     @Test
     fun `setAutomaticOpenEvents false is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setAutomaticOpenEvents(false).build()
-        assertFalse(config.automaticOpenEvents)
+        assertEquals(false, config.automaticOpenEvents)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -282,6 +263,11 @@ class BranchConfigurationBuilderTest {
     @Test(expected = IllegalArgumentException::class)
     fun `blank branch key throws IllegalArgumentException`() {
         BranchConfiguration.Builder("   ").build()
+    }
+
+    @Test
+    fun `builder without a key builds a configuration without a key`() {
+        assertNull(BranchConfiguration.Builder().build().branchKey)
     }
 
     @Test
@@ -386,26 +372,6 @@ class BranchConfigurationBuilderTest {
     }
 
     // -----------------------------------------------------------------------------------------
-    // build() validation — no-connection retry max
-    // -----------------------------------------------------------------------------------------
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `zero no-connection retry max throws`() {
-        BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(0).build()
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `negative no-connection retry max throws`() {
-        BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(-1).build()
-    }
-
-    @Test
-    fun `no-connection retry max of one is accepted`() {
-        val config = BranchConfiguration.Builder("key_live_x").setNoConnectionRetryMax(1).build()
-        assertEquals(1, config.noConnectionRetryMax)
-    }
-
-    // -----------------------------------------------------------------------------------------
     // build() reports every failure at once
     // -----------------------------------------------------------------------------------------
 
@@ -455,11 +421,8 @@ class BranchConfigurationBuilderTest {
             .setNetworkConnectTimeout(5_000)
             .setRetryCount(3)
             .setRetryInterval(1_500)
-            .setNoConnectionRetryMax(2)
             .setAttributionLevel(Defines.BranchAttributionLevel.FULL)
             .setDMAParameters(DMAParameters.Builder().setEeaRegion(true).setAdPersonalizationConsent(true).build())
-            .setLimitFacebookAttribution(true)
-            .setAdNetworkCalloutsDisabled(false)
             .setFacebookAppId("fb999")
             .setPreinstallCampaign("spring")
             .setPreinstallPartner("samsung")
@@ -473,7 +436,7 @@ class BranchConfigurationBuilderTest {
         assertEquals("key_live_x", config.branchKey)
         assertTrue(config.testMode)
         assertEquals(Defines.BranchAttributionLevel.FULL, config.attributionLevel)
-        assertTrue(config.userAgentFetchSync)
+        assertEquals(true, config.userAgentFetchSync)
     }
 
     // -------------------------------------------------------------------------

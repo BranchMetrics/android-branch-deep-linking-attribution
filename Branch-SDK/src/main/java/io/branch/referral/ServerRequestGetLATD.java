@@ -87,9 +87,4 @@ public class ServerRequestGetLATD extends ServerRequest {
     public BRANCH_API_VERSION getBranchRemoteAPIVersion() {
         return BRANCH_API_VERSION.V1_LATD;
     }
-
-    @Override
-    protected boolean shouldUpdateLimitFacebookTracking() {
-        return true;
-    }
 }
