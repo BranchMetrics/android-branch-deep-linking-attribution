@@ -141,6 +141,11 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Initialize the queue processing - must be called before any requests are processed
      */
     fun initialize() {
+        // queueState only leaves IDLE once the coroutine runs, so the flag is what blocks a second loop.
+        if (!isProcessing.compareAndSet(false, true)) {
+            BranchLogger.v("initialize ignored: processing already started")
+            return
+        }
         BranchLogger.v("Initializing BranchRequestQueue with coroutines")
         BranchLogger.v("BranchRequestQueue.initialize called")
         startProcessing()
