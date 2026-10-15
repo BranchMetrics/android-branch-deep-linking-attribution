@@ -2,8 +2,8 @@ package io.branch.referral
 
 /**
  * DMA consent fields for the EEA region. Build with [Builder], then pass to
- * [BranchConfiguration.Builder.setDMAParameters], and pass the configuration to [Branch.initialize],
- * or to [Branch.updateConfiguration] when consent changes later.
+ * [BranchConfiguration.Builder.setDMAParameters] at init. When consent changes later, pass them to
+ * [Branch.setDMAParameters] or [Branch.updateConfiguration].
  *
  * [eeaRegion] states whether European regulation applies to this user at all; the two consent
  * fields record the user's answer to a consent prompt. Outside the EEA the consent fields carry

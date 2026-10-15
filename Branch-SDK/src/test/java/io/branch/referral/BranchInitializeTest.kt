@@ -328,12 +328,8 @@ class BranchInitializeTest : BranchTestBase() {
     // DMA parameters at runtime
     // -------------------------------------------------------------------------
 
-    private fun updateDMAParameters(params: DMAParameters) {
-        Branch.getInstance().updateConfiguration(BranchConfiguration.Builder().setDMAParameters(params).build())
-    }
-
     @Test
-    fun updateConfiguration_dmaParameters_reachPrefHelper() {
+    fun setDMAParameters_afterInitialize_reachesPrefHelper() {
         Branch.initialize(
             context,
             BranchConfiguration.Builder("key_live_test123")
@@ -341,7 +337,7 @@ class BranchInitializeTest : BranchTestBase() {
                 .build()
         )
 
-        updateDMAParameters(
+        Branch.getInstance().setDMAParameters(
             DMAParameters.Builder()
                 .setEeaRegion(true)
                 .setAdPersonalizationConsent(true)
@@ -356,10 +352,10 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun updateConfiguration_dmaParameters_reachTheRequestBody() {
+    fun setDMAParameters_afterInitialize_reachesRequestBody() {
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
 
-        updateDMAParameters(
+        Branch.getInstance().setDMAParameters(
             DMAParameters.Builder()
                 .setEeaRegion(true)
                 .setAdPersonalizationConsent(false)
@@ -382,10 +378,37 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun updateConfiguration_dmaParameters_emitTheInconsistencyWarning() {
+    fun setDMAParameters_canRevokeConsentGrantedAtInit() {
+        Branch.initialize(
+            context,
+            BranchConfiguration.Builder("key_live_test123")
+                .setDMAParameters(
+                    DMAParameters.Builder()
+                        .setEeaRegion(true)
+                        .setAdPersonalizationConsent(true)
+                        .setAdUserDataUsageConsent(true)
+                        .build()
+                )
+                .build()
+        )
+
+        Branch.getInstance().setDMAParameters(
+            DMAParameters.Builder().setEeaRegion(true).build()
+        )
+
+        val prefHelper = PrefHelper.getInstance(context)
+        assertTrue(prefHelper.getEEARegion())
+        assertFalse(prefHelper.getAdPersonalizationConsent())
+        assertFalse(prefHelper.getAdUserDataUsageConsent())
+    }
+
+    @Test
+    fun setDMAParameters_emitsTheInconsistencyWarning() {
         val logs = captureInitLogs(BranchLogger.BranchLogLevel.VERBOSE)
 
-        updateDMAParameters(DMAParameters.Builder().setAdUserDataUsageConsent(true).build())
+        Branch.getInstance().setDMAParameters(
+            DMAParameters.Builder().setAdUserDataUsageConsent(true).build()
+        )
 
         assertTrue(
             "the runtime path must drain the warning too, not just applyTo()",
