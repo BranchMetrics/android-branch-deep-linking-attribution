@@ -5,6 +5,8 @@ import static io.branch.referral.PrefHelper.NO_STRING_VALUE;
 import android.content.Context;
 import android.text.TextUtils;
 
+import androidx.annotation.Nullable;
+
 import java.util.concurrent.CountDownLatch;
 
 import org.json.JSONException;
@@ -322,16 +324,29 @@ public abstract class ServerRequestInitSession extends ServerRequest {
         post.put(Defines.Jsonkey.PreviousUpdateTime.getKey(), prefHelper_.getLong(PrefHelper.KEY_PREVIOUS_UPDATE_TIME));
     }
 
+    /** The launch link fields this request sends instead of the saved ones, or null when it sends the saved ones. */
+    @Nullable
+    protected JSONObject keptLaunchLink() {
+        return null;
+    }
+
+    private static boolean hasLink(JSONObject fields) {
+        return fields.has(Defines.Jsonkey.AndroidAppLinkURL.getKey())
+                || fields.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())
+                || fields.has(Defines.Jsonkey.LinkIdentifier.getKey());
+    }
+
     @Override
     protected boolean prepareExecuteWithoutTracking() {
         JSONObject post = getPost();
-        // The link fields come from prefs at send time, so a request checked when it is queued has them only there.
-        if ((post.has(Defines.Jsonkey.AndroidAppLinkURL.getKey())
-                || post.has(Defines.Jsonkey.AndroidPushIdentifier.getKey())
-                || post.has(Defines.Jsonkey.LinkIdentifier.getKey())
-                || !prefHelper_.getAppLink().equals(NO_STRING_VALUE)
-                || !prefHelper_.getPushIdentifier().equals(NO_STRING_VALUE)
-                || !prefHelper_.getLinkClickIdentifier().equals(NO_STRING_VALUE))) {
+        // The link fields are put in the post at send time, so a request checked when it is queued has
+        // them only in its kept launch link, or in prefs when it sends the saved ones.
+        JSONObject kept = keptLaunchLink();
+        if (hasLink(post)
+                || (kept != null && hasLink(kept))
+                || (kept == null && (!prefHelper_.getAppLink().equals(NO_STRING_VALUE)
+                        || !prefHelper_.getPushIdentifier().equals(NO_STRING_VALUE)
+                        || !prefHelper_.getLinkClickIdentifier().equals(NO_STRING_VALUE)))) {
 
             post.remove(Defines.Jsonkey.RandomizedDeviceToken.getKey());
             post.remove(Defines.Jsonkey.RandomizedBundleToken.getKey());

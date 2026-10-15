@@ -46,6 +46,7 @@ class BranchConfigurationBuilderTest {
         assertTrue(config.whitelistedSchemes.isEmpty())
         assertTrue(config.uriHostsToSkip.isEmpty())
         assertNull(config.userAgentFetchSync)
+        assertNull(config.automaticOpenEvents)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -213,6 +214,12 @@ class BranchConfigurationBuilderTest {
     fun `setUserAgentFetchSync true is stored`() {
         val config = BranchConfiguration.Builder("key_live_x").setUserAgentFetchSync(true).build()
         assertEquals(true, config.userAgentFetchSync)
+    }
+
+    @Test
+    fun `setAutomaticOpenEvents false is stored`() {
+        val config = BranchConfiguration.Builder("key_live_x").setAutomaticOpenEvents(false).build()
+        assertEquals(false, config.automaticOpenEvents)
     }
 
     // -----------------------------------------------------------------------------------------

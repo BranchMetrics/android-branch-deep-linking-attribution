@@ -433,7 +433,7 @@ public class PrefHelper {
             // PrefHelper can be retrieved before Branch singleton is initialized
             if (Branch.getInstance() != null) {
                 Branch.getInstance().linkCache_.clear();
-                Branch.getInstance().requestQueue_.clear();
+                Branch.getInstance().requestQueue_.clear(BranchError.ERR_OTHER, "Dropped by a Branch key change");
             }
 
             return true;

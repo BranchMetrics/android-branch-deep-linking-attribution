@@ -33,7 +33,8 @@ class BranchConfiguration private constructor(
     val referringLinkAttributionForPreinstalledApps: Boolean?,
     val whitelistedSchemes: List<String>,
     val uriHostsToSkip: List<String>,
-    val userAgentFetchSync: Boolean?
+    val userAgentFetchSync: Boolean?,
+    val automaticOpenEvents: Boolean?
 ) {
 
     /**
@@ -74,6 +75,7 @@ class BranchConfiguration private constructor(
         // Set once
         BranchUtil.setTestMode(testMode)
         remoteInterface?.let { branch.setBranchRemoteInterface(it) }
+        branch.automaticOpenEvents_ = automaticOpenEvents ?: true
 
         // Install attribution
         facebookAppId?.let { PrefHelper.setFbAppId(it) }
@@ -106,6 +108,7 @@ class BranchConfiguration private constructor(
         if (preinstallPartner != null) names.add("preinstallPartner")
         if (installMetadata.isNotEmpty()) names.add("installMetadata")
         if (referringLinkAttributionForPreinstalledApps != null) names.add("referringLinkAttributionForPreinstalledApps")
+        if (automaticOpenEvents != null) names.add("automaticOpenEvents")
         return names
     }
 
@@ -204,6 +207,7 @@ class BranchConfiguration private constructor(
         raw("whitelistedSchemes", whitelistedSchemes.joinToString(",", "[", "]") { JSONObject.quote(it) })
         raw("uriHostsToSkip", uriHostsToSkip.joinToString(",", "[", "]") { JSONObject.quote(it) })
         lit("userAgentFetchSync", userAgentFetchSync)
+        lit("automaticOpenEvents", automaticOpenEvents)
 
         return json.append('}').toString()
     }
@@ -238,6 +242,7 @@ class BranchConfiguration private constructor(
         if (whitelistedSchemes.isNotEmpty()) nonDefaults.add("whitelistedSchemes=$whitelistedSchemes")
         if (uriHostsToSkip.isNotEmpty()) nonDefaults.add("uriHostsToSkip=$uriHostsToSkip")
         userAgentFetchSync?.let { nonDefaults.add("userAgentFetchSync=$it") }
+        automaticOpenEvents?.let { nonDefaults.add("automaticOpenEvents=$it") }
         return "BranchConfiguration(${nonDefaults.joinToString(", ")})"
     }
 
@@ -275,6 +280,7 @@ class BranchConfiguration private constructor(
         private val whitelistedSchemes: MutableList<String> = mutableListOf()
         private val uriHostsToSkip: MutableList<String> = mutableListOf()
         private var userAgentFetchSync: Boolean? = null
+        private var automaticOpenEvents: Boolean? = null
 
         // Identity & environment
         fun setTestMode(enabled: Boolean) = apply { testMode = enabled }
@@ -315,6 +321,8 @@ class BranchConfiguration private constructor(
 
         // Open tracking
         fun setUserAgentFetchSync(sync: Boolean) = apply { userAgentFetchSync = sync }
+        /** Whether the SDK sends the open after each `/v3/deeplink` response. With `setAutomaticOpenEvents(false)`, call [Branch.sendOpen] to send it. On by default. */
+        fun setAutomaticOpenEvents(enabled: Boolean) = apply { automaticOpenEvents = enabled }
 
         /**
          * @throws IllegalArgumentException listing every field that failed validation, so a caller
@@ -365,7 +373,8 @@ class BranchConfiguration private constructor(
                 referringLinkAttributionForPreinstalledApps = referringLinkAttributionForPreinstalledApps,
                 whitelistedSchemes = whitelistedSchemes.toList(),
                 uriHostsToSkip = uriHostsToSkip.toList(),
-                userAgentFetchSync = userAgentFetchSync
+                userAgentFetchSync = userAgentFetchSync,
+                automaticOpenEvents = automaticOpenEvents
             )
         }
     }

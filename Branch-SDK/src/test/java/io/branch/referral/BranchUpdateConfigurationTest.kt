@@ -193,6 +193,20 @@ class BranchUpdateConfigurationTest : BranchTestBase() {
     }
 
     @Test
+    fun updateConfiguration_automaticOpenEvents_onlyAppliesAtInitialize() {
+        val messages = mutableListOf<String>()
+        initialize {
+            setAutomaticOpenEvents(false)
+            setLoggingCallback(IBranchLoggingCallbacks { message, _ -> messages.add(message) })
+        }
+
+        update { setAutomaticOpenEvents(true) }
+
+        assertFalse(Branch.getInstance().automaticOpenEvents_)
+        assertTrue(messages.any { it.contains("ignored settings that only apply at initialize: [automaticOpenEvents]") })
+    }
+
+    @Test
     fun updateConfiguration_withoutInitializeOnlySettings_doesNotWarn() {
         val messages = mutableListOf<String>()
         initialize { setLoggingCallback(IBranchLoggingCallbacks { message, _ -> messages.add(message) }) }

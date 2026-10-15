@@ -3,7 +3,6 @@ package io.branch.referral
 import android.app.Activity
 import android.content.Context
 import android.net.Uri
-import io.branch.coroutines.RequestDeepLink
 import io.branch.referral.util.BranchEvent
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONObject
@@ -33,6 +32,25 @@ suspend fun BranchEvent.awaitLogEvent(context: Context): Unit =
     }
 
 /**
+ * Sends the open for one `requestDeepLinkData` call, the oldest whose open isn't sent yet, and suspends
+ * until it is sent. Called before that call's response arrives, it waits for the response, or for the
+ * app to go to the background.
+ * Cancelling detaches this caller; the open is still sent.
+ *
+ * @throws BranchException if the open could not be sent.
+ */
+suspend fun Branch.sendOpen(): Unit =
+    suspendCancellableCoroutine { continuation ->
+        // Guards against a second callback resuming an already-resumed continuation.
+        val resumed = AtomicBoolean(false)
+        sendOpen(Branch.SendOpenListener { error ->
+            if (!resumed.compareAndSet(false, true)) return@SendOpenListener
+            if (error != null) continuation.resumeWithException(BranchException(error))
+            else continuation.resume(Unit)
+        })
+    }
+
+/**
  * Resolves the link in [activity]'s launch intent like the `Uri` variant, and sends the intent's
  * context with the launch.
  *
@@ -46,7 +64,7 @@ suspend fun Branch.requestDeepLinkData(activity: Activity): JSONObject =
  * Resolves [uri] against `v3/deeplink` and suspends until the referring params arrive.
  * Main-safe. Cancelling de-queues the request if it has not been sent yet. Each resolve also
  * sends one open event, unless one is already waiting to be sent; while attribution is off, it is
- * sent when the user opts in.
+ * sent when the user opts in. With `setAutomaticOpenEvents(false)`, the app sends it with [Branch.sendOpen].
  *
  * @param uri The URI (App Link or Scheme) to resolve, or null to look up a deferred deep link.
  * @throws BranchException if the deep link could not be resolved.
@@ -72,7 +90,7 @@ private suspend fun Branch.requestLaunchDeepLinkData(uri: Uri?, activity: Activi
 
         // Enqueue first: invokeOnCancellation fires immediately for an already-cancelled
         // continuation, and removing before enqueueing would let the request send anyway.
-        readLaunchLink(uri, activity)
+        readLaunchLink(uri, activity, request)
         enqueueLaunchRequest(request)
         continuation.invokeOnCancellation { requestQueue_.remove(request) }
     }
