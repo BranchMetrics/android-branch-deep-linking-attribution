@@ -61,6 +61,7 @@ class LaunchDataTest : BranchTestBase() {
     @Volatile private var adId: Pair<Int, String?>? = null
     @Volatile private var referrer: InstallReferrerResult? = null
     @Volatile private var readDelayMs = 0L
+    @Volatile private var adIdDelayMs: Long? = null
     @Volatile private var hangAdIdRead = false
     @Volatile private var hangReferrerRead = false
 
@@ -133,6 +134,22 @@ class LaunchDataTest : BranchTestBase() {
         assertEquals(REFERRER_CLICK_ID, deepLink.optString(LINK_ID_KEY))
         assertEquals(Defines.Jsonkey.Google_Play_Store.key, deepLink.optString(Defines.Jsonkey.App_Store.key))
         assertEquals(PLAY_REFERRER_WITH_CLICK, remote.opens[0].optString(REFERRER_KEY))
+    }
+
+    @Test
+    fun firstInstall_aSecondLinkBeforeTheFirstDeepLinkIsSent_doesNotDropTheReferrersClickId() {
+        referrer = playReferrer()
+        readDelayMs = 300
+        adIdDelayMs = 600
+
+        Branch.getInstance().requestDeepLinkData(null) { _, _ -> }
+        // The first call's install referrer read has finished and its ad ID read hasn't. The first
+        // /v3/deeplink is sent while the second call's own install referrer read is still running.
+        Thread.sleep(400)
+        Branch.getInstance().requestDeepLinkData(Uri.parse("https://example.app.link/b")) { _, _ -> }
+        awaitDeepLinks(2)
+
+        assertEquals(REFERRER_CLICK_ID, remote.deepLinks[0].optString(LINK_ID_KEY))
     }
 
     @Test
@@ -378,7 +395,7 @@ class LaunchDataTest : BranchTestBase() {
                 adIdReads.incrementAndGet()
                 thread {
                     if (hangAdIdRead) return@thread
-                    Thread.sleep(readDelayMs)
+                    Thread.sleep(adIdDelayMs ?: readDelayMs)
                     adId?.let {
                         setLAT(it.first)
                         setGAID(it.second)
