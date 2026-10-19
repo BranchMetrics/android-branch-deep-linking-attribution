@@ -5,7 +5,7 @@
 
 ## Branches and commits
 
-`6.0.0-beta.0` is the base branch for this line and is never committed to directly. Branch, push, open a PR against it. Do not target `master` by accident: the two lines have different architectures, so a cross-line merge is not a conflict, it is a regression.
+Each beta round has its own branch (`6.0.0-beta.N`), cut from the previous one when it ships. The open round, currently `6.0.0-beta.4`, is the base branch for this line and is never committed to directly. Branch, push, open a PR against it. Do not target `master` by accident: the two lines have different architectures, so a cross-line merge is not a conflict, it is a regression.
 
 There is no enforced branch-naming convention. History carries author-prefixed (`gdeluna/...`), ticket-key-first (`SDK-1234-...`), and type-prefixed (`fix/...`) names side by side. Pick one and move on.
 

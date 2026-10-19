@@ -44,14 +44,13 @@ class BranchAsyncNetworkLayer(
         private const val RETRY_NUMBER = "retryNumber"
 
         // Exponential backoff configuration
-        private const val BASE_DELAY_MS = 1000L // 1 second base delay
         private const val MAX_DELAY_MS = 30000L // 30 seconds max delay
         private const val BACKOFF_MULTIPLIER = 2.0
         private const val JITTER_FACTOR = 0.1 // 10% jitter
     }
 
     private val prefHelper: PrefHelper = PrefHelper.getInstance(branch.applicationContext)
-    private val retryLimit: Int = prefHelper.retryCount
+    private val retryLimit: Int get() = prefHelper.retryCount
 
     // State tracking for debugging
     private var lastResponseCode = -1
@@ -177,7 +176,7 @@ class BranchAsyncNetworkLayer(
      * This replaces the old linear retry with Thread.sleep().
      */
     private fun calculateRetryDelay(retryNumber: Int): Long {
-        val baseDelay = BASE_DELAY_MS * BACKOFF_MULTIPLIER.pow(retryNumber).toLong()
+        val baseDelay = prefHelper.retryInterval * BACKOFF_MULTIPLIER.pow(retryNumber).toLong()
         val cappedDelay = min(baseDelay, MAX_DELAY_MS)
 
         // Add jitter to prevent thundering herd
