@@ -2,7 +2,7 @@
 
 Run from the repo root:
 
-    python -m unittest scripts.test_validate_l1_logs
+    python3 -m unittest discover -s scripts -p 'test_*.py'
 """
 
 import io

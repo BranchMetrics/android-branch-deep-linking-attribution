@@ -6,6 +6,7 @@ Run from the repo root:
 """
 
 import os
+import re
 import sys
 import unittest
 
@@ -41,6 +42,11 @@ class ScenarioArtifactGuards(unittest.TestCase):
         # The emulator's own address, and organic_open's older placeholder. Neither
         # routes anywhere.
         "local_ip": {"10.0.2.16", "10.0.0.1"},
+    }
+    # Request ids are unique per request, so they are a pattern, not a set: the zero UUID
+    # with a counter in the last group, then the capture's date-hour suffix.
+    PLACEHOLDER_PATTERNS = {
+        "branch_sdk_request_unique_id": re.compile(r"00000000-0000-4000-8000-0{8}\d{4}-\d{10}"),
     }
     LINK_PREFIXES = ("https://bnctestbed.test-app.link/fixture-", "branchtest://")
 
@@ -121,6 +127,13 @@ class ScenarioArtifactGuards(unittest.TestCase):
                     if field in payload:
                         with self.subTest(scenario=scenario, request=index, field=field):
                             self.assertIn(payload[field], allowed, f"{fixture}: {field} is not a placeholder")
+                for field, pattern in self.PLACEHOLDER_PATTERNS.items():
+                    if field in payload:
+                        with self.subTest(scenario=scenario, request=index, field=field):
+                            self.assertIsInstance(payload[field], str, f"{fixture}: {field} is not a string")
+                            self.assertIsNotNone(
+                                pattern.fullmatch(payload[field]), f"{fixture}: {field} is not a placeholder"
+                            )
                 for field in ("android_app_link_url", "external_intent_uri"):
                     if field in payload:
                         with self.subTest(scenario=scenario, request=index, field=field):
