@@ -20,8 +20,11 @@ lines for every wire request just before HTTP send:
 import argparse
 import json
 import os
+import re
 import sys
 from urllib.parse import urlparse
+
+from scenario_contracts import SCENARIO_CONTRACTS
 
 POSTING_PREFIX = "posting to "
 POST_VALUE_PREFIX = "Post value = "
@@ -246,89 +249,6 @@ def collapse_retries(entries):
     return kept
 
 
-# What the wire must look like after a scenario ran. All endpoint names live
-# here rather than in the checks, so the same checks serve this line's capture
-# and the iOS one.
-#
-#   counts  endpoint -> exact number of requests. 0 forbids the endpoint.
-#           An endpoint absent from counts is unconstrained.
-#   order   (earlier, later) pairs. Relative, not adjacency: a request
-#           between the two does not violate it.
-#   fields  endpoint -> field -> exact number of that endpoint's requests
-#           carrying the field. Same counting as `counts`, one level down;
-#           0 forbids. Presence only, never a value comparison.
-#           It exists because an endpoint count cannot see a request changing
-#           character: on 6.0.0-beta.0 the install is a /v3/events/open like
-#           any other, so a first install and a launch on an installed device
-#           put the same endpoints on the wire in the same order.
-#
-# Ported from the iOS line, where the same engine gates 4.0.0-beta.0. Kept
-# byte-compatible on purpose: a contract that reads differently per platform
-# is a parity gap wearing a helper's clothes.
-SCENARIO_CONTRACTS = {
-    # Every contract is derived from a real capture. organic_open's is less the
-    # duplicate /v3/events/open that EMT-4136 removed.
-    #
-    # organic_open, cold_firstInstall and cold_https are test-plan scenarios.
-    # link_generation is not: it is the harness run that creates the link
-    # cold_firstInstall opens.
-
-    # organic_open: a launch with no link. MainActivity.onCreate resolves
-    # unconditionally, so a /v3/deeplink with no link precedes the open, the
-    # nil-input resolve the beta design uses as the deferred link check.
-    #
-    # No `fields` rule. The property this scenario is really about is that the
-    # open carries no link data, and the measurement that produced these shapes
-    # reported the token rather than the link payload. The exact counts still
-    # earn their place: they are what catches a second open reappearing.
-    "organic_open": {
-        "counts": {"/v3/deeplink": 1, "/v3/events/open": 1},
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {},
-    },
-    # cold_firstInstall: the link starts the app on a device with no prior
-    # install. The install is a /v3/events/open like any other on 6.0, decided
-    # by randomizedBundleToken == nil, so its missing token is what marks it.
-    # /v1/url is 0 because the link is generated outside this capture.
-    "cold_firstInstall": {
-        "counts": {
-            "/v3/deeplink": 1,
-            "/v3/events/open": 1,
-            "/v1/url": 0,
-        },
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {
-            "/v3/deeplink": {"android_app_link_url": 1},
-            "/v3/events/open": {"randomized_bundle_token": 0},
-        },
-    },
-    # cold_https: the link starts the app on a device that already has it.
-    # The open carries the token, which is what separates it from
-    # cold_firstInstall.
-    # /v3/events/custom is not counted in either: the TestBed logs one from
-    # onStart, and whether it reaches the wire depends on init timing.
-    "cold_https": {
-        "counts": {
-            "/v3/deeplink": 1,
-            "/v3/events/open": 1,
-            "/v1/url": 0,
-        },
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {
-            "/v3/deeplink": {"android_app_link_url": 1},
-            "/v3/events/open": {"randomized_bundle_token": 1},
-        },
-    },
-    # link_generation: the generation run that precedes
-    # cold_firstInstall, judged on its own capture. It holds the only /v1/url,
-    # so it carries the EMT-4199 rule that /v1/url sends no hardware_id.
-    "link_generation": {
-        "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {"/v1/url": {"hardware_id": 0}},
-    },
-}
-
 # The link data each cold scenario's generator writes, checked against the
 # params the TestBed receives. Kept out of SCENARIO_CONTRACTS so the contracts
 # stay byte-compatible with iOS.
@@ -368,6 +288,17 @@ def occurs_after(uris, earlier, later):
     return False
 
 
+POSITION_SUFFIX = re.compile(r"^(?P<endpoint>[^\[\]]+)\[(?P<position>-?[0-9]+)\]$")
+
+
+def split_position(endpoint_key):
+    """Split a `fields` key into (endpoint, position); position is None when plain."""
+    match = POSITION_SUFFIX.match(endpoint_key)
+    if match is None:
+        return endpoint_key, None
+    return match["endpoint"], int(match["position"])
+
+
 def assert_contract(entries, contract):
     """Check a normalized capture against a scenario contract.
 
@@ -395,8 +326,24 @@ def assert_contract(entries, contract):
         if not occurs_after(uris, earlier, later):
             errors.append(f"Expected a '{later}' request after a '{earlier}' one.")
 
-    for endpoint, fields in sorted(contract.get("fields", {}).items()):
+    for endpoint_key, fields in sorted(contract.get("fields", {}).items()):
+        endpoint, position = split_position(endpoint_key)
+        if position is None and "[" in endpoint_key:
+            errors.append(
+                f"Contract error: field key '{endpoint_key}' has a malformed "
+                f"position; expected '<endpoint>[<integer>]'."
+            )
+            continue
         matching = [e for e in entries if e["uri"] == endpoint]
+        if position is not None:
+            if not -len(matching) <= position < len(matching):
+                errors.append(
+                    f"Contract error: position {position} in '{endpoint_key}' is "
+                    f"out of range for {len(matching)} captured '{endpoint}' request(s)."
+                )
+                continue
+            matching = [matching[position]]
+            endpoint = endpoint_key
         for field, expected in sorted(fields.items()):
             actual = sum(
                 1 for e in matching if is_present(lookup_field(e["request"], field))
