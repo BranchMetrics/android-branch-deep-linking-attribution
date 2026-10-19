@@ -46,6 +46,7 @@ class BranchRequestQueueWaitLockIntegrationTest : BranchTestBase() {
             "handleRequestCannotBeProcessed",
             ServerRequest::class.java,
             String::class.java,
+            Boolean::class.javaPrimitiveType,
             Continuation::class.java
         ).apply { isAccessible = true }
     }
@@ -59,7 +60,7 @@ class BranchRequestQueueWaitLockIntegrationTest : BranchTestBase() {
                 latch.countDown()
             }
         }
-        val result = handleRequestCannotBeProcessed.invoke(queue, request, requestId, continuation)
+        val result = handleRequestCannotBeProcessed.invoke(queue, request, requestId, request.isWaitingOnProcessToFinish, continuation)
         if (result !== COROUTINE_SUSPENDED) {
             // Completed synchronously (e.g. the fail-and-return path, which does not delay).
             latch.countDown()

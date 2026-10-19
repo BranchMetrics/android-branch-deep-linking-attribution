@@ -16,7 +16,7 @@ import org.junit.Test
  *
  * Tests Consumer Protection Preference feature. The button opens an AlertDialog
  * with a list of 4 options: Full, Reduced, Minimal, None.
- * Selecting an option calls Branch.setConsumerProtectionAttributionLevel() and shows a Toast.
+ * Selecting an option calls Branch.updateConfiguration() with that attribution level and shows a Toast.
  */
 class ConsumerProtectionHybridTest : BaseGptDriverTest() {
 
