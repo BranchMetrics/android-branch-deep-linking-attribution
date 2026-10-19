@@ -237,13 +237,15 @@ class BranchRequestQueue private constructor(private val context: Context) {
         BranchLogger.v("BranchRequestQueue.processNextRequest called for: ${request::class.simpleName}")
         
         val requestId = generateRequestId(request)
+        // Read once: a lock can be removed from another thread between two reads.
+        val isWaitingOnLock = request.isWaitingOnProcessToFinish
         
-        if (!canProcessRequest(request)) {
-            if (request.isWaitingOnProcessToFinish) {
+        if (!canProcessRequest(request, isWaitingOnLock)) {
+            if (isWaitingOnLock) {
                 val waitLocks = request.printWaitLocks()
                 BranchLogger.v("Request cannot be processed - waiting on locks: $waitLocks")
             }
-            handleRequestCannotBeProcessed(request, requestId)
+            handleRequestCannotBeProcessed(request, requestId, isWaitingOnLock)
             return
         }
         
@@ -320,14 +322,12 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Implements retry mechanism with limits to prevent infinite loops
      * Follows SRP - single responsibility for retry logic
      */
-    private suspend fun handleRequestCannotBeProcessed(request: ServerRequest, requestId: String) {
+    private suspend fun handleRequestCannotBeProcessed(request: ServerRequest, requestId: String, isWaitingOnLock: Boolean) {
         val retryInfo = requestRetryInfo.getOrPut(requestId) {
             RequestRetryInfo(requestId)
         }
 
         // EMT-3859: lock-waiting requests are bounded only by the 30s timeout, not the retry count.
-        val isWaitingOnLock = request.isWaitingOnProcessToFinish
-
         // Check if request has exceeded limits
         if (shouldFailRequest(retryInfo, isWaitingOnLock)) {
             handleRequestFailureWithCleanup(request, requestId, retryInfo, isWaitingOnLock)
@@ -731,8 +731,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * ServerRequestInitSession types should always be processed to establish session
      * Follows SRP - single responsibility for processing eligibility
      */
-    private fun canProcessRequest(request: ServerRequest): Boolean {
-        val isWaiting = request.isWaitingOnProcessToFinish
+    private fun canProcessRequest(request: ServerRequest, isWaiting: Boolean): Boolean {
         val needsSession = requestNeedsSession(request)
         val hasValidSession = hasValidSession(request)
         
