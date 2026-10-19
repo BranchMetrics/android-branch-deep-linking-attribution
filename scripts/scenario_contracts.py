@@ -202,4 +202,22 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1},
         },
     },
+    # cold_uriScheme: a branchtest:// link starts the app on a device that already has it. The
+    # wire is asserted, not resolution: the server answers a scheme link_click_id with
+    # +non_branch_link. android_app_link_url at 0 is what separates it from an https delivery.
+    # /v3/events/custom is not counted, as in cold_https.
+    "cold_uriScheme": {
+        "counts": {
+            "/v3/deeplink": 1,
+            "/v3/events/open": 1,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/deeplink": {
+                "android_app_link_url": 0,
+                "external_intent_uri": 1,
+                "link_identifier": 1,
+            },
+        },
+    },
 }

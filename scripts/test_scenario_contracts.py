@@ -39,7 +39,14 @@ class ScenarioContractTests(unittest.TestCase):
     not in the CI gate yet. The requests are real, taken after the driver moved the launch
     capture aside once the bare launch had settled (WireScenarioDriver.setCaptureAside),
     trimmed to the fields the validator reads, with the identifiers swapped for the
-    placeholders above."""
+    placeholders above.
+
+    cold_uriScheme is a capture of a local run on an API 30 emulator (sdk_gphone_arm64), not a
+    CI capture. The requests are real, trimmed to the fields the validator reads, with the
+    identifiers swapped for the placeholders above (the link keeps the fixture run id). Only
+    the requests are kept: the server's response to the scheme link, which does not resolve
+    it (+non_branch_link), is deliberately omitted, because the contract asserts the wire and
+    not resolution."""
 
     def _entries(self, scenario):
         path = _fixture(SCENARIO_FIXTURES[scenario])
@@ -162,6 +169,12 @@ class ScenarioContractTests(unittest.TestCase):
             errors = self._errors(capture, contract)
             with self.subTest(capture=capture, contract=contract):
                 self.assertTrue(any("randomized_bundle_token" in e for e in errors), errors)
+
+    def test_a_cold_https_capture_fails_on_android_app_link_url_for_cold_uriScheme(self):
+        # Catches a cold https delivery passing as a scheme one (name-mismatch trap); only
+        # android_app_link_url on the resolve tells them apart, hot_uriScheme cannot.
+        errors = self._errors("cold_https", "cold_uriScheme")
+        self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
 
     def test_an_install_fails_warm_https_onNewIntent(self):
         # The ticket's one explicit ask for this group: assert the absence of
