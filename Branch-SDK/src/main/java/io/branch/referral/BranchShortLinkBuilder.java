@@ -139,4 +139,16 @@ public class BranchShortLinkBuilder extends BranchUrlBuilder<BranchShortLinkBuil
     public void generateShortUrl(Branch.BranchLinkCreateListener callback) {
         super.generateUrlInternal(callback);
     }
+
+    /**
+     * <p>Builds the long Branch URL for the configured parameters entirely on device.</p>
+     *
+     * <p>No server round trip is made, so this returns immediately and works offline. The link
+     * parameters, channel included, are encoded into the query string.</p>
+     *
+     * @return A {@link String} containing the long URL. Null is returned if Branch is not initialised.
+     */
+    public String getLongUrl() {
+        return super.getLongUrlInternal();
+    }
 }
