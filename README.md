@@ -1,6 +1,6 @@
 # Branch SDK Documentation for Android
 
-[![unit](https://img.shields.io/github/actions/workflow/status/BranchMetrics/android-branch-deep-linking-attribution/unit-tests.yml?branch=6.0.0-beta.0&label=unit)](https://github.com/BranchMetrics/android-branch-deep-linking-attribution/actions/workflows/unit-tests.yml?query=branch%3A6.0.0-beta.0) [![black-box](https://img.shields.io/github/actions/workflow/status/BranchMetrics/android-branch-deep-linking-attribution/sdk-l1-validation.yml?branch=6.0.0-beta.0&label=black-box)](https://github.com/BranchMetrics/android-branch-deep-linking-attribution/actions/workflows/sdk-l1-validation.yml?query=branch%3A6.0.0-beta.0)
+[![unit](https://img.shields.io/github/actions/workflow/status/BranchMetrics/android-branch-deep-linking-attribution/unit-tests.yml?branch=6.0.0-beta.4&label=unit)](https://github.com/BranchMetrics/android-branch-deep-linking-attribution/actions/workflows/unit-tests.yml?query=branch%3A6.0.0-beta.4) [![black-box](https://img.shields.io/github/actions/workflow/status/BranchMetrics/android-branch-deep-linking-attribution/sdk-l1-validation.yml?branch=6.0.0-beta.4&label=black-box)](https://github.com/BranchMetrics/android-branch-deep-linking-attribution/actions/workflows/sdk-l1-validation.yml?query=branch%3A6.0.0-beta.4)
 
 The Branch Android SDK for deep linking and attribution.
 
