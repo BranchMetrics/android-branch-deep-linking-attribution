@@ -17,7 +17,6 @@ import java.io.OutputStreamWriter;
 import io.branch.referral.Branch;
 import io.branch.referral.BranchConfiguration;
 import io.branch.referral.BranchLogger;
-import io.branch.referral.DMAParameters;
 import io.branch.referral.IBranchRequestTracingCallback;
 
 public final class CustomBranchApp extends Application {
@@ -45,14 +44,10 @@ public final class CustomBranchApp extends Application {
                         })
                         .setRequestTracingCallback(tracingCallback());
 
-        // Operator-set override from SettingsActivity, applied at launch because DMA consent is a
-        // pre-init decision here. Off by default — see TestBedSettings.isDmaParamsEnabled.
+        // Operator-set override from SettingsActivity, which also applies it right away. Off by
+        // default — see TestBedSettings.isDmaParamsEnabled.
         if (TestBedSettings.isDmaParamsEnabled(this)) {
-            config.setDMAParameters(new DMAParameters.Builder()
-                    .setEeaRegion(true)
-                    .setAdPersonalizationConsent(false)
-                    .setAdUserDataUsageConsent(true)
-                    .build());
+            config.setDMAParameters(TestBedSettings.dmaParameters());
         }
 
         // Operator-set override from SettingsActivity, applied at launch because the API URL is a
@@ -61,6 +56,8 @@ public final class CustomBranchApp extends Application {
         if (!TextUtils.isEmpty(apiUrl)) {
             config.setApiUrl(apiUrl);
         }
+
+        config.setAutomaticOpenEvents(TestBedSettings.isAutomaticOpenEvents(this));
 
         Branch.initialize(this, config.build());
 
