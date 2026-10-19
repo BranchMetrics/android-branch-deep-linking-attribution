@@ -55,7 +55,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     public BranchRemoteInterfaceUrlConnection(@NonNull Branch branch) {
         this.branch = branch;
         this.prefHelper = PrefHelper.getInstance(branch.getApplicationContext());
-        this.retryLimit = prefHelper.getRetryCount();
         
         // Initialize modern async implementation
         this.asyncImplementation = new BranchRemoteInterfaceUrlConnectionAsync(branch);
@@ -70,7 +69,6 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
     private String lastResponseMessage = "";
     private String lastRequestId = "";
     private PrefHelper prefHelper;
-    private int retryLimit;
 
     @Override
     public BranchResponse doRestfulGet(String url) throws BranchRemoteException {
@@ -114,7 +112,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             String requestId = connection.getHeaderField(Defines.HeaderKey.RequestId.getKey());
 
             int responseCode = connection.getResponseCode();
-            if (responseCode >= 500 && retryNumber < retryLimit) {
+            if (responseCode >= 500 && retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
@@ -149,7 +147,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         }
         catch (SocketTimeoutException ex) {
             // On socket  time out retry the request for retryNumber of times
-            if (retryNumber < retryLimit) {
+            if (retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
@@ -166,7 +164,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         catch (InterruptedIOException ex) {
             BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             // When the thread times out before or while sending the request
-            if (retryNumber < retryLimit) {
+            if (retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
@@ -241,7 +239,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
             lastResponseMessage = connection.getResponseMessage(); // If we have the response code, this will not invoke any more data transfer
             BranchLogger.d("lastResponseMessage " + lastResponseMessage);
 
-            if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR && retryNumber < retryLimit) {
+            if (responseCode >= HttpsURLConnection.HTTP_INTERNAL_ERROR && retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
@@ -298,7 +296,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         catch (SocketTimeoutException ex) {
             BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             // On socket  time out retry the request for retryNumber of times
-            if (retryNumber < retryLimit) {
+            if (retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
@@ -315,7 +313,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         catch (InterruptedIOException ex) {
             BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
             // When the thread times out before or while sending the request
-            if (retryNumber < retryLimit) {
+            if (retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
@@ -332,7 +330,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
         // Unable to resolve host/Unknown host exception
         catch (IOException ex) {
             BranchLogger.e(getNetworkErrorMessage(ex, url, retryNumber));
-            if (retryNumber < retryLimit) {
+            if (retryNumber < prefHelper.getRetryCount()) {
                 try {
                     Thread.sleep(prefHelper.getRetryInterval());
                 }
@@ -396,7 +394,7 @@ public class BranchRemoteInterfaceUrlConnection extends BranchRemoteInterface {
                 "\nCaught exception type: " + e.getClass().getCanonicalName() +
                 "\nRetry number: " + retry +
                 "\nrequestId: " + lastRequestId +
-                "\nFinal attempt: " + (retry >= retryLimit) +
+                "\nFinal attempt: " + (retry >= prefHelper.getRetryCount()) +
                 "\nObject: " + this +
                 "\nException Message: " + e.getMessage() +
                 "\nStacktrace: " + BranchLogger.stackTraceToString(e);

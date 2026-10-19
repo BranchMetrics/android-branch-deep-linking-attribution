@@ -1,13 +1,6 @@
-package io.branch.coroutines
+package io.branch.referral
 
 import android.content.Context
-import io.branch.referral.Branch
-import io.branch.referral.BranchError
-import io.branch.referral.BranchLogger
-import io.branch.referral.Defines
-import io.branch.referral.PrefHelper
-import io.branch.referral.ServerRequestInitSession
-import io.branch.referral.ServerResponse
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -16,6 +9,49 @@ internal class RequestDeepLink(
     callback: Branch.BranchReferralInitListener?,
     isAutoInitialization: Boolean
 ) : ServerRequestInitSession(context, Defines.RequestPath.Deeplink, isAutoInitialization) {
+
+    // Set once sendOpenAfterDeepLink has this request's response; containsDeepLink() then skips it.
+    @JvmField @Volatile var responseHandled = false
+
+    // Set under Branch's heldOpenLock_ by a background: its open is sent when it responds, without sendOpen.
+    @JvmField @Volatile var sendOpenWhenAnswered = false
+
+    // The launch link when requestDeepLinkData was called. Sent instead of the saved one, which a later
+    // call or consent off can change before this request is sent.
+    @Volatile private var launchLink: JSONObject? = null
+
+    // The launch link fields it sent, set when it is prepared to send.
+    @Volatile private var sentLaunchLink: JSONObject? = null
+
+    fun keepLaunchLink() {
+        launchLink = savedLaunchLink(prefHelper_)
+    }
+
+    /** Keeps the install referrer's click id when it has none: a later call can clear the saved one before this is sent. */
+    fun keepInstallReferrerClickId(clickId: String) {
+        val link = launchLink ?: return
+        if (clickId.isBlank() || clickId == PrefHelper.NO_STRING_VALUE || link.has(Defines.Jsonkey.LinkIdentifier.key)) return
+        launchLink = JSONObject(link.toString()).put(Defines.Jsonkey.LinkIdentifier.key, clickId)
+    }
+
+    override fun keptLaunchLink(): JSONObject? = launchLink
+
+    override fun doFinalUpdateOnBackgroundThread() {
+        super.doFinalUpdateOnBackgroundThread()
+        launchLink?.let { putLaunchLink(it) }
+        // Before consent off strips the intent fields: its open may be sent after opt-in.
+        sentLaunchLink = JSONObject().also { link ->
+            for (key in LAUNCH_LINK_KEYS) {
+                post.opt(key)?.let { link.put(key, it) }
+            }
+        }
+    }
+
+    /**
+     * The launch link fields for its open, which may be sent after a later call changed the saved ones:
+     * the ones it sent, or the ones it kept if it was never sent.
+     */
+    fun launchLinkForOpen(): JSONObject? = sentLaunchLink ?: launchLink
 
     init {
         callback_ = callback
@@ -69,6 +105,11 @@ internal class RequestDeepLink(
                 prefHelper_.sessionParams = PrefHelper.NO_STRING_VALUE
             }
 
+            // With setAutomaticOpenEvents(false), before the callback, so a sendOpen made in it finds the response.
+            if (!branch.automaticOpenEvents_) {
+                branch.sendOpenAfterDeepLink(this, response.`object`)
+            }
+
             if (callback_ != null) {
                 callback_!!.onInitFinished(branch.latestReferringParams, null)
             }
@@ -81,15 +122,19 @@ internal class RequestDeepLink(
 
         onInitSessionCompleted(response, branch)
 
-        Branch.getInstance().sendOpen(response.`object`)
+        if (!responseHandled) {
+            branch.sendOpenAfterDeepLink(this, response.`object`)
+        }
     }
 
     override fun handleFailure(statusCode: Int, causeMsg: String) {
         val serverErrorMessage = "Request DeepLink failed with HTTP code: $statusCode. Server says: $causeMsg"
         BranchLogger.e(serverErrorMessage)
 
-        // Each resolve sends one open; a failed one sends it without link_data.
-        Branch.getInstance().sendOpen(null as JSONObject?)
+        // A failed /v3/deeplink's open has no link_data.
+        if (!responseHandled) {
+            Branch.getInstance().sendOpenAfterDeepLink(this, null)
+        }
 
         if (callback_ != null) {
             val obj = JSONObject()

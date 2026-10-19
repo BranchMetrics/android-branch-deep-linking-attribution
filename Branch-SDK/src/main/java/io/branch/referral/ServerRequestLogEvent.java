@@ -88,11 +88,6 @@ public class ServerRequestLogEvent extends ServerRequest {
     }
 
     @Override
-    protected boolean shouldUpdateLimitFacebookTracking() {
-        return true;
-    }
-
-    @Override
     protected boolean shouldAddDMAParams() {
         return true;
     }
