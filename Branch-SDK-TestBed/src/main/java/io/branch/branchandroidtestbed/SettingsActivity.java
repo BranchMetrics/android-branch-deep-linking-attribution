@@ -12,6 +12,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchConfiguration;
+import io.branch.referral.DMAParameters;
 import io.branch.referral.PrefHelper;
 
 public class SettingsActivity extends Activity {
@@ -22,8 +24,9 @@ public class SettingsActivity extends Activity {
 
         setContentView(R.layout.activity_settings);
 
-        setupDisableAdNetworkCalloutsSwitch();
         setupEnableDmaParamsSwitch();
+        setupAutomaticOpenEventsSwitch();
+        setupSendOpenBeforeDeepLinkSwitch();
         setupPrepHelperView();
         setupRetryEditText();
         setupApiUrlText();
@@ -111,44 +114,54 @@ public class SettingsActivity extends Activity {
         prefHelperTextView.setText(strBuilder.toString());
     }
 
-    void setupDisableAdNetworkCalloutsSwitch() {
-        final Switch disableAdNetworkCalloutsSwitch = findViewById(R.id.disable_ad_network_callouts);
-
-        /*
-         * Initialize switch state from SharedPreferences.
-         */
-        final PrefHelper prefHelper = PrefHelper.getInstance(this);
-        disableAdNetworkCalloutsSwitch.setChecked(prefHelper.getAdNetworkCalloutsDisabled());
-
-        /*
-         * Update the setting whenever the switch changes state.
-         */
-        disableAdNetworkCalloutsSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                prefHelper.setAdNetworkCalloutsDisabled(disableAdNetworkCalloutsSwitch.isChecked());
-            }
-        });
-
-    }
-
     void setupEnableDmaParamsSwitch() {
         final Switch enableDmaParamsSwitch = findViewById(R.id.enable_dma_params);
 
         /*
-         * Applied at next launch by CustomBranchApp, not immediately — DMA consent is a pre-init
-         * decision, same as the API URL below.
+         * Applied right away with updateConfiguration, and at each launch by CustomBranchApp.
+         * Off sends a non-EEA user.
          */
         enableDmaParamsSwitch.setChecked(TestBedSettings.isDmaParamsEnabled(this));
 
         enableDmaParamsSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TestBedSettings.setDmaParamsEnabled(SettingsActivity.this, enableDmaParamsSwitch.isChecked());
+                boolean enabled = enableDmaParamsSwitch.isChecked();
+                TestBedSettings.setDmaParamsEnabled(SettingsActivity.this, enabled);
+                Branch.getInstance().updateConfiguration(new BranchConfiguration.Builder()
+                        .setDMAParameters(enabled
+                                ? TestBedSettings.dmaParameters()
+                                : new DMAParameters.Builder().setEeaRegion(false).build())
+                        .build());
                 Toast.makeText(SettingsActivity.this,
-                        "DMA params " + (enableDmaParamsSwitch.isChecked() ? "enabled" : "disabled")
+                        "DMA params " + (enabled ? "enabled" : "disabled"),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    void setupAutomaticOpenEventsSwitch() {
+        final Switch automaticOpenEventsSwitch = findViewById(R.id.automatic_open_events);
+        automaticOpenEventsSwitch.setChecked(TestBedSettings.isAutomaticOpenEvents(this));
+        automaticOpenEventsSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TestBedSettings.setAutomaticOpenEvents(SettingsActivity.this, automaticOpenEventsSwitch.isChecked());
+                Toast.makeText(SettingsActivity.this,
+                        "Automatic open events " + (automaticOpenEventsSwitch.isChecked() ? "on" : "off")
                                 + " — restart the app to apply",
                         Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    void setupSendOpenBeforeDeepLinkSwitch() {
+        final Switch sendOpenBeforeDeepLinkSwitch = findViewById(R.id.send_open_before_deep_link);
+        sendOpenBeforeDeepLinkSwitch.setChecked(TestBedSettings.isSendOpenBeforeDeepLink(this));
+        sendOpenBeforeDeepLinkSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TestBedSettings.setSendOpenBeforeDeepLink(SettingsActivity.this, sendOpenBeforeDeepLinkSwitch.isChecked());
             }
         });
     }
