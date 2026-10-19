@@ -98,17 +98,6 @@ class BranchInitializeTest : BranchTestBase() {
     }
 
     @Test
-    fun initialize_noConnectionRetryMax_reachesPrefHelper() {
-        val config = BranchConfiguration.Builder("key_live_test123")
-            .setNoConnectionRetryMax(4)
-            .build()
-
-        Branch.initialize(context, config)
-
-        assertEquals(4, PrefHelper.getInstance(context).getNoConnectionRetryMax())
-    }
-
-    @Test
     fun initialize_clearsSessionParamsLeftByPreviousProcess() {
         // Same key, so the key-change reset doesn't clear it instead.
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
@@ -119,6 +108,17 @@ class BranchInitializeTest : BranchTestBase() {
         Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
 
         assertEquals(PrefHelper.NO_STRING_VALUE, PrefHelper.getInstance(context).sessionParams)
+    }
+
+    @Test
+    fun initialize_networkTimeoutRemovedFromTheConfig_goesBackToTheDefault() {
+        // Same key, so the key-change reset doesn't clear it instead.
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").setNetworkTimeout(15_000).build())
+        Branch.shutDown()
+
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").build())
+
+        assertEquals(PrefHelper.TIMEOUT, PrefHelper.getInstance(context).getTimeout())
     }
 
     // -------------------------------------------------------------------------
@@ -484,6 +484,16 @@ class BranchInitializeTest : BranchTestBase() {
         assertEquals("key_live_test123", PrefHelper.getInstance(context).getBranchKey())
     }
 
+    @Test
+    fun initialize_configWithoutAKey_throwsTheMissingKeyError() {
+        val error = runCatching { Branch.initialize(context, BranchConfiguration.Builder().build()) }
+            .exceptionOrNull()
+
+        assertTrue("got: $error", error is IllegalArgumentException)
+        assertTrue(error!!.message!!.contains("dashboard"))
+        assertNull(Branch.getInstance())
+    }
+
     // -------------------------------------------------------------------------
     // Attribution level wired to PrefHelper, without sending an open
     // -------------------------------------------------------------------------
@@ -504,7 +514,7 @@ class BranchInitializeTest : BranchTestBase() {
         )
         assertTrue(
             "setting an attribution level at init must not also fire sendOpen()",
-            logs.none { it.contains("sendOpen BranchAttributionLevel") }
+            logs.none { it.contains("sendOpenAfterDeepLink BranchAttributionLevel") }
         )
     }
 
@@ -568,6 +578,13 @@ class BranchInitializeTest : BranchTestBase() {
         assertNull(Branch.getInstance())
     }
 
+    @Test
+    fun initialize_setAutomaticOpenEventsFalse_reachesBranch() {
+        Branch.initialize(context, BranchConfiguration.Builder("key_live_test123").setAutomaticOpenEvents(false).build())
+
+        assertFalse(Branch.getInstance().automaticOpenEvents_)
+    }
+
     // -------------------------------------------------------------------------
     // Logging emitted by initialize()
     //
@@ -579,11 +596,10 @@ class BranchInitializeTest : BranchTestBase() {
     private val allConfigurationFields = listOf(
         "event", "branchKey", "testMode", "apiUrl", "cdnBaseUrl", "euEndpoint", "logLevel",
         "loggingCallback", "requestTracingCallback", "networkTimeout", "networkConnectTimeout",
-        "retryCount", "retryInterval", "noConnectionRetryMax", "remoteInterface",
-        "attributionLevel", "dmaParameters", "limitFacebookAttribution",
-        "adNetworkCalloutsDisabled", "facebookAppId", "preinstallCampaign", "preinstallPartner",
+        "retryCount", "retryInterval", "remoteInterface",
+        "attributionLevel", "dmaParameters", "facebookAppId", "preinstallCampaign", "preinstallPartner",
         "installMetadata", "referringLinkAttributionForPreinstalledApps", "whitelistedSchemes",
-        "uriHostsToSkip", "userAgentFetchSync"
+        "uriHostsToSkip", "userAgentFetchSync", "automaticOpenEvents"
     )
 
     /**
