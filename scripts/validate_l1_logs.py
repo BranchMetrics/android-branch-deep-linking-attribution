@@ -311,6 +311,7 @@ def collapse_retries(entries):
 SCENARIO_LINK_MARKERS = {
     "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
     "cold_https": {"l1_scenario": "cold_https"},
+    "hot_https_foreground": {"l1_scenario": "hot_https_foreground"},
     "attribution_none": {"l1_scenario": "attribution_none"},
 }
 

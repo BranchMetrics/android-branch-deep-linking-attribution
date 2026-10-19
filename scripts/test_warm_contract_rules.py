@@ -24,8 +24,12 @@ WARM = {
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
 }
-# Every contract whose rules are tabled below: the two warm ones and hot_uriScheme.
-RULED = {**WARM, "hot_uriScheme": "hot_uriScheme.txt"}
+# Every contract whose rules are tabled below: the two warm ones and the two hot ones.
+RULED = {
+    **WARM,
+    "hot_uriScheme": "hot_uriScheme.txt",
+    "hot_https_foreground": "hot_https_foreground.txt",
+}
 
 
 # The rules each warm contract is expected to hold, restated on purpose. The cases below
@@ -51,6 +55,11 @@ COUNTS = {
         "/v3/events/open": 1,
         "/v3/events/custom": 0,
     },
+    "hot_https_foreground": {
+        "/v3/deeplink": 1,
+        "/v3/events/open": 1,
+        "/v1/url": 0,
+    },
 }
 ORDER = (("/v3/deeplink", "/v3/events/open"),)
 FIELDS = {
@@ -68,6 +77,10 @@ FIELDS = {
     "hot_uriScheme": {
         "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
         "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1},
+    },
+    "hot_https_foreground": {
+        "/v3/deeplink": {"android_app_link_url": 1, "external_intent_uri": 1, "link_identifier": 0},
+        "/v3/events/open": {"randomized_bundle_token": 1, "link_data": 1},
     },
 }
 
@@ -284,6 +297,28 @@ class WarmScenariosAreSeparated(unittest.TestCase):
         open_["request"].pop("external_intent_uri", None)
         errors = _errors(entries, "hot_uriScheme")
         self.assertTrue(any("'external_intent_uri'" in e and "/v3/events/open" in e for e in errors), errors)
+
+    def test_a_scheme_url_fails_hot_https_foreground(self):
+        # hot_uriScheme asserts external_intent_uri alone, so a hot scenario that resolved a scheme
+        # URL instead of an App Link must fail here on the missing android_app_link_url.
+        entries = _entries("hot_https_foreground")
+        deeplink = next(e for e in entries if e["uri"] == "/v3/deeplink")
+        deeplink["request"].pop("android_app_link_url")
+        deeplink["request"]["external_intent_uri"] = "branchtest://open"
+        errors = _errors(entries, "hot_https_foreground")
+        self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
+
+    def test_each_hot_capture_fails_the_other_hot_contract(self):
+        # The two hot captures, unmodified, must refuse each other: the https fixture
+        # carries android_app_link_url (hot_uriScheme holds it at 0), and the scheme
+        # fixture lacks it (hot_https_foreground requires it).
+        for capture, contract in (
+            ("hot_https_foreground", "hot_uriScheme"),
+            ("hot_uriScheme", "hot_https_foreground"),
+        ):
+            with self.subTest(capture=capture, contract=contract):
+                errors = _errors(_entries(capture), contract)
+                self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
 
     def test_each_warm_capture_fails_the_other_warm_contract(self):
         # The two share counts and order. What tells them apart is the entry
