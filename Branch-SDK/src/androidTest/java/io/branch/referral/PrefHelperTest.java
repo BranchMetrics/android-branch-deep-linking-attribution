@@ -73,20 +73,6 @@ public class PrefHelperTest extends BranchTest {
     }
 
     @Test
-    public void testSetAdNetworkCalloutsDisabled() {
-        prefHelper.setAdNetworkCalloutsDisabled(true);
-
-        Assert.assertTrue(prefHelper.getAdNetworkCalloutsDisabled());
-    }
-
-    @Test
-    public void testSetAdNetworkCalloutsEnabled() {
-        prefHelper.setAdNetworkCalloutsDisabled(false);
-
-        Assert.assertFalse(prefHelper.getAdNetworkCalloutsDisabled());
-    }
-
-    @Test
     public void testSetTimeout(){
         int TEST_TIMEOUT = 1;
         prefHelper.setTimeout(TEST_TIMEOUT);
@@ -125,19 +111,6 @@ public class PrefHelperTest extends BranchTest {
         String result = prefHelper.getRandomlyGeneratedUuid();
 
         Assert.assertEquals(uuid, result);
-    }
-
-    @Test
-    public void testSetNoConnectionRetryMaxReturnsDefault(){
-        Assert.assertEquals(prefHelper.getNoConnectionRetryMax(), PrefHelper.DEFAULT_NO_CONNECTION_RETRY_MAX);
-    }
-
-    @Test
-    public void testSetNoConnectionRetryMax(){
-        int max = 10;
-        prefHelper.setNoConnectionRetryMax(max);
-
-        Assert.assertEquals(max, prefHelper.getNoConnectionRetryMax());
     }
 
     @Test

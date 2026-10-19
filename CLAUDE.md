@@ -4,7 +4,7 @@ Branch Android SDK. One library module, `:Branch-SDK`, package root `io.branch.r
 
 **What the SDK does.** It creates and resolves Branch links, and it attributes app activity to them. When a link is tapped, the SDK reports the app launch to the Branch API and gets back the link's data, so the app can route the user to the right content and Branch can credit the campaign that drove them. The first launch after an app is installed is an **install**; every later launch is an **open**. That distinction runs through the whole codebase. Integrator-facing docs: https://help.branch.io/developers-hub/docs/android-sdk-overview
 
-**You are on `6.0.0-beta.0`, an internal beta, not a stable release.** Breaking changes and clean API surfaces are fine here. Do not add backward-compatibility shims unless asked.
+**You are on the 6.0 beta line, not a stable release.** Each beta round has its own branch (`6.0.0-beta.N`), cut from the previous one when it ships; PRs target the open round, currently `6.0.0-beta.4`. Breaking changes and clean API surfaces are fine here. Do not add backward-compatibility shims unless asked.
 
 This branch has diverged substantially from `master`: request execution moved from AsyncTask to Kotlin coroutines, session state is a sealed `BranchSessionState`, link generation goes through `ModernLinkGenerator`, and there are new `v3` OPEN and deeplink request paths. **Anything written against `master` or the published 5.x docs is frequently stale here**, and so is the branch's own older documentation. Verify against source on this branch.
 
