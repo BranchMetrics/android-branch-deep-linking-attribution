@@ -83,7 +83,6 @@ public class Defines {
         OpenAdvertisingID("oaid"),                          // Huawei Mobile Services
         LATVal("lat_val"),
         LimitedAdTracking("limit_ad_tracking"),
-        limitFacebookTracking("limit_facebook_tracking"),
         Debug("debug"),
         Brand("brand"),
         Model("model"),
@@ -199,7 +198,6 @@ public class Defines {
         Condition("$condition"),
         CreationTimestamp("$creation_timestamp"),
         TrackingDisabled("tracking_disabled"),
-        DisableAdNetworkCallouts("disable_ad_network_callouts"),
         PartnerData("partner_data"),
         Instant("instant"),
 
