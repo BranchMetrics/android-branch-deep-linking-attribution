@@ -14,12 +14,15 @@ object BranchLogger {
         NONE(0), ERROR(1), WARN(2), INFO(3), DEBUG(4), VERBOSE(5)
     }
 
+    @Volatile
     @JvmStatic
     var loggingLevel: BranchLogLevel = BranchLogLevel.DEBUG
 
+    @Volatile
     @JvmStatic
     var loggingEnabled = false
 
+    @Volatile
     @JvmStatic
     var loggerCallback: IBranchLoggingCallbacks? = null
 
