@@ -1,4 +1,49 @@
 # Branch Android SDK change log
+- v6.0.0-beta.3
+* _*Beta Release*_ - Oct 15, 2026
+
+  Upgrade instructions: https://help.branch.io/developer-hub/android-sdk-6-integration
+
+  - Added `BranchConfiguration`, built with `BranchConfiguration.Builder("<branch_key>")`. It holds the settings that used to be `Branch` setters: test mode, API and CDN URLs, EU endpoint, log level and logging callback, request tracing callback, network timeouts, retry count and interval, remote interface, attribution level, DMA parameters, Facebook app ID, preinstall campaign and partner, install metadata, preinstalled app link attribution, allowed schemes, URI hosts to skip, user agent fetch mode and automatic open events.
+  - Added `Branch.initialize(Context, BranchConfiguration)` to initialize the SDK. Removed `getAutoInstance`; use `Branch.getInstance()` after `initialize`.
+    * The Branch key is no longer read from `AndroidManifest.xml`. Pass it to `BranchConfiguration.Builder`.
+  - Added `Branch.updateConfiguration(BranchConfiguration)` to change settings after initialization. The Branch key, test mode, remote interface, Facebook app ID, preinstall settings, install metadata and automatic open events apply only at `initialize`.
+    * Removed the old setters:
+      -- `setBranchKey`
+      -- `enableTestMode` / `disableTestMode`
+      -- `setAPIUrl`
+      -- `setCDNBaseUrl`
+      -- `useEUEndpoint`
+      -- `setNetworkTimeout`
+      -- `setNetworkConnectTimeout`
+      -- `setRetryCount`
+      -- `setRetryInterval`
+      -- `setNoConnectionRetryMax`
+      -- `setCallbackForTracingRequests`
+      -- `setBranchRemoteInterface`
+      -- `setFBAppID`
+      -- `setPreinstallCampaign` / `setPreinstallPartner`
+      -- `addInstallMetadata`
+      -- `setReferringLinkAttributionForPreinstalledAppsEnabled`
+      -- `addWhiteListedScheme` / `setWhiteListedSchemes`
+      -- `addUriHostsToSkip`
+      -- `setIsUserAgentSync`
+      -- `setInstallReferrerTimeout`
+      -- `setDeepLinkDebugMode`
+  - New deep link API `requestDeepLinkData` replaces `sessionBuilder(...).init()` and `reInit()`. Call it in `onCreate` and `onNewIntent`:
+    * `requestDeepLinkData(Activity, BranchReferralInitListener)`
+    * `requestDeepLinkData(Uri, BranchReferralInitListener)`
+    * Removed `sessionBuilder`, `expectDelayedSessionInitialization`, `removeSessionInitializationDelay`, `bypassWaitingForIntent`, `enableBypassCurrentActivityIntentState`, `ignoreIntent`, `isWaitingForIntent`, `unlockPendingIntent`, `resetUserSession` and the instant deep linking methods.
+  - Added manual open control: `BranchConfiguration.Builder.setAutomaticOpenEvents` (default `true`).
+  - Added `Branch.sendOpen(SendOpenListener)`. If automatic open events are set to `false`, use it to send the open event yourself.
+  - Added Kotlin `suspend` functions: `Branch.requestDeepLinkData`, `Branch.sendOpen`, `BranchEvent.awaitLogEvent`, `BranchUniversalObject.createLink` and `BranchShortLinkBuilder.createLink`.
+  - Replaced `setIdentity` with `setUserAlias`.
+  - Deprecated `disableTracking`. Use `setAttributionLevel` with `BranchAttributionLevel.NONE` in `BranchConfiguration`, or `setConsumerProtectionAttributionLevel`.
+  - Replaced `setDMAParamsForEEA` with the `DMAParameters` class and `setDMAParameters`.
+  - Removed `setLimitFacebookTracking` and `disableAdNetworkCallouts`.
+  - Removed `registerView`, `BranchUniversalObject.showShareSheet`, the `BranchUniversalObject` content indexing methods, `disableDeviceIDFetch`, `disableAppList` and `showInstallPrompt`.
+  - Requests run on Kotlin coroutines instead of `AsyncTask`.
+
 - v5.20.3
 * _*Master Release*_ - Sep 24, 2025
   - Add some additional debug logging.

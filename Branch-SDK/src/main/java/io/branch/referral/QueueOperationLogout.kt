@@ -45,7 +45,7 @@ class QueueOperationLogout(
         v("QueueOperationLogout onRequestSucceeded $this")
             //On Logout clear the link cache and all pending requests
             Branch.getInstance().linkCache_.clear();
-            Branch.getInstance().requestQueue_.clear();
+            Branch.getInstance().requestQueue_.clear(BranchError.ERR_OTHER, "Dropped by logout");
         if (callback_ != null) {
             callback_!!.onLogoutFinished(true, null)
         }
