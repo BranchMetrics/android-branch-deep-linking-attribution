@@ -44,7 +44,7 @@ Test the edge the code exists to handle, not the happy path. A guard, a cap, a t
 | Workflow | Runs on this branch? | What it does |
 | --- | --- | --- |
 | `unit-and-instrumented-tests-action.yml` | **no** | it is `disabled_manually` at repo level and has zero runs in its history, so nothing has ever exercised the suite in CI on any branch. Tracked as EMT-4261 |
-| `sdk-l1-validation.yml` | yes | EMT-4077 added `6.0.0-beta.0` to both triggers, so it runs on push to this branch and on PRs into it. A PR targeting a branch further up a stack is not covered, since only the listed bases match; use `workflow_dispatch` there |
+| `sdk-l1-validation.yml` | yes | Both triggers match `6.0.0-beta.*`, so it runs on push to any beta round branch and on PRs into one. A PR targeting a branch further up a stack is not covered, since only the listed bases match; use `workflow_dispatch` there |
 | `gptdriverautomation.yaml` | pushes to `Release-*`, or manual | drives the `:Branch-SDK-GPTDriver` MobileBoost E2E module |
 | `apiCompatibilityReport` | not a workflow at all | a Gradle task that diffs the public API against a pinned 5.x baseline. Report-only; pass `-PapiDiffStrict` to make a break fail the build |
 

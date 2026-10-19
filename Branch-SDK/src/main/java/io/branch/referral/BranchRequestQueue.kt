@@ -2,7 +2,6 @@ package io.branch.referral
 
 import android.content.Context
 import android.os.SystemClock
-import io.branch.coroutines.RequestDeepLink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -238,13 +237,15 @@ class BranchRequestQueue private constructor(private val context: Context) {
         BranchLogger.v("BranchRequestQueue.processNextRequest called for: ${request::class.simpleName}")
         
         val requestId = generateRequestId(request)
+        // Read once: a lock can be removed from another thread between two reads.
+        val isWaitingOnLock = request.isWaitingOnProcessToFinish
         
-        if (!canProcessRequest(request)) {
-            if (request.isWaitingOnProcessToFinish) {
+        if (!canProcessRequest(request, isWaitingOnLock)) {
+            if (isWaitingOnLock) {
                 val waitLocks = request.printWaitLocks()
                 BranchLogger.v("Request cannot be processed - waiting on locks: $waitLocks")
             }
-            handleRequestCannotBeProcessed(request, requestId)
+            handleRequestCannotBeProcessed(request, requestId, isWaitingOnLock)
             return
         }
         
@@ -321,14 +322,12 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * Implements retry mechanism with limits to prevent infinite loops
      * Follows SRP - single responsibility for retry logic
      */
-    private suspend fun handleRequestCannotBeProcessed(request: ServerRequest, requestId: String) {
+    private suspend fun handleRequestCannotBeProcessed(request: ServerRequest, requestId: String, isWaitingOnLock: Boolean) {
         val retryInfo = requestRetryInfo.getOrPut(requestId) {
             RequestRetryInfo(requestId)
         }
 
         // EMT-3859: lock-waiting requests are bounded only by the 30s timeout, not the retry count.
-        val isWaitingOnLock = request.isWaitingOnProcessToFinish
-
         // Check if request has exceeded limits
         if (shouldFailRequest(retryInfo, isWaitingOnLock)) {
             handleRequestFailureWithCleanup(request, requestId, retryInfo, isWaitingOnLock)
@@ -732,8 +731,7 @@ class BranchRequestQueue private constructor(private val context: Context) {
      * ServerRequestInitSession types should always be processed to establish session
      * Follows SRP - single responsibility for processing eligibility
      */
-    private fun canProcessRequest(request: ServerRequest): Boolean {
-        val isWaiting = request.isWaitingOnProcessToFinish
+    private fun canProcessRequest(request: ServerRequest, isWaiting: Boolean): Boolean {
         val needsSession = requestNeedsSession(request)
         val hasValidSession = hasValidSession(request)
         
@@ -858,6 +856,17 @@ class BranchRequestQueue private constructor(private val context: Context) {
         synchronized(queueList) {
             return queueList.any { it is RequestOpen || it is RequestDeepLink } ||
                 activeRequests.values.any { it is RequestOpen || it is RequestDeepLink }
+        }
+    }
+
+    /** Whether a RequestDeepLink is queued or executing, with its response not handled yet. */
+    internal fun containsDeepLink(): Boolean = deepLinksWaiting().isNotEmpty()
+
+    /** The RequestDeepLinks queued or executing, with their responses not handled yet. */
+    internal fun deepLinksWaiting(): List<RequestDeepLink> {
+        synchronized(queueList) {
+            return (queueList + activeRequests.values).filterIsInstance<RequestDeepLink>()
+                .filter { !it.responseHandled }.distinct()
         }
     }
 
@@ -1047,17 +1056,19 @@ class BranchRequestQueue private constructor(private val context: Context) {
     }
     
     /**
-     * Clear all requests from queue
+     * Clear all requests from queue, except RequestDeepLinks: a /v3/deeplink the app asked for is always sent.
+     * Returns the queued requests it removed.
      * Follows SRP - single responsibility for clearing queue state
      */
-    fun clear() {
+    fun clear(): List<ServerRequest> {
         BranchLogger.v("BranchRequestQueue.clear called")
-        synchronized(queueList) {
-            queueList.clear()
+        val removed = synchronized(queueList) {
+            queueList.filter { it !is RequestDeepLink }.also { queueList.retainAll { it is RequestDeepLink } }
         }
-        activeRequests.clear()
+        activeRequests.values.removeAll { it !is RequestDeepLink || it.responseHandled }
         requestRetryInfo.clear()
         BranchLogger.v("BranchRequestQueue.clear completed")
+        return removed
     }
     
     /**
