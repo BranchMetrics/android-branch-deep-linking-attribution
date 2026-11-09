@@ -15,7 +15,12 @@ import androidx.test.uiautomator.UiDevice
 import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.LinkFieldReader
+import io.branch.indexing.BranchUniversalObject
+import io.branch.referral.BranchError
+import io.branch.referral.util.LinkProperties
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -107,6 +112,40 @@ internal class WireScenarioDriver {
         }
         awaitQuiet()
         return field
+    }
+
+    /**
+     * Generates a link in the running activity that carries [marker] as the control parameter
+     * `l1_scenario`, which the contract's link marker check reads back from the resolved link
+     * (SCENARIO_LINK_MARKERS in validate_l1_logs.py). Used by a scenario whose contract has a
+     * marker (hot_https_foreground); [generateLink] clicks the TestBed button and cannot set one.
+     * Fails by name if the link does not arrive, fails, or is not https.
+     */
+    fun generateMarkedLink(marker: String): String {
+        val runId = System.currentTimeMillis().toString()
+        val latch = CountDownLatch(1)
+        var url: String? = null
+        var error: BranchError? = null
+        val properties = LinkProperties()
+            .addControlParameter("l1_scenario", marker)
+            .addControlParameter("l1_run_id", runId)
+        checkNotNull(scenario) { "generateMarkedLink needs a launched scenario" }.onActivity { activity ->
+            BranchUniversalObject()
+                .setCanonicalIdentifier("l1/$marker/$runId")
+                .generateShortUrl(activity, properties, { generated, failure ->
+                    url = generated
+                    error = failure
+                    latch.countDown()
+                }, false)
+        }
+        check(latch.await(LINK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+            "No link within ${LINK_TIMEOUT_MS}ms"
+        }
+        check(error == null) { "Link generation failed: ${error?.message}" }
+        val link = url.orEmpty()
+        check(link.startsWith("https://")) { "Expected an https link, got '$link'" }
+        awaitQuiet()
+        return link
     }
 
     /**
