@@ -77,10 +77,14 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
       # Each scenario gets its own capture file, because CustomBranchApp appends
-      # to the capture and nothing truncates it. Every scenario starts from wiped
-      # app data; the cold_https generation run makes the install its link then
-      # opens on. wire-link_generation.txt is cold_firstInstall's
-      # generation capture, where /v1/url is.
+      # to the capture and nothing truncates it. The organic_open, cold_firstInstall
+      # and cold_https runs start from wiped app data; the cold_https generation
+      # run makes the install its link then opens on. wire-link_generation.txt is
+      # cold_firstInstall's generation capture, where /v1/url is.
+      #
+      # The two warm scenarios do not wipe. They need an installed device, so
+      # they run right after cold_https and rely on the install and device state
+      # it left behind; reordering them ahead of it breaks them.
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
@@ -103,6 +107,8 @@ jobs:
             TEST_CLASS=N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=W1WarmHttpsWireTest OUTPUT_LOG=wire-warm_https_onNewIntent.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=W2WarmUriSchemeWireTest OUTPUT_LOG=wire-warm_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -140,6 +146,8 @@ jobs:
           check link_generation wire-link_generation.txt
           check cold_firstInstall wire-cold_firstInstall.txt
           check cold_https wire-cold_https.txt
+          check warm_https_onNewIntent wire-warm_https_onNewIntent.txt
+          check warm_uriScheme wire-warm_uriScheme.txt
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
@@ -167,11 +175,12 @@ jobs:
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "| Cold | cold_firstInstall and cold_https pass |"
               echo "| Negative and guards | organic_open pass, no_stickiness, attribution_none and late_userActivity not implemented |"
+              echo "| Warm | warm_https_onNewIntent and warm_uriScheme pass |"
             else
               echo "| Cold | see failures below |"
               echo "| Negative and guards | see failures below |"
+              echo "| Warm | see failures below |"
             fi
-            echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
             echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
