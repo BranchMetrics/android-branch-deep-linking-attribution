@@ -1,4 +1,4 @@
-"""One test per kind of rule in the warm contracts, so deleting any rule turns a test red.
+"""One test per kind of rule in the warm and hot contracts, so deleting any rule turns a test red.
 
 Run from the repo root:
 
@@ -24,6 +24,8 @@ WARM = {
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
 }
+# Every contract whose rules are tabled below: the two warm ones and hot_uriScheme.
+RULED = {**WARM, "hot_uriScheme": "hot_uriScheme.txt"}
 
 
 # The rules each warm contract is expected to hold, restated on purpose. The cases below
@@ -44,6 +46,11 @@ COUNTS = {
         "/v3/events/custom": 2,
         "/v1/install": 0,
     },
+    "hot_uriScheme": {
+        "/v3/deeplink": 1,
+        "/v3/events/open": 1,
+        "/v3/events/custom": 0,
+    },
 }
 ORDER = (("/v3/deeplink", "/v3/events/open"),)
 FIELDS = {
@@ -58,11 +65,15 @@ FIELDS = {
         "/v1/url": {"hardware_id": 0},
         "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
     },
+    "hot_uriScheme": {
+        "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
+        "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1},
+    },
 }
 
 
 def _entries(scenario):
-    path = os.path.join(THIS_DIR, "fixtures", WARM[scenario])
+    path = os.path.join(THIS_DIR, "fixtures", RULED[scenario])
     return v.collapse_retries(v.parse_branch_logs(path))
 
 
@@ -81,7 +92,7 @@ class WarmContractsAreTheTable(unittest.TestCase):
     def test_the_table_above_is_the_contract(self):
         # A rule added to a contract has to be added to the table, which is where
         # the cases that break it are generated from.
-        for scenario in WARM:
+        for scenario in RULED:
             contract = v.contract_for(scenario)
             with self.subTest(scenario=scenario):
                 self.assertEqual(contract["counts"], COUNTS[scenario])
@@ -94,7 +105,7 @@ class WarmCountRules(unittest.TestCase):
         # Every endpoint in `counts`, in both directions. A zero is only broken
         # upward, and /v1/install is a zero the beta can never send, so the extra
         # request is a copy of another entry under that name.
-        for scenario in WARM:
+        for scenario in RULED:
             for endpoint, expected in COUNTS[scenario].items():
                 entries = _entries(scenario)
                 template = entries[0]
@@ -118,7 +129,7 @@ class WarmOrderRules(unittest.TestCase):
     def test_every_open_before_every_deeplink_fails(self):
         # The one order pair is (deeplink, open). Opens first, deeplinks after,
         # keeps every count intact, so only the order rule can see it.
-        for scenario in WARM:
+        for scenario in RULED:
             entries = _entries(scenario)
             opens = [e for e in entries if e["uri"] == "/v3/events/open"]
             rest = [e for e in entries if e["uri"] != "/v3/events/open"]
@@ -144,7 +155,7 @@ class WarmFieldRules(unittest.TestCase):
         # For every (endpoint, field, expected): strip the field from the requests
         # the rule judges (fails any expected above zero), and set it on all of
         # them (fails any expected below the number of requests).
-        for scenario in WARM:
+        for scenario in RULED:
             for endpoint, rules in FIELDS[scenario].items():
                 for field, expected in rules.items():
                     size = len(_selected(_entries(scenario), endpoint))
@@ -240,6 +251,40 @@ class PositionalKeysFailLoudly(unittest.TestCase):
 
 
 class WarmScenariosAreSeparated(unittest.TestCase):
+    def test_an_https_delivery_fails_hot_uriScheme(self):
+        # An https link rides external_intent_uri as well as android_app_link_url, so
+        # the hot contract needs android_app_link_url at 0 to refuse it. The tapped
+        # link's own deeplink and open, taken from the https capture, are that delivery.
+        entries = _entries("warm_https_onNewIntent")
+        deeplink = [e for e in entries if e["uri"] == "/v3/deeplink"][-1]
+        open_ = [e for e in entries if e["uri"] == "/v3/events/open"][-1]
+        errors = _errors([deeplink, open_], "hot_uriScheme")
+        self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
+
+    def test_an_https_link_on_the_hot_fixture_fails_hot_uriScheme(self):
+        entries = _entries("hot_uriScheme")
+        deeplink = next(e for e in entries if e["uri"] == "/v3/deeplink")
+        link = "https://bnctestbed.test-app.link/fixture-link"
+        deeplink["request"]["android_app_link_url"] = link
+        deeplink["request"]["external_intent_uri"] = link
+        errors = _errors(entries, "hot_uriScheme")
+        self.assertTrue(any("android_app_link_url" in e for e in errors), errors)
+
+    def test_a_restarted_activity_in_the_hot_window_fails_hot_uriScheme(self):
+        # A /v3/events/custom in the delivery window is the activity restarting, the
+        # lifecycle this scenario exists to exclude.
+        entries = _entries("hot_uriScheme")
+        entries.insert(0, dict(entries[0], uri="/v3/events/custom"))
+        errors = _errors(entries, "hot_uriScheme")
+        self.assertTrue(_count_error(errors, "/v3/events/custom", 0), errors)
+
+    def test_a_hot_open_without_the_scheme_link_fails_hot_uriScheme(self):
+        entries = _entries("hot_uriScheme")
+        open_ = next(e for e in entries if e["uri"] == "/v3/events/open")
+        open_["request"].pop("external_intent_uri", None)
+        errors = _errors(entries, "hot_uriScheme")
+        self.assertTrue(any("'external_intent_uri'" in e and "/v3/events/open" in e for e in errors), errors)
+
     def test_each_warm_capture_fails_the_other_warm_contract(self):
         # The two share counts and order. What tells them apart is the entry
         # point: an https link rides android_app_link_url, a scheme link does not.

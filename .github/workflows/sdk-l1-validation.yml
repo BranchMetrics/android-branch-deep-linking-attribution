@@ -181,7 +181,7 @@ jobs:
               echo "| Negative and guards | see failures below |"
               echo "| Warm | see failures below |"
             fi
-            echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
+            echo "| Hot | hot_uriScheme has a driver and contract but is not in this gate yet; hot_https_foreground not implemented |"
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"
