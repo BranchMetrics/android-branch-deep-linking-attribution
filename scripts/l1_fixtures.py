@@ -12,6 +12,7 @@ SCENARIO_FIXTURES = {
     "cold_firstInstall": "cold_firstInstall.txt",
     "cold_https": "cold_https.txt",
     "link_generation": "link_generation.txt",
+    "attribution_none": "attribution_none.txt",
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
     "hot_uriScheme": "hot_uriScheme.txt",
