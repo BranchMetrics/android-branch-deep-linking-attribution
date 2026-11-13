@@ -9,6 +9,7 @@ import io.branch.data.InstallReferrerResult
 import io.branch.referral.BranchLogger
 import io.branch.referral.Defines.Jsonkey
 import io.branch.referral.PrefHelper
+import io.branch.referral.fetchSamsungMapsPreinstallData
 import io.branch.referral.util.classExists
 import io.branch.referral.util.huaweiInstallReferrerClass
 import io.branch.referral.util.samsungInstallReferrerClass
@@ -16,6 +17,7 @@ import io.branch.referral.util.xiaomiInstallReferrerClass
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -367,12 +369,21 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
         getLatestValidReferrerStore(allReferrers)
     }
 
-    return if (timeoutMs > 0) {
+    return coroutineScope {
+        // Samsung MAPS runs next to the store referrers with its own time limit, so a blocked
+        // MAPS query can't discard a store referrer that already arrived.
+        val samsungMapsPreinstall = async { fetchSamsungMapsPreinstallData(context) }
+
+        val latestReferrer = if (timeoutMs > 0) {
                 withTimeoutOrNull(timeoutMs.toLong()) { fetchAll() }
             }
             else {
                 fetchAll()
             }
+
+        samsungMapsPreinstall.await()
+        latestReferrer
+    }
 }
 
 /**

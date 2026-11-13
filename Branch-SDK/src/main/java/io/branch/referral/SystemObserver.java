@@ -42,6 +42,8 @@ import kotlin.Pair;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
+import kotlin.coroutines.intrinsics.IntrinsicsKt;
+import kotlin.jvm.functions.Function2;
 
 /**
  * <p>Class that provides a series of methods providing access to commonly used, device-wide
@@ -592,9 +594,14 @@ abstract class SystemObserver {
     }
 
     public void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback) {
+        fetchInstallReferrer(context_, callback, InstallReferrersKt::fetchLatestInstallReferrer);
+    }
+
+    void fetchInstallReferrer(Context context_, InstallReferrerFetchEvents callback,
+                              Function2<Context, Continuation<? super InstallReferrerResult>, Object> fetch) {
         BranchLogger.v("Begin fetchInstallReferrer");
         try {
-            InstallReferrersKt.fetchLatestInstallReferrer(context_, new Continuation<InstallReferrerResult>() {
+            Object result = fetch.invoke(context_, new Continuation<InstallReferrerResult>() {
                 @NonNull
                 @Override
                 public CoroutineContext getContext() {
@@ -603,28 +610,43 @@ abstract class SystemObserver {
 
                 @Override
                 public void resumeWith(@NonNull Object o) {
-                    if (o != null) {
-                        BranchLogger.v("fetchInstallReferrer resumeWith got result: " + o);
-                        InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
-                        AppStoreReferrer.processReferrerInfo(context_,
-                                latestReferrer.getInstallReferrer(),
-                                latestReferrer.getReferrerClickTimestampSeconds(),
-                                latestReferrer.getInstallBeginTimestampSeconds(),
-                                latestReferrer.getAppStore(),
-                                latestReferrer.isClickThrough(),
-                                latestReferrer.getInstallBeginTimestampServerSeconds(),
-                                latestReferrer.getReferrerClickTimestampServerSeconds());
-                    } else {
-                        BranchLogger.v("fetchInstallReferrer resumeWith got null result");
-                    }
-
-                    if (callback != null) {
-                        callback.onInstallReferrersFinished();
-                    }
+                    onInstallReferrerFetchResult(context_, o, callback);
                 }
             });
+
+            // The fetch finished without suspending, so resumeWith will not be called.
+            if (result != IntrinsicsKt.getCOROUTINE_SUSPENDED()) {
+                onInstallReferrerFetchResult(context_, result, callback);
+            }
         } catch(Exception e) {
             BranchLogger.e("Caught Exception SystemObserver fetchInstallReferrer " + e.getMessage());
+            if (callback != null) {
+                callback.onInstallReferrersFinished();
+            }
+        }
+    }
+
+    private void onInstallReferrerFetchResult(Context context_, Object o, InstallReferrerFetchEvents callback) {
+        try {
+            if (o instanceof InstallReferrerResult) {
+                BranchLogger.v("fetchInstallReferrer got result: " + o);
+                InstallReferrerResult latestReferrer = (InstallReferrerResult) o;
+                AppStoreReferrer.processReferrerInfo(context_,
+                        latestReferrer.getInstallReferrer(),
+                        latestReferrer.getReferrerClickTimestampSeconds(),
+                        latestReferrer.getInstallBeginTimestampSeconds(),
+                        latestReferrer.getAppStore(),
+                        latestReferrer.isClickThrough(),
+                        latestReferrer.getInstallBeginTimestampServerSeconds(),
+                        latestReferrer.getReferrerClickTimestampServerSeconds());
+            } else if (o != null) {
+                BranchLogger.e("fetchInstallReferrer ended with an error: " + o);
+            } else {
+                BranchLogger.v("fetchInstallReferrer got null result");
+            }
+        } catch (Exception e) {
+            BranchLogger.e("Caught Exception SystemObserver onInstallReferrerFetchResult " + e.getMessage());
+        } finally {
             if (callback != null) {
                 callback.onInstallReferrersFinished();
             }

@@ -1,4 +1,20 @@
 # Branch Android SDK change log
+- v5.22.0
+  - Add Samsung MAPS pre-install attribution. When Samsung MAPS installed the app, `/v1/install` carries `preinstall_partner` = `a_ott_samsung_san` and `preinstall_campaign` = the MAPS ID, or `Samsung MAPS` when MAPS returns no ID. Pre-install values the app already set are not overwritten.
+    - `setSamsungMapsAppTrackingId(String appTrackingId)`
+    - Call before `Branch.sessionBuilder(activity).init()`
+      For example:
+        `Branch.getInstance().setSamsungMapsAppTrackingId("<your app tracking ID>")`
+    - Add to the app's `AndroidManifest.xml`. Without `<queries>`, Android 11+ hides the MAPS provider and the SDK doesn't query it.
+      ```
+      <uses-permission android:name="com.samsung.android.mapsagent.permission.READ_APP_INFO"/>
+      <queries>
+          <package android:name="com.samsung.android.mapsagent" />
+      </queries>
+      ```
+    - Samsung MAPS is queried at most once per install. The install request waits for it up to the `setInstallReferrerTimeout` value, or 3 seconds when that is 0.
+  - Fix `/v1/install` never being sent when the install referrer fetch finishes without suspending or ends with an error.
+
 - v5.21.3
   - Add ProGuard rule to keep `AdvertisingIdClient` class name for referencing. Removes need for developer to add this rule.
 

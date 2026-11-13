@@ -139,6 +139,9 @@ public class PrefHelper {
 
     static final String KEY_INSTALL_REFERRER_TIMEOUT_MS = "bnc_install_referrer_timeout";
 
+    static final String KEY_SAMSUNG_MAPS_APP_TRACKING_ID = "bnc_samsung_maps_app_tracking_id";
+    static final String KEY_SAMSUNG_MAPS_QUERY_RECORD = "bnc_samsung_maps_query_record";
+
     /**
      * Internal static variable of own type {@link PrefHelper}. This variable holds the single
      * instance used when the class is instantiated via the Singleton pattern.
@@ -1347,12 +1350,18 @@ public class PrefHelper {
         String linkClickIdentifier = getLinkClickIdentifier();
         String appLink = getAppLink();
         String pushIdentifier = getPushIdentifier();
+        // Samsung MAPS may block a package that queries too often, so the record of a query is kept
+        boolean hasSamsungMapsQueryRecord = hasPrefValue(KEY_SAMSUNG_MAPS_QUERY_RECORD);
+        String samsungMapsQueryRecord = getString(KEY_SAMSUNG_MAPS_QUERY_RECORD);
         prefsEditor_.clear();
-        
+
         setLinkClickID(linkClickID);
         setLinkClickIdentifier(linkClickIdentifier);
         setAppLink(appLink);
         setPushIdentifier(pushIdentifier);
+        if (hasSamsungMapsQueryRecord) {
+            setString(KEY_SAMSUNG_MAPS_QUERY_RECORD, samsungMapsQueryRecord);
+        }
         prefsEditor_.apply();
     }
     
@@ -1520,6 +1529,41 @@ public class PrefHelper {
 
     public int getInstallReferrerTimeout(){
         return getInteger(KEY_INSTALL_REFERRER_TIMEOUT_MS, 0);
+    }
+
+    public void setSamsungMapsAppTrackingId(String appTrackingId) {
+        if (appTrackingId == null) {
+            removePrefValue(KEY_SAMSUNG_MAPS_APP_TRACKING_ID);
+        } else {
+            setString(KEY_SAMSUNG_MAPS_APP_TRACKING_ID, appTrackingId);
+        }
+    }
+
+    public String getSamsungMapsAppTrackingId() {
+        return hasPrefValue(KEY_SAMSUNG_MAPS_APP_TRACKING_ID) ? getString(KEY_SAMSUNG_MAPS_APP_TRACKING_ID) : null;
+    }
+
+    /**
+     * Saves the Samsung MAPS query record. Written synchronously, so the record survives a crash during the query.
+     */
+    public void setSamsungMapsQueryRecord(JSONObject record) {
+        prefsEditor_.putString(KEY_SAMSUNG_MAPS_QUERY_RECORD, record.toString()).commit();
+    }
+
+    /**
+     * Returns the saved Samsung MAPS query record, or null if MAPS was never queried.
+     * A record that can't be parsed is returned as an empty object, so it still counts as a query.
+     */
+    public JSONObject getSamsungMapsQueryRecord() {
+        if (!hasPrefValue(KEY_SAMSUNG_MAPS_QUERY_RECORD)) {
+            return null;
+        }
+        try {
+            return new JSONObject(getString(KEY_SAMSUNG_MAPS_QUERY_RECORD));
+        } catch (JSONException e) {
+            BranchLogger.w("Could not parse Samsung MAPS query record: " + e.getMessage());
+            return new JSONObject();
+        }
     }
 
     /**
