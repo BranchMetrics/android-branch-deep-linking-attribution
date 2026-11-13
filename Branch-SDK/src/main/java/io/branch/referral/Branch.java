@@ -2734,6 +2734,20 @@ public class Branch {
     }
 
     /**
+     * Sets the app tracking ID used to read Samsung MAPS pre-install data before the install request is sent.
+     * @param appTrackingId The app tracking ID registered with Samsung for this app's MAPS campaign.
+     */
+    public void setSamsungMapsAppTrackingId(String appTrackingId) {
+        if (appTrackingId == null || appTrackingId.trim().isEmpty()) {
+            BranchLogger.w("setSamsungMapsAppTrackingId: appTrackingId is null or blank, Samsung MAPS will not be queried");
+            PrefHelper.getInstance(context_).setSamsungMapsAppTrackingId(null);
+            return;
+        }
+        PrefHelper.getInstance(context_).setSamsungMapsAppTrackingId(appTrackingId);
+        BranchLogger.v("set Samsung MAPS app tracking ID to " + appTrackingId);
+    }
+
+    /**
      * Internal method to display an in app web browser.
      * Launches default browser that supports CustomTabs.
      */
