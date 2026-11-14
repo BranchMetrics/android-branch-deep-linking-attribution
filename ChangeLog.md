@@ -1,4 +1,9 @@
 # Branch Android SDK change log
+- v5.22.0
+  - `app_store` on `/v1/install` and `/v1/open` now comes from the app's installer (Google Play, Huawei AppGallery, Samsung Galaxy Store, Xiaomi GetApps), even when no install referrer library answers. It's sent on every open, so it names the store that last installed or updated the app. Apps from any other installer, or sideloaded, send no `app_store`. A winning Meta install referrer still takes precedence.
+  - `user_data.app_store` on events is now read when the event is sent, not when it's created, so events logged before session init finishes carry the same value as the init.
+  - When `setInstallReferrerTimeout` runs out, referrer answers that already arrived are kept instead of discarded.
+
 - v5.21.3
   - Add ProGuard rule to keep `AdvertisingIdClient` class name for referencing. Removes need for developer to add this rule.
 
