@@ -25,10 +25,9 @@ public class AppStoreReferrer {
                                            Long referrerClickTimestampServerSeconds) {
         PrefHelper prefHelper = PrefHelper.getInstance(context);
         if(!TextUtils.isEmpty(store)){
-            prefHelper.setAppStoreSource(store);
-
-            //Set the click through flag for Meta Install Referrers
+            //Set the store and click through flag for Meta Install Referrers
             if (store.equals(Defines.Jsonkey.Meta_Install_Referrer.getKey())) {
+                prefHelper.setAppStoreSource(store);
                 prefHelper.setIsMetaClickThrough(isClickThrough);
             }
         }
