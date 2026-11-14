@@ -10,6 +10,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -83,14 +84,23 @@ class InstallerAppStoreTest {
     }
 
     @Test
-    fun precedence() {
-        assertEquals("Meta", resolveAppStore("Meta", "PlayStore"))
-        assertEquals("Meta", resolveAppStore("Meta", null))
-        assertEquals("GalaxyStore", resolveAppStore("Meta", "GalaxyStore"))
-        assertEquals("PlayStore", resolveAppStore("AppGallery", "PlayStore"))
-        assertNull(resolveAppStore("PlayStore", null))
-        assertNull(resolveAppStore(null, null))
-        assertEquals("PlayStore", resolveAppStore(null, "PlayStore"))
+    fun precedenceOnOpen() {
+        assertEquals("Meta", resolveAppStore("Meta", "PlayStore", false))
+        assertEquals("Meta", resolveAppStore("Meta", null, false))
+        assertEquals("GalaxyStore", resolveAppStore("Meta", "GalaxyStore", false))
+        assertEquals("PlayStore", resolveAppStore("AppGallery", "PlayStore", false))
+        assertNull(resolveAppStore("PlayStore", null, false))
+        assertNull(resolveAppStore(null, null, false))
+        assertEquals("PlayStore", resolveAppStore(null, "PlayStore", false))
+    }
+
+    @Test
+    fun precedenceOnInstall() {
+        assertEquals("Meta", resolveAppStore("Meta", "PlayStore", true))
+        assertEquals("Meta", resolveAppStore("Meta", null, true))
+        assertEquals("Meta", resolveAppStore("Meta", "GalaxyStore", true))
+        assertEquals("GalaxyStore", resolveAppStore(null, "GalaxyStore", true))
+        assertNull(resolveAppStore(null, null, true))
     }
 
     @Test
@@ -101,28 +111,47 @@ class InstallerAppStoreTest {
         val winner = getLatestValidReferrerStore(listOf(playStore, null, null, null, metaClickThrough))
 
         assertEquals(metaClickThrough, winner)
-        assertEquals("Meta", resolveAppStore(winner!!.appStore, installerToAppStore("com.android.vending")))
+        assertEquals("Meta", resolveAppStore(winner!!.appStore, installerToAppStore("com.android.vending"), true))
     }
 
     @Test
     fun updateAppStoreSourceWritesInstallerStore() {
         val prefHelper = mockPrefHelper(PrefHelper.NO_STRING_VALUE)
-        updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper)
+        updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, false)
         verify(prefHelper).setAppStoreSource("GalaxyStore")
     }
 
     @Test
     fun updateAppStoreSourceKeepsMetaWithPlayInstaller() {
         val prefHelper = mockPrefHelper("Meta")
-        updateAppStoreSource(mockContext("com.android.vending"), prefHelper)
+        updateAppStoreSource(mockContext("com.android.vending"), prefHelper, false)
+        verify(prefHelper).setAppStoreSource("Meta")
+    }
+
+    @Test
+    fun updateAppStoreSourceKeepsMetaOnInstallWithOtherStoreInstaller() {
+        val prefHelper = mockPrefHelper("Meta")
+        updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, true)
         verify(prefHelper).setAppStoreSource("Meta")
     }
 
     @Test
     fun updateAppStoreSourceClearsStoreForUnknownInstaller() {
         val prefHelper = mockPrefHelper("PlayStore")
-        updateAppStoreSource(mockContext(null), prefHelper)
+        updateAppStoreSource(mockContext(null), prefHelper, false)
         verify(prefHelper).setAppStoreSource(PrefHelper.NO_STRING_VALUE)
+    }
+
+    @Test
+    fun updateAppStoreSourceSkippedWhenTrackingDisabled() {
+        val prefHelper = mockPrefHelper(PrefHelper.NO_STRING_VALUE)
+        `when`(prefHelper.getBool(PrefHelper.KEY_TRACKING_STATE)).thenReturn(true)
+        val context = mockContext("com.android.vending")
+
+        updateAppStoreSource(context, prefHelper, false)
+
+        verify(prefHelper, never()).setAppStoreSource(any())
+        verify(context, never()).packageManager
     }
 
     private fun mockContext(installer: String?): Context {

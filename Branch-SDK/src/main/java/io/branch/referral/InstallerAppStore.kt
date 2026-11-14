@@ -41,11 +41,12 @@ internal fun installerToAppStore(installer: String?): String? {
 
 /**
  * Returns the app_store value to store, given the stored value and the installer's store.
- * A stored Meta value is kept unless the installer is a store other than Google Play.
+ * A stored Meta value is always kept on install. On open, it is kept unless the installer
+ * is a store other than Google Play.
  */
-internal fun resolveAppStore(stored: String?, installerStore: String?): String? {
+internal fun resolveAppStore(stored: String?, installerStore: String?, isInstall: Boolean): String? {
     if (stored == Defines.Jsonkey.Meta_Install_Referrer.key
-        && (installerStore == null || installerStore == Defines.Jsonkey.Google_Play_Store.key)) {
+        && (isInstall || installerStore == null || installerStore == Defines.Jsonkey.Google_Play_Store.key)) {
         return Defines.Jsonkey.Meta_Install_Referrer.key
     }
     return installerStore
@@ -53,11 +54,16 @@ internal fun resolveAppStore(stored: String?, installerStore: String?): String? 
 
 /**
  * Reads the installer of this app and saves the resulting app_store value in [prefHelper].
+ * Does nothing while tracking is disabled.
  */
-internal fun updateAppStoreSource(context: Context, prefHelper: PrefHelper) {
+internal fun updateAppStoreSource(context: Context, prefHelper: PrefHelper, isInstall: Boolean) {
+    if (prefHelper.getBool(PrefHelper.KEY_TRACKING_STATE)) {
+        BranchLogger.v("Tracking is disabled, not updating app_store")
+        return
+    }
     val installer = getInstallerPackageName(context.packageManager, context.packageName, Build.VERSION.SDK_INT)
     val stored = prefHelper.appStoreSource.takeUnless { it == PrefHelper.NO_STRING_VALUE }
-    val appStore = resolveAppStore(stored, installerToAppStore(installer))
+    val appStore = resolveAppStore(stored, installerToAppStore(installer), isInstall)
     prefHelper.setAppStoreSource(appStore ?: PrefHelper.NO_STRING_VALUE)
     BranchLogger.v("Installer package: $installer, app_store: $appStore")
 }
