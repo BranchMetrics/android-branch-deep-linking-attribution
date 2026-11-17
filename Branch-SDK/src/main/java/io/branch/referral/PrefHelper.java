@@ -598,18 +598,23 @@ public class PrefHelper {
     }
 
     /**
-     * Sets a new randomly generated UUID for some SAN APIs.
-     * @param uuid
+     * No-op. The anonymous ID is read from the Meta SDK and cannot be set.
+     * @param uuid Ignored.
+     * @deprecated The anonymous ID is read from the Meta SDK.
      */
+    @Deprecated
     public void setAnonID(String uuid){
-        setString(KEY_ANON_ID, uuid);
+        BranchLogger.w("setAnonID is deprecated and has no effect. The anonymous ID is read from the Meta SDK.");
     }
 
     /**
-     * Returns our own randomly generated UUID for some SAN APIs.
+     * Returns the Meta SDK anonymous ID, or null if it is unavailable.
+     * @deprecated The anonymous ID is read from the Meta SDK.
      */
+    @Deprecated
     public String getAnonID() {
-        return getString(KEY_ANON_ID);
+        DeviceInfo deviceInfo = DeviceInfo.getInstance();
+        return deviceInfo != null ? deviceInfo.fbSdkAnonId() : null;
     }
     
     /**

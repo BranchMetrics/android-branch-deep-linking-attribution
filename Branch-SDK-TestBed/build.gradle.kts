@@ -20,6 +20,10 @@ dependencies {
 
     implementation("androidx.browser:browser:1.8.0")
 
+    implementation("com.facebook.android:facebook-core:19.0.1")
+    // facebook-core brings kotlin-stdlib 1.8.20; align stdlib-jdk7/jdk8 so their classes are not duplicated.
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.20"))
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")

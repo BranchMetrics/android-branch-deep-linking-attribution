@@ -4,7 +4,8 @@ Layer 1 wire-validation for the Branch Android SDK.
 Parses branchlogs.txt (captured during the L1 instrumented run), extracts each
 wire request, and asserts the SDK is emitting every device/SDK field that must
 be on the wire. Presence-only check — a missing field fails the run; field
-contents are not type-checked.
+contents are not type-checked, except that anon_id must carry Meta's "XZ"
+prefix.
 
 On success the validator prints the full payload for every captured request
 plus a per-field check table so reviewers can verify what actually went over
@@ -52,10 +53,15 @@ REQUIRED_COMMON = [
 # connection_type is only emitted on init/event requests, so /v1/url
 # (a CreateUrl request) legitimately lacks it.
 REQUIRED_PER_ENDPOINT = {
-    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time"],
-    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token"],
+    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time", "anon_id"],
+    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token", "anon_id"],
     "/v1/url": [],
 }
+
+# anon_id is the Meta SDK anonymous ID (the TestBed links facebook-core).
+# Meta's IDs start with this prefix; anything else (e.g. a legacy Branch
+# UUID) means the SDK is not reading Meta's value.
+META_ANON_ID_PREFIX = "XZ"
 
 
 def parse_branch_logs(file_path):
@@ -170,6 +176,15 @@ def validate_request(entry, idx, total):
         else:
             print(f"  {marker} {field:<35} MISSING")
             errors.append(f"Request {idx} ({uri}): missing required field '{field}'")
+
+    anon_id = lookup_field(request, "anon_id")
+    if is_present(anon_id) and not (
+        isinstance(anon_id, str) and anon_id.startswith(META_ANON_ID_PREFIX)
+    ):
+        errors.append(
+            f"Request {idx} ({uri}): anon_id '{anon_id}' does not start with "
+            f"'{META_ANON_ID_PREFIX}' (not a Meta SDK anonymous ID)"
+        )
 
     return errors
 
