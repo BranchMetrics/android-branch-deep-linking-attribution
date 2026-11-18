@@ -56,6 +56,13 @@ class MissingFieldTests(unittest.TestCase):
             f"Expected wifi-missing error, got: {errors}",
         )
 
+    def test_missing_wifi_fails_only_for_wifi(self):
+        errors, _ = _run_validation("missing_wifi.txt")
+        self.assertEqual(
+            errors,
+            ["Request 1 (/v1/install): missing required field 'wifi'"],
+        )
+
 
 class InstallRequiredTests(unittest.TestCase):
     def test_capture_without_install_fails(self):
@@ -64,6 +71,42 @@ class InstallRequiredTests(unittest.TestCase):
             any("'/v1/install' was not captured" in e for e in errors),
             f"Expected install-missing error, got: {errors}",
         )
+
+    def test_capture_without_install_fails_only_for_install(self):
+        errors, _ = _run_validation("no_install.txt")
+        self.assertEqual(errors, ["Mandatory endpoint '/v1/install' was not captured."])
+
+
+class MetaAnonIdTests(unittest.TestCase):
+    def test_happy_path_has_meta_anon_id_on_install_and_open(self):
+        entries = v.parse_branch_logs(_fixture("happy_path.txt"))
+        for entry in entries:
+            self.assertTrue(
+                entry["request"]["anon_id"].startswith(v.META_ANON_ID_PREFIX),
+                f"{entry['uri']} anon_id lacks Meta prefix",
+            )
+
+    def test_missing_anon_id_fails_with_named_error(self):
+        errors, _ = _run_validation("missing_anon_id.txt")
+        self.assertEqual(
+            errors,
+            ["Request 1 (/v1/install): missing required field 'anon_id'"],
+        )
+
+    def test_legacy_anon_id_fails_prefix_check(self):
+        errors, _ = _run_validation("legacy_anon_id.txt")
+        self.assertEqual(len(errors), 2, f"Expected install+open errors, got: {errors}")
+        for err, uri in zip(errors, ["/v1/install", "/v1/open"]):
+            self.assertIn(uri, err)
+            self.assertIn("does not start with 'XZ'", err)
+
+    def test_legacy_anon_id_row_is_marked_failed(self):
+        _, output = _run_validation("legacy_anon_id.txt")
+        anon_rows = [line for line in output.splitlines() if line.strip().split(" ")[1:2] == ["anon_id"]]
+        self.assertEqual(len(anon_rows), 2, f"Expected an anon_id row per request, got: {anon_rows}")
+        for row in anon_rows:
+            self.assertTrue(row.strip().startswith("✗"), f"anon_id row not marked failed: {row}")
+            self.assertIn("does not start with 'XZ'", row)
 
 
 if __name__ == "__main__":

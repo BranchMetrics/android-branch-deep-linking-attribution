@@ -24,7 +24,9 @@ python3 -m unittest scripts.test_validate_l1_logs -v
 
 Presence-only. A required field is either there (pass) or absent (fail). No
 type checks, no value-format checks — those are intentionally left to the
-backend ingestion gate.
+backend ingestion gate. The one exception is `anon_id`: it must start with
+`META_ANON_ID_PREFIX` (`XZ`), the Meta SDK anonymous ID format. The TestBed
+links `facebook-core` so this ID is present.
 
 The required field list lives at the top of `validate_l1_logs.py`:
 
@@ -32,8 +34,9 @@ The required field list lives at the top of `validate_l1_logs.py`:
 - `REQUIRED_PER_ENDPOINT` — additional fields per endpoint. Today this
   covers `is_hardware_id_real` and `first_install_time` on `/v1/install`;
   `randomized_device_token` and `randomized_bundle_token` on `/v1/open`;
-  and `connection_type` on both `/v1/install` and `/v1/open` (only emitted
-  on init/event requests, so `/v1/url` legitimately lacks it).
+  and `connection_type` and `anon_id` on both `/v1/install` and `/v1/open`
+  (`connection_type` is only emitted on init/event requests, so `/v1/url`
+  legitimately lacks it).
 
 Required-field checks are scoped to `/v1/*` only. Captured non-v1
 endpoints (e.g. `/v2/event/*`) get their payload printed for visibility

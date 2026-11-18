@@ -710,6 +710,7 @@ public abstract class ServerRequest {
         
         // Update the dynamic device info params
         updateDeviceInfo();
+        DeviceInfo.getInstance().addFbSdkAnonId(this);
         updateDisableAdNetworkCallouts();
         //Google ADs ID  and LAT value are updated using reflection. These method need background thread
         //So updating them for install and open on background thread.

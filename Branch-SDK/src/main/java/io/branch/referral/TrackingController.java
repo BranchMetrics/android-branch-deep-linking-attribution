@@ -84,7 +84,6 @@ public class TrackingController {
         prefHelper.setExternalIntentUri(PrefHelper.NO_STRING_VALUE);
         prefHelper.setExternalIntentExtra(PrefHelper.NO_STRING_VALUE);
         prefHelper.setSessionParams(PrefHelper.NO_STRING_VALUE);
-        prefHelper.setAnonID(PrefHelper.NO_STRING_VALUE);
         prefHelper.setReferringUrlQueryParameters(new JSONObject());
         Branch.getInstance().clearPartnerParameters();
     }

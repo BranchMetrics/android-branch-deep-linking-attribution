@@ -80,20 +80,6 @@ abstract class SystemObserver {
     }
 
     /**
-     * Randomly generated value for some SAN APIs.
-     *
-     * @return anon A {@link String} value that is a randomly generated UUID
-     */
-    static String getAnonID(Context context) {
-        String anonID = PrefHelper.getInstance(context).getAnonID();
-        if (TextUtils.isEmpty(anonID) || anonID.equals(BLANK)) {
-            anonID = UUID.randomUUID().toString();
-            PrefHelper.getInstance(context).setAnonID(anonID);
-        }
-        return anonID;
-    }
-
-    /**
      * Get the package name for this application.
      * @param context Context.
      * @return {@link String} with value as package name. Empty String in case of error
