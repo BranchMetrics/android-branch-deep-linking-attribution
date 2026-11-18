@@ -1,11 +1,4 @@
 # Branch Android SDK change log
-- v5.22.0
-  - `anon_id` is now the Meta (Facebook) SDK anonymous ID, read at runtime from `AppEventsLogger.getAnonymousAppDeviceGUID` when the Meta SDK is present. The SDK no longer generates or stores its own `anon_id`.
-  - If the Meta SDK is not in the app, `anon_id` is omitted from requests. Previously a Branch-generated UUID was always sent.
-  - `anon_id` is not sent when the consumer protection attribution level is `NONE`.
-  - Deprecated `PrefHelper.getAnonID()`, which now returns the Meta SDK anonymous ID, and `PrefHelper.setAnonID(String)`, which now has no effect.
-  - Added a consumer ProGuard rule that keeps `AppEventsLogger.getAnonymousAppDeviceGUID` so the ID can be read in minified apps.
-
 - v5.21.3
   - Add ProGuard rule to keep `AdvertisingIdClient` class name for referencing. Removes need for developer to add this rule.
 

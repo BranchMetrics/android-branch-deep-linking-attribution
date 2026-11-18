@@ -100,6 +100,14 @@ class MetaAnonIdTests(unittest.TestCase):
             self.assertIn(uri, err)
             self.assertIn("does not start with 'XZ'", err)
 
+    def test_legacy_anon_id_row_is_marked_failed(self):
+        _, output = _run_validation("legacy_anon_id.txt")
+        anon_rows = [line for line in output.splitlines() if line.strip().split(" ")[1:2] == ["anon_id"]]
+        self.assertEqual(len(anon_rows), 2, f"Expected an anon_id row per request, got: {anon_rows}")
+        for row in anon_rows:
+            self.assertTrue(row.strip().startswith("✗"), f"anon_id row not marked failed: {row}")
+            self.assertIn("does not start with 'XZ'", row)
+
 
 if __name__ == "__main__":
     unittest.main()

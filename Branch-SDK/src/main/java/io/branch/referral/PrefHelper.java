@@ -197,6 +197,10 @@ public class PrefHelper {
     private PrefHelper(Context context) {
         this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
         this.prefsEditor_ = this.appSharedPrefs_.edit();
+        // The SDK no longer generates its own anonymous ID; delete the one older versions stored.
+        if (appSharedPrefs_.contains(KEY_ANON_ID)) {
+            prefsEditor_.remove(KEY_ANON_ID).apply();
+        }
     }
     
     /**
@@ -608,13 +612,14 @@ public class PrefHelper {
     }
 
     /**
-     * Returns the Meta SDK anonymous ID, or null if it is unavailable.
+     * Returns the Meta SDK anonymous ID, or {@link #NO_STRING_VALUE} if it is unavailable.
      * @deprecated The anonymous ID is read from the Meta SDK.
      */
     @Deprecated
     public String getAnonID() {
         DeviceInfo deviceInfo = DeviceInfo.getInstance();
-        return deviceInfo != null ? deviceInfo.fbSdkAnonId() : null;
+        String anonID = deviceInfo != null ? deviceInfo.fbSdkAnonId() : null;
+        return anonID != null ? anonID : NO_STRING_VALUE;
     }
     
     /**

@@ -11,15 +11,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TestFbSdkAppEventsLogger {
     static volatile String anonymousAppDeviceGUID;
+    static volatile boolean throwOnCall;
     static final AtomicInteger callCount = new AtomicInteger();
 
     static void reset() {
         anonymousAppDeviceGUID = null;
+        throwOnCall = false;
         callCount.set(0);
     }
 
     public static String getAnonymousAppDeviceGUID(Context context) {
         callCount.incrementAndGet();
+        if (throwOnCall) {
+            throw new IllegalStateException("Meta SDK not initialized");
+        }
         return anonymousAppDeviceGUID;
     }
 }

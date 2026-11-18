@@ -169,22 +169,19 @@ def validate_request(entry, idx, total):
     print(f"Required fields ({len(fields)}):")
     for field in fields:
         value = lookup_field(request, field)
-        present = is_present(value)
-        marker = "✓" if present else "✗"
-        if present:
-            print(f"  {marker} {field:<35} {value}")
-        else:
-            print(f"  {marker} {field:<35} MISSING")
+        if not is_present(value):
+            print(f"  ✗ {field:<35} MISSING")
             errors.append(f"Request {idx} ({uri}): missing required field '{field}'")
-
-    anon_id = lookup_field(request, "anon_id")
-    if is_present(anon_id) and not (
-        isinstance(anon_id, str) and anon_id.startswith(META_ANON_ID_PREFIX)
-    ):
-        errors.append(
-            f"Request {idx} ({uri}): anon_id '{anon_id}' does not start with "
-            f"'{META_ANON_ID_PREFIX}' (not a Meta SDK anonymous ID)"
-        )
+        elif field == "anon_id" and not (
+            isinstance(value, str) and value.startswith(META_ANON_ID_PREFIX)
+        ):
+            print(f"  ✗ {field:<35} {value} (does not start with '{META_ANON_ID_PREFIX}')")
+            errors.append(
+                f"Request {idx} ({uri}): anon_id '{value}' does not start with "
+                f"'{META_ANON_ID_PREFIX}' (not a Meta SDK anonymous ID)"
+            )
+        else:
+            print(f"  ✓ {field:<35} {value}")
 
     return errors
 

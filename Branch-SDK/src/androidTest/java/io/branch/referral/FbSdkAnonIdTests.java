@@ -1,5 +1,8 @@
 package io.branch.referral;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONObject;
@@ -37,18 +40,27 @@ public class FbSdkAnonIdTests extends BranchTest {
         TestFbSdkAppEventsLogger.reset();
     }
 
+    private ServerRequest newEvent() {
+        return new ServerRequestLogEvent(getTestContext(), Defines.RequestPath.TrackStandardEvent,
+                "PURCHASE", new HashMap<String, Object>(), new JSONObject(), new JSONObject(), new ArrayList<BranchUniversalObject>());
+    }
+
+    // The anon_id is added in the background step that runs just before a request is sent.
+    private static JSONObject sentPost(ServerRequest request) {
+        request.doFinalUpdateOnBackgroundThread();
+        return request.getPost();
+    }
+
     private JSONObject installPost() {
-        return new ServerRequestRegisterInstall(getTestContext(), null, false).getPost();
+        return sentPost(new ServerRequestRegisterInstall(getTestContext(), null, false));
     }
 
     private JSONObject openPost() {
-        return new ServerRequestRegisterOpen(getTestContext(), null, false).getPost();
+        return sentPost(new ServerRequestRegisterOpen(getTestContext(), null, false));
     }
 
     private JSONObject eventUserData() throws Exception {
-        ServerRequest event = new ServerRequestLogEvent(getTestContext(), Defines.RequestPath.TrackStandardEvent,
-                "PURCHASE", new HashMap<String, Object>(), new JSONObject(), new JSONObject(), new ArrayList<BranchUniversalObject>());
-        return event.getPost().getJSONObject(Defines.Jsonkey.UserData.getKey());
+        return sentPost(newEvent()).getJSONObject(Defines.Jsonkey.UserData.getKey());
     }
 
     @Test
@@ -83,15 +95,58 @@ public class FbSdkAnonIdTests extends BranchTest {
     }
 
     @Test
-    public void testMetaSdkAbsentReturnsNull() {
+    public void testMetaSdkAbsentIsRemembered() {
         initWithStub();
         // The real Meta class name; the Meta SDK is not on this module's test classpath.
         deviceInfo.fbSdkLoggerClassName = DependencyUtilsKt.metaAppEventsLoggerClass;
         Assert.assertNull(deviceInfo.fbSdkAnonId());
 
-        // Class present but without the accessor.
+        // Once the class is known to be missing, it is not looked up again.
+        deviceInfo.fbSdkLoggerClassName = TestFbSdkAppEventsLogger.class.getName();
+        TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = META_ANON_ID;
+        Assert.assertNull(deviceInfo.fbSdkAnonId());
+        Assert.assertEquals(0, TestFbSdkAppEventsLogger.callCount.get());
+    }
+
+    @Test
+    public void testMetaAccessorMissingIsRemembered() {
+        initWithStub();
+        // Class present but without the accessor, as when R8 strips it.
         deviceInfo.fbSdkLoggerClassName = Object.class.getName();
         Assert.assertNull(deviceInfo.fbSdkAnonId());
+
+        deviceInfo.fbSdkLoggerClassName = TestFbSdkAppEventsLogger.class.getName();
+        TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = META_ANON_ID;
+        Assert.assertNull(deviceInfo.fbSdkAnonId());
+        Assert.assertEquals(0, TestFbSdkAppEventsLogger.callCount.get());
+    }
+
+    @Test
+    public void testMetaThrowingIsRetried() {
+        initWithStub();
+        TestFbSdkAppEventsLogger.throwOnCall = true;
+        Assert.assertNull(deviceInfo.fbSdkAnonId());
+        Assert.assertEquals(1, TestFbSdkAppEventsLogger.callCount.get());
+
+        TestFbSdkAppEventsLogger.throwOnCall = false;
+        TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = META_ANON_ID;
+        Assert.assertEquals(META_ANON_ID, deviceInfo.fbSdkAnonId());
+        Assert.assertEquals(2, TestFbSdkAppEventsLogger.callCount.get());
+    }
+
+    @Test
+    public void testRequestConstructorDoesNotReadMeta() throws Exception {
+        initWithStub();
+        TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = META_ANON_ID;
+
+        ServerRequest install = new ServerRequestRegisterInstall(getTestContext(), null, false);
+        ServerRequest event = newEvent();
+        Assert.assertEquals(0, TestFbSdkAppEventsLogger.callCount.get());
+        Assert.assertFalse(install.getPost().has(ANON_ID_KEY));
+        Assert.assertFalse(event.getPost().getJSONObject(Defines.Jsonkey.UserData.getKey()).has(ANON_ID_KEY));
+
+        Assert.assertEquals(META_ANON_ID, sentPost(install).getString(ANON_ID_KEY));
+        Assert.assertEquals(META_ANON_ID, sentPost(event).getJSONObject(Defines.Jsonkey.UserData.getKey()).getString(ANON_ID_KEY));
     }
 
     @Test
@@ -145,10 +200,10 @@ public class FbSdkAnonIdTests extends BranchTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    public void testDeprecatedPrefHelperGetterReturnsNullWithoutMeta() {
+    public void testDeprecatedPrefHelperGetterReturnsNoValueWithoutMeta() {
         initWithStub();
         TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = null;
-        Assert.assertNull(prefHelper.getAnonID());
+        Assert.assertEquals(PrefHelper.NO_STRING_VALUE, prefHelper.getAnonID());
     }
 
     @Test
@@ -163,9 +218,17 @@ public class FbSdkAnonIdTests extends BranchTest {
         TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = META_ANON_ID;
         Assert.assertEquals(META_ANON_ID, installPost().getString(ANON_ID_KEY));
         Assert.assertEquals(META_ANON_ID, eventUserData().getString(ANON_ID_KEY));
+    }
 
-        // The legacy value is left in place, untouched.
-        Assert.assertEquals(LEGACY_GUID, prefHelper.getString(PrefHelper.KEY_ANON_ID));
+    @Test
+    public void testLegacyGuidDeletedWhenPrefHelperCreated() {
+        // An upgraded app starts with the value an older SDK version stored, before any PrefHelper exists.
+        SharedPreferences prefs = getTestContext().getSharedPreferences("branch_referral_shared_pref", Context.MODE_PRIVATE);
+        prefs.edit().putString(PrefHelper.KEY_ANON_ID, LEGACY_GUID).commit();
+
+        initWithStub();
+        Assert.assertFalse(prefHelper.hasPrefValue(PrefHelper.KEY_ANON_ID));
+        Assert.assertFalse(prefs.contains(PrefHelper.KEY_ANON_ID));
     }
 
     @Test
