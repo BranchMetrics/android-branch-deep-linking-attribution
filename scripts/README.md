@@ -34,9 +34,9 @@ The required field list lives at the top of `validate_l1_logs.py`:
 - `REQUIRED_PER_ENDPOINT` — additional fields per endpoint. Today this
   covers `is_hardware_id_real` and `first_install_time` on `/v1/install`;
   `randomized_device_token` and `randomized_bundle_token` on `/v1/open`;
-  and `connection_type` and `anon_id` on both `/v1/install` and `/v1/open`
-  (`connection_type` is only emitted on init/event requests, so `/v1/url`
-  legitimately lacks it).
+  and `connection_type`, `timezone` and `anon_id` on both `/v1/install`
+  and `/v1/open` (`connection_type` and `timezone` are only emitted on
+  init/event requests, so `/v1/url` legitimately lacks them).
 
 Required-field checks are scoped to `/v1/*` only. Captured non-v1
 endpoints (e.g. `/v2/event/*`) get their payload printed for visibility

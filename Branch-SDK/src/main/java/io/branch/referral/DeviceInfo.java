@@ -115,6 +115,10 @@ class DeviceInfo {
                 requestObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
                 requestObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
                 requestObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                String timezone = SystemObserver.getTimezone();
+                if (!TextUtils.isEmpty(timezone)) {
+                    requestObj.put(Defines.Jsonkey.Timezone.getKey(), timezone);
+                }
                 requestObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
                 requestObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
                 requestObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());
@@ -228,6 +232,10 @@ class DeviceInfo {
                 userDataObj.put(Defines.Jsonkey.CPUType.getKey(), SystemObserver.getCPUType());
                 userDataObj.put(Defines.Jsonkey.DeviceBuildId.getKey(), SystemObserver.getDeviceBuildId());
                 userDataObj.put(Defines.Jsonkey.Locale.getKey(), SystemObserver.getLocale());
+                String timezone = SystemObserver.getTimezone();
+                if (!TextUtils.isEmpty(timezone)) {
+                    userDataObj.put(Defines.Jsonkey.Timezone.getKey(), timezone);
+                }
                 userDataObj.put(Defines.Jsonkey.ConnectionType.getKey(), SystemObserver.getConnectionType(context_));
                 userDataObj.put(Defines.Jsonkey.DeviceCarrier.getKey(), SystemObserver.getCarrier(context_));
                 userDataObj.put(Defines.Jsonkey.OSVersionAndroid.getKey(), SystemObserver.getOSVersion());

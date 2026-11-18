@@ -63,6 +63,21 @@ class MissingFieldTests(unittest.TestCase):
             ["Request 1 (/v1/install): missing required field 'wifi'"],
         )
 
+    def test_missing_timezone_fails_on_install_and_open(self):
+        errors, _ = _run_validation("missing_timezone.txt")
+        for uri in ("/v1/install", "/v1/open"):
+            self.assertTrue(
+                any(f"({uri}): missing required field 'timezone'" in e for e in errors),
+                f"Expected timezone-missing error on {uri}, got: {errors}",
+            )
+
+    def test_url_request_does_not_require_timezone(self):
+        errors, _ = _run_validation("no_install.txt")
+        self.assertFalse(
+            any("'timezone'" in e for e in errors),
+            f"/v1/url should not require timezone, got: {errors}",
+        )
+
 
 class InstallRequiredTests(unittest.TestCase):
     def test_capture_without_install_fails(self):
