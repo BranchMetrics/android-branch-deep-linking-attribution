@@ -18,6 +18,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -351,39 +352,40 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
     val timeoutMs = PrefHelper.getInstance(context).installReferrerTimeout
     BranchLogger.v("InstallReferrer fetch timeout in milliseconds: $timeoutMs")
 
-    suspend fun fetchAll(): InstallReferrerResult? = supervisorScope {
-        val googleReferrer = async { getGooglePlayStoreReferrerDetails(context) }
-        val huaweiReferrer = async { getHuaweiAppGalleryReferrerDetails(context) }
-        val samsungReferrer = async { getSamsungGalaxyStoreReferrerDetails(context) }
-        val xiaomiReferrer = async { getXiaomiGetAppsReferrerDetails(context) }
-        val metaReferrer = async { getMetaInstallReferrerDetails(context) }
-
-        val allReferrers: List<InstallReferrerResult?> = listOf(
-            googleReferrer.await(),
-            huaweiReferrer.await(),
-            samsungReferrer.await(),
-            xiaomiReferrer.await(),
-            metaReferrer.await()
-        )
-
-        getLatestValidReferrerStore(allReferrers)
-    }
-
     return coroutineScope {
         // Samsung MAPS runs next to the store referrers with its own time limit, so a blocked
         // MAPS query can't discard a store referrer that already arrived.
         val samsungMapsPreinstall = async { fetchSamsungMapsPreinstallData(context) }
 
-        val latestReferrer = if (timeoutMs > 0) {
-                withTimeoutOrNull(timeoutMs.toLong()) { fetchAll() }
-            }
-            else {
-                fetchAll()
-            }
+        val latestReferrer = fetchReferrersKeepingArrived(timeoutMs.toLong(), listOf(
+            { getGooglePlayStoreReferrerDetails(context) },
+            { getHuaweiAppGalleryReferrerDetails(context) },
+            { getSamsungGalaxyStoreReferrerDetails(context) },
+            { getXiaomiGetAppsReferrerDetails(context) },
+            { getMetaInstallReferrerDetails(context) }
+        ))
 
         samsungMapsPreinstall.await()
         latestReferrer
     }
+}
+
+/**
+ * Runs the fetchers in parallel and returns the latest valid referrer among those that finished.
+ * If [timeoutMs] is greater than 0, fetchers still running after [timeoutMs] are cancelled and ignored.
+ */
+internal suspend fun fetchReferrersKeepingArrived(timeoutMs: Long, fetchers: List<suspend () -> InstallReferrerResult?>): InstallReferrerResult? = supervisorScope {
+    val results = fetchers.map { fetch -> async { fetch() } }
+    if (timeoutMs > 0) {
+        if (withTimeoutOrNull(timeoutMs) { results.joinAll() } == null) {
+            BranchLogger.v("Install referrer fetch timed out after $timeoutMs ms; kept ${results.count { it.isCompleted && !it.isCancelled }} of ${results.size}")
+            results.forEach { if (!it.isCompleted) it.cancel() }
+        }
+    } else {
+        results.joinAll()
+    }
+    val arrived = results.map { if (it.isCompleted && !it.isCancelled) it.await() else null }
+    getLatestValidReferrerStore(arrived)
 }
 
 /**

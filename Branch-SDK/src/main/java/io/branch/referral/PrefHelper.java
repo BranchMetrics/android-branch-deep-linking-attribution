@@ -133,6 +133,7 @@ public class PrefHelper {
     static final String KEY_ANON_ID = "bnc_anon_id";
 
     static final String KEY_IS_META_CLICKTHROUGH = "bnc_is_meta_clickthrough";
+    static final String KEY_INSTALLER_APP_STORE = "bnc_installer_app_store";
 
     static final String KEY_ENHANCED_WEB_LINK_UX_USED = "bnc_enhanced_web_link_ux_used";
     static final String KEY_URL_LOAD_MS = "bnc_url_load_ms";
@@ -200,6 +201,10 @@ public class PrefHelper {
     private PrefHelper(Context context) {
         this.appSharedPrefs_ = context.getSharedPreferences(SHARED_PREF_FILE, Context.MODE_PRIVATE);
         this.prefsEditor_ = this.appSharedPrefs_.edit();
+        // The SDK no longer generates its own anonymous ID; delete the one older versions stored.
+        if (appSharedPrefs_.contains(KEY_ANON_ID)) {
+            prefsEditor_.remove(KEY_ANON_ID).apply();
+        }
     }
     
     /**
@@ -601,18 +606,24 @@ public class PrefHelper {
     }
 
     /**
-     * Sets a new randomly generated UUID for some SAN APIs.
-     * @param uuid
+     * No-op. The anonymous ID is read from the Meta SDK and cannot be set.
+     * @param uuid Ignored.
+     * @deprecated The anonymous ID is read from the Meta SDK.
      */
+    @Deprecated
     public void setAnonID(String uuid){
-        setString(KEY_ANON_ID, uuid);
+        BranchLogger.w("setAnonID is deprecated and has no effect. The anonymous ID is read from the Meta SDK.");
     }
 
     /**
-     * Returns our own randomly generated UUID for some SAN APIs.
+     * Returns the Meta SDK anonymous ID, or {@link #NO_STRING_VALUE} if it is unavailable.
+     * @deprecated The anonymous ID is read from the Meta SDK.
      */
+    @Deprecated
     public String getAnonID() {
-        return getString(KEY_ANON_ID);
+        DeviceInfo deviceInfo = DeviceInfo.getInstance();
+        String anonID = deviceInfo != null ? deviceInfo.fbSdkAnonId() : null;
+        return anonID != null ? anonID : NO_STRING_VALUE;
     }
     
     /**

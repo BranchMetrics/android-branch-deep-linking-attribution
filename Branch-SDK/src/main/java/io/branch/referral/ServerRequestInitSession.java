@@ -143,6 +143,7 @@ abstract class ServerRequestInitSession extends ServerRequest {
             }
         }
 
+        InstallerAppStore.updateAppStoreSource(context_, prefHelper_, this instanceof ServerRequestRegisterInstall);
         String appStore = prefHelper_.getAppStoreSource();
         if(!NO_STRING_VALUE.equals(appStore)) {
             try {

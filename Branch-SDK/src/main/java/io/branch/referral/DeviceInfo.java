@@ -14,7 +14,10 @@ import androidx.annotation.NonNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.InvocationTargetException;
+
 import io.branch.coroutines.DeviceSignalsKt;
+import io.branch.referral.util.DependencyUtilsKt;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -28,6 +31,11 @@ import kotlin.coroutines.EmptyCoroutineContext;
 class DeviceInfo {
     private final SystemObserver systemObserver_;
     private final Context context_;
+
+    // Package-private so tests can point it at a stub class.
+    String fbSdkLoggerClassName = DependencyUtilsKt.metaAppEventsLoggerClass;
+    private String cachedFbSdkAnonId;
+    private boolean fbSdkUnavailable;
 
     /**
      * Get the singleton instance for this class
@@ -56,11 +64,6 @@ class DeviceInfo {
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
                 requestObj.put(Defines.Jsonkey.HardwareID.getKey(), hardwareID.getId());
                 requestObj.put(Defines.Jsonkey.IsHardwareIDReal.getKey(), hardwareID.isReal());
-            }
-
-            String anonID = SystemObserver.getAnonID(context_);
-            if (!isNullOrEmptyOrBlank(anonID)) {
-                requestObj.put(Defines.Jsonkey.AnonID.getKey(), anonID);
             }
 
             String brandName = SystemObserver.getPhoneBrand();
@@ -145,11 +148,6 @@ class DeviceInfo {
             SystemObserver.UniqueId hardwareID = getHardwareID();
             if (!isNullOrEmptyOrBlank(hardwareID.getId())) {
                 userDataObj.put(Defines.Jsonkey.AndroidID.getKey(), hardwareID.getId());
-            }
-
-            String anonID = SystemObserver.getAnonID(context_);
-            if (!isNullOrEmptyOrBlank(anonID)) {
-                userDataObj.put(Defines.Jsonkey.AnonID.getKey(), anonID);
             }
 
             String brandName = SystemObserver.getPhoneBrand();
@@ -372,6 +370,79 @@ class DeviceInfo {
 
     public String getOsName() {
         return systemObserver_.getOS(context_);
+    }
+
+    /**
+     * @return the Meta SDK anonymous ID, or null if the Meta SDK is absent or returns an invalid value.
+     * A valid value is cached in memory for the life of this instance; an invalid one is retried on the next call.
+     */
+    synchronized String fbSdkAnonId() {
+        if (cachedFbSdkAnonId != null) {
+            return cachedFbSdkAnonId;
+        }
+        if (fbSdkUnavailable) {
+            return null;
+        }
+        String value = readFbSdkAnonIdFromMetaSDK();
+        if (!isValidFbSdkAnonId(value)) {
+            return null;
+        }
+        cachedFbSdkAnonId = value;
+        return value;
+    }
+
+    /**
+     * Adds the Meta SDK anonymous ID to the request, unless tracking is disabled or the attribution level is NONE.
+     * Reads the Meta SDK, so call this from a background thread.
+     */
+    void addFbSdkAnonId(ServerRequest serverRequest) {
+        if (TrackingController.isTrackingDisabled(context_)) {
+            return;
+        }
+        PrefHelper prefHelper = serverRequest.prefHelper_;
+        if (prefHelper.isAttributionLevelInitialized()
+                && prefHelper.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.NONE) {
+            return;
+        }
+        String anonID = fbSdkAnonId();
+        if (isNullOrEmptyOrBlank(anonID)) {
+            return;
+        }
+        JSONObject target = serverRequest.getPost();
+        if (target != null && serverRequest.getBranchRemoteAPIVersion() != ServerRequest.BRANCH_API_VERSION.V1) {
+            target = target.optJSONObject(Defines.Jsonkey.UserData.getKey());
+        }
+        if (target == null) {
+            return;
+        }
+        try {
+            target.put(Defines.Jsonkey.AnonID.getKey(), anonID);
+        } catch (JSONException e) {
+            BranchLogger.w("Caught JSONException " + e.getMessage());
+        }
+    }
+
+    private String readFbSdkAnonIdFromMetaSDK() {
+        try {
+            Class<?> loggerClass = Class.forName(fbSdkLoggerClassName);
+            Object value = loggerClass.getMethod("getAnonymousAppDeviceGUID", Context.class).invoke(null, context_);
+            return value instanceof String ? (String) value : null;
+        } catch (ClassNotFoundException | NoSuchMethodException | LinkageError e) {
+            // The Meta SDK is not in the app, or its accessor was removed. This won't change while the process lives.
+            fbSdkUnavailable = true;
+            BranchLogger.v("Meta SDK anonymous ID unavailable: " + e);
+            return null;
+        } catch (InvocationTargetException e) {
+            BranchLogger.w("Meta SDK threw reading the anonymous ID: " + e.getCause());
+            return null;
+        } catch (Exception e) {
+            BranchLogger.w("Failed to read the Meta SDK anonymous ID: " + e);
+            return null;
+        }
+    }
+
+    private static boolean isValidFbSdkAnonId(String value) {
+        return value != null && value.length() > 2 && value.startsWith("XZ");
     }
 
     /**

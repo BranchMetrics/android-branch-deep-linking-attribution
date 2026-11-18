@@ -10,3 +10,8 @@
 -keep class com.google.android.gms.ads.identifier.AdvertisingIdClient
 
 -dontwarn com.android.billingclient.**
+
+# Keep Meta's anon ID accessor so the SDK can read it by reflection in minified apps.
+-keep class com.facebook.appevents.AppEventsLogger {
+    public static java.lang.String getAnonymousAppDeviceGUID(android.content.Context);
+}
