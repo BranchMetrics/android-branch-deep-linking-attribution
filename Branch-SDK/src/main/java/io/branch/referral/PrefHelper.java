@@ -133,6 +133,7 @@ public class PrefHelper {
     static final String KEY_ANON_ID = "bnc_anon_id";
 
     static final String KEY_IS_META_CLICKTHROUGH = "bnc_is_meta_clickthrough";
+    static final String KEY_INSTALLER_APP_STORE = "bnc_installer_app_store";
 
     static final String KEY_ENHANCED_WEB_LINK_UX_USED = "bnc_enhanced_web_link_ux_used";
     static final String KEY_URL_LOAD_MS = "bnc_url_load_ms";

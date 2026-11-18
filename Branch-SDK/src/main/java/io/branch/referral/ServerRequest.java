@@ -573,6 +573,12 @@ public abstract class ServerRequest {
                 try {
                     userDataObj.put(Defines.Jsonkey.DeveloperIdentity.getKey(), prefHelper_.getIdentity());
                     userDataObj.put(Defines.Jsonkey.RandomizedDeviceToken.getKey(), prefHelper_.getRandomizedDeviceToken());
+                    String appStore = prefHelper_.getAppStoreSource();
+                    if (!PrefHelper.NO_STRING_VALUE.equals(appStore)) {
+                        userDataObj.put(Defines.Jsonkey.App_Store.getKey(), appStore);
+                    } else {
+                        userDataObj.remove(Defines.Jsonkey.App_Store.getKey());
+                    }
                 } catch (JSONException e) {
                     BranchLogger.w("Caught JSONException " + e.getMessage());
                 }
