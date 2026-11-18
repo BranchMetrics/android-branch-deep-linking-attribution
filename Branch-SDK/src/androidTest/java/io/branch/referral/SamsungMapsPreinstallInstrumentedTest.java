@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.branch.referral.Defines.PreinstallKey;
 import io.branch.referral.test.mock.MockRemoteInterface;
@@ -91,6 +92,25 @@ public class SamsungMapsPreinstallInstrumentedTest extends BranchTest {
         Assert.assertEquals(1, remoteInterface.openPayloads.size());
         Assert.assertEquals(0, MockSamsungMapsProvider.queryCount.get());
         Assert.assertFalse(remoteInterface.openPayloads.get(0).has(PreinstallKey.partner.getKey()));
+    }
+
+    @Test
+    public void trackingDisabledDoesNotQuerySamsungMaps() throws InterruptedException {
+        initBranchInstance();
+        branch.disableTracking(true);
+        branch.setSamsungMapsAppTrackingId(APP_TRACKING_ID);
+        branch.setBranchRemoteInterface(remoteInterface);
+
+        // initSessionResumeActivity fails on any init error, and tracking off makes init return one.
+        CountDownLatch initFinished = new CountDownLatch(1);
+        activityScenario.onActivity(activity ->
+                Branch.sessionBuilder(activity)
+                        .withCallback((referringParams, error) -> initFinished.countDown())
+                        .init());
+        Assert.assertTrue(initFinished.await(TEST_INIT_SESSION_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        Assert.assertEquals(0, MockSamsungMapsProvider.queryCount.get());
+        Assert.assertEquals(0, remoteInterface.installPayloads.size());
     }
 
     private static class CapturingRemoteInterface extends MockRemoteInterface {
