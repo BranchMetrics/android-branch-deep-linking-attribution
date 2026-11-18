@@ -22,6 +22,8 @@ class BranchPreinstall {
 
     private static final String SYSTEM_PROPERTIES_CLASS_KEY = "android.os.SystemProperties";
     private static final String BRANCH_PREINSTALL_PROP_KEY = "io.branch.preinstall.apps.path";
+    static final String SAMSUNG_MAPS_PREINSTALL_PARTNER = "a_ott_samsung_san";
+    static final String SAMSUNG_MAPS_DEFAULT_CAMPAIGN = "Samsung MAPS";
 
     public static void getPreinstallSystemData(Branch branchInstance, Context context) {
         if (branchInstance != null) {
@@ -138,6 +140,27 @@ class BranchPreinstall {
             }
         }
 
+    }
+
+    /**
+     * Sets the pre-install partner and campaign for an app installed by Samsung MAPS,
+     * unless a pre-install partner or campaign is already set.
+     * The campaign is the MAPS ID, or "Samsung MAPS" when MAPS returned none.
+     */
+    static void setSamsungMapsPreinstallData(PrefHelper prefHelper, String mapsId) {
+        String partnerKey = PreinstallKey.partner.getKey();
+        String campaignKey = PreinstallKey.campaign.getKey();
+        String existingPartner = prefHelper.getInstallMetaData(partnerKey);
+        String existingCampaign = prefHelper.getInstallMetaData(campaignKey);
+        if ((existingPartner != null && !existingPartner.isEmpty()) || (existingCampaign != null && !existingCampaign.isEmpty())) {
+            BranchLogger.v("Pre-install data already set (partner: " + existingPartner + ", campaign: " + existingCampaign + "). Not applying Samsung MAPS data");
+            return;
+        }
+
+        String campaign = (mapsId == null || mapsId.isEmpty()) ? SAMSUNG_MAPS_DEFAULT_CAMPAIGN : mapsId;
+        prefHelper.addInstallMetadata(partnerKey, SAMSUNG_MAPS_PREINSTALL_PARTNER);
+        prefHelper.addInstallMetadata(campaignKey, campaign);
+        BranchLogger.v("Samsung MAPS installed the app. Set " + partnerKey + " to " + SAMSUNG_MAPS_PREINSTALL_PARTNER + " and " + campaignKey + " to " + campaign);
     }
 
 }

@@ -9,6 +9,7 @@ import io.branch.data.InstallReferrerResult
 import io.branch.referral.BranchLogger
 import io.branch.referral.Defines.Jsonkey
 import io.branch.referral.PrefHelper
+import io.branch.referral.fetchSamsungMapsPreinstallData
 import io.branch.referral.util.classExists
 import io.branch.referral.util.huaweiInstallReferrerClass
 import io.branch.referral.util.samsungInstallReferrerClass
@@ -16,6 +17,7 @@ import io.branch.referral.util.xiaomiInstallReferrerClass
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -350,13 +352,22 @@ suspend fun fetchLatestInstallReferrer(context: Context): InstallReferrerResult?
     val timeoutMs = PrefHelper.getInstance(context).installReferrerTimeout
     BranchLogger.v("InstallReferrer fetch timeout in milliseconds: $timeoutMs")
 
-    return fetchReferrersKeepingArrived(timeoutMs.toLong(), listOf(
-        { getGooglePlayStoreReferrerDetails(context) },
-        { getHuaweiAppGalleryReferrerDetails(context) },
-        { getSamsungGalaxyStoreReferrerDetails(context) },
-        { getXiaomiGetAppsReferrerDetails(context) },
-        { getMetaInstallReferrerDetails(context) }
-    ))
+    return coroutineScope {
+        // Samsung MAPS runs next to the store referrers with its own time limit, so a blocked
+        // MAPS query can't discard a store referrer that already arrived.
+        val samsungMapsPreinstall = async { fetchSamsungMapsPreinstallData(context) }
+
+        val latestReferrer = fetchReferrersKeepingArrived(timeoutMs.toLong(), listOf(
+            { getGooglePlayStoreReferrerDetails(context) },
+            { getHuaweiAppGalleryReferrerDetails(context) },
+            { getSamsungGalaxyStoreReferrerDetails(context) },
+            { getXiaomiGetAppsReferrerDetails(context) },
+            { getMetaInstallReferrerDetails(context) }
+        ))
+
+        samsungMapsPreinstall.await()
+        latestReferrer
+    }
 }
 
 /**

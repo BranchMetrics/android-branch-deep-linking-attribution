@@ -1544,6 +1544,9 @@ public class Branch {
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
 
+        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        BranchLogger.v("Added GAID_FETCH_WAIT_LOCK");
+
         if (request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
@@ -1557,9 +1560,6 @@ public class Branch {
                 }
             });
         }
-
-        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        BranchLogger.v("Added GAID_FETCH_WAIT_LOCK");
 
         deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
             @Override
@@ -2732,6 +2732,20 @@ public class Branch {
         else {
             BranchLogger.w("setInstallReferrerTimeout: timeoutMs must be 0 or greater");
         }
+    }
+
+    /**
+     * Sets the app tracking ID used to read Samsung MAPS pre-install data before the install request is sent.
+     * @param appTrackingId The app tracking ID registered with Samsung for this app's MAPS campaign.
+     */
+    public void setSamsungMapsAppTrackingId(String appTrackingId) {
+        if (appTrackingId == null || appTrackingId.trim().isEmpty()) {
+            BranchLogger.w("setSamsungMapsAppTrackingId: appTrackingId is null or blank, Samsung MAPS will not be queried");
+            PrefHelper.getInstance(context_).setSamsungMapsAppTrackingId(null);
+            return;
+        }
+        PrefHelper.getInstance(context_).setSamsungMapsAppTrackingId(appTrackingId);
+        BranchLogger.v("set Samsung MAPS app tracking ID to " + appTrackingId);
     }
 
     /**
