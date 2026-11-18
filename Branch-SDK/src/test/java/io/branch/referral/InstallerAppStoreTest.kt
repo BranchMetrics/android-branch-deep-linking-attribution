@@ -5,6 +5,10 @@ import android.content.pm.InstallSourceInfo
 import android.content.pm.PackageManager
 import io.branch.coroutines.getLatestValidReferrerStore
 import io.branch.data.InstallReferrerResult
+import io.branch.referral.InstallerAppStore.getInstallerPackageName
+import io.branch.referral.InstallerAppStore.installerToAppStore
+import io.branch.referral.InstallerAppStore.resolveAppStore
+import io.branch.referral.InstallerAppStore.updateAppStoreSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -85,22 +89,23 @@ class InstallerAppStoreTest {
 
     @Test
     fun precedenceOnOpen() {
-        assertEquals("Meta", resolveAppStore("Meta", "PlayStore", false))
-        assertEquals("Meta", resolveAppStore("Meta", null, false))
-        assertEquals("GalaxyStore", resolveAppStore("Meta", "GalaxyStore", false))
-        assertEquals("PlayStore", resolveAppStore("AppGallery", "PlayStore", false))
-        assertNull(resolveAppStore("PlayStore", null, false))
-        assertNull(resolveAppStore(null, null, false))
-        assertEquals("PlayStore", resolveAppStore(null, "PlayStore", false))
+        assertEquals("Meta", resolveAppStore("Meta", "PlayStore", true, false))
+        assertEquals("Meta", resolveAppStore("Meta", null, true, false))
+        assertEquals("GalaxyStore", resolveAppStore("Meta", "GalaxyStore", true, false))
+        assertEquals("Meta", resolveAppStore("Meta", "GalaxyStore", false, false))
+        assertEquals("PlayStore", resolveAppStore("AppGallery", "PlayStore", true, false))
+        assertNull(resolveAppStore("PlayStore", null, true, false))
+        assertNull(resolveAppStore(null, null, false, false))
+        assertEquals("PlayStore", resolveAppStore(null, "PlayStore", false, false))
     }
 
     @Test
     fun precedenceOnInstall() {
-        assertEquals("Meta", resolveAppStore("Meta", "PlayStore", true))
-        assertEquals("Meta", resolveAppStore("Meta", null, true))
-        assertEquals("Meta", resolveAppStore("Meta", "GalaxyStore", true))
-        assertEquals("GalaxyStore", resolveAppStore(null, "GalaxyStore", true))
-        assertNull(resolveAppStore(null, null, true))
+        assertEquals("Meta", resolveAppStore("Meta", "PlayStore", false, true))
+        assertEquals("Meta", resolveAppStore("Meta", null, false, true))
+        assertEquals("Meta", resolveAppStore("Meta", "GalaxyStore", true, true))
+        assertEquals("GalaxyStore", resolveAppStore(null, "GalaxyStore", false, true))
+        assertNull(resolveAppStore(null, null, false, true))
     }
 
     @Test
@@ -111,7 +116,7 @@ class InstallerAppStoreTest {
         val winner = getLatestValidReferrerStore(listOf(playStore, null, null, null, metaClickThrough))
 
         assertEquals(metaClickThrough, winner)
-        assertEquals("Meta", resolveAppStore(winner!!.appStore, installerToAppStore("com.android.vending"), true))
+        assertEquals("Meta", resolveAppStore(winner!!.appStore, installerToAppStore("com.android.vending"), false, true))
     }
 
     @Test
@@ -119,11 +124,12 @@ class InstallerAppStoreTest {
         val prefHelper = mockPrefHelper(PrefHelper.NO_STRING_VALUE)
         updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, false)
         verify(prefHelper).setAppStoreSource("GalaxyStore")
+        verify(prefHelper).setString(PrefHelper.KEY_INSTALLER_APP_STORE, "GalaxyStore")
     }
 
     @Test
     fun updateAppStoreSourceKeepsMetaWithPlayInstaller() {
-        val prefHelper = mockPrefHelper("Meta")
+        val prefHelper = mockPrefHelper("Meta", recordedInstallerStore = "GalaxyStore")
         updateAppStoreSource(mockContext("com.android.vending"), prefHelper, false)
         verify(prefHelper).setAppStoreSource("Meta")
     }
@@ -133,13 +139,45 @@ class InstallerAppStoreTest {
         val prefHelper = mockPrefHelper("Meta")
         updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, true)
         verify(prefHelper).setAppStoreSource("Meta")
+        verify(prefHelper).setString(PrefHelper.KEY_INSTALLER_APP_STORE, "GalaxyStore")
+    }
+
+    @Test
+    fun updateAppStoreSourceKeepsMetaOnOpenWithSameOtherStoreInstaller() {
+        val prefHelper = mockPrefHelper("Meta", recordedInstallerStore = "GalaxyStore")
+        updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, false)
+        verify(prefHelper).setAppStoreSource("Meta")
+    }
+
+    @Test
+    fun updateAppStoreSourceKeepsMetaOnOpenWithNoRecordedInstaller() {
+        val prefHelper = mockPrefHelper("Meta")
+        updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, false)
+        verify(prefHelper).setAppStoreSource("Meta")
+        verify(prefHelper).setString(PrefHelper.KEY_INSTALLER_APP_STORE, "GalaxyStore")
+    }
+
+    @Test
+    fun updateAppStoreSourceReplacesMetaWhenOtherStoreUpdatesApp() {
+        val prefHelper = mockPrefHelper("Meta", recordedInstallerStore = "PlayStore")
+        updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, false)
+        verify(prefHelper).setAppStoreSource("GalaxyStore")
+        verify(prefHelper).setString(PrefHelper.KEY_INSTALLER_APP_STORE, "GalaxyStore")
+    }
+
+    @Test
+    fun updateAppStoreSourceReplacesMetaWhenStoreUpdatesSideloadedApp() {
+        val prefHelper = mockPrefHelper("Meta", recordedInstallerStore = PrefHelper.NO_STRING_VALUE)
+        updateAppStoreSource(mockContext("com.sec.android.app.samsungapps"), prefHelper, false)
+        verify(prefHelper).setAppStoreSource("GalaxyStore")
     }
 
     @Test
     fun updateAppStoreSourceClearsStoreForUnknownInstaller() {
-        val prefHelper = mockPrefHelper("PlayStore")
+        val prefHelper = mockPrefHelper("PlayStore", recordedInstallerStore = "PlayStore")
         updateAppStoreSource(mockContext(null), prefHelper, false)
         verify(prefHelper).setAppStoreSource(PrefHelper.NO_STRING_VALUE)
+        verify(prefHelper).setString(PrefHelper.KEY_INSTALLER_APP_STORE, PrefHelper.NO_STRING_VALUE)
     }
 
     @Test
@@ -151,6 +189,7 @@ class InstallerAppStoreTest {
         updateAppStoreSource(context, prefHelper, false)
 
         verify(prefHelper, never()).setAppStoreSource(any())
+        verify(prefHelper, never()).setString(any(), any())
         verify(context, never()).packageManager
     }
 
@@ -164,9 +203,13 @@ class InstallerAppStoreTest {
         return context
     }
 
-    private fun mockPrefHelper(stored: String): PrefHelper {
+    private fun mockPrefHelper(stored: String, recordedInstallerStore: String? = null): PrefHelper {
         val prefHelper = mock(PrefHelper::class.java)
         `when`(prefHelper.appStoreSource).thenReturn(stored)
+        if (recordedInstallerStore != null) {
+            `when`(prefHelper.hasPrefValue(PrefHelper.KEY_INSTALLER_APP_STORE)).thenReturn(true)
+            `when`(prefHelper.getString(PrefHelper.KEY_INSTALLER_APP_STORE)).thenReturn(recordedInstallerStore)
+        }
         return prefHelper
     }
 }
