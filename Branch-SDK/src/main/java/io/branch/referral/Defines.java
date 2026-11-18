@@ -165,6 +165,7 @@ public class Defines {
         CPUType("cpu_type"),
         DeviceBuildId("build"),
         Locale("locale"),
+        Timezone("timezone"),
         ConnectionType("connection_type"),
         DeviceCarrier("device_carrier"),
         PluginName("plugin_name"),

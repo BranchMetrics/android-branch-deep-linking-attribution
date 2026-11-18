@@ -11,12 +11,18 @@ import android.webkit.WebView;
 import androidx.test.annotation.UiThreadTest;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import io.branch.referral.util.BRANCH_STANDARD_EVENT;
+import io.branch.referral.util.BranchEvent;
 
 @RunWith(AndroidJUnit4.class)
 public class DeviceInfoTest extends BranchTest {
@@ -113,5 +119,72 @@ public class DeviceInfoTest extends BranchTest {
 
         // This is true assuming the webview package was not updated in between this test execution
         Assert.assertEquals(getDefaultUserAgentString, getUserAgentString);
+    }
+
+    // Wire key is spelled out rather than read from Defines so a rename fails these tests.
+    private static final String TIMEZONE_KEY = "timezone";
+
+    @Test
+    public void testTimezoneInInstallRequest() throws Exception {
+        initBranchInstance();
+        JSONObject post = new ServerRequestRegisterInstall(getTestContext(), null, true).getPost();
+
+        Assert.assertEquals(TimeZone.getDefault().getID(), post.getString(TIMEZONE_KEY));
+    }
+
+    @Test
+    public void testTimezoneInOpenRequest() throws Exception {
+        initBranchInstance();
+        JSONObject post = new ServerRequestRegisterOpen(getTestContext(), null, true).getPost();
+
+        Assert.assertEquals(TimeZone.getDefault().getID(), post.getString(TIMEZONE_KEY));
+    }
+
+    @Test
+    public void testTimezoneInStandardEventUserData() throws Exception {
+        initBranchInstance();
+        ServerRequest request = logEvent(getTestContext(), new BranchEvent(BRANCH_STANDARD_EVENT.PURCHASE));
+        JSONObject userData = request.getPost().getJSONObject(Defines.Jsonkey.UserData.getKey());
+
+        Assert.assertEquals(TimeZone.getDefault().getID(), userData.getString(TIMEZONE_KEY));
+    }
+
+    @Test
+    public void testTimezoneInCustomEventUserData() throws Exception {
+        initBranchInstance();
+        ServerRequest request = logEvent(getTestContext(), new BranchEvent("TimezoneCustomEvent"));
+        JSONObject userData = request.getPost().getJSONObject(Defines.Jsonkey.UserData.getKey());
+
+        Assert.assertEquals(TimeZone.getDefault().getID(), userData.getString(TIMEZONE_KEY));
+    }
+
+    @Test
+    public void testTimezoneSentExactlyAsDeviceReportsIt() throws Exception {
+        TimeZone original = TimeZone.getDefault();
+        try {
+            // Legacy alias of Asia/Kolkata; must not be canonicalized.
+            TimeZone.setDefault(TimeZone.getTimeZone("Asia/Calcutta"));
+            initBranchInstance();
+            JSONObject post = new ServerRequestRegisterInstall(getTestContext(), null, true).getPost();
+
+            Assert.assertEquals("Asia/Calcutta", post.getString(TIMEZONE_KEY));
+        } finally {
+            TimeZone.setDefault(original);
+        }
+    }
+
+    @Test
+    public void testTimezoneOmittedWhenDeviceReportsNoName() throws Exception {
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(new SimpleTimeZone(0, ""));
+            initBranchInstance();
+            JSONObject post = new ServerRequestRegisterInstall(getTestContext(), null, true).getPost();
+
+            Assert.assertFalse(post.has(TIMEZONE_KEY));
+            Assert.assertTrue(post.has(Defines.Jsonkey.Locale.getKey()));
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 }

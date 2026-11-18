@@ -28,6 +28,7 @@ import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static android.content.Context.UI_MODE_SERVICE;
@@ -330,6 +331,15 @@ abstract class SystemObserver {
      */
     static String getLocale() {
         return Locale.getDefault().getLanguage() + "_" + Locale.getDefault().getCountry();
+    }
+
+    /**
+     * Returns the device time zone name as reported by the device, e.g. "Asia/Seoul".
+     *
+     * @return A {@link String} value representing the device time zone name.
+     */
+    static String getTimezone() {
+        return TimeZone.getDefault().getID();
     }
 
     /**

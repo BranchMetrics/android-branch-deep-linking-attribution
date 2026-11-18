@@ -50,11 +50,11 @@ REQUIRED_COMMON = [
 ]
 
 # Endpoint-specific additions on top of REQUIRED_COMMON.
-# connection_type is only emitted on init/event requests, so /v1/url
-# (a CreateUrl request) legitimately lacks it.
+# connection_type and timezone are only emitted on init/event requests, so
+# /v1/url (a CreateUrl request) legitimately lacks them.
 REQUIRED_PER_ENDPOINT = {
-    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time", "anon_id"],
-    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token", "anon_id"],
+    "/v1/install": ["connection_type", "timezone", "is_hardware_id_real", "first_install_time", "anon_id"],
+    "/v1/open": ["connection_type", "timezone", "randomized_device_token", "randomized_bundle_token", "anon_id"],
     "/v1/url": [],
 }
 
