@@ -392,10 +392,13 @@ class DeviceInfo {
     }
 
     /**
-     * Adds the Meta SDK anonymous ID to the request, unless the attribution level is NONE.
+     * Adds the Meta SDK anonymous ID to the request, unless tracking is disabled or the attribution level is NONE.
      * Reads the Meta SDK, so call this from a background thread.
      */
     void addFbSdkAnonId(ServerRequest serverRequest) {
+        if (TrackingController.isTrackingDisabled(context_)) {
+            return;
+        }
         PrefHelper prefHelper = serverRequest.prefHelper_;
         if (prefHelper.isAttributionLevelInitialized()
                 && prefHelper.getConsumerProtectionAttributionLevel() == Defines.BranchAttributionLevel.NONE) {
@@ -406,7 +409,7 @@ class DeviceInfo {
             return;
         }
         JSONObject target = serverRequest.getPost();
-        if (target != null && serverRequest.getBranchRemoteAPIVersion() == ServerRequest.BRANCH_API_VERSION.V2) {
+        if (target != null && serverRequest.getBranchRemoteAPIVersion() != ServerRequest.BRANCH_API_VERSION.V1) {
             target = target.optJSONObject(Defines.Jsonkey.UserData.getKey());
         }
         if (target == null) {

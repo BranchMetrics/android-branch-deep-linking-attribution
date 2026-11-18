@@ -278,4 +278,24 @@ public class FbSdkAnonIdTests extends BranchTest {
             Assert.assertEquals(level.toString(), META_ANON_ID, eventUserData().getString(ANON_ID_KEY));
         }
     }
+
+    @Test
+    public void testSentInUserDataOnLatd() throws Exception {
+        initWithStub();
+        TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = META_ANON_ID;
+
+        JSONObject post = sentPost(new ServerRequestGetLATD(getTestContext(), Defines.RequestPath.GetLATD, null));
+        Assert.assertEquals(META_ANON_ID, post.getJSONObject(Defines.Jsonkey.UserData.getKey()).getString(ANON_ID_KEY));
+        Assert.assertFalse(post.has(ANON_ID_KEY));
+    }
+
+    @Test
+    public void testOmittedWhenTrackingDisabled() throws Exception {
+        initWithStub();
+        TestFbSdkAppEventsLogger.anonymousAppDeviceGUID = META_ANON_ID;
+        Branch.getInstance().disableTracking(true);
+
+        JSONObject post = sentPost(new ServerRequestCreateUrl(Defines.RequestPath.GetURL, new JSONObject(), getTestContext()));
+        Assert.assertFalse(post.has(ANON_ID_KEY));
+    }
 }
