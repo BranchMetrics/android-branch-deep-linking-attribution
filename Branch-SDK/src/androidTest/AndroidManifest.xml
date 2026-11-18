@@ -9,10 +9,10 @@
     <application>
         <activity android:name=".mock.MockActivity" />
 
-        <!-- Stands in for the Samsung MAPS app tracking provider -->
+        <!-- Stands in for the Samsung MAPS app tracking provider. Uses a test-only authority so the APK still installs on a phone with MAPS. -->
         <provider
             android:name=".mock.MockSamsungMapsProvider"
-            android:authorities="com.samsung.android.mapsagent.providers.apptracking"
+            android:authorities="io.branch.referral.test.mockmapsagent"
             android:exported="false" />
 
         <!-- The Branch Key for testing.  Do not use these keys for production applications. -->

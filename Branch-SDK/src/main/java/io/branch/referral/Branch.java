@@ -1544,6 +1544,9 @@ public class Branch {
             BranchLogger.v("Added INTENT_PENDING_WAIT_LOCK");
         }
 
+        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
+        BranchLogger.v("Added GAID_FETCH_WAIT_LOCK");
+
         if (request instanceof ServerRequestRegisterInstall) {
             request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
             BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
@@ -1557,9 +1560,6 @@ public class Branch {
                 }
             });
         }
-
-        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
-        BranchLogger.v("Added GAID_FETCH_WAIT_LOCK");
 
         deviceInfo_.getSystemObserver().fetchAdId(context_, new SystemObserver.AdsParamsFetchEvents() {
             @Override

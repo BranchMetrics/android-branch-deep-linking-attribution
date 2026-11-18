@@ -31,11 +31,13 @@ public class SamsungMapsPreinstallInstrumentedTest extends BranchTest {
     @Before
     public void resetProvider() {
         MockSamsungMapsProvider.reset();
+        SamsungMapsPreinstallKt.setSamsungMapsAuthority(MockSamsungMapsProvider.AUTHORITY);
     }
 
     @After
     public void releaseProvider() {
         MockSamsungMapsProvider.reset();
+        SamsungMapsPreinstallKt.setSamsungMapsAuthority(SamsungMapsPreinstallKt.samsungMapsDefaultAuthority);
     }
 
     @Test

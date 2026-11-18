@@ -3,6 +3,7 @@ package io.branch.referral
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
@@ -10,8 +11,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import java.util.concurrent.Executor
 
-private const val samsungMapsAuthority = "com.samsung.android.mapsagent.providers.apptracking"
-private const val samsungMapsUri = "content://$samsungMapsAuthority/info"
+internal const val samsungMapsDefaultAuthority = "com.samsung.android.mapsagent.providers.apptracking"
+// Tests point this at a stand-in provider, because a test APK can't register Samsung's authority on a phone with MAPS.
+@VisibleForTesting
+internal var samsungMapsAuthority = samsungMapsDefaultAuthority
 private const val samsungMapsDefaultTimeoutMs = 3000L
 private const val samsungMapsResult = "RESULT"
 private const val samsungMapsId = "MAPS_ID"
@@ -41,16 +44,22 @@ internal fun samsungMapsTimeoutMs(installReferrerTimeoutMs: Int): Long =
  * pre-install partner and campaign for the install request.
  */
 internal suspend fun fetchSamsungMapsPreinstallData(context: Context) {
+    if (TrackingController.isTrackingDisabled(context)) {
+        BranchLogger.v("Tracking is disabled. Not querying Samsung MAPS")
+        return
+    }
+
     val prefHelper = PrefHelper.getInstance(context)
+    val authority = samsungMapsAuthority
     fetchSamsungMapsPreinstallData(
         prefHelper = prefHelper,
         timeoutMs = samsungMapsTimeoutMs(prefHelper.installReferrerTimeout),
         isProviderPresent = {
-            context.packageManager.resolveContentProvider(samsungMapsAuthority, 0) != null
+            context.packageManager.resolveContentProvider(authority, 0) != null
         },
         query = { appTrackingId ->
             context.contentResolver.query(
-                Uri.parse(samsungMapsUri),
+                Uri.parse("content://$authority/info"),
                 null,
                 context.packageName,
                 arrayOf(appTrackingId),

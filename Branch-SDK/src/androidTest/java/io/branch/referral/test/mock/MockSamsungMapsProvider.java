@@ -17,6 +17,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Stands in for the Samsung MAPS app tracking provider. Static fields set its answer and how long it blocks.
  */
 public class MockSamsungMapsProvider extends ContentProvider {
+    /** Must match android:authorities in androidTest/AndroidManifest.xml. */
+    public static final String AUTHORITY = "io.branch.referral.test.mockmapsagent";
+
     private static final String[] COLUMNS = {
             "RESULT", "REASON", "APP_TRACKING_ID", "MAPS_ID", "INSTALLED_TIME_TEXT",
             "ACTIVATED_TIME_TEXT", "COUNTRY", "DEVICE_NAME", "FIRST_QUERY"
