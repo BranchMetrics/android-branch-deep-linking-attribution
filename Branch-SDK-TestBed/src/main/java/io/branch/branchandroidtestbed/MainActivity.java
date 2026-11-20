@@ -838,7 +838,7 @@ public class MainActivity extends Activity {
         if (!TestBedSettings.isAutomaticOpenEvents(this) && TestBedSettings.isSendOpenBeforeDeepLink(this)) {
             sendOpenWithPartnerId("partner-" + System.currentTimeMillis());
         }
-        Branch.getInstance().requestDeepLinkData(this, new BranchReferralInitListener() {
+        BranchReferralInitListener callback = new BranchReferralInitListener() {
             @Override
             public void onInitFinished(JSONObject referringParams, BranchError error) {
                 if (error != null) {
@@ -847,7 +847,12 @@ public class MainActivity extends Activity {
                     BranchLogger.d("Deep link params: " + referringParams.toString());
                 }
             }
-        });
+        };
+        if (L1Hooks.useUriCall(this)) {
+            Branch.getInstance().requestDeepLinkData(getIntent().getData(), callback);
+        } else {
+            Branch.getInstance().requestDeepLinkData(this, callback);
+        }
     }
 
     /**

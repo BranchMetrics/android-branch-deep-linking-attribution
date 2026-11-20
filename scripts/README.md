@@ -48,6 +48,32 @@ For every captured request: the full payload plus a per-field check table
 showing the actual value that went over the wire. Silent passes are not
 possible because every field's value is visible in the CI log.
 
+## Install-referrer scenarios
+
+`run_l1_referrer.sh` runs one scenario where the app starts at attribution
+level NONE on a fresh install that came from a real Branch link click, then
+the user consents. `run_l1_referrer.sh --list` names them, and
+`run_l1_referrer_scenarios.sh` runs them all. CI runs them in the
+`validate-referrer-scenarios` job.
+
+On an emulator without Google Play (AOSP `default` image), as CI does:
+
+```bash
+./gradlew :Branch-SDK-TestBed:assembleDebug :Branch-SDK-TestPlayStore:assembleDebug
+adb install -r --force-queryable Branch-SDK-TestPlayStore/build/outputs/apk/debug/Branch-SDK-TestPlayStore-debug.apk
+adb install -r -t Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk
+./scripts/run_l1_referrer_scenarios.sh
+python3 scripts/validate_l1_logs.py wire-none_referrer_install.txt --scenario none_referrer_install \
+  --run-id "$(cat wire-none_referrer_install.txt.run_id)" --click-id "$(cat wire-none_referrer_install.txt.click_id)"
+```
+
+On a real device with Google Play, set `L1_REFERRER_SOURCE=play`. Google Play
+then returns the referrer, so the TestBed has to be built under a package
+published on Play (`-Pl1ApplicationId=<package>`), with that app's Branch
+link domain and key in `L1_PLAY_PACKAGE`, `L1_PLAY_LINK_HOST` and
+`L1_PLAY_BRANCH_KEY`. With more than one device attached, set
+`ANDROID_SERIAL`. The script header lists every input.
+
 ## Platform parity
 
 The iOS sibling validator lives in `ios-branch-deep-linking-attribution`

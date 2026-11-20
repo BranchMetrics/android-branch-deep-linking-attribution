@@ -34,7 +34,9 @@ android {
 
     compileSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
     defaultConfig {
-        applicationId = "io.branch.branchandroidtestbed"
+        // -Pl1ApplicationId builds the app under a package published on Google Play, for real-device
+        // runs of scripts/run_l1_referrer.sh. Local only.
+        applicationId = (findProperty("l1ApplicationId") as String?) ?: "io.branch.branchandroidtestbed"
         minSdk = ANDROID_BUILD_SDK_VERSION_MINIMUM.toInt()
         targetSdk = 34
         versionName = VERSION_NAME
