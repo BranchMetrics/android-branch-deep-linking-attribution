@@ -15,6 +15,7 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
+      - "Branch-SDK-TestPlayStore/**"
       - ".github/workflows/sdk-l1-validation.yml"
   pull_request:
     branches: [master, main, feature/mobileboost-e2e-tests, "6.0.0-beta.*"]
@@ -29,6 +30,7 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
+      - "Branch-SDK-TestPlayStore/**"
       - ".github/workflows/sdk-l1-validation.yml"
   workflow_dispatch:
 
@@ -206,4 +208,123 @@ jobs:
 
       - name: Fail the job if validation failed
         if: steps.validate.outcome == 'failure'
+        run: exit 1
+
+  # The install-referrer scenarios at attribution level NONE (scripts/run_l1_referrer.sh). Their own
+  # emulator: an AOSP image, which has no Play Store of its own, so Branch-SDK-TestPlayStore can be
+  # installed as com.android.vending and return the Play install referrer of a real click on a test link.
+  validate-referrer-scenarios:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "gradle"
+
+      - name: Build TestBed + test Play Store APKs
+        run: |
+          ./gradlew \
+            :Branch-SDK-TestBed:assembleDebug \
+            :Branch-SDK-TestPlayStore:assembleDebug \
+            -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
+
+      # One line per command: the action runs each line of `script:` in its own `sh -c`. The runner
+      # script keeps going after a failed scenario, so every capture gets validated below.
+      - name: Run the install-referrer scenarios
+        id: scenarios
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          script: |
+            adb install -r --force-queryable Branch-SDK-TestPlayStore/build/outputs/apk/debug/Branch-SDK-TestPlayStore-debug.apk
+            adb install -r -t Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk
+            ./scripts/run_l1_referrer_scenarios.sh
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Run L1 Validator Unit Tests
+        run: python -m unittest discover -s scripts -p "test_*.py" -v
+
+      # Each capture against its scenario's contract, with the run id and click id it was made with.
+      - name: Validate the captures
+        id: validate
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          rc=0
+          for scenario in $(./scripts/run_l1_referrer.sh --list); do
+            log="wire-$scenario.txt"
+            set -- "$log" --scenario "$scenario" --run-id "$(cat "$log.run_id" 2> /dev/null)"
+            click_id=$(cat "$log.click_id" 2> /dev/null || true)
+            if [ -n "$click_id" ]; then set -- "$@" --click-id "$click_id"; fi
+            echo "::group::$scenario"
+            if python scripts/validate_l1_logs.py "$@" 2>&1 \
+                 | sed "s/^FAILED:/FAILED: [$scenario]/" | tee -a /tmp/l1-referrer-output.txt; then
+              echo "$scenario pass" >> /tmp/l1-referrer-results.txt
+            else
+              echo "$scenario fail" >> /tmp/l1-referrer-results.txt
+              rc=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $rc
+
+      - name: Write run summary
+        if: always()
+        run: |
+          {
+            echo "### Layer 1: install-referrer scenarios at attribution level NONE"
+            echo
+            echo "| scenario | result |"
+            echo "| --- | --- |"
+            for scenario in $(./scripts/run_l1_referrer.sh --list); do
+              result=$(grep "^$scenario " /tmp/l1-referrer-results.txt 2> /dev/null | cut -d' ' -f2)
+              echo "| \`$scenario\` | ${result:-not validated} |"
+            done
+            echo
+            if [ "${{ steps.scenarios.outcome }}" != "success" ]; then
+              echo "Running the scenarios failed: see the job log."
+              echo
+            fi
+            if [ "${{ steps.validate.outcome }}" != "success" ]; then
+              echo '```'
+              grep '^FAILED:' /tmp/l1-referrer-output.txt 2> /dev/null || echo "(no FAILED lines; see the job log)"
+              echo '```'
+              echo
+            fi
+            echo "Not checked here: the ad id. This emulator has no Google Play services, so the SDK never has one."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Only from PRs in this repo, as in validate-wire-logs.
+      - name: Upload Logs on Failure
+        if: always() && (steps.scenarios.outcome != 'success' || steps.validate.outcome != 'success') && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-referrer-wire-logs
+          path: wire-none_*
+
+      - name: Fail the job if a scenario failed
+        if: steps.scenarios.outcome == 'failure' || steps.validate.outcome == 'failure'
         run: exit 1
