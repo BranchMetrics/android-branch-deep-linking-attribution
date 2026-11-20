@@ -76,6 +76,10 @@ REQUIRED_COMMON = [
 #   connection_type       — in the iOS common list, absent from both /v3 payloads here.
 REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
 
+# At attribution level NONE (tracking_disabled: true) the SDK strips these before sending, so a request
+# that carries tracking_disabled is not required to have them. Every other required field still is.
+NOT_SENT_WHEN_TRACKING_DISABLED = ("local_ip", "anon_id", "first_install_time", "is_hardware_id_real")
+
 # An endpoint absent from this table has no L1 contract yet: its payload is printed but nothing is
 # asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
 # PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
@@ -196,6 +200,8 @@ def validate_request(entry, idx, total):
         return errors
 
     fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT[uri]
+    if lookup_field(request, "tracking_disabled") is True:
+        fields = [f for f in fields if f not in NOT_SENT_WHEN_TRACKING_DISABLED]
     print(f"Required fields ({len(fields)}):")
     for field in fields:
         value = lookup_field(request, field)
@@ -245,6 +251,30 @@ def collapse_retries(entries):
         kept.append(entry)
     return kept
 
+
+# Fields a /v3/deeplink sent at attribution level NONE must not carry: device ids, and the install
+# referrer's fields other than its click id, which goes as link_identifier.
+NONE_DEEPLINK_ABSENT = dict.fromkeys((
+    "advertising_ids", "google_advertising_id", "aaid", "hardware_id", "is_hardware_id_real", "anon_id",
+    "local_ip", "identity", "randomized_device_token", "randomized_bundle_token",
+    "link_click_id", "install_referrer_extras", "google_search_install_referrer", "clicked_referrer_ts",
+    "clicked_referrer_server_ts", "install_begin_ts", "install_begin_server_ts", "app_store", "is_meta_ct",
+    "first_install_time", "latest_install_time", "latest_update_time", "previous_update_time",
+), 0)
+
+# An install from a link at NONE, then consent: one /v3/deeplink with only the referrer's click id, then
+# the open with the install's link and the install referrer's fields.
+INSTALL_REFERRER_LINK_CONTRACT = {
+    "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 0},
+    "order": (("/v3/deeplink", "/v3/events/open"),),
+    "fields": {
+        "/v3/deeplink": {**NONE_DEEPLINK_ABSENT, "link_identifier": 1, "tracking_disabled": 1},
+        "/v3/events/open": {
+            "link_data": 1, "link_identifier": 1, "link_click_id": 1,
+            "install_referrer_extras": 1, "app_store": 1, "tracking_disabled": 0,
+        },
+    },
+}
 
 # What the wire must look like after a scenario ran. All endpoint names live
 # here rather than in the checks, so the same checks serve this line's capture
@@ -327,6 +357,43 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {"/v1/url": {"hardware_id": 0}},
     },
+    # The install-referrer scenarios (scripts/run_l1_referrer.sh): a fresh install whose Play install
+    # referrer holds a link click id, the app at attribution level NONE, the steps below, then consent.
+    # Measured on an AOSP API 34 emulator with Branch-SDK-TestPlayStore.
+    "none_referrer_install": INSTALL_REFERRER_LINK_CONTRACT,
+    "none_referrer_install_reduced": INSTALL_REFERRER_LINK_CONTRACT,
+    # A redirect into the app calls requestDeepLinkData with a non-Branch URI, and a relaunch after the
+    # process ends calls it with no link: at NONE neither sends anything.
+    "none_referrer_browser_return": INSTALL_REFERRER_LINK_CONTRACT,
+    "none_referrer_background_death": INSTALL_REFERRER_LINK_CONTRACT,
+    "none_referrer_foreground_death": INSTALL_REFERRER_LINK_CONTRACT,
+    # The app passes its intent's data, a null Uri on a launcher start, so the relaunch reads the saved
+    # click id: one /v3/deeplink in all means it was not sent again.
+    "none_referrer_foreground_death_uri_call": INSTALL_REFERRER_LINK_CONTRACT,
+    # The first launch is a URI carrying the referrer's click id, as an app can pass it itself.
+    "none_referrer_app_passes_click_id": INSTALL_REFERRER_LINK_CONTRACT,
+    # A second Branch link opens the installed app at NONE: its own /v3/deeplink, and the open carries it.
+    "none_referrer_second_link": {
+        "counts": {"/v3/deeplink": 2, "/v3/events/open": 1, "/v1/url": 0},
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/deeplink": {
+                **NONE_DEEPLINK_ABSENT, "link_identifier": 1, "android_app_link_url": 1, "tracking_disabled": 2,
+            },
+            "/v3/events/open": INSTALL_REFERRER_LINK_CONTRACT["fields"]["/v3/events/open"],
+        },
+    },
+    # The referrer holds no click id: nothing goes out at NONE, and the open carries no link.
+    "none_organic_install": {
+        "counts": {"/v3/deeplink": 0, "/v3/events/open": 1, "/v1/url": 0},
+        "order": (),
+        "fields": {
+            "/v3/events/open": {
+                "link_data": 0, "link_identifier": 0, "link_click_id": 0,
+                "install_referrer_extras": 1, "app_store": 1, "tracking_disabled": 0,
+            },
+        },
+    },
 }
 
 # The link data each cold scenario's generator writes, checked against the
@@ -336,6 +403,92 @@ SCENARIO_LINK_MARKERS = {
     "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
     "cold_https": {"l1_scenario": "cold_https"},
 }
+
+
+# Android-only, for the install-referrer scenarios (scripts/run_l1_referrer.sh): the l1_link of each link
+# the app gets, in order, and the l1_link the open sent at consent carries in link_data (None: no
+# link_data). Kept out of SCENARIO_CONTRACTS, like SCENARIO_LINK_MARKERS.
+SCENARIO_REFERRER_LINKS = {
+    "none_referrer_install": (("install",), "install"),
+    "none_referrer_install_reduced": (("install",), "install"),
+    "none_referrer_browser_return": (("install",), "install"),
+    "none_referrer_background_death": (("install",), "install"),
+    "none_referrer_foreground_death": (("install",), "install"),
+    "none_referrer_foreground_death_uri_call": (("install",), "install"),
+    "none_referrer_second_link": (("install", "second"), "second"),
+    "none_referrer_app_passes_click_id": (("install",), "install"),
+    "none_organic_install": ((), None),
+}
+
+
+def _link_data(request):
+    """The request's link_data as a dict, whether it was sent as an object or a JSON string."""
+    data = request.get("link_data")
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            return None
+    return data if isinstance(data, dict) else None
+
+
+def assert_referrer_scenario(entries, resolved, scenario, run_id=None, click_id=None):
+    """Check an install-referrer scenario: the links the app got, the link the open after consent
+    carries and, with `click_id`, that the install referrer's click id reaches each request.
+
+    Links count as this scenario's only when they carry its l1_scenario and, with `run_id`, its
+    l1_run_id. Returns a list of error strings, empty when everything holds."""
+    errors = []
+    expected_links, expected_open_link = SCENARIO_REFERRER_LINKS[scenario]
+
+    def is_this_run(params):
+        return params.get("l1_scenario") == scenario and (run_id is None or params.get("l1_run_id") == run_id)
+
+    got_links = [params.get("l1_link") for params in resolved if is_this_run(params)]
+    if got_links != list(expected_links):
+        errors.append(f"Expected the app to get the links {list(expected_links)} in that order, got {got_links}.")
+
+    deeplinks = [entry["request"] for entry in entries if entry["uri"] == "/v3/deeplink"]
+    opens = [entry["request"] for entry in entries if entry["uri"] == "/v3/events/open"]
+    consent_open = opens[-1] if opens else None
+    if consent_open is not None:
+        data = _link_data(consent_open)
+        if expected_open_link is None:
+            if data is not None:
+                errors.append("Expected the open after consent to carry no link_data, but it did.")
+        elif data is None or not is_this_run(data) or data.get("l1_link") != expected_open_link:
+            shown = {key: data.get(key) for key in ("l1_scenario", "l1_run_id", "l1_link")} if data else None
+            errors.append(
+                f"Expected the open after consent to carry this run's '{expected_open_link}' link in "
+                f"link_data, got {shown}."
+            )
+
+    if click_id:
+        first = deeplinks[0] if deeplinks else None
+        sent = first.get("link_identifier") if first else None
+        if first is None or str(sent) != click_id:
+            errors.append(
+                f"Expected the first /v3/deeplink to send the referrer's click id {click_id} as "
+                f"link_identifier, got {sent if first else 'no /v3/deeplink'}."
+            )
+        if consent_open is None:
+            errors.append("Expected an open after consent to carry the referrer's click id, got none.")
+        else:
+            extras = consent_open.get("install_referrer_extras")
+            if not (isinstance(extras, str) and f"link_click_id={click_id}" in extras):
+                errors.append(
+                    f"Expected the open's install_referrer_extras to hold link_click_id={click_id}, "
+                    f"got {extras!r}."
+                )
+            for field in ("link_click_id", "link_identifier"):
+                if str(consent_open.get(field)) != click_id:
+                    errors.append(
+                        f"Expected the open's {field} to be the click id {click_id}, "
+                        f"got {consent_open.get(field)!r}."
+                    )
+            if consent_open.get("app_store") != "PlayStore":
+                errors.append(f"Expected the open's app_store to be PlayStore, got {consent_open.get('app_store')!r}.")
+    return errors
 
 
 class UnknownScenario(Exception):
@@ -493,6 +646,14 @@ def main():
         help="which scenario produced this capture; selects its contract. "
              "Omitted, only the per-request required fields are asserted.",
     )
+    parser.add_argument(
+        "--run-id", default=None,
+        help="install-referrer scenarios: the l1_run_id the scenario's links carry",
+    )
+    parser.add_argument(
+        "--click-id", default=None,
+        help="install-referrer scenarios: the link_click_id in the Play referrer the scenario set",
+    )
     args = parser.parse_args()
     log_file_path = args.log_file
 
@@ -519,7 +680,12 @@ def main():
         sys.exit(1)
 
     marker = SCENARIO_LINK_MARKERS.get(args.scenario) if args.scenario else None
-    errors = validate_entries(entries, contract, parse_resolved_params(log_file_path), marker)
+    resolved = parse_resolved_params(log_file_path)
+    errors = validate_entries(entries, contract, resolved, marker)
+    if args.scenario in SCENARIO_REFERRER_LINKS:
+        errors.extend(assert_referrer_scenario(
+            collapse_retries(entries), resolved, args.scenario, args.run_id or None, args.click_id or None
+        ))
 
     if errors:
         print("\n--- VALIDATION FAILED ---")
