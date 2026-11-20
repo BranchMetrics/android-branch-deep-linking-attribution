@@ -53,11 +53,11 @@ Integration notes for this option:
 - log events after `sendOpen` completes: on a first install, events before the open fail with -101, and the SDK logs one `logAlways` warning.
 
 **Opting in sends the held open.** When tracking goes from off to on (`setConsumerProtectionAttributionLevel` leaving `NONE`, or the deprecated `disableTracking(false)`), `TrackingController` calls `Branch.sendHeldOpen(callback)`:
-- if an open is held, it sends it. It carries `link_data` when its `/v3/deeplink` response matched a link, which a call with a link URI gets even while attribution is off. The open's result goes to the consent callback;
+- if an open is held, it sends it. It carries `link_data` when its `/v3/deeplink` response matched a link, which a call with a link URI gets even while attribution is off. On an install (no bundle token yet), an open whose response matched no link carries the install's first referring params (`installParams`) instead, so the install is credited to the link that brought it even after a later call or a new process replaced the held open. The open's result goes to the consent callback;
 - otherwise it sends nothing and completes the callback at once. Either no `/v3/deeplink` has finished yet (for example the level is applied in `Branch.initialize`), and the next one counts the launch, or the latest is still running and sends its open when it finishes, now that attribution is on.
 - with `setAutomaticOpenEvents(false)`, a held open also waits for the app's `sendOpen`, unless a background already passed. Until then, opting in sends nothing and completes the callback at once.
 
-No deferred deep link is looked up while attribution is off: a call with no URI fails at once with `ERR_BRANCH_TRACKING_DISABLED`, and its held open carries no link.
+While attribution is off, the only deferred deep link looked up is the install referrer's. On an install launch, until the install has its link (`installParams`), `enqueueLaunchRequest` reads the Play install referrer but not the ad ID. A click id it finds is sent as `link_identifier` with `tracking_disabled`, and `prepareExecuteWithoutTracking` removes the other referrer fields. Once that `/v3/deeplink` succeeds, `RequestDeepLink` clears the saved click id, because no open clears it while attribution is off and a process that dies before the background would send it again. A call with no URI and no click id fails with `ERR_BRANCH_TRACKING_DISABLED`, and its held open carries no link.
 
 Consent never sends an OPEN of its own: opting in sends only an OPEN held while attribution was off, and changing between non-`NONE` levels sends none.
 

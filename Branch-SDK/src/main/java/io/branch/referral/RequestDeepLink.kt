@@ -27,10 +27,15 @@ internal class RequestDeepLink(
         launchLink = savedLaunchLink(prefHelper_)
     }
 
+    // The click id the install referrer saved for this request.
+    @Volatile private var installReferrerClickId: String? = null
+
     /** Keeps the install referrer's click id when it has none: a later call can clear the saved one before this is sent. */
     fun keepInstallReferrerClickId(clickId: String) {
+        if (clickId.isBlank() || clickId == PrefHelper.NO_STRING_VALUE) return
+        installReferrerClickId = clickId
         val link = launchLink ?: return
-        if (clickId.isBlank() || clickId == PrefHelper.NO_STRING_VALUE || link.has(Defines.Jsonkey.LinkIdentifier.key)) return
+        if (link.has(Defines.Jsonkey.LinkIdentifier.key)) return
         launchLink = JSONObject(link.toString()).put(Defines.Jsonkey.LinkIdentifier.key, clickId)
     }
 
@@ -103,6 +108,14 @@ internal class RequestDeepLink(
                 }
             } else {
                 prefHelper_.sessionParams = PrefHelper.NO_STRING_VALUE
+            }
+
+            // While attribution is off no open clears it, so a process that dies before going to the
+            // background would send it again on the next launch.
+            if (branch.trackingController.isTrackingDisabled) {
+                installReferrerClickId?.let {
+                    if (prefHelper_.linkClickIdentifier == it) prefHelper_.linkClickIdentifier = PrefHelper.NO_STRING_VALUE
+                }
             }
 
             // With setAutomaticOpenEvents(false), before the callback, so a sendOpen made in it finds the response.

@@ -2248,9 +2248,16 @@ public class Branch {
         request.keepLaunchLink();
     }
 
-    /** Enqueues a launch request, reading the install data and advertising ID first unless attribution is off: then they are read at opt-in. */
+    /**
+     * Enqueues a launch request, reading the install data and advertising ID first. While attribution is
+     * off they are read at opt-in, except the install referrer's link, until the install has its link.
+     */
     void enqueueLaunchRequest(@NonNull ServerRequestInitSession request) {
         if (isAttributionOff()) {
+            if (request instanceof RequestDeepLink && request.isInstallLaunch()
+                    && prefHelper_.getInstallParams().equals(PrefHelper.NO_STRING_VALUE)) {
+                readInstallReferrer(request);
+            }
             requestQueue_.handleNewRequest(request);
         } else {
             initTasks(request);
@@ -2262,23 +2269,7 @@ public class Branch {
         BranchLogger.v("Starting initTasks for request: " + request.getClass().getSimpleName());
 
         if (request.isInstallLaunch()) {
-            request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-            BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
-            BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
-
-            deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
-                @Override
-                public void onInstallReferrersFinished() {
-                    // The click id this read saved, unless a later call's link has replaced it.
-                    String referrerClickId = AppStoreReferrer.getInstallationID();
-                    if (request instanceof RequestDeepLink && referrerClickId.equals(prefHelper_.getLinkClickIdentifier())) {
-                        ((RequestDeepLink) request).keepInstallReferrerClickId(referrerClickId);
-                    }
-                    request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
-                    BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
-                    BranchLogger.v("Install referrer fetch completed, lock removed");
-                }
-            });
+            readInstallReferrer(request);
         }
 
         request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.GAID_FETCH_WAIT_LOCK);
@@ -2296,6 +2287,26 @@ public class Branch {
 
         BranchLogger.v("Calling handleNewRequest for request: " + request);
         requestQueue_.handleNewRequest(request);
+    }
+
+    private void readInstallReferrer(ServerRequestInitSession request) {
+        request.addProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+        BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK");
+        BranchLogger.v("Added INSTALL_REFERRER_FETCH_WAIT_LOCK for install request");
+
+        deviceInfo_.getSystemObserver().fetchInstallReferrer(context_, new SystemObserver.InstallReferrerFetchEvents() {
+            @Override
+            public void onInstallReferrersFinished() {
+                // The click id this read saved, unless a later call's link has replaced it.
+                String referrerClickId = AppStoreReferrer.getInstallationID();
+                if (request instanceof RequestDeepLink && referrerClickId.equals(prefHelper_.getLinkClickIdentifier())) {
+                    ((RequestDeepLink) request).keepInstallReferrerClickId(referrerClickId);
+                }
+                request.removeProcessWaitLock(ServerRequest.PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK);
+                BranchLogger.v("INSTALL_REFERRER_FETCH_WAIT_LOCK removed");
+                BranchLogger.v("Install referrer fetch completed, lock removed");
+            }
+        });
     }
 
 
