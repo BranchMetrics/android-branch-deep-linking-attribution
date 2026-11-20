@@ -338,7 +338,7 @@ public abstract class ServerRequestInitSession extends ServerRequest {
 
     @Override
     protected boolean prepareExecuteWithoutTracking() {
-        // The install referrer read may still find its link: checked again when it is sent.
+        // The install referrer read may still find its link. The queue's check when it is sent is required: it removes the fields.
         if (isWaitingOn(PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK)) {
             return true;
         }

@@ -82,7 +82,7 @@ internal class RequestOpen @JvmOverloads constructor(
                     openPost.put("link_data", dataJSON)
                 }
             }
-            // The install's open, from a launch with no link of its own, carries the link that brought the install.
+            // An install's open with no link_data of its own carries the install's link, also after a failed lookup.
             if (!openPost.has("link_data") && isInstallLaunch()) {
                 val installParams = prefHelper_.installParams
                 if (installParams != PrefHelper.NO_STRING_VALUE) {

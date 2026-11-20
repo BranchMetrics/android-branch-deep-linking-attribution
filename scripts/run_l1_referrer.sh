@@ -250,7 +250,7 @@ sleep 4
 # 6. Proof the SDK read this run's referrer; without it the scenario tested nothing.
 expected="utm_medium=organic"
 [ -n "$CLICK_ID" ] && expected="link_click_id=$CLICK_ID"
-capture | grep 'fetchInstallReferrer resumeWith got result' | grep -q -F "$expected" \
+capture | grep -E 'fetchInstallReferrer (resumeWith )?got result' | grep -q -F "$expected" \
   || fail "the SDK never read the referrer this run set ($expected)"
 
 save_capture
