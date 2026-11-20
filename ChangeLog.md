@@ -1,4 +1,16 @@
 # Branch Android SDK change log
+- v6.0.0-beta.4
+* _*Beta Release*_ - Nov 20, 2026
+
+  Upgrade instructions: https://help.branch.io/developer-hub/android-sdk-6-integration
+
+  - Fixed deferred deep linking at attribution level `NONE`. On the first launch after a Play Store install from a Branch link, `requestDeepLinkData` now returns the link.
+    * At `NONE`, the SDK reads the install referrer and sends only the link's click id. It sends no device IDs, no advertising ID and no other install referrer fields.
+    * A launch with no link still fails with `ERR_BRANCH_TRACKING_DISABLED` (-117). On an install, that now comes after the install referrer read.
+  - When attribution is turned on with `updateConfiguration` (`FULL` or `REDUCED`), the open the SDK sends now carries the install's link. This also holds if the app called `requestDeepLinkData` again, or was closed, before that.
+  - Fixed the install's link being returned a second time at `NONE`, after the app was closed in the foreground, for apps that call `requestDeepLinkData(Uri)`.
+  - Fixed the install referrer read sometimes never reporting back. The first request then waited about 10 seconds and went out without the install referrer.
+
 - v6.0.0-beta.3
 * _*Beta Release*_ - Oct 15, 2026
 
