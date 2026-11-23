@@ -18,7 +18,6 @@ public class TestBedHelper {
 
     /**
      * Shows a long-duration toast that displays twice (effectively ~6s visibility).
-     * Useful for E2E test assertions where the AI driver needs time to read the toast.
      */
     public static void showLongToast(Context context, String message) {
         Toast toast = Toast.makeText(context.getApplicationContext(), message, Toast.LENGTH_LONG);

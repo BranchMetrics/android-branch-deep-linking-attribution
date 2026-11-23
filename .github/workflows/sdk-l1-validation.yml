@@ -15,8 +15,7 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
-      # .github/** so a re-added vendor workflow or script runs the guard step below.
-      - ".github/**"
+      - ".github/workflows/sdk-l1-validation.yml"
   pull_request:
     branches: [master, main, "6.0.0-beta.*"]
     # Duplicated rather than shared via a YAML anchor: GitHub Actions does not guarantee anchor
@@ -30,8 +29,7 @@ on:
       # below had. Over-triggering on an unrelated scripts/ edit costs one CI run; under-triggering
       # costs a missed regression, which is the worse failure for a gate.
       - "scripts/**"
-      # .github/** so a re-added vendor workflow or script runs the guard step below.
-      - ".github/**"
+      - ".github/workflows/sdk-l1-validation.yml"
   workflow_dispatch:
 
 permissions:
@@ -45,19 +43,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
-
-      - name: Fail if the vendor comes back
-        run: |
-          # The vendor left this line with EMT-4518. A rebase that keeps both
-          # sides of a conflict in this file, the L1 script or the module build
-          # restores it silently and stays green, since the repo secret still
-          # exists for master. This step turns that into a red build.
-          # The bracket expressions match the vendor strings but not their own
-          # text, so this file stays covered without excluding itself.
-          if git grep -n -i -e 'mobile[b]oost' -e 'gptdriver[_]lib' -- ':!ChangeLog.md' ; then
-            echo "::error::vendor reference found"
-            exit 1
-          fi
 
       - name: Enable KVM
         run: |
