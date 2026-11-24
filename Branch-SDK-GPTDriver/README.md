@@ -29,9 +29,16 @@ Branch-SDK-GPTDriver/
 └── src/main/
     ├── AndroidManifest.xml
     └── java/io/branch/gptdriver/
+        ├── LinkFieldReader.kt                  reads the generated link from the TestBed
         ├── LinkGenerationIdlingResource.kt     waits for the TestBed's link field
         └── tests/
             ├── N1OrganicOpenWireTest.kt          organic_open
-            ├── ScenarioLinkGenerator.kt          creates the link each cold scenario opens
+            ├── ScenarioLinkGenerator.kt          creates the link a cold run opens, unless
+            │                                     COLD_LINK_URL gives one (cold_uriScheme)
+            ├── WireScenarioDriver.kt             steps the warm and hot drivers share
+            ├── W1WarmHttpsWireTest.kt            warm_https_onNewIntent
+            ├── W2WarmUriSchemeWireTest.kt        warm_uriScheme
+            ├── H1HotAppLinkWireTest.kt           hot_https_foreground
+            ├── H2HotUriSchemeWireTest.kt         hot_uriScheme
             └── LinkCreationDeterministicTest.kt  Espresso link creation, not run by CI
 ```
