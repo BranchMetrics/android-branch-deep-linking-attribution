@@ -54,8 +54,8 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * The scenario is never closed here, and the drivers use no ActivityScenarioRule, for the same
  * reason: once a new intent has arrived through startActivity the scenario has lost lifecycle
- * control, so close() throws "Activity never becomes DESTROYED". DeepLinkWarmOpenHybridTest hit
- * the same wall. The runner cleans the activity up.
+ * control, so close() throws "Activity never becomes DESTROYED". The runner cleans the
+ * activity up.
  */
 internal class WireScenarioDriver {
 

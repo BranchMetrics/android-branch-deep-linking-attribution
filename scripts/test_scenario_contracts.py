@@ -35,8 +35,8 @@ class ScenarioContractTests(unittest.TestCase):
     they establish.
 
     hot_uriScheme is not one of those. It is a capture of a local H2HotUriSchemeWireTest run
-    at 4652bf06 (2026-10-09, an API 30 emulator, sdk_gphone_arm64), not a CI capture: H2 is
-    not in the CI gate yet. The requests are real, taken after the driver moved the launch
+    at 4652bf06 (2026-10-09, an API 30 emulator, sdk_gphone_arm64), not a CI capture: no CI
+    run of H2 exists yet. The requests are real, taken after the driver moved the launch
     capture aside once the bare launch had settled (WireScenarioDriver.setCaptureAside),
     trimmed to the fields the validator reads, with the identifiers swapped for the
     placeholders above.

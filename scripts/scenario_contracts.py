@@ -229,7 +229,7 @@ SCENARIO_CONTRACTS = {
     # delivery alone: the driver moves the launch capture aside once the bare launch has
     # settled (WireScenarioDriver.setCaptureAside), so the log holds this scenario's own
     # requests, not the bare launch that precedes it. No CI emulator run of this scenario
-    # exists yet (H2 is not in the CI gate), so the fixture is that local run, real
+    # exists yet, so the fixture is that local run, real
     # requests with placeholders.
     #
     # The delivery window must not restart the activity, which is what /v3/events/custom

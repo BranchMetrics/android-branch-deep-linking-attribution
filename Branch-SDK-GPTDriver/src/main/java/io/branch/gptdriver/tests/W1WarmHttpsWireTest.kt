@@ -8,9 +8,7 @@ import org.junit.Test
  *
  * Warm is defined by the launch state, not by the delivery. The app must actually be in the
  * background when the link arrives, which is why this presses Home and waits for the activity
- * to stop before delivering. DeepLinkWarmOpenHybridTest delivers with the app in the
- * foreground ("App is in foreground" in its header), so it is a precedent for the mechanism
- * and not for the state.
+ * to stop before delivering.
  *
  * Needs a device that already holds a token. The contract expects both opens to carry
  * randomized_bundle_token, and only the reply to an init-session request stores it
@@ -33,8 +31,7 @@ import org.junit.Test
  *
  * No ActivityScenarioRule here, unlike the other L1 drivers. The rule closes the scenario in
  * its after(), and once a new intent has been delivered through startActivity the scenario
- * has lost lifecycle control, so close() throws. DeepLinkWarmOpenHybridTest hit the same wall
- * and manages its own scenario for the same reason. The runner cleans the activity up.
+ * has lost lifecycle control, so close() throws. The runner cleans the activity up.
  *
  * The driver checks only its own preconditions: the launch open carries a token, the activity
  * stopped without being destroyed, and it was not destroyed by the delivery. The capture is the

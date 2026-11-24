@@ -120,6 +120,7 @@ jobs:
             TEST_CLASS=W1WarmHttpsWireTest OUTPUT_LOG=wire-warm_https_onNewIntent.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=W2WarmUriSchemeWireTest OUTPUT_LOG=wire-warm_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=H1HotAppLinkWireTest OUTPUT_LOG=wire-hot_https_foreground.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=H2HotUriSchemeWireTest OUTPUT_LOG=wire-hot_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -174,6 +175,7 @@ jobs:
           check warm_https_onNewIntent wire-warm_https_onNewIntent.txt
           check warm_uriScheme wire-warm_uriScheme.txt
           check hot_https_foreground wire-hot_https_foreground.txt
+          check hot_uriScheme wire-hot_uriScheme.txt
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
@@ -208,7 +210,7 @@ jobs:
               echo "| Warm | see failures below |"
             fi
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
-              echo "| Hot | hot_https_foreground pass, hot_uriScheme not wired into the gate yet (driver and contract present) |"
+              echo "| Hot | hot_https_foreground and hot_uriScheme pass |"
             else
               echo "| Hot | see failures below |"
             fi
