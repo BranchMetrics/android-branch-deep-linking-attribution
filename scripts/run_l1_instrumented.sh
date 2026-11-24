@@ -181,3 +181,5 @@ fi
 
 sleep "$COLD_SETTLE_S"
 pull_capture "$OUTPUT_LOG"
+# The validator checks that the link the app got and the open's link_data are this run's.
+printf '%s\n' "$L1_RUN_ID" > "$OUTPUT_LOG.run_id"

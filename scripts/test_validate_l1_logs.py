@@ -460,6 +460,32 @@ class ScenarioContractTests(unittest.TestCase):
                 expected = v.SCENARIO_LINK_MARKERS[scenario]
                 self.assertEqual(v.assert_open_link(self._entries(scenario), expected), [])
 
+    def test_the_run_id_joins_the_marker(self):
+        self.assertEqual(
+            v.marker_for("cold_https", "fixture-run"),
+            {"l1_scenario": "cold_https", "l1_run_id": "fixture-run"},
+        )
+        self.assertEqual(v.marker_for("cold_https"), v.SCENARIO_LINK_MARKERS["cold_https"])
+        self.assertIsNone(v.marker_for("organic_open", "fixture-run"))
+
+    def test_each_cold_scenario_passes_with_its_own_run_id(self):
+        for scenario in ("cold_firstInstall", "cold_https"):
+            marker = v.marker_for(scenario, "fixture-run")
+            with self.subTest(scenario=scenario):
+                self.assertEqual(v.assert_resolved(self._resolved(scenario), marker), [])
+                self.assertEqual(v.assert_open_link(self._entries(scenario), marker), [])
+
+    def test_a_link_from_another_run_fails(self):
+        # Runs repeat with the same scenario names, so only the run id tells
+        # this run's link from one left over by an earlier run.
+        for scenario in ("cold_firstInstall", "cold_https"):
+            marker = v.marker_for(scenario, "a-later-run")
+            with self.subTest(scenario=scenario):
+                resolved_errors = v.assert_resolved(self._resolved(scenario), marker)
+                open_errors = v.assert_open_link(self._entries(scenario), marker)
+                self.assertTrue(any("l1_run_id" in e for e in resolved_errors), resolved_errors)
+                self.assertTrue(any("l1_run_id" in e for e in open_errors), open_errors)
+
     def test_an_open_crediting_another_link_fails_validation(self):
         # The app got its own link, but the open credits a different one: the
         # resolved rule passes, so only the open's link_data can catch it.

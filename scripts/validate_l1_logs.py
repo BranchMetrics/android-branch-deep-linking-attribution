@@ -606,6 +606,15 @@ def assert_resolved(resolved, expected):
     return [f"Expected a resolution carrying {expected}, got {seen or 'none'}."]
 
 
+def marker_for(scenario, run_id=None):
+    """The link data a cold scenario's links must carry: its marker, plus `run_id` as l1_run_id
+    when given. None for a scenario without a marker."""
+    marker = SCENARIO_LINK_MARKERS.get(scenario)
+    if marker and run_id:
+        marker = dict(marker, l1_run_id=run_id)
+    return marker
+
+
 def assert_open_link(entries, expected):
     """Check that some /v3/events/open's link_data carries every `expected` key with its value.
 
@@ -661,7 +670,7 @@ def main():
     )
     parser.add_argument(
         "--run-id", default=None,
-        help="install-referrer scenarios: the l1_run_id the scenario's links carry",
+        help="cold and install-referrer scenarios: the l1_run_id the scenario's links carry",
     )
     parser.add_argument(
         "--click-id", default=None,
@@ -692,7 +701,7 @@ def main():
         print(f"FAILED: {e}")
         sys.exit(1)
 
-    marker = SCENARIO_LINK_MARKERS.get(args.scenario) if args.scenario else None
+    marker = marker_for(args.scenario, args.run_id or None) if args.scenario else None
     resolved = parse_resolved_params(log_file_path)
     errors = validate_entries(entries, contract, resolved, marker)
     if args.scenario in SCENARIO_REFERRER_LINKS:
