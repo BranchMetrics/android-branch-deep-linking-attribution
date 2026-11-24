@@ -1,5 +1,6 @@
 package io.branch.gptdriver.tests
 
+import org.junit.After
 import org.junit.Test
 
 /**
@@ -25,6 +26,9 @@ import org.junit.Test
 class H1HotAppLinkWireTest {
 
     private val driver = WireScenarioDriver()
+
+    @After
+    fun closeDriver() = driver.close()
 
     @Test
     fun hotAppLinkEmitsWirePayload() {

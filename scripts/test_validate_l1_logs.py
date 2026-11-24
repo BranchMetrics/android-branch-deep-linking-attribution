@@ -315,12 +315,32 @@ class ReferrerScenarioTests(unittest.TestCase):
                 errors, _ = _run_validation(SCENARIO_FIXTURES[scenario])
                 self.assertEqual(errors, [])
 
-    def test_a_deeplink_not_at_none_must_carry_the_stripped_fields(self):
+    def test_an_unstripped_deeplink_must_carry_the_stripped_fields(self):
         entry = self._first(self._entries("none_referrer_install"), "/v3/deeplink")
         entry["request"]["cpp_level"] = "FULL"
+        entry["request"].pop("tracking_disabled")
         with redirect_stdout(io.StringIO()):
             errors = v.validate_request(entry, 1, 1)
         self.assertTrue(any("local_ip" in e for e in errors), errors)
+
+    def test_a_deeplink_stripped_by_disable_tracking_passes_without_a_level(self):
+        # The deprecated disableTracking(true) strips the request and sets no level, so the
+        # request carries tracking_disabled and no cpp_level, or the level set earlier.
+        for level in (None, "FULL"):
+            entry = self._first(self._entries("none_referrer_install"), "/v3/deeplink")
+            if level is None:
+                entry["request"].pop("cpp_level")
+            else:
+                entry["request"]["cpp_level"] = level
+            with self.subTest(cpp_level=level), redirect_stdout(io.StringIO()):
+                self.assertEqual(v.validate_request(entry, 1, 1), [])
+
+    def test_a_stripped_deeplink_with_tracking_disabled_false_fails(self):
+        entry = self._first(self._entries("none_referrer_install"), "/v3/deeplink")
+        entry["request"]["tracking_disabled"] = False
+        with redirect_stdout(io.StringIO()):
+            errors = v.validate_request(entry, 1, 1)
+        self.assertTrue(any("'tracking_disabled' must be true" in e for e in errors), errors)
 
     def test_a_none_deeplink_without_tracking_disabled_fails(self):
         entry = self._first(self._entries("none_referrer_install"), "/v3/deeplink")

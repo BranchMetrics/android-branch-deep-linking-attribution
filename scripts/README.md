@@ -22,15 +22,19 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 
 The suite is split by what it judges:
 
-- `test_validate_l1_logs.py`: the parser, the field and contract engine, the registry.
+- `test_validate_l1_logs.py`: the parser, the field and contract engine, the registry,
+  and the install-referrer scenarios.
 - `test_scenario_contracts.py`: each scenario contract against the fixture it was
   written from, and its negatives.
-- `test_scenario_artifact_guards.py`: guards over the committed fixtures (placeholders
+- `test_attribution_none.py`: the required-field tiers for stripped requests, and the
+  attribution_none contract.
+- `test_scenario_artifact_guards.py`: guards over the wire-gate fixtures (placeholders
   only, wire pairs only) and over the contract table.
-- `test_warm_contract_rules.py`: one test per rule of the two warm contracts and of
-  `hot_uriScheme`, so deleting or weakening a rule fails.
+- `test_warm_contract_rules.py`: one test per rule of the warm, hot and cold_uriScheme
+  contracts, so deleting or weakening a rule fails. It keeps its own fixture map.
 
-`l1_fixtures.py` holds the fixture directory and the scenario-to-fixture map they share.
+`l1_fixtures.py` holds the fixture directory and the scenario-to-fixture map the other
+test files share.
 
 ## What gets validated
 

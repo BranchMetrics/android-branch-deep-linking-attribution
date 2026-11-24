@@ -94,8 +94,10 @@ REQUIRED_V3_NONE_ONLY = ["tracking_disabled"]
 # contract cannot be expressed by extending the common list. iOS gives v2 its own complete list
 # instead. That mechanism change is out of scope here.
 #
-# Tiered by the request's own cpp_level, as on iOS: `always` at every level,
-# `not_none` at every level except NONE, `none_only` at NONE. /v1/* stay flat.
+# Tiered by whether the SDK stripped the request (is_stripped): `always` on every request,
+# `not_none` on a request it did not strip, `none_only` on one it did. It strips at
+# cpp_level NONE, as on iOS, and when tracking is disabled through the deprecated
+# disableTracking(true), which sets no level. /v1/* stay flat.
 REQUIRED_PER_ENDPOINT = {
     "/v1/install": {
         "always": REQUIRED_COMMON + REQUIRED_COMMON_NOT_NONE
@@ -209,14 +211,21 @@ def attribution_level(request):
     return value.upper()
 
 
+def is_stripped(request):
+    """True when the SDK sent the request without tracking: at cpp_level NONE, or marked
+    tracking_disabled. The SDK strips both cases the same way and marks the request."""
+    return (attribution_level(request) == ATTRIBUTION_LEVEL_NONE
+            or lookup_field(request, "tracking_disabled") is True)
+
+
 def required_fields_for(uri, request):
-    """Return the required fields for one request at its own attribution
-    level, or None when the endpoint has no contract."""
+    """Return the required fields for one request, by whether the SDK stripped
+    it, or None when the endpoint has no contract."""
     contract = REQUIRED_PER_ENDPOINT.get(uri)
     if contract is None:
         return None
     fields = list(contract["always"])
-    if attribution_level(request) == ATTRIBUTION_LEVEL_NONE:
+    if is_stripped(request):
         fields.extend(contract["none_only"])
     else:
         fields.extend(contract["not_none"])
@@ -266,6 +275,10 @@ def validate_request(entry, idx, total):
             print(f"  {marker} {field:<35} MISSING")
             errors.append(f"Request {idx} ({uri}): missing required field '{field}'")
 
+    disabled = lookup_field(request, "tracking_disabled")
+    if is_stripped(request) and is_present(disabled) and disabled is not True:
+        errors.append(f"Request {idx} ({uri}): 'tracking_disabled' must be true, got {disabled!r}")
+
     return errors
 
 
@@ -305,9 +318,13 @@ def collapse_retries(entries):
     return kept
 
 
-# The link data each cold scenario's generator writes, checked against the
-# params the TestBed receives and the link_data its open sends. Kept out of
-# SCENARIO_CONTRACTS so the contracts stay byte-compatible with iOS.
+# The l1_scenario each scenario's link carries, checked against the params the
+# TestBed receives and, where the contract requires link_data on an open, the
+# open's link_data. --run-id adds l1_run_id; it applies to the scenarios whose
+# link ScenarioLinkGenerator makes (the cold ones and attribution_none), since
+# that is where the run script saves the id. hot_https_foreground's driver
+# stamps its own. Kept out of SCENARIO_CONTRACTS so the contracts stay
+# byte-compatible with iOS.
 SCENARIO_LINK_MARKERS = {
     "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
     "cold_https": {"l1_scenario": "cold_https"},

@@ -72,17 +72,18 @@ FIELDS = {
     "warm_https_onNewIntent": {
         "/v3/events/open": {"randomized_bundle_token": 2},
         "/v3/events/open[-1]": {"link_data": 1},
+        "/v3/events/open[0]": {"link_data": 0},
         "/v1/url": {"hardware_id": 0},
         "/v3/deeplink": {"android_app_link_url": 1, "external_intent_uri": 1},
     },
     "warm_uriScheme": {
-        "/v3/events/open": {"randomized_bundle_token": 2},
+        "/v3/events/open": {"randomized_bundle_token": 2, "link_data": 0},
         "/v1/url": {"hardware_id": 0},
         "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
     },
     "hot_uriScheme": {
         "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
-        "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1},
+        "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1, "link_data": 0},
     },
     "hot_https_foreground": {
         "/v3/deeplink": {"android_app_link_url": 1, "external_intent_uri": 1, "link_identifier": 0},
@@ -94,6 +95,7 @@ FIELDS = {
             "external_intent_uri": 1,
             "link_identifier": 1,
         },
+        "/v3/events/open": {"link_data": 0},
     },
 }
 
@@ -218,12 +220,13 @@ class WarmLinkDataPosition(unittest.TestCase):
         errors = _errors(entries, "warm_https_onNewIntent")
         self.assertTrue(any("link_data" in e for e in errors), errors)
 
-    def test_link_data_on_both_opens_passes(self):
-        # Extra attribution on the bare launch is not the defect this guards.
+    def test_link_data_on_the_bare_launch_open_fails(self):
+        # The bare launch follows no link; link_data on its open would credit one.
         entries = _entries("warm_https_onNewIntent")
         opens = self._opens(entries)
         opens[0]["request"]["link_data"] = opens[-1]["request"]["link_data"]
-        self.assertEqual(_errors(entries, "warm_https_onNewIntent"), [])
+        errors = _errors(entries, "warm_https_onNewIntent")
+        self.assertTrue(any("link_data" in e and "[0]" in e for e in errors), errors)
 
     def test_the_real_fixture_carries_it_on_the_tap_only(self):
         opens = self._opens(_entries("warm_https_onNewIntent"))

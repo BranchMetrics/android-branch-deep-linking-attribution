@@ -33,6 +33,8 @@ class ScenarioLinkGenerator {
         val scenario = requireNotNull(args.getString(ARG_SCENARIO)) { "$ARG_SCENARIO is required" }
         val runId = args.getString(ARG_RUN_ID) ?: System.currentTimeMillis().toString()
         val level = args.getString(ARG_LEVEL)?.let { Defines.BranchAttributionLevel.valueOf(it) }
+        // The SDK calls the level callback for another level only when tracking was disabled.
+        require(level == null || level == Defines.BranchAttributionLevel.NONE) { "$ARG_LEVEL supports only NONE, got $level" }
 
         Thread.sleep(SESSION_MS)
         if (level != null) {
@@ -61,7 +63,7 @@ class ScenarioLinkGenerator {
         check(link.startsWith("https://")) { "Expected an https link, got '$link'" }
 
         if (level != null) {
-            // Safe to await: NONE calls back synchronously; another level would wait for an init request.
+            // NONE calls back synchronously.
             val levelSet = CountDownLatch(1)
             activityRule.scenario.onActivity {
                 Branch.getInstance().setConsumerProtectionAttributionLevel(level) { _, _, _ -> levelSet.countDown() }

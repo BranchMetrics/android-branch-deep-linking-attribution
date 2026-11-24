@@ -15,6 +15,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, THIS_DIR)
 
 import validate_l1_logs as v  # noqa: E402
+from scenario_contracts import NONE_DEEPLINK_ABSENT  # noqa: E402
 from l1_fixtures import fixture_path as _fixture  # noqa: E402
 
 
@@ -32,8 +33,8 @@ def _quiet(fn, *args):
 
 
 class AttributionTierTests(unittest.TestCase):
-    """Required fields tiered by the request's own cpp_level, as on iOS.
-    At NONE the SDK strips the device identifiers before sending."""
+    """Required fields tiered by whether the SDK stripped the request: at cpp_level NONE,
+    as on iOS, or marked tracking_disabled. A stripped request carries no device identifiers."""
 
     NONE_FIXTURE = "attribution_none.txt"
     STRIPPED_AT_NONE = {"local_ip", "anon_id", "first_install_time", "is_hardware_id_real"}
@@ -124,8 +125,7 @@ class AttributionNoneRuleTests(unittest.TestCase):
         self.assertEqual(contract["order"], ())
         self.assertEqual(
             contract["fields"],
-            {"/v3/deeplink": {"tracking_disabled": 1, "randomized_device_token": 0,
-                              "randomized_bundle_token": 0, "hardware_id": 0, "anon_id": 0}},
+            {"/v3/deeplink": {**NONE_DEEPLINK_ABSENT, "tracking_disabled": 1}},
         )
 
     def test_a_second_resolve_fails_the_deeplink_count(self):

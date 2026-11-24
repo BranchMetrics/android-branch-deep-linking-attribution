@@ -77,8 +77,7 @@ SCENARIO_CONTRACTS = {
     "attribution_none": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 0},
         "order": (),
-        "fields": {"/v3/deeplink": {"tracking_disabled": 1, "randomized_device_token": 0,
-                   "randomized_bundle_token": 0, "hardware_id": 0, "anon_id": 0}},
+        "fields": {"/v3/deeplink": {**NONE_DEEPLINK_ABSENT, "tracking_disabled": 1}},
     },
     # cold_firstInstall: the link starts the app on a device with no prior
     # install. The install is a /v3/events/open like any other on 6.0, decided
@@ -137,6 +136,8 @@ SCENARIO_CONTRACTS = {
             # rule: a bare scheme link matches nothing, so its opens have none.
             "/v3/events/open": {"randomized_bundle_token": 2},
             "/v3/events/open[-1]": {"link_data": 1},
+            # The bare launch's open follows no link, so it must carry none.
+            "/v3/events/open[0]": {"link_data": 0},
             "/v1/url": {"hardware_id": 0},
             # The entry point, asserted in both directions across the two warm
             # scenarios. An https link now rides both fields, a scheme link only
@@ -165,7 +166,7 @@ SCENARIO_CONTRACTS = {
         },
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
-            "/v3/events/open": {"randomized_bundle_token": 2},
+            "/v3/events/open": {"randomized_bundle_token": 2, "link_data": 0},
             "/v1/url": {"hardware_id": 0},
             "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
         },
@@ -249,7 +250,7 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
             "/v3/deeplink": {"android_app_link_url": 0, "external_intent_uri": 1},
-            "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1},
+            "/v3/events/open": {"randomized_bundle_token": 1, "external_intent_uri": 1, "link_data": 0},
         },
     },
     # The install-referrer scenarios (scripts/run_l1_referrer.sh): a fresh install whose Play install
@@ -305,6 +306,7 @@ SCENARIO_CONTRACTS = {
                 "external_intent_uri": 1,
                 "link_identifier": 1,
             },
+            "/v3/events/open": {"link_data": 0},
         },
     },
 }

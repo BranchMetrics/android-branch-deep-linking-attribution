@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The steps the wire drivers share: launch the TestBed, optionally generate a link (W1 and W2
- * do, H2 does not), then deliver a URI through startActivity, either after sending the app to
- * the background ([background] then [deliver], W1WarmHttpsWireTest and
+ * The steps the wire drivers share: launch the TestBed, optionally generate a link (W1, W2
+ * and H1 do, H2 does not), then deliver a URI through startActivity, either after sending the
+ * app to the background ([background] then [deliver], W1WarmHttpsWireTest and
  * W2WarmUriSchemeWireTest) or while the activity is resumed ([deliverHot],
- * H2HotUriSchemeWireTest).
+ * H1HotAppLinkWireTest and H2HotUriSchemeWireTest).
  *
  * Each step waits for something it can observe: the TestBed's own capture file
  * (branchlogs.txt, read in this process, which is the app's), the short-URL field, or the
@@ -170,7 +170,7 @@ internal class WireScenarioDriver {
 
     /**
      * Sets the capture so far aside, for a scenario whose contract judges only its delivery
-     * (hot_uriScheme counts one deeplink and one open, not the launch's). [launch] owns the
+     * (the hot contracts count the delivery's requests, not the launch's). [launch] owns the
      * arrival precondition (a deeplink and an open, then quiet), so it is not repeated here.
      * What this asserts can fail on its own: the rename's result, and that the set-aside file
      * holds the launch's /v3/events/open carrying randomized_bundle_token. The deeplink half of

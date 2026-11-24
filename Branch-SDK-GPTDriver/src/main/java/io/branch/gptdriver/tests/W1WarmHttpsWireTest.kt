@@ -29,9 +29,9 @@ import org.junit.Test
  * after that the SDK holds no launch intent state to re-run. The TestBed's onNewIntent calls
  * requestDeepLinkData, which sends the deeplink and the open.
  *
- * No ActivityScenarioRule here, unlike the other L1 drivers. The rule closes the scenario in
- * its after(), and once a new intent has been delivered through startActivity the scenario
- * has lost lifecycle control, so close() throws. The runner cleans the activity up.
+ * No ActivityScenarioRule here, as in every WireScenarioDriver driver. The rule closes the
+ * scenario in its after(), and once a new intent has been delivered through startActivity the
+ * scenario has lost lifecycle control, so close() throws. The runner cleans the activity up.
  *
  * The driver checks only its own preconditions: the launch open carries a token, the activity
  * stopped without being destroyed, and it was not destroyed by the delivery. The capture is the

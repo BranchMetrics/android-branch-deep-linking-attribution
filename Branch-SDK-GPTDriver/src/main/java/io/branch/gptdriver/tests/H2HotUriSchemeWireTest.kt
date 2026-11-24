@@ -1,5 +1,6 @@
 package io.branch.gptdriver.tests
 
+import org.junit.After
 import org.junit.Test
 
 /**
@@ -9,8 +10,8 @@ import org.junit.Test
  *
  * Needs a device that already holds a token, from cold_https running first; this line does not
  * wipe app data. The shared driver checks it on the launch open and fails by name without it.
- * The hot_uriScheme contract itself has no token rule. W1WarmHttpsWireTest explains why the
- * token comes from cold_https and not from this launch. The link generation step W2 has is
+ * W1WarmHttpsWireTest explains why the token comes from cold_https and not from this launch.
+ * The link generation step W2 has is
  * left out: it only added a /v1/url that this scenario sets aside anyway.
  *
  * The contract counts one deeplink and one open, the delivery's own, so the launch's pair is
@@ -23,14 +24,13 @@ import org.junit.Test
  * No ActivityScenarioRule, for the reason WireScenarioDriver documents. The driver asserts that
  * MainActivity is RESUMED before and after the delivery and never stopped or died between the
  * launch and its end. The capture is the output.
- *
- * Not in the L1 workflow yet: run it by hand after cold_https with
- * TEST_CLASS=H2HotUriSchemeWireTest OUTPUT_LOG=wire-hot_uriScheme.txt CLEAR_LOG=1
- * ./scripts/run_l1_instrumented.sh, then validate_l1_logs.py --scenario hot_uriScheme.
  */
 class H2HotUriSchemeWireTest {
 
     private val driver = WireScenarioDriver()
+
+    @After
+    fun closeDriver() = driver.close()
 
     @Test
     fun hotUriSchemeLinkEmitsWirePayload() {
