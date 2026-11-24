@@ -309,4 +309,47 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"link_data": 0},
         },
     },
+    # no_stickiness: an old link must not come back. N2NoStickinessWireTest launches bare,
+    # opens a marked link warm, presses Home, comes back the way recents does, presses Home,
+    # then the run script force-stops the app and the driver opens it again with no link.
+    # The return sends nothing: an extra deeplink or open breaks the counts. The relaunch is
+    # the last deeplink and open, and must carry none of the link. The four custom events are
+    # the TestBed's onStart, once per start: the launch, the delivery, the return and the
+    # relaunch, so they witness the return from the capture side.
+    "no_stickiness": {
+        "counts": {
+            "/v3/deeplink": 3,
+            "/v3/events/open": 3,
+            "/v1/url": 1,
+            "/v3/events/custom": 4,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"randomized_bundle_token": 3},
+            "/v3/events/open[0]": {"link_data": 0},
+            "/v3/deeplink[1]": {"android_app_link_url": 1, "external_intent_uri": 1},
+            "/v3/events/open[1]": {"link_data": 1},
+            "/v3/deeplink[-1]": {"android_app_link_url": 0, "external_intent_uri": 0},
+            "/v3/events/open[-1]": {"link_data": 0, "android_app_link_url": 0, "external_intent_uri": 0},
+        },
+    },
+    # no_stickiness_none: no_stickiness with attribution level NONE set after the link is
+    # made, so only the bare launch sends an open. At NONE a launch's deeplink is sent only when
+    # it carries a link, so the relaunch sends nothing, and the deeplink count of two is the
+    # check: an old link kept in prefs would send a third. The custom events stop at NONE, so
+    # they are not counted.
+    "no_stickiness_none": {
+        "counts": {
+            "/v3/deeplink": 2,
+            "/v3/events/open": 1,
+            "/v1/url": 1,
+            "/v1/install": 0,
+        },
+        "order": (("/v3/deeplink", "/v3/events/open"),),
+        "fields": {
+            "/v3/events/open": {"link_data": 0},
+            "/v3/deeplink[-1]": {"android_app_link_url": 1, "tracking_disabled": 1},
+        },
+    },
 }

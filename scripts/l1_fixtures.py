@@ -27,6 +27,8 @@ SCENARIO_FIXTURES = {
     "none_referrer_app_passes_click_id": "none_referrer_app_passes_click_id.txt",
     "none_organic_install": "none_organic_install.txt",
     "cold_uriScheme": "cold_uriScheme.txt",
+    "no_stickiness": "no_stickiness.txt",
+    "no_stickiness_none": "no_stickiness_none.txt",
 }
 
 

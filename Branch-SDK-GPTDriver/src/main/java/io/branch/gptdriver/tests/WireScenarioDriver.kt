@@ -1,6 +1,7 @@
 package io.branch.gptdriver.tests
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
@@ -16,7 +17,9 @@ import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
 import io.branch.gptdriver.LinkFieldReader
 import io.branch.indexing.BranchUniversalObject
+import io.branch.referral.Branch
 import io.branch.referral.BranchError
+import io.branch.referral.Defines
 import io.branch.referral.util.LinkProperties
 import java.io.File
 import java.util.concurrent.CountDownLatch
@@ -28,7 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger
  * and H1 do, H2 does not), then deliver a URI through startActivity, either after sending the
  * app to the background ([background] then [deliver], W1WarmHttpsWireTest and
  * W2WarmUriSchemeWireTest) or while the activity is resumed ([deliverHot],
- * H1HotAppLinkWireTest and H2HotUriSchemeWireTest).
+ * H1HotAppLinkWireTest and H2HotUriSchemeWireTest). N2NoStickinessWireTest delivers warm, then
+ * leaves and comes back with [returnFromRecents].
  *
  * Each step waits for something it can observe: the TestBed's own capture file
  * (branchlogs.txt, read in this process, which is the app's), the short-URL field, or the
@@ -64,13 +68,23 @@ internal class WireScenarioDriver {
     private val lifecycle = MainActivityLifecycle()
     private var registeredOn: Application? = null
 
-    /** Starts the TestBed and waits for its launch to reach the wire: a deeplink and an open. */
-    fun launch() {
+    /**
+     * Starts the TestBed and waits for its launch to reach the wire: a deeplink and an open. With
+     * [expectRequests] false, as for a launch with no link at attribution level NONE, which sends
+     * nothing, it waits for MainActivity to resume and then for [FINAL_QUIET_MS] of quiet instead;
+     * the contract's counts check that nothing was sent.
+     */
+    fun launch(expectRequests: Boolean = true) {
         baseline = ENDPOINTS.associateWith { posts(it) }
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
         registeredOn = (app as Application).also { it.registerActivityLifecycleCallbacks(lifecycle) }
         scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario?.moveToState(Lifecycle.State.RESUMED)
+        if (!expectRequests) {
+            await("MainActivity did not resume") { lifecycle.resumed }
+            awaitQuiet(FINAL_QUIET_MS)
+            return
+        }
         awaitPosts(DEEPLINK, OPEN)
         awaitQuiet()
         val launchOpen = launchOpenBody(captureFile())
@@ -149,6 +163,21 @@ internal class WireScenarioDriver {
     }
 
     /**
+     * Sets attribution level NONE and waits for the SDK's callback. The level stays in prefs
+     * after the process ends, until the app's data is cleared.
+     */
+    fun setAttributionNone() {
+        val levelSet = CountDownLatch(1)
+        checkNotNull(scenario) { "setAttributionNone needs a launched scenario" }.onActivity {
+            Branch.getInstance().setConsumerProtectionAttributionLevel(
+                Defines.BranchAttributionLevel.NONE
+            ) { _, _, _ -> levelSet.countDown() }
+        }
+        check(levelSet.await(WAIT_MS, TimeUnit.MILLISECONDS)) { "No level callback within ${WAIT_MS}ms" }
+        awaitQuiet()
+    }
+
+    /**
      * Presses Home and asserts the activity went to the background: it must report onStop and
      * must not be destroyed. Without this a Home press that did not stop the activity, or a
      * device that destroys it ("Don't keep activities"), would still produce a capture, and
@@ -204,13 +233,14 @@ internal class WireScenarioDriver {
     }
 
     /**
-     * Delivers [uri] and waits for the deeplink and open it causes, then for quiet. A request
-     * that never comes is not an error here: the contract that judges the capture names what
-     * is missing, and stopping this driver early would skip that judgement.
+     * Delivers [uri] and waits for the deeplink and open it causes, or only the deeplink when
+     * [expectOpen] is false, then for quiet. A request that never comes is not an error here:
+     * the contract that judges the capture names what is missing, and stopping this driver early
+     * would skip that judgement.
      */
-    fun deliver(uri: String) {
+    fun deliver(uri: String, expectOpen: Boolean = true) {
         assertBackgrounded()
-        send(uri)
+        send(uri, expectOpen)
         check(lifecycle.destroys.get() == 0) {
             "MainActivity was destroyed during delivery, so the link did not reach a living " +
                 "activity through onNewIntent"
@@ -236,7 +266,26 @@ internal class WireScenarioDriver {
         }
     }
 
-    private fun send(uri: String) {
+    /**
+     * Brings the TestBed's task back to the front the way the recents screen does, with no new
+     * intent, so MainActivity restarts and resumes but is not created again and gets no
+     * onNewIntent. Waits for it to resume, then for [FINAL_QUIET_MS] of quiet, so a request the
+     * return causes lands in the capture.
+     */
+    fun returnFromRecents() {
+        assertBackgrounded()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val tasks = context.getSystemService(ActivityManager::class.java).appTasks
+        check(tasks.size == 1) { "Expected one TestBed task to return to, found ${tasks.size}" }
+        tasks[0].moveToFront()
+        await("MainActivity did not resume after the return") { lifecycle.resumed }
+        check(lifecycle.destroys.get() == 0) {
+            "MainActivity was destroyed, so the return created it again instead of restarting it"
+        }
+        awaitQuiet(FINAL_QUIET_MS)
+    }
+
+    private fun send(uri: String, expectOpen: Boolean = true) {
         baseline = ENDPOINTS.associateWith { posts(it) }
         // setPackage, so the system still resolves the intent against the manifest. Naming
         // the component would work too and would skip resolution, but then a manifest that
@@ -249,7 +298,7 @@ internal class WireScenarioDriver {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         context.startActivity(intent)
-        poll(WAIT_MS) { arrived(DEEPLINK) && arrived(OPEN) }
+        poll(WAIT_MS) { arrived(DEEPLINK) && (!expectOpen || arrived(OPEN)) }
         awaitQuiet(FINAL_QUIET_MS)
     }
 

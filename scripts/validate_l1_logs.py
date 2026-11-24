@@ -322,14 +322,16 @@ def collapse_retries(entries):
 # TestBed receives and, where the contract requires link_data on an open, the
 # open's link_data. --run-id adds l1_run_id; it applies to the scenarios whose
 # link ScenarioLinkGenerator makes (the cold ones and attribution_none), since
-# that is where the run script saves the id. hot_https_foreground's driver
-# stamps its own. Kept out of SCENARIO_CONTRACTS so the contracts stay
+# that is where the run script saves the id. The hot_https_foreground and
+# no_stickiness drivers stamp their own. Kept out of SCENARIO_CONTRACTS so the contracts stay
 # byte-compatible with iOS.
 SCENARIO_LINK_MARKERS = {
     "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
     "cold_https": {"l1_scenario": "cold_https"},
     "hot_https_foreground": {"l1_scenario": "hot_https_foreground"},
     "attribution_none": {"l1_scenario": "attribution_none"},
+    "no_stickiness": {"l1_scenario": "no_stickiness"},
+    "no_stickiness_none": {"l1_scenario": "no_stickiness_none"},
 }
 
 

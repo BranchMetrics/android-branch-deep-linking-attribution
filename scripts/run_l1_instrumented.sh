@@ -33,6 +33,10 @@ case "$TEST_CLASS" in
   *) TEST_CLASS="$TEST_CLASS_PACKAGE.$TEST_CLASS" ;;
 esac
 OUTPUT_LOG="${OUTPUT_LOG:-}"
+# TEST_METHODS="first second" runs those methods of TEST_CLASS, each in its own
+# instrumentation, in order, and force-stops the app between them, so each one
+# starts in a new process.
+TEST_METHODS="${TEST_METHODS:-}"
 
 # Both default off. CLEAR_LOG truncates the capture file, which the app only
 # ever appends to. WIPE_FIRST runs `pm clear`, since `adb install -r` keeps app
@@ -51,27 +55,33 @@ LINK_LOG="${LINK_LOG:-}"
 # COLD_LINK_URL, when set, is delivered as the link and the generator is skipped.
 COLD_LINK_URL="${COLD_LINK_URL:-}"
 # L1_ATTRIBUTION_LEVEL=NONE makes the generator set NONE after the link exists; it is the
-# only level supported. WIPE_AFTER=1 clears app data on exit, so no later scenario inherits it.
-# Both act only in a cold run that generates its link.
+# only level supported. With TEST_METHODS it is passed to each method instead. WIPE_AFTER=1
+# clears app data on exit, so no later scenario inherits it. Both act only in a cold run that
+# generates its link, or with TEST_METHODS.
 L1_ATTRIBUTION_LEVEL="${L1_ATTRIBUTION_LEVEL:-}"
 WIPE_AFTER="${WIPE_AFTER:-0}"
 if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$L1_ATTRIBUTION_LEVEL" != "NONE" ]; then
   echo "L1_ATTRIBUTION_LEVEL supports only NONE, got $L1_ATTRIBUTION_LEVEL" >&2
   exit 1
 fi
-if [ -n "$L1_ATTRIBUTION_LEVEL" ] && { [ -z "$COLD_SCENARIO" ] || [ -n "$COLD_LINK_URL" ]; }; then
-  echo "L1_ATTRIBUTION_LEVEL needs COLD_SCENARIO without COLD_LINK_URL, so the generator runs" >&2
+if [ -n "$TEST_METHODS" ] && [ -n "$COLD_SCENARIO" ]; then
+  echo "TEST_METHODS runs TEST_CLASS, so it cannot be combined with COLD_SCENARIO" >&2
   exit 1
 fi
-if [ "$WIPE_AFTER" = "1" ] && [ -z "$COLD_SCENARIO" ]; then
-  echo "WIPE_AFTER=1 needs COLD_SCENARIO" >&2
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ -z "$TEST_METHODS" ] && \
+   { [ -z "$COLD_SCENARIO" ] || [ -n "$COLD_LINK_URL" ]; }; then
+  echo "L1_ATTRIBUTION_LEVEL needs COLD_SCENARIO without COLD_LINK_URL, so the generator runs, or TEST_METHODS" >&2
+  exit 1
+fi
+if [ "$WIPE_AFTER" = "1" ] && [ -z "$COLD_SCENARIO" ] && [ -z "$TEST_METHODS" ]; then
+  echo "WIPE_AFTER=1 needs COLD_SCENARIO or TEST_METHODS" >&2
   exit 1
 fi
 if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$COLD_WIPE" = "1" ]; then
   echo "L1_ATTRIBUTION_LEVEL needs the generation run's tokens; COLD_WIPE would erase them" >&2
   exit 1
 fi
-if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$WIPE_FIRST" != "1" ]; then
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ -n "$COLD_SCENARIO" ] && [ "$WIPE_FIRST" != "1" ]; then
   echo "L1_ATTRIBUTION_LEVEL needs WIPE_FIRST=1 so the level starts from a clean install" >&2
   exit 1
 fi
@@ -140,11 +150,20 @@ pull_capture() {
   wc -l "$1"
 }
 
-if [ -z "$COLD_SCENARIO" ]; then
-  run_instrumented "$TEST_CLASS"
-  pull_capture "$OUTPUT_LOG"
-  exit 0
-fi
+app_pid() {
+  adb shell pidof "$TARGET_PKG" | tr -d '\r' || true
+}
+
+# Stops the app and waits until its process is gone.
+force_stop_app() {
+  adb shell am force-stop "$TARGET_PKG"
+  for _ in 1 2 3 4 5; do
+    [ -z "$(app_pid)" ] && return 0
+    sleep 1
+  done
+  echo "$TARGET_PKG is still running after force-stop." >&2
+  exit 1
+}
 
 LEVEL_ARGS=()
 if [ -n "$L1_ATTRIBUTION_LEVEL" ]; then
@@ -153,6 +172,24 @@ fi
 if [ "$WIPE_AFTER" = "1" ]; then
   trap 'adb shell pm clear "$TARGET_PKG" || true' EXIT
 fi
+
+if [ -n "$TEST_METHODS" ]; then
+  first=1
+  for method in $TEST_METHODS; do
+    [ "$first" = "1" ] || force_stop_app
+    first=0
+    run_instrumented "$TEST_CLASS#$method" ${LEVEL_ARGS[@]+"${LEVEL_ARGS[@]}"}
+  done
+  pull_capture "$OUTPUT_LOG"
+  exit 0
+fi
+
+if [ -z "$COLD_SCENARIO" ]; then
+  run_instrumented "$TEST_CLASS"
+  pull_capture "$OUTPUT_LOG"
+  exit 0
+fi
+
 LINK_URL="$COLD_LINK_URL"
 if [ -z "$LINK_URL" ]; then
   run_instrumented "$TEST_CLASS_PACKAGE.ScenarioLinkGenerator" \
@@ -166,19 +203,7 @@ fi
 
 # Stopped before the capture is read or cleared, so no write from the
 # generation run can land after it.
-adb shell am force-stop "$TARGET_PKG"
-
-app_pid() {
-  adb shell pidof "$TARGET_PKG" | tr -d '\r' || true
-}
-for _ in 1 2 3 4 5; do
-  [ -z "$(app_pid)" ] && break
-  sleep 1
-done
-if [ -n "$(app_pid)" ]; then
-  echo "$TARGET_PKG is still running after force-stop." >&2
-  exit 1
-fi
+force_stop_app
 
 if [ -n "$LINK_LOG" ]; then
   pull_capture "$LINK_LOG"

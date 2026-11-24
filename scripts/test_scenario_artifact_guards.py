@@ -62,8 +62,8 @@ class ScenarioArtifactGuards(unittest.TestCase):
         already carried it). Every other kept field is one a rule or a required list
         names, external_intent_uri and link_data among them. cpp_level is read by the
         required-field tiers but is a literal in attribution_level(), not a constant to
-        derive from, so it is allowed for attribution_none alone, the one capture that
-        sets a level."""
+        derive from, so it is allowed only for the captures that set a level:
+        attribution_none and no_stickiness_none."""
         keep = set()
 
         def collect(value):
@@ -81,7 +81,7 @@ class ScenarioArtifactGuards(unittest.TestCase):
             for rules in contract["fields"].values():
                 keep |= set(rules)
         keep |= {"app_version"}
-        if scenario == "attribution_none":
+        if scenario in ("attribution_none", "no_stickiness_none"):
             keep.add("cpp_level")
         return keep
 

@@ -32,6 +32,8 @@ The suite is split by what it judges:
   only, wire pairs only) and over the contract table.
 - `test_warm_contract_rules.py`: one test per rule of the warm, hot and cold_uriScheme
   contracts, so deleting or weakening a rule fails. It keeps its own fixture map.
+- `test_no_stickiness.py`: the no_stickiness contracts against their fixtures, and an old
+  link coming back on the relaunch or after the return.
 
 `l1_fixtures.py` holds the fixture directory and the scenario-to-fixture map the other
 test files share.
