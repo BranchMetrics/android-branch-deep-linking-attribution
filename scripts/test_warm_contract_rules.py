@@ -1,4 +1,4 @@
-"""One test per kind of rule in the warm and hot contracts, so deleting any rule turns a test red.
+"""One test per kind of rule in the warm, hot and cold_uriScheme contracts, so deleting any rule turns a test red.
 
 Run from the repo root:
 
@@ -24,11 +24,13 @@ WARM = {
     "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
     "warm_uriScheme": "warm_uriScheme.txt",
 }
-# Every contract whose rules are tabled below: the two warm ones and the two hot ones.
+# Every contract whose rules are tabled below: the two warm ones, the two hot ones and
+# cold_uriScheme.
 RULED = {
     **WARM,
     "hot_uriScheme": "hot_uriScheme.txt",
     "hot_https_foreground": "hot_https_foreground.txt",
+    "cold_uriScheme": "cold_uriScheme.txt",
 }
 
 
@@ -60,6 +62,10 @@ COUNTS = {
         "/v3/events/open": 1,
         "/v1/url": 0,
     },
+    "cold_uriScheme": {
+        "/v3/deeplink": 1,
+        "/v3/events/open": 1,
+    },
 }
 ORDER = (("/v3/deeplink", "/v3/events/open"),)
 FIELDS = {
@@ -81,6 +87,13 @@ FIELDS = {
     "hot_https_foreground": {
         "/v3/deeplink": {"android_app_link_url": 1, "external_intent_uri": 1, "link_identifier": 0},
         "/v3/events/open": {"randomized_bundle_token": 1, "link_data": 1},
+    },
+    "cold_uriScheme": {
+        "/v3/deeplink": {
+            "android_app_link_url": 0,
+            "external_intent_uri": 1,
+            "link_identifier": 1,
+        },
     },
 }
 

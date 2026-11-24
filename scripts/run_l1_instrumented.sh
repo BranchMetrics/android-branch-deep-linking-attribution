@@ -57,6 +57,8 @@ COLD_SCENARIO="${COLD_SCENARIO:-}"
 COLD_WIPE="${COLD_WIPE:-0}"
 COLD_SETTLE_S="${COLD_SETTLE_S:-12}"
 LINK_LOG="${LINK_LOG:-}"
+# COLD_LINK_URL, when set, is delivered as the link and the generator is skipped.
+COLD_LINK_URL="${COLD_LINK_URL:-}"
 # L1_ATTRIBUTION_LEVEL makes the generator set that level after the link exists.
 # WIPE_AFTER=1 clears app data on exit, so no later scenario inherits it.
 L1_ATTRIBUTION_LEVEL="${L1_ATTRIBUTION_LEVEL:-}"
@@ -148,9 +150,12 @@ fi
 if [ "$WIPE_AFTER" = "1" ]; then
   trap 'adb shell pm clear "$TARGET_PKG" || true' EXIT
 fi
-run_instrumented "$TEST_CLASS_PACKAGE.ScenarioLinkGenerator" \
-  -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID" ${LEVEL_ARGS[@]+"${LEVEL_ARGS[@]}"}
-LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
+LINK_URL="$COLD_LINK_URL"
+if [ -z "$LINK_URL" ]; then
+  run_instrumented "$TEST_CLASS_PACKAGE.ScenarioLinkGenerator" \
+    -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID" ${LEVEL_ARGS[@]+"${LEVEL_ARGS[@]}"}
+  LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
+fi
 if [ -z "$LINK_URL" ]; then
   echo "ScenarioLinkGenerator reported no link." >&2
   exit 1
