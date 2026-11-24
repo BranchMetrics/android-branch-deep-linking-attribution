@@ -114,6 +114,7 @@ android {
     }
 
     testOptions {
+        targetSdk = ANDROID_BUILD_SDK_VERSION_COMPILE.toInt()
         unitTests {
             isIncludeAndroidResources = true
         }
