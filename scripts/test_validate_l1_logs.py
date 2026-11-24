@@ -429,13 +429,51 @@ class ScenarioContractTests(unittest.TestCase):
         errors = v.assert_resolved([], v.SCENARIO_LINK_MARKERS["cold_firstInstall"])
         self.assertTrue(any("none" in e for e in errors), errors)
 
-    def test_organic_open_forbids_nothing_it_did_not_measure(self):
-        # organic_open carries no `fields` rule on purpose. The property the
-        # scenario is about is that the open carries no link data, and the run
-        # these were derived from reported the token rather than the link
-        # payload. The counts still earn their place: they catch a second open
-        # reappearing.
-        self.assertEqual(v.contract_for("organic_open")["fields"], {})
+    def test_an_open_without_link_data_fails_each_cold_scenario(self):
+        # The open's link_data credits the link; without it the deep link still
+        # works, so nothing else in the contract notices.
+        for scenario in ("cold_firstInstall", "cold_https"):
+            entries = self._entries(scenario)
+            for e in entries:
+                if e["uri"] == "/v3/events/open":
+                    e["request"].pop("link_data")
+            with self.subTest(scenario=scenario):
+                errors = v.assert_contract(entries, v.contract_for(scenario))
+                self.assertTrue(any("link_data" in e for e in errors), errors)
+
+    def test_an_open_with_link_data_fails_each_launch_without_a_link(self):
+        # api-open credits any link_data an open carries, so a launch with no
+        # link must not send one.
+        stale = {"+clicked_branch_link": True, "~referring_link": "https://bnctestbed.test-app.link/stale"}
+        for scenario in ("organic_open", "link_generation"):
+            entries = self._entries(scenario)
+            for e in entries:
+                if e["uri"] == "/v3/events/open":
+                    e["request"]["link_data"] = stale
+            with self.subTest(scenario=scenario):
+                errors = v.assert_contract(entries, v.contract_for(scenario))
+                self.assertTrue(any("link_data" in e for e in errors), errors)
+
+    def test_each_cold_open_credits_its_own_link(self):
+        for scenario in ("cold_firstInstall", "cold_https"):
+            with self.subTest(scenario=scenario):
+                expected = v.SCENARIO_LINK_MARKERS[scenario]
+                self.assertEqual(v.assert_open_link(self._entries(scenario), expected), [])
+
+    def test_an_open_crediting_another_link_fails_validation(self):
+        # The app got its own link, but the open credits a different one: the
+        # resolved rule passes, so only the open's link_data can catch it.
+        entries = self._entries("cold_https")
+        for e in entries:
+            if e["uri"] == "/v3/events/open":
+                e["request"]["link_data"] = dict(e["request"]["link_data"], l1_scenario="cold_firstInstall")
+        errors = v.validate_entries(
+            entries,
+            v.contract_for("cold_https"),
+            self._resolved("cold_https"),
+            v.SCENARIO_LINK_MARKERS["cold_https"],
+        )
+        self.assertTrue(any("open whose link_data" in e for e in errors), errors)
 
 
 class ReferrerScenarioTests(unittest.TestCase):

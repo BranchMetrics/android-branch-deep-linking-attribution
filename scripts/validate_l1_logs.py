@@ -307,18 +307,17 @@ SCENARIO_CONTRACTS = {
     # unconditionally, so a /v3/deeplink with no link precedes the open, the
     # nil-input resolve the beta design uses as the deferred link check.
     #
-    # No `fields` rule. The property this scenario is really about is that the
-    # open carries no link data, and the measurement that produced these shapes
-    # reported the token rather than the link payload. The exact counts still
-    # earn their place: they are what catches a second open reappearing.
+    # The open carries no link_data: api-open credits any link_data it gets, so
+    # an organic open must not send one. The exact counts catch a second open.
     "organic_open": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {},
+        "fields": {"/v3/events/open": {"link_data": 0}},
     },
     # cold_firstInstall: the link starts the app on a device with no prior
     # install. The install is a /v3/events/open like any other on 6.0, decided
     # by randomizedBundleToken == nil, so its missing token is what marks it.
+    # Its link_data is what credits the install to the link.
     # /v1/url is 0 because the link is generated outside this capture.
     "cold_firstInstall": {
         "counts": {
@@ -329,12 +328,12 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
             "/v3/deeplink": {"android_app_link_url": 1},
-            "/v3/events/open": {"randomized_bundle_token": 0},
+            "/v3/events/open": {"randomized_bundle_token": 0, "link_data": 1},
         },
     },
     # cold_https: the link starts the app on a device that already has it.
     # The open carries the token, which is what separates it from
-    # cold_firstInstall.
+    # cold_firstInstall, and the link_data that credits the open to the link.
     # /v3/events/custom is not counted in either: the TestBed logs one from
     # onStart, and whether it reaches the wire depends on init timing.
     "cold_https": {
@@ -346,16 +345,17 @@ SCENARIO_CONTRACTS = {
         "order": (("/v3/deeplink", "/v3/events/open"),),
         "fields": {
             "/v3/deeplink": {"android_app_link_url": 1},
-            "/v3/events/open": {"randomized_bundle_token": 1},
+            "/v3/events/open": {"randomized_bundle_token": 1, "link_data": 1},
         },
     },
     # link_generation: the generation run that precedes
     # cold_firstInstall, judged on its own capture. It holds the only /v1/url,
-    # so it carries the EMT-4199 rule that /v1/url sends no hardware_id.
+    # so it carries the EMT-4199 rule that /v1/url sends no hardware_id. Its
+    # launch has no link, so its open carries no link_data.
     "link_generation": {
         "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
         "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {"/v1/url": {"hardware_id": 0}},
+        "fields": {"/v1/url": {"hardware_id": 0}, "/v3/events/open": {"link_data": 0}},
     },
     # The install-referrer scenarios (scripts/run_l1_referrer.sh): a fresh install whose Play install
     # referrer holds a link click id, the app at attribution level NONE, the steps below, then consent.
@@ -397,8 +397,8 @@ SCENARIO_CONTRACTS = {
 }
 
 # The link data each cold scenario's generator writes, checked against the
-# params the TestBed receives. Kept out of SCENARIO_CONTRACTS so the contracts
-# stay byte-compatible with iOS.
+# params the TestBed receives and the link_data its open sends. Kept out of
+# SCENARIO_CONTRACTS so the contracts stay byte-compatible with iOS.
 SCENARIO_LINK_MARKERS = {
     "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
     "cold_https": {"l1_scenario": "cold_https"},
@@ -606,10 +606,22 @@ def assert_resolved(resolved, expected):
     return [f"Expected a resolution carrying {expected}, got {seen or 'none'}."]
 
 
+def assert_open_link(entries, expected):
+    """Check that some /v3/events/open's link_data carries every `expected` key with its value.
+
+    Returns a list of error strings, empty when one does."""
+    links = [_link_data(e["request"]) or {} for e in entries if e["uri"] == "/v3/events/open"]
+    for data in links:
+        if all(data.get(key) == value for key, value in expected.items()):
+            return []
+    seen = [{key: data.get(key) for key in expected} for data in links]
+    return [f"Expected an open whose link_data carries {expected}, got {seen or 'none'}."]
+
+
 def validate_entries(entries, contract=None, resolved=None, marker=None):
     """Check every request's required fields, the capture against `contract`,
-    and the `resolved` params against `marker`, each when given. Returns
-    aggregated errors."""
+    and the `resolved` params and the opens' link_data against `marker`, each
+    when given. Returns aggregated errors."""
     errors = []
 
     if not entries:
@@ -628,6 +640,7 @@ def validate_entries(entries, contract=None, resolved=None, marker=None):
 
     if marker:
         errors.extend(assert_resolved(resolved or [], marker))
+        errors.extend(assert_open_link(collapse_retries(entries), marker))
 
     for i, entry in enumerate(entries, start=1):
         errors.extend(validate_request(entry, i, len(entries)))
