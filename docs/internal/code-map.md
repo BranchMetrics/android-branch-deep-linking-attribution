@@ -11,7 +11,7 @@ Where things live, and which file to open for a given task. Line numbers drift o
 | --- | --- |
 | `:Branch-SDK` | the library. All production code under `Branch-SDK/src/main/java/io/branch/` |
 | `:Branch-SDK-TestBed` | sample app (`io.branch.branchandroidtestbed`), depends on `:Branch-SDK`. Target app for E2E |
-| `:Branch-SDK-GPTDriver` | `com.android.test` E2E module targeting the TestBed. Hybrid philosophy: deterministic Espresso first, AI-assisted validation only when Espresso matchers cannot express the intent. See `Branch-SDK-GPTDriver/README.md` |
+| `:Branch-SDK-GPTDriver` | `com.android.test` module targeting the TestBed. Holds the Espresso drivers the L1 wire-validation gate runs. See `Branch-SDK-GPTDriver/README.md` |
 
 ## Packages
 
