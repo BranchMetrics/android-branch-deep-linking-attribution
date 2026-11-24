@@ -119,18 +119,30 @@ jobs:
         run: |
           set -o pipefail
           rc=0
+          # check SCENARIO CAPTURE [RUN_ID_FILE]: with a run id file, the scenario's links must
+          # carry the run id the run script saved there.
           check () {
             echo "::group::$1"
-            if ! python scripts/validate_l1_logs.py "$2" --scenario "$1" 2>&1 \
-                 | sed "s/^FAILED:/FAILED: [$1]/" | tee -a /tmp/l1-output.txt; then
+            scenario=$1 run_id_file=${3:-}
+            set -- "$2" --scenario "$scenario"
+            if [ -n "$run_id_file" ]; then
+              if [ -s "$run_id_file" ]; then
+                set -- "$@" --run-id "$(cat "$run_id_file")"
+              else
+                echo "FAILED: [$scenario] no run id was saved in $run_id_file" | tee -a /tmp/l1-output.txt
+                rc=1
+              fi
+            fi
+            if ! python scripts/validate_l1_logs.py "$@" 2>&1 \
+                 | sed "s/^FAILED:/FAILED: [$scenario]/" | tee -a /tmp/l1-output.txt; then
               rc=1
             fi
             echo "::endgroup::"
           }
           check organic_open wire-organic_open.txt
           check link_generation wire-link_generation.txt
-          check cold_firstInstall wire-cold_firstInstall.txt
-          check cold_https wire-cold_https.txt
+          check cold_firstInstall wire-cold_firstInstall.txt wire-cold_firstInstall.txt.run_id
+          check cold_https wire-cold_https.txt wire-cold_https.txt.run_id
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
