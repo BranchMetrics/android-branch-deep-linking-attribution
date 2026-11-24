@@ -2,29 +2,49 @@ package io.branch.gptdriver.tests
 
 import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withSubstring
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import io.branch.branchandroidtestbed.MainActivity
 import io.branch.branchandroidtestbed.R
-import io.branch.gptdriver.BaseGptDriverTest
 import androidx.test.espresso.IdlingResource
 import io.branch.gptdriver.LinkGenerationIdlingResource
+import java.util.concurrent.TimeUnit
 import org.junit.After
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
 /**
  * DETERMINISTIC approach — 100% Espresso.
  *
  * All actions and assertions use resource IDs and Espresso matchers.
- * GPTDriver is only used for session status reporting.
  *
  * Best for: fixed UI elements, known resource IDs, predictable flows.
  */
-class LinkCreationDeterministicTest : BaseGptDriverTest() {
+@LargeTest
+@RunWith(AndroidJUnit4::class)
+class LinkCreationDeterministicTest {
+
+    @get:Rule
+    val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     private var idlingResource: IdlingResource? = null
+
+    @Before
+    fun setUp() {
+        // Espresso's default 60s timeouts are too short for the Branch backend
+        // to round-trip a link on an emulator with a slow network.
+        IdlingPolicies.setMasterPolicyTimeout(2, TimeUnit.MINUTES)
+        IdlingPolicies.setIdlingResourceTimeout(2, TimeUnit.MINUTES)
+    }
 
     @After
     fun tearDownIdlingResource() {
@@ -43,8 +63,6 @@ class LinkCreationDeterministicTest : BaseGptDriverTest() {
         // TestBed uses test mode → domain is bnctestbed.test-app.link
         onView(withId(R.id.editReferralShortUrl))
             .check(matches(withSubstring("bnctestbed")))
-
-        driver.setSessionStatus("success")
     }
 
     @Test
@@ -58,8 +76,6 @@ class LinkCreationDeterministicTest : BaseGptDriverTest() {
         // Assert URL starts with https
         onView(withId(R.id.editReferralShortUrl))
             .check(matches(withSubstring("https://")))
-
-        driver.setSessionStatus("success")
     }
 
     private fun waitForLinkGeneration() {

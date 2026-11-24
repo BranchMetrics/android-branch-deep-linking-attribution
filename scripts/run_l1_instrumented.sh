@@ -10,18 +10,9 @@
 # normal shell semantics (pipefail, multi-line if/then/else, variable scope).
 #
 # Usage:
-#   ./scripts/run_l1_instrumented.sh "$MOBILEBOOST_API_KEY"
-#
-# The API key may also be supplied via the MOBILEBOOST_API_KEY env var; the
-# positional argument takes precedence when both are present.
+#   ./scripts/run_l1_instrumented.sh
 
 set -euo pipefail
-
-MOBILEBOOST_API_KEY="${1:-${MOBILEBOOST_API_KEY:-}}"
-if [[ -z "$MOBILEBOOST_API_KEY" ]]; then
-  echo "Error: MOBILEBOOST_API_KEY is required (provide as positional arg or env var)" >&2
-  exit 1
-fi
 
 TARGET_APK="Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk"
 TEST_APK="Branch-SDK-GPTDriver/build/outputs/apk/debug/Branch-SDK-GPTDriver-debug.apk"
@@ -102,7 +93,6 @@ run_instrumented() {
   shift
   adb shell am instrument -w -r \
     -e class "$test_class" \
-    -e MOBILEBOOST_API_KEY "$MOBILEBOOST_API_KEY" \
     "$@" \
     "$TEST_PKG/$RUNNER" | tee "$INSTRUMENT_LOG"
 
