@@ -82,6 +82,16 @@ internal class RequestOpen @JvmOverloads constructor(
                     openPost.put("link_data", dataJSON)
                 }
             }
+            // An install's open with no link_data of its own carries the install's link, also after a failed lookup.
+            if (!openPost.has("link_data") && isInstallLaunch()) {
+                val installParams = prefHelper_.installParams
+                if (installParams != PrefHelper.NO_STRING_VALUE) {
+                    val installLink = JSONObject(installParams)
+                    if (installLink.optBoolean(Defines.Jsonkey.Clicked_Branch_Link.key)) {
+                        openPost.put("link_data", installLink)
+                    }
+                }
+            }
             setPost(openPost)
         } catch (ex: JSONException) {
             BranchLogger.w("Caught JSONException ${ex.message}")

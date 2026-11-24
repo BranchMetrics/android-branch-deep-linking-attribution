@@ -1,4 +1,11 @@
 # Branch Android SDK change log
+- v6.0.0-beta.4
+* _*Beta Release*_ - Nov 20, 2026
+
+  Upgrade instructions: https://help.branch.io/developer-hub/android-sdk-6-integration
+
+  - Fixed deferred deep links at attribution level `NONE`: the install referrer's link is returned on first launch, and only its click id is sent.
+
 - v6.0.0-beta.3
 * _*Beta Release*_ - Oct 15, 2026
 

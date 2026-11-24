@@ -17,8 +17,24 @@ python3 scripts/validate_l1_logs.py path/to/branchlogs.txt
 To run the validator's own test suite:
 
 ```bash
-python3 -m unittest scripts.test_validate_l1_logs -v
+python3 -m unittest discover -s scripts -p 'test_*.py' -v
 ```
+
+The suite is split by what it judges:
+
+- `test_validate_l1_logs.py`: the parser, the field and contract engine, the registry,
+  and the install-referrer scenarios.
+- `test_scenario_contracts.py`: each scenario contract against the fixture it was
+  written from, and its negatives.
+- `test_attribution_none.py`: the required-field tiers for stripped requests, and the
+  attribution_none contract.
+- `test_scenario_artifact_guards.py`: guards over the wire-gate fixtures (placeholders
+  only, wire pairs only) and over the contract table.
+- `test_warm_contract_rules.py`: one test per rule of the warm, hot and cold_uriScheme
+  contracts, so deleting or weakening a rule fails. It keeps its own fixture map.
+
+`l1_fixtures.py` holds the fixture directory and the scenario-to-fixture map the other
+test files share.
 
 ## What gets validated
 
@@ -34,10 +50,13 @@ The required field list lives at the top of `validate_l1_logs.py`:
   `randomized_device_token` and `randomized_bundle_token` on `/v1/open`;
   and `connection_type` on both `/v1/install` and `/v1/open` (only emitted
   on init/event requests, so `/v1/url` legitimately lacks it).
+- Tiers, per request by its own `cpp_level`: `always` at every level,
+  `not_none` (`local_ip` and the `/v3` session fields) at every level except
+  `NONE`, and `none_only` (`tracking_disabled` on `/v3`) at `NONE`.
 
-Required-field checks are scoped to `/v1/*` only. Captured non-v1
-endpoints (e.g. `/v3/events/*`) get their payload printed for visibility
-but do not fail the run — the L1 contract covers v1 only.
+Required-field checks apply to the endpoints in `REQUIRED_PER_ENDPOINT`:
+`/v1/*`, `/v3/deeplink` and `/v3/events/open`. Other captured endpoints get
+their payload printed for visibility but do not fail the run.
 
 Lookups tolerate `user_data` nesting so a future move from top-level to
 nested placement does not break the gate.
@@ -47,6 +66,32 @@ nested placement does not break the gate.
 For every captured request: the full payload plus a per-field check table
 showing the actual value that went over the wire. Silent passes are not
 possible because every field's value is visible in the CI log.
+
+## Install-referrer scenarios
+
+`run_l1_referrer.sh` runs one scenario where the app starts at attribution
+level NONE on a fresh install that came from a real Branch link click, then
+the user consents. `run_l1_referrer.sh --list` names them, and
+`run_l1_referrer_scenarios.sh` runs them all. CI runs them in the
+`validate-referrer-scenarios` job.
+
+On an emulator without Google Play (AOSP `default` image), as CI does:
+
+```bash
+./gradlew :Branch-SDK-TestBed:assembleDebug :Branch-SDK-TestPlayStore:assembleDebug
+adb install -r --force-queryable Branch-SDK-TestPlayStore/build/outputs/apk/debug/Branch-SDK-TestPlayStore-debug.apk
+adb install -r -t Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk
+./scripts/run_l1_referrer_scenarios.sh
+python3 scripts/validate_l1_logs.py wire-none_referrer_install.txt --scenario none_referrer_install \
+  --run-id "$(cat wire-none_referrer_install.txt.run_id)" --click-id "$(cat wire-none_referrer_install.txt.click_id)"
+```
+
+On a real device with Google Play, set `L1_REFERRER_SOURCE=play`. Google Play
+then returns the referrer, so the TestBed has to be built under a package
+published on Play (`-Pl1ApplicationId=<package>`), with that app's Branch
+link domain and key in `L1_PLAY_PACKAGE`, `L1_PLAY_LINK_HOST` and
+`L1_PLAY_BRANCH_KEY`. With more than one device attached, set
+`ANDROID_SERIAL`. The script header lists every input.
 
 ## Platform parity
 

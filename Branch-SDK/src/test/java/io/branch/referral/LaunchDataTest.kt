@@ -211,14 +211,15 @@ class LaunchDataTest : BranchTestBase() {
     }
 
     @Test
-    fun consentNone_readsNothing_untilOptIn_thenTheHeldOpenCarriesTheData() {
+    fun consentNone_readsOnlyTheInstallReferrer_untilOptIn_thenTheHeldOpenCarriesTheData() {
         Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.NONE)
         referrer = playReferrer()
         adId = Pair(0, GAID)
 
         Branch.getInstance().requestDeepLinkData(null) { _, _ -> }
         settle(500)
-        assertEquals("nothing is read while attribution is off", 0, adIdReads.get() + referrerReads.get())
+        assertEquals("the ad ID is not read while attribution is off", 0, adIdReads.get())
+        assertEquals("the install referrer is read for its link", 1, referrerReads.get())
         assertEquals("the open is held while attribution is off", 0, remote.opens.size)
 
         Branch.getInstance().setConsumerProtectionAttributionLevel(Defines.BranchAttributionLevel.FULL)

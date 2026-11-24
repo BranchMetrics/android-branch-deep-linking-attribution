@@ -20,8 +20,11 @@ lines for every wire request just before HTTP send:
 import argparse
 import json
 import os
+import re
 import sys
 from urllib.parse import urlparse
+
+from scenario_contracts import SCENARIO_CONTRACTS
 
 POSTING_PREFIX = "posting to "
 POST_VALUE_PREFIX = "Post value = "
@@ -40,13 +43,15 @@ REQUIRED_COMMON = [
     "os_version",
     "country",
     "language",
-    "local_ip",
     "screen_dpi",
     "screen_height",
     "screen_width",
     "wifi",
     "ui_mode",
 ]
+
+# Stripped at attribution level NONE, so required only at every other level.
+REQUIRED_COMMON_NOT_NONE = ["local_ip"]
 
 # hardware_id is deliberately not common. ServerRequestCreateUrl builds the
 # payload and then removes anon_id, is_hardware_id_real and hardware_id before
@@ -76,6 +81,9 @@ REQUIRED_COMMON = [
 #   connection_type       — in the iOS common list, absent from both /v3 payloads here.
 REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
 
+# Added by ServerRequestInitSession.prepareExecuteWithoutTracking at level NONE.
+REQUIRED_V3_NONE_ONLY = ["tracking_disabled"]
+
 # An endpoint absent from this table has no L1 contract yet: its payload is printed but nothing is
 # asserted. The beta does not emit /v1/install or /v1/open, but this validator also gates master
 # PRs, where both are the live init path — so their contracts stay. An endpoint simply not present
@@ -85,13 +93,43 @@ REQUIRED_V3_SESSION = ["anon_id", "first_install_time", "is_hardware_id_real"]
 # lookup_field already resolves, but it carries no `wifi` — a REQUIRED_COMMON field — so a v2
 # contract cannot be expressed by extending the common list. iOS gives v2 its own complete list
 # instead. That mechanism change is out of scope here.
+#
+# Tiered by whether the SDK stripped the request (is_stripped): `always` on every request,
+# `not_none` on a request it did not strip, `none_only` on one it did. It strips at
+# cpp_level NONE, as on iOS, and when tracking is disabled through the deprecated
+# disableTracking(true), which sets no level. /v1/* stay flat.
 REQUIRED_PER_ENDPOINT = {
-    "/v1/install": ["connection_type", "is_hardware_id_real", "first_install_time", "hardware_id"],
-    "/v1/open": ["connection_type", "randomized_device_token", "randomized_bundle_token", "hardware_id"],
-    "/v1/url": [],
-    "/v3/deeplink": REQUIRED_V3_SESSION,
-    "/v3/events/open": REQUIRED_V3_SESSION,
+    "/v1/install": {
+        "always": REQUIRED_COMMON + REQUIRED_COMMON_NOT_NONE
+        + ["connection_type", "is_hardware_id_real", "first_install_time", "hardware_id"],
+        "not_none": [],
+        "none_only": [],
+    },
+    "/v1/open": {
+        "always": REQUIRED_COMMON + REQUIRED_COMMON_NOT_NONE
+        + ["connection_type", "randomized_device_token", "randomized_bundle_token", "hardware_id"],
+        "not_none": [],
+        "none_only": [],
+    },
+    "/v1/url": {
+        "always": REQUIRED_COMMON + REQUIRED_COMMON_NOT_NONE,
+        "not_none": [],
+        "none_only": [],
+    },
+    "/v3/deeplink": {
+        "always": REQUIRED_COMMON,
+        "not_none": REQUIRED_COMMON_NOT_NONE + REQUIRED_V3_SESSION,
+        "none_only": REQUIRED_V3_NONE_ONLY,
+    },
+    "/v3/events/open": {
+        "always": REQUIRED_COMMON,
+        "not_none": REQUIRED_COMMON_NOT_NONE + REQUIRED_V3_SESSION,
+        "none_only": REQUIRED_V3_NONE_ONLY,
+    },
 }
+
+# Wire spelling of Defines.BranchAttributionLevel.NONE.
+ATTRIBUTION_LEVEL_NONE = "NONE"
 
 
 def parse_branch_logs(file_path):
@@ -164,6 +202,36 @@ def is_present(value):
     return True
 
 
+def attribution_level(request):
+    """Return the request's cpp_level uppercased, or None when it carries none.
+    The SDK writes cpp_level only once a level was set."""
+    value = lookup_field(request, "cpp_level")
+    if not isinstance(value, str) or value == "":
+        return None
+    return value.upper()
+
+
+def is_stripped(request):
+    """True when the SDK sent the request without tracking: at cpp_level NONE, or marked
+    tracking_disabled. The SDK strips both cases the same way and marks the request."""
+    return (attribution_level(request) == ATTRIBUTION_LEVEL_NONE
+            or lookup_field(request, "tracking_disabled") is True)
+
+
+def required_fields_for(uri, request):
+    """Return the required fields for one request, by whether the SDK stripped
+    it, or None when the endpoint has no contract."""
+    contract = REQUIRED_PER_ENDPOINT.get(uri)
+    if contract is None:
+        return None
+    fields = list(contract["always"])
+    if is_stripped(request):
+        fields.extend(contract["none_only"])
+    else:
+        fields.extend(contract["not_none"])
+    return fields
+
+
 def validate_request(entry, idx, total):
     """Print the full payload + per-field table for one request. Return a
     list of error strings (empty when everything required is present).
@@ -191,11 +259,11 @@ def validate_request(entry, idx, total):
     print(json.dumps(request, indent=2, sort_keys=True))
     print()
 
-    if uri not in REQUIRED_PER_ENDPOINT:
+    fields = required_fields_for(uri, request)
+    if fields is None:
         print(f"(No L1 contract for this endpoint; required-field checks skipped)")
         return errors
 
-    fields = REQUIRED_COMMON + REQUIRED_PER_ENDPOINT[uri]
     print(f"Required fields ({len(fields)}):")
     for field in fields:
         value = lookup_field(request, field)
@@ -206,6 +274,10 @@ def validate_request(entry, idx, total):
         else:
             print(f"  {marker} {field:<35} MISSING")
             errors.append(f"Request {idx} ({uri}): missing required field '{field}'")
+
+    disabled = lookup_field(request, "tracking_disabled")
+    if is_stripped(request) and is_present(disabled) and disabled is not True:
+        errors.append(f"Request {idx} ({uri}): 'tracking_disabled' must be true, got {disabled!r}")
 
     return errors
 
@@ -246,96 +318,105 @@ def collapse_retries(entries):
     return kept
 
 
-# What the wire must look like after a scenario ran. All endpoint names live
-# here rather than in the checks, so the same checks serve this line's capture
-# and the iOS one.
-#
-#   counts  endpoint -> exact number of requests. 0 forbids the endpoint.
-#           An endpoint absent from counts is unconstrained.
-#   order   (earlier, later) pairs. Relative, not adjacency: a request
-#           between the two does not violate it.
-#   fields  endpoint -> field -> exact number of that endpoint's requests
-#           carrying the field. Same counting as `counts`, one level down;
-#           0 forbids. Presence only, never a value comparison.
-#           It exists because an endpoint count cannot see a request changing
-#           character: on 6.0.0-beta.0 the install is a /v3/events/open like
-#           any other, so a first install and a launch on an installed device
-#           put the same endpoints on the wire in the same order.
-#
-# Ported from the iOS line, where the same engine gates 4.0.0-beta.0. Kept
-# byte-compatible on purpose: a contract that reads differently per platform
-# is a parity gap wearing a helper's clothes.
-SCENARIO_CONTRACTS = {
-    # Every contract is derived from a real capture. organic_open's is less the
-    # duplicate /v3/events/open that EMT-4136 removed.
-    #
-    # organic_open, cold_firstInstall and cold_https are test-plan scenarios.
-    # link_generation is not: it is the harness run that creates the link
-    # cold_firstInstall opens.
-
-    # organic_open: a launch with no link. MainActivity.onCreate resolves
-    # unconditionally, so a /v3/deeplink with no link precedes the open, the
-    # nil-input resolve the beta design uses as the deferred link check.
-    #
-    # No `fields` rule. The property this scenario is really about is that the
-    # open carries no link data, and the measurement that produced these shapes
-    # reported the token rather than the link payload. The exact counts still
-    # earn their place: they are what catches a second open reappearing.
-    "organic_open": {
-        "counts": {"/v3/deeplink": 1, "/v3/events/open": 1},
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {},
-    },
-    # cold_firstInstall: the link starts the app on a device with no prior
-    # install. The install is a /v3/events/open like any other on 6.0, decided
-    # by randomizedBundleToken == nil, so its missing token is what marks it.
-    # /v1/url is 0 because the link is generated outside this capture.
-    "cold_firstInstall": {
-        "counts": {
-            "/v3/deeplink": 1,
-            "/v3/events/open": 1,
-            "/v1/url": 0,
-        },
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {
-            "/v3/deeplink": {"android_app_link_url": 1},
-            "/v3/events/open": {"randomized_bundle_token": 0},
-        },
-    },
-    # cold_https: the link starts the app on a device that already has it.
-    # The open carries the token, which is what separates it from
-    # cold_firstInstall.
-    # /v3/events/custom is not counted in either: the TestBed logs one from
-    # onStart, and whether it reaches the wire depends on init timing.
-    "cold_https": {
-        "counts": {
-            "/v3/deeplink": 1,
-            "/v3/events/open": 1,
-            "/v1/url": 0,
-        },
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {
-            "/v3/deeplink": {"android_app_link_url": 1},
-            "/v3/events/open": {"randomized_bundle_token": 1},
-        },
-    },
-    # link_generation: the generation run that precedes
-    # cold_firstInstall, judged on its own capture. It holds the only /v1/url,
-    # so it carries the EMT-4199 rule that /v1/url sends no hardware_id.
-    "link_generation": {
-        "counts": {"/v3/deeplink": 1, "/v3/events/open": 1, "/v1/url": 1},
-        "order": (("/v3/deeplink", "/v3/events/open"),),
-        "fields": {"/v1/url": {"hardware_id": 0}},
-    },
-}
-
-# The link data each cold scenario's generator writes, checked against the
-# params the TestBed receives. Kept out of SCENARIO_CONTRACTS so the contracts
-# stay byte-compatible with iOS.
+# The l1_scenario each scenario's link carries, checked against the params the
+# TestBed receives and, where the contract requires link_data on an open, the
+# open's link_data. --run-id adds l1_run_id; it applies to the scenarios whose
+# link ScenarioLinkGenerator makes (the cold ones and attribution_none), since
+# that is where the run script saves the id. hot_https_foreground's driver
+# stamps its own. Kept out of SCENARIO_CONTRACTS so the contracts stay
+# byte-compatible with iOS.
 SCENARIO_LINK_MARKERS = {
     "cold_firstInstall": {"l1_scenario": "cold_firstInstall"},
     "cold_https": {"l1_scenario": "cold_https"},
+    "hot_https_foreground": {"l1_scenario": "hot_https_foreground"},
+    "attribution_none": {"l1_scenario": "attribution_none"},
 }
+
+
+# Android-only, for the install-referrer scenarios (scripts/run_l1_referrer.sh): the l1_link of each link
+# the app gets, in order, and the l1_link the open sent at consent carries in link_data (None: no
+# link_data). Kept out of SCENARIO_CONTRACTS, like SCENARIO_LINK_MARKERS.
+SCENARIO_REFERRER_LINKS = {
+    "none_referrer_install": (("install",), "install"),
+    "none_referrer_install_reduced": (("install",), "install"),
+    "none_referrer_browser_return": (("install",), "install"),
+    "none_referrer_background_death": (("install",), "install"),
+    "none_referrer_foreground_death": (("install",), "install"),
+    "none_referrer_foreground_death_uri_call": (("install",), "install"),
+    "none_referrer_second_link": (("install", "second"), "second"),
+    "none_referrer_app_passes_click_id": (("install",), "install"),
+    "none_organic_install": ((), None),
+}
+
+
+def _link_data(request):
+    """The request's link_data as a dict, whether it was sent as an object or a JSON string."""
+    data = request.get("link_data")
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            return None
+    return data if isinstance(data, dict) else None
+
+
+def assert_referrer_scenario(entries, resolved, scenario, run_id=None, click_id=None):
+    """Check an install-referrer scenario: the links the app got, the link the open after consent
+    carries and, with `click_id`, that the install referrer's click id reaches each request.
+
+    Links count as this scenario's only when they carry its l1_scenario and, with `run_id`, its
+    l1_run_id. Returns a list of error strings, empty when everything holds."""
+    errors = []
+    expected_links, expected_open_link = SCENARIO_REFERRER_LINKS[scenario]
+
+    def is_this_run(params):
+        return params.get("l1_scenario") == scenario and (run_id is None or params.get("l1_run_id") == run_id)
+
+    got_links = [params.get("l1_link") for params in resolved if is_this_run(params)]
+    if got_links != list(expected_links):
+        errors.append(f"Expected the app to get the links {list(expected_links)} in that order, got {got_links}.")
+
+    deeplinks = [entry["request"] for entry in entries if entry["uri"] == "/v3/deeplink"]
+    opens = [entry["request"] for entry in entries if entry["uri"] == "/v3/events/open"]
+    consent_open = opens[-1] if opens else None
+    if consent_open is not None:
+        data = _link_data(consent_open)
+        if expected_open_link is None:
+            if data is not None:
+                errors.append("Expected the open after consent to carry no link_data, but it did.")
+        elif data is None or not is_this_run(data) or data.get("l1_link") != expected_open_link:
+            shown = {key: data.get(key) for key in ("l1_scenario", "l1_run_id", "l1_link")} if data else None
+            errors.append(
+                f"Expected the open after consent to carry this run's '{expected_open_link}' link in "
+                f"link_data, got {shown}."
+            )
+
+    if click_id:
+        first = deeplinks[0] if deeplinks else None
+        sent = first.get("link_identifier") if first else None
+        if first is None or str(sent) != click_id:
+            errors.append(
+                f"Expected the first /v3/deeplink to send the referrer's click id {click_id} as "
+                f"link_identifier, got {sent if first else 'no /v3/deeplink'}."
+            )
+        if consent_open is None:
+            errors.append("Expected an open after consent to carry the referrer's click id, got none.")
+        else:
+            extras = consent_open.get("install_referrer_extras")
+            if not (isinstance(extras, str) and f"link_click_id={click_id}" in extras):
+                errors.append(
+                    f"Expected the open's install_referrer_extras to hold link_click_id={click_id}, "
+                    f"got {extras!r}."
+                )
+            for field in ("link_click_id", "link_identifier"):
+                if str(consent_open.get(field)) != click_id:
+                    errors.append(
+                        f"Expected the open's {field} to be the click id {click_id}, "
+                        f"got {consent_open.get(field)!r}."
+                    )
+            if consent_open.get("app_store") != "PlayStore":
+                errors.append(f"Expected the open's app_store to be PlayStore, got {consent_open.get('app_store')!r}.")
+    return errors
 
 
 class UnknownScenario(Exception):
@@ -368,6 +449,17 @@ def occurs_after(uris, earlier, later):
     return False
 
 
+POSITION_SUFFIX = re.compile(r"^(?P<endpoint>[^\[\]]+)\[(?P<position>-?[0-9]+)\]$")
+
+
+def split_position(endpoint_key):
+    """Split a `fields` key into (endpoint, position); position is None when plain."""
+    match = POSITION_SUFFIX.match(endpoint_key)
+    if match is None:
+        return endpoint_key, None
+    return match["endpoint"], int(match["position"])
+
+
 def assert_contract(entries, contract):
     """Check a normalized capture against a scenario contract.
 
@@ -395,8 +487,24 @@ def assert_contract(entries, contract):
         if not occurs_after(uris, earlier, later):
             errors.append(f"Expected a '{later}' request after a '{earlier}' one.")
 
-    for endpoint, fields in sorted(contract.get("fields", {}).items()):
+    for endpoint_key, fields in sorted(contract.get("fields", {}).items()):
+        endpoint, position = split_position(endpoint_key)
+        if position is None and "[" in endpoint_key:
+            errors.append(
+                f"Contract error: field key '{endpoint_key}' has a malformed "
+                f"position; expected '<endpoint>[<integer>]'."
+            )
+            continue
         matching = [e for e in entries if e["uri"] == endpoint]
+        if position is not None:
+            if not -len(matching) <= position < len(matching):
+                errors.append(
+                    f"Contract error: position {position} in '{endpoint_key}' is "
+                    f"out of range for {len(matching)} captured '{endpoint}' request(s)."
+                )
+                continue
+            matching = [matching[position]]
+            endpoint = endpoint_key
         for field, expected in sorted(fields.items()):
             actual = sum(
                 1 for e in matching if is_present(lookup_field(e["request"], field))
@@ -453,10 +561,39 @@ def assert_resolved(resolved, expected):
     return [f"Expected a resolution carrying {expected}, got {seen or 'none'}."]
 
 
+def marker_for(scenario, run_id=None):
+    """The link data a cold scenario's links must carry: its marker, plus `run_id` as l1_run_id
+    when given. None for a scenario without a marker."""
+    marker = SCENARIO_LINK_MARKERS.get(scenario)
+    if marker and run_id:
+        marker = dict(marker, l1_run_id=run_id)
+    return marker
+
+
+def assert_open_link(entries, expected):
+    """Check that some /v3/events/open's link_data carries every `expected` key with its value.
+
+    Returns a list of error strings, empty when one does."""
+    links = [_link_data(e["request"]) or {} for e in entries if e["uri"] == "/v3/events/open"]
+    for data in links:
+        if all(data.get(key) == value for key, value in expected.items()):
+            return []
+    seen = [{key: data.get(key) for key in expected} for data in links]
+    return [f"Expected an open whose link_data carries {expected}, got {seen or 'none'}."]
+
+
+def _requires_open_link(contract):
+    """True when the contract requires link_data on some /v3/events/open."""
+    for key, fields in (contract or {}).get("fields", {}).items():
+        if split_position(key)[0] == "/v3/events/open" and fields.get("link_data", 0) > 0:
+            return True
+    return False
+
+
 def validate_entries(entries, contract=None, resolved=None, marker=None):
     """Check every request's required fields, the capture against `contract`,
-    and the `resolved` params against `marker`, each when given. Returns
-    aggregated errors."""
+    and the `resolved` params and the opens' link_data against `marker`, each
+    when given. Returns aggregated errors."""
     errors = []
 
     if not entries:
@@ -475,6 +612,8 @@ def validate_entries(entries, contract=None, resolved=None, marker=None):
 
     if marker:
         errors.extend(assert_resolved(resolved or [], marker))
+        if _requires_open_link(contract):
+            errors.extend(assert_open_link(collapse_retries(entries), marker))
 
     for i, entry in enumerate(entries, start=1):
         errors.extend(validate_request(entry, i, len(entries)))
@@ -492,6 +631,14 @@ def main():
         "--scenario", default=None,
         help="which scenario produced this capture; selects its contract. "
              "Omitted, only the per-request required fields are asserted.",
+    )
+    parser.add_argument(
+        "--run-id", default=None,
+        help="cold and install-referrer scenarios: the l1_run_id the scenario's links carry",
+    )
+    parser.add_argument(
+        "--click-id", default=None,
+        help="install-referrer scenarios: the link_click_id in the Play referrer the scenario set",
     )
     args = parser.parse_args()
     log_file_path = args.log_file
@@ -518,8 +665,13 @@ def main():
         print(f"FAILED: {e}")
         sys.exit(1)
 
-    marker = SCENARIO_LINK_MARKERS.get(args.scenario) if args.scenario else None
-    errors = validate_entries(entries, contract, parse_resolved_params(log_file_path), marker)
+    marker = marker_for(args.scenario, args.run_id or None) if args.scenario else None
+    resolved = parse_resolved_params(log_file_path)
+    errors = validate_entries(entries, contract, resolved, marker)
+    if args.scenario in SCENARIO_REFERRER_LINKS:
+        errors.extend(assert_referrer_scenario(
+            collapse_retries(entries), resolved, args.scenario, args.run_id or None, args.click_id or None
+        ))
 
     if errors:
         print("\n--- VALIDATION FAILED ---")

@@ -738,6 +738,10 @@ public abstract class ServerRequest {
     public String printWaitLocks(){
         return Arrays.toString(locks_.toArray());
     }
+
+    boolean isWaitingOn(PROCESS_WAIT_LOCK lock) {
+        return locks_.contains(lock);
+    }
     
     
     /**

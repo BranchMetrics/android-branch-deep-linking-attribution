@@ -34,9 +34,10 @@ public final class CustomBranchApp extends Application {
     public void onCreate() {
         super.onCreate();
 
+        String branchKey = L1Hooks.branchKey(this, USE_TEST_KEY ? TEST_KEY : LIVE_KEY);
         BranchConfiguration.Builder config =
-                new BranchConfiguration.Builder(USE_TEST_KEY ? TEST_KEY : LIVE_KEY)
-                        .setTestMode(USE_TEST_KEY)
+                new BranchConfiguration.Builder(branchKey)
+                        .setTestMode(branchKey.startsWith("key_test_"))
                         .setLogLevel(BranchLogger.BranchLogLevel.VERBOSE)
                         .setLoggingCallback((message, severity) -> {
                             Log.d("BranchTestbed", message);
@@ -58,6 +59,7 @@ public final class CustomBranchApp extends Application {
         }
 
         config.setAutomaticOpenEvents(TestBedSettings.isAutomaticOpenEvents(this));
+        L1Hooks.applyLaunchConfig(this, config);
 
         Branch.initialize(this, config.build());
 

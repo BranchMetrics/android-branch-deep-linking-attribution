@@ -338,6 +338,10 @@ public abstract class ServerRequestInitSession extends ServerRequest {
 
     @Override
     protected boolean prepareExecuteWithoutTracking() {
+        // The install referrer read may still find its link. The queue's check when it is sent is required: it removes the fields.
+        if (isWaitingOn(PROCESS_WAIT_LOCK.INSTALL_REFERRER_FETCH_WAIT_LOCK)) {
+            return true;
+        }
         JSONObject post = getPost();
         // The link fields are put in the post at send time, so a request checked when it is queued has
         // them only in its kept launch link, or in prefs when it sends the saved ones.
@@ -358,6 +362,13 @@ public abstract class ServerRequestInitSession extends ServerRequest {
             post.remove(Defines.Jsonkey.PreviousUpdateTime.getKey());
             post.remove(Defines.Jsonkey.InstallBeginTimeStamp.getKey());
             post.remove(Defines.Jsonkey.ClickedReferrerTimeStamp.getKey());
+            post.remove(Defines.Jsonkey.InstallBeginServerTimeStamp.getKey());
+            post.remove(Defines.Jsonkey.ClickedReferrerServerTimeStamp.getKey());
+            post.remove(Defines.Jsonkey.LinkClickID.getKey());
+            post.remove(Defines.Jsonkey.GooglePlayInstallReferrer.getKey());
+            post.remove(Defines.Jsonkey.GoogleSearchInstallReferrer.getKey());
+            post.remove(Defines.Jsonkey.App_Store.getKey());
+            post.remove(Defines.Jsonkey.Is_Meta_Click_Through.getKey());
             post.remove(Defines.Jsonkey.HardwareID.getKey());
             post.remove(Defines.Jsonkey.IsHardwareIDReal.getKey());
             post.remove(Defines.Jsonkey.LocalIP.getKey());

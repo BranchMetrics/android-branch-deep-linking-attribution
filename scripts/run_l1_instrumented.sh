@@ -10,18 +10,9 @@
 # normal shell semantics (pipefail, multi-line if/then/else, variable scope).
 #
 # Usage:
-#   ./scripts/run_l1_instrumented.sh "$MOBILEBOOST_API_KEY"
-#
-# The API key may also be supplied via the MOBILEBOOST_API_KEY env var; the
-# positional argument takes precedence when both are present.
+#   ./scripts/run_l1_instrumented.sh
 
 set -euo pipefail
-
-MOBILEBOOST_API_KEY="${1:-${MOBILEBOOST_API_KEY:-}}"
-if [[ -z "$MOBILEBOOST_API_KEY" ]]; then
-  echo "Error: MOBILEBOOST_API_KEY is required (provide as positional arg or env var)" >&2
-  exit 1
-fi
 
 TARGET_APK="Branch-SDK-TestBed/build/outputs/apk/debug/Branch-SDK-TestBed-debug.apk"
 TEST_APK="Branch-SDK-GPTDriver/build/outputs/apk/debug/Branch-SDK-GPTDriver-debug.apk"
@@ -57,6 +48,33 @@ COLD_SCENARIO="${COLD_SCENARIO:-}"
 COLD_WIPE="${COLD_WIPE:-0}"
 COLD_SETTLE_S="${COLD_SETTLE_S:-12}"
 LINK_LOG="${LINK_LOG:-}"
+# COLD_LINK_URL, when set, is delivered as the link and the generator is skipped.
+COLD_LINK_URL="${COLD_LINK_URL:-}"
+# L1_ATTRIBUTION_LEVEL=NONE makes the generator set NONE after the link exists; it is the
+# only level supported. WIPE_AFTER=1 clears app data on exit, so no later scenario inherits it.
+# Both act only in a cold run that generates its link.
+L1_ATTRIBUTION_LEVEL="${L1_ATTRIBUTION_LEVEL:-}"
+WIPE_AFTER="${WIPE_AFTER:-0}"
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$L1_ATTRIBUTION_LEVEL" != "NONE" ]; then
+  echo "L1_ATTRIBUTION_LEVEL supports only NONE, got $L1_ATTRIBUTION_LEVEL" >&2
+  exit 1
+fi
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && { [ -z "$COLD_SCENARIO" ] || [ -n "$COLD_LINK_URL" ]; }; then
+  echo "L1_ATTRIBUTION_LEVEL needs COLD_SCENARIO without COLD_LINK_URL, so the generator runs" >&2
+  exit 1
+fi
+if [ "$WIPE_AFTER" = "1" ] && [ -z "$COLD_SCENARIO" ]; then
+  echo "WIPE_AFTER=1 needs COLD_SCENARIO" >&2
+  exit 1
+fi
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$COLD_WIPE" = "1" ]; then
+  echo "L1_ATTRIBUTION_LEVEL needs the generation run's tokens; COLD_WIPE would erase them" >&2
+  exit 1
+fi
+if [ -n "$L1_ATTRIBUTION_LEVEL" ] && [ "$WIPE_FIRST" != "1" ]; then
+  echo "L1_ATTRIBUTION_LEVEL needs WIPE_FIRST=1 so the level starts from a clean install" >&2
+  exit 1
+fi
 
 # A cold run names its capture after its scenario, so a caller states the
 # name once. Anything else keeps this script's original default.
@@ -102,7 +120,6 @@ run_instrumented() {
   shift
   adb shell am instrument -w -r \
     -e class "$test_class" \
-    -e MOBILEBOOST_API_KEY "$MOBILEBOOST_API_KEY" \
     "$@" \
     "$TEST_PKG/$RUNNER" | tee "$INSTRUMENT_LOG"
 
@@ -129,9 +146,19 @@ if [ -z "$COLD_SCENARIO" ]; then
   exit 0
 fi
 
-run_instrumented "$TEST_CLASS_PACKAGE.ScenarioLinkGenerator" \
-  -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID"
-LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
+LEVEL_ARGS=()
+if [ -n "$L1_ATTRIBUTION_LEVEL" ]; then
+  LEVEL_ARGS=(-e L1_ATTRIBUTION_LEVEL "$L1_ATTRIBUTION_LEVEL")
+fi
+if [ "$WIPE_AFTER" = "1" ]; then
+  trap 'adb shell pm clear "$TARGET_PKG" || true' EXIT
+fi
+LINK_URL="$COLD_LINK_URL"
+if [ -z "$LINK_URL" ]; then
+  run_instrumented "$TEST_CLASS_PACKAGE.ScenarioLinkGenerator" \
+    -e L1_SCENARIO "$COLD_SCENARIO" -e L1_RUN_ID "$L1_RUN_ID" ${LEVEL_ARGS[@]+"${LEVEL_ARGS[@]}"}
+  LINK_URL=$(tr -d '\r' < "$INSTRUMENT_LOG" | sed -n 's/^INSTRUMENTATION_STATUS: l1_link_url=//p' | head -n 1)
+fi
 if [ -z "$LINK_URL" ]; then
   echo "ScenarioLinkGenerator reported no link." >&2
   exit 1
@@ -164,6 +191,7 @@ else
   adb shell "run-as $TARGET_PKG sh -c 'rm -f $CAPTURE'" || true
 fi
 
+# Explicit-package delivery bypasses App Link verification, so the API level does not change the receiver.
 # Resolved against the package, not a named component, so the manifest still
 # has to declare the link's host. One quoted string, so the device shell
 # cannot split the URL.
@@ -181,3 +209,5 @@ fi
 
 sleep "$COLD_SETTLE_S"
 pull_capture "$OUTPUT_LOG"
+# The validator checks that the link the app got and the open's link_data are this run's.
+printf '%s\n' "$L1_RUN_ID" > "$OUTPUT_LOG.run_id"
