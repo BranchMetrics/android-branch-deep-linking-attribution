@@ -79,10 +79,17 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx8192M -Dkotlin.daemon.jvm.options\\=\"-Xmx8192M\""
 
       # Each scenario gets its own capture file, because CustomBranchApp appends
-      # to the capture and nothing truncates it. Every scenario starts from wiped
-      # app data; the cold_https generation run makes the install its link then
-      # opens on. wire-link_generation.txt is cold_firstInstall's
-      # generation capture, where /v1/url is.
+      # to the capture and nothing truncates it. The organic_open, cold_firstInstall
+      # and cold_https runs start from wiped app data; the cold_https generation
+      # run makes the install its link then opens on. wire-link_generation.txt is
+      # cold_firstInstall's generation capture, where /v1/url is.
+      # attribution_none sets the attribution level to NONE after its link
+      # exists, and wipes app data after itself.
+      #
+      # The two warm scenarios and hot_https_foreground do not wipe. They need an
+      # installed device holding the token, so they run after cold_https and rely
+      # on the install and device state it left behind; reordering them ahead of it,
+      # or wiping before them, breaks them.
       #
       # One line per command: the emulator-runner action splits `script:` on
       # newlines and runs each through its own `sh -c`, so a multi-line
@@ -103,8 +110,12 @@ jobs:
           # longer pass the secret as a positional argument (avoids argv leak).
           script: |
             TEST_CLASS=N1OrganicOpenWireTest OUTPUT_LOG=wire-organic_open.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            COLD_SCENARIO=attribution_none L1_ATTRIBUTION_LEVEL=NONE CLEAR_LOG=1 WIPE_FIRST=1 WIPE_AFTER=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_firstInstall COLD_WIPE=1 LINK_LOG=wire-link_generation.txt CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
             COLD_SCENARIO=cold_https CLEAR_LOG=1 WIPE_FIRST=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=W1WarmHttpsWireTest OUTPUT_LOG=wire-warm_https_onNewIntent.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=W2WarmUriSchemeWireTest OUTPUT_LOG=wire-warm_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            TEST_CLASS=H1HotAppLinkWireTest OUTPUT_LOG=wire-hot_https_foreground.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -151,9 +162,13 @@ jobs:
             echo "::endgroup::"
           }
           check organic_open wire-organic_open.txt
+          check attribution_none wire-attribution_none.txt wire-attribution_none.txt.run_id
           check link_generation wire-link_generation.txt
           check cold_firstInstall wire-cold_firstInstall.txt wire-cold_firstInstall.txt.run_id
           check cold_https wire-cold_https.txt wire-cold_https.txt.run_id
+          check warm_https_onNewIntent wire-warm_https_onNewIntent.txt
+          check warm_uriScheme wire-warm_uriScheme.txt
+          check hot_https_foreground wire-hot_https_foreground.txt
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
@@ -180,13 +195,18 @@ jobs:
             echo "| --- | --- |"
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "| Cold | cold_firstInstall and cold_https pass |"
-              echo "| Negative and guards | organic_open pass, no_stickiness, attribution_none and late_userActivity not implemented |"
+              echo "| Negative and guards | organic_open and attribution_none pass, no_stickiness and late_userActivity not implemented |"
+              echo "| Warm | warm_https_onNewIntent and warm_uriScheme pass |"
             else
               echo "| Cold | see failures below |"
               echo "| Negative and guards | see failures below |"
+              echo "| Warm | see failures below |"
             fi
-            echo "| Warm | warm_https_onNewIntent and warm_uriScheme not implemented |"
-            echo "| Hot | hot_https_foreground and hot_uriScheme not implemented |"
+            if [ "${{ steps.validate.outcome }}" = "success" ]; then
+              echo "| Hot | hot_https_foreground pass, hot_uriScheme not wired into the gate yet (driver and contract present) |"
+            else
+              echo "| Hot | see failures below |"
+            fi
             echo
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "Result: **PASS**"

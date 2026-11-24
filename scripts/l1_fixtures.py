@@ -1,0 +1,33 @@
+"""Shared paths for the L1 validator tests: the fixture directory and which fixture
+holds which scenario's capture."""
+
+import os
+
+FIXTURE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
+
+# Every contract in the registry must appear here, and every entry must name a
+# file that exists. That binding is what the registry guard checks.
+SCENARIO_FIXTURES = {
+    "organic_open": "organic_open.txt",
+    "cold_firstInstall": "cold_firstInstall.txt",
+    "cold_https": "cold_https.txt",
+    "hot_https_foreground": "hot_https_foreground.txt",
+    "link_generation": "link_generation.txt",
+    "attribution_none": "attribution_none.txt",
+    "warm_https_onNewIntent": "warm_https_onNewIntent.txt",
+    "warm_uriScheme": "warm_uriScheme.txt",
+    "hot_uriScheme": "hot_uriScheme.txt",
+    "none_referrer_install": "none_referrer_install.txt",
+    "none_referrer_install_reduced": "none_referrer_install_reduced.txt",
+    "none_referrer_browser_return": "none_referrer_browser_return.txt",
+    "none_referrer_background_death": "none_referrer_background_death.txt",
+    "none_referrer_foreground_death": "none_referrer_foreground_death.txt",
+    "none_referrer_foreground_death_uri_call": "none_referrer_foreground_death_uri_call.txt",
+    "none_referrer_second_link": "none_referrer_second_link.txt",
+    "none_referrer_app_passes_click_id": "none_referrer_app_passes_click_id.txt",
+    "none_organic_install": "none_organic_install.txt",
+}
+
+
+def fixture_path(name):
+    return os.path.join(FIXTURE_DIR, name)
