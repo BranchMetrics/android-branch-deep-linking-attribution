@@ -32,6 +32,9 @@ The suite is split by what it judges:
   only, wire pairs only) and over the contract table.
 - `test_warm_contract_rules.py`: one test per rule of the warm, hot and cold_uriScheme
   contracts, so deleting or weakening a rule fails. It keeps its own fixture map.
+- `test_late_duplicate_intent.py`: the late_duplicate_intent contracts against their fixtures, a
+  link credited again after Android rebuilt its screen, and a new tap's open skipped or sent without
+  its link.
 
 `l1_fixtures.py` holds the fixture directory and the scenario-to-fixture map the other
 test files share.
@@ -92,6 +95,26 @@ published on Play (`-Pl1ApplicationId=<package>`), with that app's Branch
 link domain and key in `L1_PLAY_PACKAGE`, `L1_PLAY_LINK_HOST` and
 `L1_PLAY_BRANCH_KEY`. With more than one device attached, set
 `ANDROID_SERIAL`. The script header lists every input.
+
+## One tap, one credit (late_duplicate_intent)
+
+`run_l1_late_duplicate_intent.sh` checks that a link is credited once per tap. A link opens the
+app, then the user turns the phone, comes back from recents, and taps new links, and Android ends the
+app's process in between. Only the new taps may send a link. It drives the device from the host, because
+Android ending the app would also end an instrumentation running in it. `--list` names its two
+scenarios: one where `MainActivity` calls `requestDeepLinkData(this)`, and one where it calls
+`requestDeepLinkData(getIntent().getData())`. The script header lists every step.
+
+With the debug TestBed installed and the screen unlocked:
+
+```bash
+SCENARIO=late_duplicate_intent ./scripts/run_l1_late_duplicate_intent.sh
+python3 scripts/validate_l1_logs.py wire-late_duplicate_intent.txt --scenario late_duplicate_intent \
+  --run-id "$(cat wire-late_duplicate_intent.txt.run_id)"
+```
+
+It works on a real device too; with more than one device attached, set `ANDROID_SERIAL`. A lock screen
+with a pattern, PIN or password must be unlocked first. The script puts the rotation setting back on exit.
 
 ## Platform parity
 

@@ -827,30 +827,6 @@ class BranchRequestQueue private constructor(private val context: Context) {
         }
     }
     
-    /**
-     * Whether an open is already queued or in flight.
-     *
-     * Deep link resolution is not an open: the beta's flow is /v3/deeplink followed by
-     * /v3/events/open, so RequestDeepLink is deliberately excluded — counting it would suppress
-     * the open that has to follow it.
-     *
-     * Checks both the queue and the requests already executing, because the duplicate this guards
-     * against is enqueued while the first open is pending, before it reaches the network.
-     */
-    fun containsOpen(): Boolean {
-        synchronized(queueList) {
-            if (queueList.any { it is RequestOpen }) {
-                BranchLogger.v("containsOpen: found one queued")
-                return true
-            }
-        }
-        val executing = activeRequests.values.any { it is RequestOpen }
-        if (executing) {
-            BranchLogger.v("containsOpen: found one executing")
-        }
-        return executing
-    }
-
     /** Whether a deep link or open request is queued or executing. */
     fun containsDeepLinkOrOpen(): Boolean {
         synchronized(queueList) {

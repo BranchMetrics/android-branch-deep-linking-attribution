@@ -63,8 +63,8 @@ suspend fun Branch.requestDeepLinkData(activity: Activity): JSONObject =
 /**
  * Resolves [uri] against `v3/deeplink` and suspends until the referring params arrive.
  * Main-safe. Cancelling de-queues the request if it has not been sent yet. Each resolve also
- * sends one open event, unless one is already waiting to be sent; while attribution is off, it is
- * sent when the user opts in. With `setAutomaticOpenEvents(false)`, the app sends it with [Branch.sendOpen].
+ * sends one open event; while attribution is off, it is sent when the user opts in. With
+ * `setAutomaticOpenEvents(false)`, the app sends it with [Branch.sendOpen].
  *
  * @param uri The URI (App Link or Scheme) to resolve, or null to look up a deferred deep link.
  * @throws BranchException if the deep link could not be resolved.
