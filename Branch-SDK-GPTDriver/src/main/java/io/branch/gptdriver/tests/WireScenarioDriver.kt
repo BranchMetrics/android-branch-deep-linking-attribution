@@ -277,8 +277,15 @@ internal class WireScenarioDriver {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val tasks = context.getSystemService(ActivityManager::class.java).appTasks
         check(tasks.size == 1) { "Expected one TestBed task to return to, found ${tasks.size}" }
-        tasks[0].moveToFront()
-        await("MainActivity did not resume after the return") { lifecycle.resumed }
+        // Android 11 drops it for about 5 s after Home ("Move to front request ... stopped"), so ask again.
+        val deadline = System.currentTimeMillis() + WAIT_MS
+        while (true) {
+            tasks[0].moveToFront()
+            if (poll(MOVE_RETRY_MS) { lifecycle.resumed }) break
+            check(System.currentTimeMillis() < deadline) {
+                "MainActivity did not resume after the return (waited ${WAIT_MS}ms)"
+            }
+        }
         check(lifecycle.destroys.get() == 0) {
             "MainActivity was destroyed, so the return created it again instead of restarting it"
         }
@@ -407,6 +414,7 @@ internal class WireScenarioDriver {
         const val LINK_TIMEOUT_MS = 30_000L
         const val WAIT_MS = 30_000L
         const val POLL_MS = 250L
+        const val MOVE_RETRY_MS = 1_000L
         const val QUIET_MS = 3_000L
         const val FINAL_QUIET_MS = 12_000L
     }
