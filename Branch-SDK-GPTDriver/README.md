@@ -40,5 +40,7 @@ Branch-SDK-GPTDriver/
             ├── W2WarmUriSchemeWireTest.kt        warm_uriScheme
             ├── H1HotAppLinkWireTest.kt           hot_https_foreground
             ├── H2HotUriSchemeWireTest.kt         hot_uriScheme
+            ├── N2NoStickinessWireTest.kt         no_stickiness and no_stickiness_none,
+            │                                     two methods run with TEST_METHODS
             └── LinkCreationDeterministicTest.kt  Espresso link creation, not run by CI
 ```
