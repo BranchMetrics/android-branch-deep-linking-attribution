@@ -151,12 +151,6 @@ class BranchRequestQueueAdapter private constructor(context: Context) {
         BranchLogger.v("BranchRequestQueueAdapter.hasUser result: $result")
         return result
     }
-    fun containsOpen(): Boolean {
-        BranchLogger.v("BranchRequestQueueAdapter.containsOpen called")
-        val result = newQueue.containsOpen()
-        BranchLogger.v("BranchRequestQueueAdapter.containsOpen result: $result")
-        return result
-    }
 
     /** Whether a deep link or open request is queued or executing. */
     fun containsDeepLinkOrOpen(): Boolean {

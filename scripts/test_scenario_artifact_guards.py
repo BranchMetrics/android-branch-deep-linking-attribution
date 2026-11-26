@@ -182,6 +182,9 @@ class ScenarioArtifactGuards(unittest.TestCase):
             for second in names[i + 1:]:
                 if first in v.SCENARIO_REFERRER_LINKS and second in v.SCENARIO_REFERRER_LINKS:
                     continue
+                # Same steps with requestDeepLinkData(Uri), so the same wire on purpose.
+                if second == f"{first}_uri_call":
+                    continue
                 with self.subTest(pair=f"{first}/{second}"):
                     self.assertNotEqual(
                         v.SCENARIO_CONTRACTS[first],

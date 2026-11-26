@@ -40,7 +40,7 @@ permissions:
 jobs:
   validate-wire-logs:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout Repository
@@ -110,6 +110,8 @@ jobs:
             TEST_CLASS=W2WarmUriSchemeWireTest OUTPUT_LOG=wire-warm_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=H1HotAppLinkWireTest OUTPUT_LOG=wire-hot_https_foreground.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
             TEST_CLASS=H2HotUriSchemeWireTest OUTPUT_LOG=wire-hot_uriScheme.txt CLEAR_LOG=1 ./scripts/run_l1_instrumented.sh
+            SCENARIO=late_duplicate_intent ./scripts/run_l1_late_duplicate_intent.sh
+            SCENARIO=late_duplicate_intent_uri_call ./scripts/run_l1_late_duplicate_intent.sh
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -165,6 +167,8 @@ jobs:
           check warm_uriScheme wire-warm_uriScheme.txt
           check hot_https_foreground wire-hot_https_foreground.txt
           check hot_uriScheme wire-hot_uriScheme.txt
+          check late_duplicate_intent wire-late_duplicate_intent.txt wire-late_duplicate_intent.txt.run_id
+          check late_duplicate_intent_uri_call wire-late_duplicate_intent_uri_call.txt wire-late_duplicate_intent_uri_call.txt.run_id
           exit $rc
 
       # What the gate actually asserted, on the PR page rather than buried in
@@ -191,7 +195,7 @@ jobs:
             echo "| --- | --- |"
             if [ "${{ steps.validate.outcome }}" = "success" ]; then
               echo "| Cold | cold_firstInstall and cold_https pass; cold_uriScheme wire passes (scheme link not resolved by the server) |"
-              echo "| Negative and guards | organic_open and attribution_none pass, no_stickiness and late_userActivity not implemented |"
+              echo "| Negative and guards | organic_open, attribution_none and late_duplicate_intent (both calls) pass, no_stickiness not implemented |"
               echo "| Warm | warm_https_onNewIntent and warm_uriScheme pass |"
             else
               echo "| Cold | see failures below |"

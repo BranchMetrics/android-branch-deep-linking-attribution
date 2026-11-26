@@ -28,6 +28,29 @@ INSTALL_REFERRER_LINK_CONTRACT = {
     },
 }
 
+# One tap is credited once, and every new tap is credited (scripts/run_l1_late_duplicate_intent.sh). Each
+# requestDeepLinkData call sends one /v3/deeplink and one /v3/events/open, in order, even when two calls
+# overlap. Calls 0, 4, 9, 10 and 13 are new taps (links A, B, C, A again, D) and send their link. Calls 1, 2,
+# 5 and 6 rebuild a screen after the user turned the phone, and 3, 7, 8 and 12 after Android ended the app's
+# process; they must not send the link that opened it. Call 11 opens the app from its icon. Coming back while
+# the app runs makes no call, so the exact counts catch a pair it sends.
+LATE_DUPLICATE_NEW_TAPS = (0, 4, 9, 10, 13)
+LATE_DUPLICATE_NO_LINK = (1, 2, 3, 5, 6, 7, 8, 11, 12)
+LAUNCH_LINK_FIELDS = ("android_app_link_url", "external_intent_uri", "link_click_id")
+LATE_DUPLICATE_INTENT_CONTRACT = {
+    "counts": {"/v3/deeplink": 14, "/v3/events/open": 14, "/v1/url": 0},
+    "order": (("/v3/deeplink", "/v3/events/open"),),
+    "fields": {
+        **{f"/v3/deeplink[{i}]": {"android_app_link_url": 1} for i in LATE_DUPLICATE_NEW_TAPS},
+        **{f"/v3/events/open[{i}]": {"link_data": 1} for i in LATE_DUPLICATE_NEW_TAPS},
+        **{f"/v3/deeplink[{i}]": dict.fromkeys(LAUNCH_LINK_FIELDS, 0) for i in LATE_DUPLICATE_NO_LINK},
+        **{
+            f"/v3/events/open[{i}]": dict.fromkeys(("link_data",) + LAUNCH_LINK_FIELDS, 0)
+            for i in LATE_DUPLICATE_NO_LINK
+        },
+    },
+}
+
 # What the wire must look like after a scenario ran. All endpoint names live
 # here rather than in the checks, so the same checks serve this line's capture
 # and the iOS one.
@@ -309,4 +332,6 @@ SCENARIO_CONTRACTS = {
             "/v3/events/open": {"link_data": 0},
         },
     },
+    "late_duplicate_intent": LATE_DUPLICATE_INTENT_CONTRACT,
+    "late_duplicate_intent_uri_call": LATE_DUPLICATE_INTENT_CONTRACT,
 }

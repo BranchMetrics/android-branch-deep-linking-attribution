@@ -7,6 +7,7 @@ import static io.branch.referral.util.DependencyUtilsKt.billingGooglePlayClass;
 import static io.branch.referral.util.DependencyUtilsKt.classExists;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -243,6 +244,9 @@ public class Branch {
     
     /* The current activity instance for the application.*/
     WeakReference<Activity> currentActivityReference_;
+
+    // Null when initialize got a context without an Application.
+    @Nullable BranchLaunchScreenObserver launchScreenObserver_;
     
     /* Key for Auto Deep link param. The activities which need to automatically deep linked should define in this in the activity metadata. */
     private static final String AUTO_DEEP_LINK_KEY = "io.branch.sdk.auto_link_keys";
@@ -393,6 +397,11 @@ public class Branch {
             BranchProcessLifecycleObserver.register(branchReferral_);
         } catch (Exception | LinkageError e) {
             BranchLogger.w("Could not register the process lifecycle observer: " + e);
+        }
+        if (context.getApplicationContext() instanceof Application) {
+            branchReferral_.launchScreenObserver_ = new BranchLaunchScreenObserver();
+            ((Application) context.getApplicationContext())
+                    .registerActivityLifecycleCallbacks(branchReferral_.launchScreenObserver_);
         }
 
         logInitializeComplete(branchReferral_, config);
@@ -545,6 +554,11 @@ public class Branch {
             }
         } catch (Exception | LinkageError e) {
             BranchLogger.w("Could not unregister the process lifecycle observer: " + e);
+        }
+        if (branchReferral_ != null && branchReferral_.launchScreenObserver_ != null
+                && branchReferral_.context_ instanceof Application) {
+            ((Application) branchReferral_.context_)
+                    .unregisterActivityLifecycleCallbacks(branchReferral_.launchScreenObserver_);
         }
 
         BranchRequestQueueAdapter.shutDown();
@@ -1920,7 +1934,6 @@ public class Branch {
 
     /** Sends or keeps the open after request's /v3/deeplink response, which is null after a failure. */
     void sendOpenAfterDeepLink(@NonNull RequestDeepLink request, @Nullable JSONObject response) {
-        boolean openPending = false;
         KeptOpen open;
         // Checked under the lock: opt-in saves the level before sendHeldOpen takes it, so an open
         // either sees attribution on here or is already held when sendHeldOpen runs.
@@ -1945,7 +1958,6 @@ public class Branch {
                 return;
             }
             if (automaticOpenEvents_) {
-                openPending = requestQueue_.containsOpen();
                 open.callback = takeAllOpenWaiters();
             } else if (!openWaiters_.isEmpty()) {
                 open.callback = openWaiters_.remove(0);
@@ -1954,14 +1966,6 @@ public class Branch {
                 BranchLogger.d("sendOpen kept until the app calls sendOpen");
                 return;
             }
-        }
-        if (openPending) {
-            BranchLogger.d("sendOpen skipped: an open is already pending");
-            // Only says an open was already queued, not that one was sent.
-            if (open.callback != null) {
-                open.callback.onInitFinished(null, null);
-            }
-            return;
         }
         sendOpenRequest(open);
     }
@@ -2237,6 +2241,11 @@ public class Branch {
         if (activity != null) {
             currentActivityReference_ = new WeakReference<>(activity);
         }
+        // Android rebuilt the screen whose link this call carries, after it was read: not a new tap.
+        if (launchScreenObserver_ != null && launchScreenObserver_.takeRebuildCall(uri)) {
+            request.keepLaunchLink();
+            return;
+        }
         if (uri != null || activity != null) {
             // Only this launch's link: readAndStripParam saves just the fields it finds. An intent read
             // before, as after a rotation, yields none, so it keeps the link saved when it was read.
@@ -2244,6 +2253,9 @@ public class Branch {
                 prefHelper_.clearLaunchLink();
             }
             readAndStripParam(uri, activity);
+            if (launchScreenObserver_ != null) {
+                launchScreenObserver_.linkRead(uri, activity);
+            }
         }
         request.keepLaunchLink();
     }
@@ -2334,8 +2346,7 @@ public class Branch {
     /**
      * Public API to manually request deep link data for a specific URI.
      * This is coroutine-friendly when called within a LifecycleScope or specialized dispatcher.
-     * Each call also sends one open event, unless one is already waiting to be sent;
-     * while attribution is off, it is sent when the user opts in.
+     * Each call also sends one open event; while attribution is off, it is sent when the user opts in.
      * With {@code setAutomaticOpenEvents(false)}, the app sends it with {@link #sendOpen}.
      * @param uri The URI (App Link or Scheme) to resolve, or null to look up a deferred deep link;
      *            from Java, pass {@code (Uri) null}.
