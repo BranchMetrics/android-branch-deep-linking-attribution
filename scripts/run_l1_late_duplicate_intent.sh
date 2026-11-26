@@ -145,6 +145,17 @@ wait_until_gone() {
   done
   fail "the app's process is still running"
 }
+# Ends the backgrounded app's process the way Android does to free memory. Android only ends it once it counts
+# as in the background, which can lag Home on a slow device, so ask again.
+end_app_process() {
+  local i
+  for ((i = 0; i < 10; i++)); do
+    adb shell am kill "$PKG"
+    sleep 1
+    [ -z "$(app_pid)" ] && return 0
+  done
+  fail "the app's process is still running"
+}
 # Opens recents and taps the task card nearest the middle of the screen, which is the app just left.
 back_from_recents() {
   local xy="" i
@@ -248,8 +259,7 @@ step_return_running() {
 step_return_after_death() {
   local calls opens
   home
-  adb shell am kill "$PKG"
-  wait_until_gone
+  end_app_process
   calls=$(count "$CALL"); opens=$(count "$OPEN_POSTED")
   back_from_recents
   await_call "a link" "$calls" "$opens"
@@ -259,8 +269,7 @@ step_return_after_death() {
 step_link_after_death() {
   local calls opens uris first
   home
-  adb shell am kill "$PKG"
-  wait_until_gone
+  end_app_process
   calls=$(count "$CALL"); opens=$(count "$OPEN_POSTED")
   wake
   adb shell "am start -W -a android.intent.action.VIEW -d '$1' -n $PKG/$ACTIVITY" > /dev/null
